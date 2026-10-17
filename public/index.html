@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Strata — 3D Nonograms</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
     {
@@ -38,18 +39,13 @@
     </button>
   </header>
 
+  <div id="coach" role="status" aria-live="polite">
+    <div id="coach-dots"></div>
+    <p id="coach-text"></p>
+    <button id="coach-skip">skip</button>
+  </div>
+
   <footer class="hud bottom">
-    <div class="peel" role="group" aria-label="Peel layers">
-      <div class="axes">
-        <button class="axis on" data-axis="0">X</button>
-        <button class="axis" data-axis="1">Y</button>
-        <button class="axis" data-axis="2">Z</button>
-        <button id="flip" class="axis flip" aria-label="Peel from the other side">
-          <svg viewBox="0 0 24 24"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
-        </button>
-      </div>
-      <input id="peel" type="range" min="0" max="7" value="0" step="1" aria-label="Layers peeled">
-    </div>
     <div class="tools">
       <button id="undo" class="icon-btn" aria-label="Undo">
         <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
@@ -89,7 +85,7 @@
         <span class="glyph circle">3</span> means they're split into two groups,
         <span class="glyph square">4</span> into three or more.</p>
       <p><b>Tap</b> to chisel. <b>Hold</b> (or right-click) to mark a cube you know stays, which protects it.</p>
-      <p>Drag to turn the block, pinch to zoom, and use the <b>peel</b> slider to see inside.</p>
+      <p><b>Drag</b> to turn the block and pinch to zoom. Drag a <b>diamond handle</b> along an edge to peel layers away and see inside. <b>Double-tap</b> empty space to reset the view.</p>
       <button class="primary" data-close>Begin</button>
     </div>
   </section>

@@ -54,6 +54,7 @@ const vertexShader = /* glsl */ `
   uniform vec3 uPeel;      // axis, layers kept (animated), side (+1 / -1)
   uniform vec4 uRip[${MAX_RIPPLES}];       // origin.xyz, start time
   uniform vec2 uRipParam[${MAX_RIPPLES}];  // amplitude, speed
+  uniform vec3 uHint;
 
   varying vec3 vN;
   varying vec3 vLocal;
@@ -125,6 +126,8 @@ const vertexShader = /* glsl */ `
       offset.x += sin(age * 70.0) * 0.07 * m;
     }
 
+    if (distance(aCell, uHint) < 0.1) offset.y += 0.07 * (0.5 + 0.5 * sin(uTime * 4.0));
+
     vGlow = glow;
     vN = n;
     vLocal = position;
@@ -145,6 +148,7 @@ const fragmentShader = /* glsl */ `
   uniform float uMask;
   uniform float uReveal;
   uniform vec3 uHover;
+  uniform vec3 uHint;
   uniform vec2 uLight;     // xz direction of the key light
   uniform vec3 cTop, cLit, cShade, cUnder;
   uniform vec3 pTop, pLit, pShade;
@@ -228,6 +232,9 @@ const fragmentShader = /* glsl */ `
     // hover
     if (distance(vCell, uHover) < 0.1) col = mix(col, vec3(1.0), 0.14 + 0.1 * edge);
 
+    // tutorial: the cube to try next breathes
+    if (distance(vCell, uHint) < 0.1) col = mix(col, vec3(1.0), 0.12 + 0.3 * (0.5 + 0.5 * sin(uTime * 4.0)));
+
     // mistake flash
     if (vState.w >= 0.0) col = mix(col, cMistake, exp(-(uTime - vState.w) * 2.5) * 0.85);
 
@@ -249,6 +256,7 @@ export class Cubes {
       uDims: { value: new THREE.Vector3(1, 1, 1) },
       uPeel: { value: new THREE.Vector3(1, 99, 1) },
       uHover: { value: new THREE.Vector3(-99, -99, -99) },
+      uHint: { value: new THREE.Vector3(-99, -99, -99) },
       uLight: { value: new THREE.Vector2(-0.45, 0.9).normalize() },
       uRip: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, 0, -99)) },
       uRipParam: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector2(0, 1)) },

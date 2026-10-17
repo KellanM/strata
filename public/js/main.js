@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Puzzle, hideClues } from './puzzle.js';
-import { SHAPES, randomShape, buildCells } from './shapes.js';
+import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES } from './palettes.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
+import { PeelHandles } from './handles.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -26,6 +27,9 @@ controls.rotateSpeed = 0.75;
 controls.minZoom = 0.6;
 controls.maxZoom = 3.5;
 controls.autoRotateSpeed = 1.4;
+// spin freely around, but never far enough over the top to read clues upside down
+controls.minPolarAngle = 0.26;
+controls.maxPolarAngle = Math.PI - 0.5;
 controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: null };
 controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
@@ -34,14 +38,18 @@ const background = new Background();
 const rays = new GodRays();
 const motes = new Motes();
 const shards = new Shards();
-scene.add(background.mesh, motes.points, shards.points);
+const handles = new PeelHandles(cubes.uniforms.uLight);
+scene.add(background.mesh, motes.points, shards.points, handles.group);
 
 const CAM_DIST = 120;
 let viewRadius = 6;
 let game = null;
 let tool = 'break';
-const peel = { axis: 0, side: 1, peeled: 0, keep: 99 };
+// peeled: whole layers (game logic). keepVisual: what the shader eases toward.
+const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
+let tutorial = null;          // { step, hint }
+let viewAnim = null;
 const clock0 = performance.now();
 const now = () => (performance.now() - clock0) / 1000;
 
@@ -58,7 +66,8 @@ function startPuzzle(entry) {
   const { shape, palette } = entry;
   const { solid, colors } = buildCells(shape);
   const puzzle = new Puzzle(shape.dims, solid, colors);
-  hideClues(puzzle, shape.fraction ?? 0.85, shape.seed ?? 7);
+  if (shape.show) for (const line of puzzle.lines) line.hidden = !shape.show[line.axis];
+  else hideClues(puzzle, shape.fraction ?? 0.85, shape.seed ?? 7);
 
   game = {
     entry, shape, puzzle, palette,
@@ -66,36 +75,42 @@ function startPuzzle(entry) {
     painted: new Uint8Array(puzzle.size),
     undo: [], mistakes: 0, start: now(), elapsed: 0, solved: false, revealStart: -1,
   };
+  if (!entry.lesson) tutorial = null;
 
   if (!cubes.mesh || !cubes.mesh.parent) scene.add(cubes.build(puzzle));
   else cubes.build(puzzle);
   applyPalette(palette);
 
   const [X, Y, Z] = shape.dims;
-  viewRadius = 0.5 * Math.hypot(X, Y, Z) + 0.6;
+  viewRadius = 0.5 * Math.hypot(X, Y, Z) + 1.1;
   motes.uniforms.uBox.value = viewRadius * 4;
-  setPeelAxis(0, 1);
-  refreshAO();
+  peel.axis = 0; peel.side = 1;
+  setPeeled(0, true);
+  peel.keepVisual = X;
+  cubes.uniforms.uPeel.value.set(0, X, 1);
 
   controls.autoRotate = false;
   controls.target.set(0, 0, 0);
   // look square-on at the broad face of flat puzzles, isometric otherwise
-  const az = Z < X * 0.6 ? 0.42 : X < Z * 0.6 ? Math.PI / 2 - 0.42 : Math.PI / 4;
-  const el = 0.56;
-  camera.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(CAM_DIST);
+  game.homeAz = shape.view ?? (Z < X * 0.6 ? 0.42 : X < Z * 0.6 ? Math.PI / 2 - 0.42 : Math.PI / 4);
+  game.homeEl = 0.56;
+  placeCamera(game.homeAz, game.homeEl);
   camera.zoom = 1;
+  viewAnim = null;
   resize();
   controls.update();
 
-  $('#pz-name').textContent = solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
-  $('#pz-meta').textContent = `${X} × ${Y} × ${Z} · ${palette.name}`;
+  $('#pz-name').textContent = entry.lesson ? shape.name : solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
+  $('#pz-meta').textContent = entry.lesson
+    ? `lesson ${entry.lesson} of ${TUTORIAL.length}`
+    : `${X} × ${Y} × ${Z} · ${palette.name}`;
   updateStrikes();
   show('#menu', false);
   show('#win', false);
+  renderCoach();
 
   // the block rises in with a wave from its base
-  const t = now();
-  cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t, 1.6, 6);
+  cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], now(), 1.6, 6);
   rayBoost = 1;
 }
 
@@ -105,6 +120,7 @@ function applyPalette(p) {
   background.setPalette(p);
   rays.setPalette(p, dark);
   motes.setPalette(p);
+  handles.setPalette(p);
   document.body.classList.toggle('dark', dark);
   const sky = '#' + new THREE.Color(p.skyTop).lerp(new THREE.Color(p.skyBottom), 0.4).getHexString();
   document.documentElement.style.setProperty('--sky', sky);
@@ -113,40 +129,71 @@ function applyPalette(p) {
   document.querySelector('meta[name=theme-color]').content = '#' + new THREE.Color(p.skyTop).getHexString();
 }
 
+// ---------------------------------------------------------------- camera
+
+const spherical = new THREE.Spherical();
+
+function placeCamera(az, el) {
+  camera.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(CAM_DIST);
+}
+
+function resetView() {
+  if (!game) return;
+  spherical.setFromVector3(camera.position);
+  let dTheta = game.homeAz - spherical.theta;
+  dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));   // shortest way round
+  viewAnim = {
+    t0: now(), theta0: spherical.theta, dTheta,
+    phi0: spherical.phi, phi1: Math.PI / 2 - game.homeEl, zoom0: camera.zoom,
+  };
+  buzz(8);
+}
+
+function stepViewAnim(t) {
+  if (!viewAnim) return;
+  const k = Math.min(1, (t - viewAnim.t0) / (reduceMotion ? 0.01 : 0.7));
+  const e = 1 - Math.pow(1 - k, 3);
+  spherical.set(CAM_DIST, viewAnim.phi0 + (viewAnim.phi1 - viewAnim.phi0) * e, viewAnim.theta0 + viewAnim.dTheta * e);
+  camera.position.setFromSpherical(spherical);
+  camera.zoom = viewAnim.zoom0 + (1 - viewAnim.zoom0) * e;
+  camera.updateProjectionMatrix();
+  if (k >= 1) viewAnim = null;
+}
+
 // ---------------------------------------------------------------- peel
 
-function inPeel(i, keep = peel.keep) {
+function inPeel(i) {
   const p = game.puzzle.coords(i);
   const dim = game.puzzle.dims[peel.axis];
   const c = peel.side > 0 ? p[peel.axis] : dim - 1 - p[peel.axis];
-  return c < keep;
+  return c < dim - peel.peeled;
 }
 
 function present(i) { return !game.broken[i] && inPeel(i); }
 
 function refreshAO() { cubes.updateAO(game.puzzle, present); }
 
-function setPeelAxis(axis, side = peel.side) {
+// Switches the peel axis/side. Layers peeled on the old axis fold back in.
+function setPeelAxis(axis, side) {
+  if (axis === peel.axis && side === peel.side) return;
+  const hadPeel = peel.peeled > 0;
   peel.axis = axis;
   peel.side = side;
   peel.peeled = 0;
-  peel.keep = game.puzzle.dims[axis];
-  cubes.uniforms.uPeel.value.set(axis, peel.keep, side);
-  const slider = $('#peel');
-  slider.max = game.puzzle.dims[axis] - 1;
-  slider.value = 0;
-  document.querySelectorAll('.axis[data-axis]').forEach((b) => b.classList.toggle('on', +b.dataset.axis === axis));
-  $('#flip').classList.toggle('on', side < 0);
+  peel.keepVisual = game.puzzle.dims[axis];
+  cubes.uniforms.uPeel.value.set(axis, peel.keepVisual, side);
   refreshAO();
+  if (hadPeel) cubes.ripple(game.puzzle.dims.map((d) => (d - 1) / 2), now(), 0.6, 8);
 }
 
-function setPeeled(n) {
-  const dims = game.puzzle.dims[peel.axis];
-  peel.peeled = Math.max(0, Math.min(dims - 1, n));
-  peel.keep = dims - peel.peeled;
-  $('#peel').value = peel.peeled;
-  refreshAO();
-  buzz(6);
+function setPeeled(n, silent = false) {
+  const dim = game.puzzle.dims[peel.axis];
+  const next = Math.max(0, Math.min(dim - 1, Math.round(n)));
+  const changed = next !== peel.peeled;
+  peel.peeled = next;
+  peel.keepVisual = dim - next;
+  if (changed || silent) refreshAO();
+  if (changed && !silent) { buzz(6); if (next > 0) tutorialEvent('peel'); }
 }
 
 // ---------------------------------------------------------------- picking
@@ -209,6 +256,7 @@ function act(i, which) {
     game.undo.push({ kind: 'paint', i });
     cubes.ripple(cell, t, 0.45, 10);
     buzz(8);
+    if (game.painted[i]) tutorialEvent('paint');
     return;
   }
 
@@ -239,6 +287,7 @@ function act(i, which) {
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
   refreshAO();
+  tutorialEvent('break');
   if (game.puzzle.isSolved(game.broken)) win();
 }
 
@@ -264,29 +313,85 @@ function win() {
   g.solved = true;
   g.elapsed = now() - g.start;
   g.revealStart = now() + 0.3;
+  setPeeled(0, true);
+  const d = g.puzzle.dims;
+  cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], now(), 2.2, 5);
+  rayBoost = 2.2;
+  buzz([20, 60, 20, 60, 40]);
+  $('#pz-name').textContent = g.shape.name;
+
+  if (g.entry.lesson) { tutorialEvent('solved'); return; }
+
+  controls.autoRotate = !reduceMotion;
   const prev = solvedStore[g.shape.id];
   if (!g.shape.id.startsWith('random') && (!prev || g.elapsed < prev.time)) {
     solvedStore[g.shape.id] = { time: g.elapsed, mistakes: g.mistakes };
     localStorage.setItem('strata.solved', JSON.stringify(solvedStore));
   }
-  setPeelAxis(peel.axis);
-  const d = g.puzzle.dims;
-  cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], now(), 2.2, 5);
-  rayBoost = 2.2;
-  controls.autoRotate = !reduceMotion;
-  buzz([20, 60, 20, 60, 40]);
-  $('#pz-name').textContent = g.shape.name;
   setTimeout(() => {
     if (game !== g) return;
-    $('#win-name').textContent = g.shape.name;
-    $('#win-stats').textContent = `${fmt(g.elapsed)} · ${g.mistakes ? g.mistakes + ' mistake' + (g.mistakes > 1 ? 's' : '') : 'flawless'}`;
-    show('#win', true);
+    showWin(g.shape.name, `${fmt(g.elapsed)} · ${g.mistakes ? g.mistakes + ' mistake' + (g.mistakes > 1 ? 's' : '') : 'flawless'}`, 'Next');
   }, 2600);
+}
+
+// ---------------------------------------------------------------- tutorial
+
+function startTutorial(step = 0) {
+  tutorial = { step, hint: 0 };
+  const lesson = TUTORIAL[step];
+  startPuzzle({ shape: lesson, palette: PALETTES[[0, 1, 3, 0, 4][step % 5]], number: null, lesson: step + 1 });
+}
+
+function currentHint() {
+  return tutorial && game?.entry.lesson ? TUTORIAL[tutorial.step].hints[tutorial.hint] : null;
+}
+
+function tutorialEvent(kind) {
+  const h = currentHint();
+  if (!h) return;
+  if (kind === 'solved') {
+    tutorial.hint = TUTORIAL[tutorial.step].hints.length;   // past the last hint
+    renderCoach(tutorial.step === TUTORIAL.length - 1 ? 'That’s everything. Well done.' : 'Nice.');
+    const g = game, step = tutorial.step;
+    setTimeout(() => {
+      if (game !== g) return;
+      if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
+      else finishTutorial();
+    }, 2200);
+    return;
+  }
+  if (h.until !== kind) return;
+  tutorial.hint++;
+  renderCoach();
+}
+
+function finishTutorial() {
+  localStorage.setItem('strata.tutorial', '1');
+  tutorial = null;
+  renderCoach();
+  controls.autoRotate = !reduceMotion;
+  showWin('You’re ready', 'tap · hold · turn · peel', 'Play No. 1');
+}
+
+function renderCoach(override) {
+  const coach = $('#coach');
+  const h = currentHint();
+  if (!tutorial || !game?.entry.lesson) { coach.classList.remove('show'); return; }
+  $('#coach-text').textContent = override || h?.text || '';
+  $('#coach-dots').innerHTML = TUTORIAL.map((_, k) =>
+    `<i class="${k < tutorial.step ? 'done' : k === tutorial.step ? 'now' : ''}"></i>`).join('');
+  coach.classList.remove('show');
+  void coach.offsetWidth;
+  coach.classList.add('show');
+  const pulse = h?.pulse;
+  cubes.uniforms.uHint.value.set(...(pulse || [-99, -99, -99]));
 }
 
 // ---------------------------------------------------------------- input
 
 let press = null;
+let drag = null;              // active handle drag
+let lastEmptyTap = -1;
 const activePointers = new Set();
 const ring = $('#press-ring');
 
@@ -294,11 +399,26 @@ function otherTool() { return tool === 'break' ? 'paint' : 'break'; }
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
+// Capture phase so a handle grab never reaches OrbitControls.
 canvas.addEventListener('pointerdown', (e) => {
   activePointers.add(e.pointerId);
   clearTimeout(press?.timer);
   ring.classList.remove('go');
-  if (activePointers.size !== 1) { press = null; return; }
+  if (activePointers.size !== 1) { press = null; drag = null; return; }
+
+  const rect = canvas.getBoundingClientRect();
+  const it = game && !game.solved && handles.group.visible ? handles.hit(e.clientX, e.clientY, camera, rect, e.pointerType === 'mouse' ? 22 : 34) : null;
+  if (it) {
+    e.stopImmediatePropagation();
+    canvas.setPointerCapture(e.pointerId);
+    if (it.axis !== peel.axis || it.side !== peel.side) setPeelAxis(it.axis, it.side);
+    drag = { it, x: e.clientX, y: e.clientY, start: peel.peeled, axis2d: handles.screenAxis(it, camera, rect) };
+    handles.grabbed = it;
+    controls.enabled = false;
+    buzz(6);
+    return;
+  }
+
   press = { x: e.clientX, y: e.clientY, button: e.button, shift: e.shiftKey, moved: false, done: false };
   if (e.pointerType !== 'mouse') {
     ring.style.left = e.clientX + 'px';
@@ -312,16 +432,30 @@ canvas.addEventListener('pointerdown', (e) => {
       act(pick(press.x, press.y), otherTool());
     }, 420);
   }
-});
+}, { capture: true });
 
 canvas.addEventListener('pointermove', (e) => {
+  if (drag) {
+    const v = drag.axis2d;
+    const len2 = v.lengthSq();
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    // project the finger's travel onto the handle's on-screen axis; inward = peel
+    const units = len2 > 64 ? (dx * v.x + dy * v.y) / len2 : dy / 40;
+    const dim = game.puzzle.dims[peel.axis];
+    const f = Math.max(0, Math.min(dim - 1, drag.start - units));
+    setPeeled(f);
+    peel.keepVisual = dim - f;          // follow the finger between whole layers
+    return;
+  }
   if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 9) {
     press.moved = true;
     clearTimeout(press.timer);
     ring.classList.remove('go');
   }
   if (e.pointerType === 'mouse' && game && !e.buttons) {
-    const i = pick(e.clientX, e.clientY);
+    const onHandle = !game.solved && handles.group.visible && handles.hit(e.clientX, e.clientY, camera, canvas.getBoundingClientRect(), 22);
+    canvas.style.cursor = onHandle ? 'grab' : '';
+    const i = onHandle ? -1 : pick(e.clientX, e.clientY);
     const h = cubes.uniforms.uHover.value;
     if (i >= 0) h.set(...game.puzzle.coords(i)); else h.set(-99, -99, -99);
   }
@@ -330,17 +464,38 @@ canvas.addEventListener('pointermove', (e) => {
 function endPointer(e, cancelled) {
   activePointers.delete(e.pointerId);
   ring.classList.remove('go');
+  if (drag) {
+    setPeeled(peel.peeled);
+    peel.keepVisual = game.puzzle.dims[peel.axis] - peel.peeled;   // settle on a whole layer
+    handles.grabbed = null;
+    drag = null;
+    controls.enabled = true;
+    return;
+  }
   if (!press) return;
   clearTimeout(press.timer);
   if (!cancelled && !press.moved && !press.done) {
-    const which = press.button === 2 || press.shift ? otherTool() : tool;
-    act(pick(press.x, press.y), which);
+    const i = pick(press.x, press.y);
+    if (i < 0) {
+      const t = now();
+      if (t - lastEmptyTap < 0.35) { resetView(); lastEmptyTap = -1; } else lastEmptyTap = t;
+    } else {
+      act(i, press.button === 2 || press.shift ? otherTool() : tool);
+    }
   }
   press = null;
 }
 canvas.addEventListener('pointerup', (e) => endPointer(e, false));
 canvas.addEventListener('pointercancel', (e) => endPointer(e, true));
 canvas.addEventListener('pointerleave', () => cubes.uniforms.uHover.value.set(-99, -99, -99));
+canvas.addEventListener('dblclick', (e) => { if (pick(e.clientX, e.clientY) < 0) resetView(); });
+
+let rotateFrom = null;
+controls.addEventListener('start', () => { rotateFrom = camera.position.clone(); viewAnim = null; });
+controls.addEventListener('end', () => {
+  if (rotateFrom && rotateFrom.angleTo(camera.position) > 0.25) tutorialEvent('rotate');
+  rotateFrom = null;
+});
 
 function setTool(t) {
   tool = t;
@@ -352,19 +507,23 @@ function setTool(t) {
 }
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
-document.querySelectorAll('.axis[data-axis]').forEach((b) =>
-  b.addEventListener('click', () => game && setPeelAxis(+b.dataset.axis)));
-$('#flip').addEventListener('click', () => game && setPeelAxis(peel.axis, -peel.side));
-$('#peel').addEventListener('input', (e) => game && setPeeled(+e.target.value));
 $('#undo').addEventListener('click', undo);
 $('#menu-btn').addEventListener('click', () => { renderMenu(); show('#menu', true); });
 $('#help-btn').addEventListener('click', () => show('#help', true));
-$('#help [data-close]').addEventListener('click', () => { show('#help', false); localStorage.setItem('strata.helped', '1'); });
+$('#help [data-close]').addEventListener('click', () => show('#help', false));
+$('#coach-skip').addEventListener('click', () => {
+  localStorage.setItem('strata.tutorial', '1');
+  tutorial = null;
+  renderCoach();
+  renderMenu();
+  show('#menu', true);
+});
 $('#win-menu').addEventListener('click', () => { renderMenu(); show('#menu', true); });
 $('#win-next').addEventListener('click', () => {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
-  if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
+  if (game.entry.lesson) startPuzzle(list[0]);
+  else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
   else startRandom(game.shape.dims[0]);
 });
 document.querySelectorAll('[data-random]').forEach((b) => b.addEventListener('click', () => startRandom(+b.dataset.random)));
@@ -373,12 +532,14 @@ $('#menu').addEventListener('click', (e) => { if (e.target.id === 'menu' && game
 window.addEventListener('keydown', (e) => {
   if (!game) return;
   const k = e.key.toLowerCase();
-  if (k === 'z' || (e.ctrlKey && k === 'z')) undo();
+  const camSide = (a) => (camera.position.getComponent(a) >= 0 ? 1 : -1);
+  if (k === 'z') undo();
   else if (k === 'b' || k === 'c') setTool('break');
   else if (k === 'p' || k === 'm') setTool('paint');
-  else if (k === '1' || k === '2' || k === '3') setPeelAxis(+k - 1);
-  else if (k === ']' || k === 'arrowup') setPeeled(peel.peeled + 1);
-  else if (k === '[' || k === 'arrowdown') setPeeled(peel.peeled - 1);
+  else if (k === 'r') resetView();
+  else if (k === '1' || k === '2' || k === '3') setPeelAxis(+k - 1, camSide(+k - 1));
+  else if (k === ']' || k === 'arrowup') { setPeeled(peel.peeled + 1); }
+  else if (k === '[' || k === 'arrowdown') { setPeeled(peel.peeled - 1); }
 });
 
 function startRandom(n) {
@@ -389,6 +550,13 @@ function startRandom(n) {
 // ---------------------------------------------------------------- UI
 
 function show(sel, on) { $(sel).classList.toggle('show', on); }
+
+function showWin(name, stats, nextLabel) {
+  $('#win-name').textContent = name;
+  $('#win-stats').textContent = stats;
+  $('#win-next').textContent = nextLabel;
+  show('#win', true);
+}
 
 function fmt(s) {
   const m = Math.floor(s / 60), r = Math.floor(s % 60);
@@ -402,10 +570,19 @@ function updateStrikes() {
 function renderMenu() {
   const grid = $('#grid');
   grid.innerHTML = '';
+  const hex = (h) => '#' + h.toString(16).padStart(6, '0');
+
+  const learned = localStorage.getItem('strata.tutorial');
+  const learn = document.createElement('button');
+  learn.className = 'card learn' + (learned ? ' solved' : '');
+  learn.innerHTML = `<span class="num">00</span><span class="gem steps"></span>
+    <span class="name">Learn</span><span class="dims">${TUTORIAL.length} short lessons</span>`;
+  learn.addEventListener('click', () => startTutorial(0));
+  grid.appendChild(learn);
+
   for (const entry of puzzleList()) {
     const { shape, palette, number } = entry;
     const solved = solvedStore[shape.id];
-    const hex = (h) => '#' + h.toString(16).padStart(6, '0');
     const b = document.createElement('button');
     b.className = 'card' + (solved ? ' solved' : '');
     b.style.background = `linear-gradient(170deg, ${hex(palette.skyTop)}, ${hex(palette.skyBottom)})`;
@@ -417,17 +594,17 @@ function renderMenu() {
       <span class="dims">${shape.dims.join('×')}${solved ? ' · ' + fmt(solved.time) : ''}</span>`;
     b.addEventListener('click', () => {
       loading(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => { startPuzzle(entry); loading(false); maybeHelp(); }));
+      requestAnimationFrame(() => requestAnimationFrame(() => { startPuzzle(entry); loading(false); }));
     });
     grid.appendChild(b);
   }
 }
 
 function loading(on) { $('#loading').textContent = on ? 'carving' : ''; }
-function maybeHelp() { if (!localStorage.getItem('strata.helped')) show('#help', true); }
 
 // ---------------------------------------------------------------- render
 
+const camDir = new THREE.Vector3();
 const centerNdc = new THREE.Vector3();
 
 function resize() {
@@ -449,14 +626,19 @@ function frame() {
   const t = now();
   const dt = Math.min(0.05, t - last);
   last = t;
+  stepViewAnim(t);
   controls.update();
 
   if (game) {
     const u = cubes.uniforms;
     u.uTime.value = t;
-    u.uPeel.value.y += (peel.keep - u.uPeel.value.y) * Math.min(1, dt * (reduceMotion ? 60 : 9));
+    u.uPeel.value.y += (peel.keepVisual - u.uPeel.value.y) * Math.min(1, dt * (reduceMotion || drag ? 60 : 9));
     if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 2.2));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
+
+    camDir.copy(camera.position).sub(controls.target).normalize();
+    handles.group.visible = !game.solved && game.shape.handles !== false;
+    handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, !!currentHint()?.pulseHandle);
   }
   rayBoost *= Math.exp(-dt * 1.6);
 
@@ -479,11 +661,13 @@ function frame() {
   // 1) silhouette -> outward rays
   if (game) {
     rays.render(renderer, () => {
-      background.mesh.visible = motes.points.visible = shards.points.visible = false;
+      const vis = handles.group.visible;
+      background.mesh.visible = motes.points.visible = shards.points.visible = handles.group.visible = false;
       cubes.uniforms.uMask.value = 1;
       renderer.render(scene, camera);
       cubes.uniforms.uMask.value = 0;
       background.mesh.visible = motes.points.visible = shards.points.visible = true;
+      handles.group.visible = vis;
     });
   }
 
@@ -501,10 +685,14 @@ function frame() {
 applyPalette(PALETTES[0]);
 resize();
 renderMenu();
-// a quiet block behind the menu so the first screen already breathes
-startPuzzle(puzzleList()[0]);
-show('#menu', true);
+if (localStorage.getItem('strata.tutorial')) {
+  // a quiet block behind the menu so the first screen already breathes
+  startPuzzle(puzzleList()[0]);
+  show('#menu', true);
+} else {
+  startTutorial(0);
+}
 requestAnimationFrame(frame);
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { get game() { return game; }, act, setPeeled, setPeelAxis };
+window.strata = { get game() { return game; }, get peel() { return peel; }, act, startTutorial, setPeeled, setPeelAxis, resetView, handles, camera };

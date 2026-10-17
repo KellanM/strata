@@ -142,3 +142,48 @@ export function buildCells(shape) {
   return { solid, colors };
 }
 
+
+// Guided lessons. `show` picks which axes' clues are visible ([x, y, z]);
+// clues are never auto-hidden so each lesson isolates one idea. Each hint
+// holds until its event fires: break | paint | rotate | peel | solved.
+export const TUTORIAL = [
+  {
+    id: 'lesson-clear', view: Math.PI / 4, handles: false, name: 'Clear', dims: [4, 2, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 ? 0xe9b949 : 0),
+    hints: [
+      { text: 'Each number counts the cubes that stay in its row. A 0 means none do. Tap a top cube to chisel it away.', pulse: [0, 1, 0], until: 'break' },
+      { text: 'Clear the rest of the top row.', until: 'solved' },
+    ],
+  },
+  {
+    id: 'lesson-mark', view: Math.PI / 4, handles: false, name: 'Keep', dims: [4, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 1 ? 0x5db6ae : 0),
+    hints: [
+      { text: 'A 4 in a row of four: every cube stays. Hold one of them to mark it.', pulse: [1, 1, 0], until: 'paint' },
+      { text: 'Marked cubes can’t be chiselled by accident. Now clear the two 0 rows.', until: 'solved' },
+    ],
+  },
+  {
+    id: 'lesson-cross', view: Math.PI / 4, handles: false, name: 'Cross', dims: [3, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (x === 1 || y === 1 ? 0xe0546b : 0),
+    hints: [
+      { text: 'Drag anywhere to turn the block. Clues sit on the tops as well as the front.', until: 'rotate' },
+      { text: 'The middle column keeps all 3, so the single cube in the top and bottom rows must be in the middle.', until: 'solved' },
+    ],
+  },
+  {
+    id: 'lesson-groups', view: Math.PI / 4, handles: false, name: 'Groups', dims: [3, 2, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 || x !== 1 ? 0xc98fb4 : 0),
+    hints: [
+      { text: 'A circled number means the cubes come in 2 separate groups (a square means 3 or more). Two cubes in two groups across three spaces leaves one way to do it.', until: 'solved' },
+    ],
+  },
+  {
+    id: 'lesson-peel', name: 'Lantern', dims: [3, 3, 3], show: [1, 1, 1],
+    cell: (x, y, z) => (x === 1 && y === 1 && z === 1 ? 0 : 0xe9b949),
+    hints: [
+      { text: 'Something is hidden inside. Drag a diamond handle along the block’s edge to peel layers away.', pulseHandle: true, until: 'peel' },
+      { text: 'Every row through the middle cube is split in two around it. Chisel it.', pulse: [1, 1, 1], until: 'solved' },
+    ],
+  },
+];

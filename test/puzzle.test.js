@@ -45,3 +45,12 @@ test('isSolved requires every empty cell broken', () => {
   assert.equal(p.isSolved(Uint8Array.from([0, 1, 0])), false);
   assert.equal(p.isSolved(Uint8Array.from([0, 1, 1])), true);
 });
+
+test('tutorial lessons are solvable with exactly the clues they show', async () => {
+  const { TUTORIAL } = await import('../public/js/shapes.js');
+  for (const lesson of TUTORIAL) {
+    const p = make(lesson);
+    for (const line of p.lines) line.hidden = !lesson.show[line.axis];
+    assert.ok(lineSolve(p), `${lesson.id} not solvable`);
+  }
+});
