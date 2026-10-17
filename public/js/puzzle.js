@@ -147,16 +147,93 @@ export function lineSolve(p) {
   return true;
 }
 
+// Difficulty profile of the visible clue set. Lines are solved in waves: each
+// wave applies every deduction available from the state left by the previous
+// one (like a player scanning the block, acting, then scanning again).
+//   rounds:  waves needed to finish (deduction chain length)
+//   opening: share of cells decidable from clues alone in wave 1
+//   hidden:  share of lines with no clue
+//   interior: share of empty cells not visible from outside the block, i.e.
+//            cells the player must peel to reach
+export function solveStats(p) {
+  const state = new Uint8Array(p.size);
+  const visible = p.lines.filter((l) => !l.hidden);
+  let rounds = 0, opening = 0, changed = true;
+  while (changed) {
+    changed = false;
+    const next = state.slice();
+    for (const line of visible) {
+      const n = line.cells.length;
+      let solidM = 0, emptyM = 0;
+      for (let t = 0; t < n; t++) {
+        const s = state[line.cells[t]];
+        if (s === SOLID) solidM |= 1 << t;
+        else if (s === EMPTY) emptyM |= 1 << t;
+      }
+      const full = (1 << n) - 1;
+      if ((solidM | emptyM) === full) continue;
+      const cands = tableFor(n).get(line.count * 3 + line.style) || [];
+      let and = full, or = 0, any = false;
+      for (const m of cands) {
+        if ((m & emptyM) || (m & solidM) !== solidM) continue;
+        and &= m; or |= m; any = true;
+      }
+      if (!any) return { solved: false, rounds, opening, hidden: 0, interior: 0 };
+      for (let t = 0; t < n; t++) {
+        const c = line.cells[t];
+        if (state[c] !== UNKNOWN || next[c] !== UNKNOWN) continue;
+        if ((and >> t) & 1) next[c] = SOLID;
+        else if (!((or >> t) & 1)) next[c] = EMPTY;
+        else continue;
+        changed = true;
+      }
+    }
+    if (changed) {
+      rounds++;
+      if (rounds === 1) opening = next.reduce((a, s) => a + (s !== UNKNOWN), 0) / p.size;
+      state.set(next);
+    }
+  }
+  const [X, Y, Z] = p.dims;
+  let empties = 0, inner = 0;
+  for (let i = 0; i < p.size; i++) {
+    if (p.solid[i]) continue;
+    empties++;
+    const [x, y, z] = p.coords(i);
+    if (x > 0 && y > 0 && z > 0 && x < X - 1 && y < Y - 1 && z < Z - 1) inner++;
+  }
+  return {
+    solved: state.every((s) => s !== UNKNOWN),
+    rounds,
+    opening,
+    hidden: p.lines.filter((l) => l.hidden).length / p.lines.length,
+    interior: empties ? inner / empties : 0,
+  };
+}
+
+// Share of a line's cells its clue decides on an empty board (0 and full rows
+// decide everything; a 2 in a row of 5 decides nothing).
+function giveaway(line) {
+  const n = line.cells.length;
+  const cands = tableFor(n).get(line.count * 3 + line.style);
+  let and = (1 << n) - 1, or = 0;
+  for (const m of cands) { and &= m; or |= m; }
+  let known = 0;
+  for (let t = 0; t < n; t++) if (((and >> t) & 1) || !((or >> t) & 1)) known++;
+  return known / n;
+}
+
 // Hides as many clues as possible (up to `fraction` of all lines) while the
 // puzzle stays line-solvable. Uses a seeded shuffle so a puzzle is stable.
+// Above fraction 0.6 the shuffle is tilted so give-away clues (0s, full rows)
+// are tried first: fewer free moves, more real deductions. That makes
+// `fraction` the one difficulty dial a shape needs.
 export function hideClues(p, fraction = 1, seed = 1) {
   if (!lineSolve(p)) return false;
   const rand = mulberry32(seed);
-  const order = p.lines.map((_, i) => i);
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
+  const tilt = Math.max(0, (fraction - 0.6) / 0.4) * 2;
+  const key = p.lines.map((l) => rand() - tilt * giveaway(l));
+  const order = p.lines.map((_, i) => i).sort((a, b) => key[a] - key[b]);
   const attempts = Math.round(order.length * fraction);
   for (let k = 0; k < attempts; k++) {
     const line = p.lines[order[k]];

@@ -1,5 +1,6 @@
 // Hidden voxel shapes. Each shape is a function (x, y, z) -> hex colour, or 0
-// for empty. y is up. Colours are only seen once the puzzle is solved.
+// for empty. y is up, z is toward the viewer. Colours are only seen once the
+// puzzle is solved. docs/level-design.md explains the set and its pacing.
 import { mulberry32 } from './puzzle.js';
 
 
@@ -12,101 +13,353 @@ function extrude(rows, depth, key) {
   };
 }
 
+const ring = (dx, dz) => Math.sqrt(dx * dx + dz * dz);
+const ell = (dx, dy, dz, rx, ry, rz) => (dx / rx) ** 2 + (dy / ry) ** 2 + (dz / rz) ** 2 <= 1;
+const DIRS8 = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+
+// Regions of the map, in play order. Each shares a palette so a chapter reads
+// as one place; puzzles inside rise in size and in how few clues they show.
+export const CHAPTERS = [
+  { name: 'First Light', palette: 'Dawn', blurb: 'small stones, warm light' },
+  { name: 'Moss Garden', palette: 'Mint', blurb: 'living things, first hollows' },
+  { name: 'The Lagoon', palette: 'Lagoon', blurb: 'boats, buoys and a lamp to find' },
+  { name: 'Ember Steps', palette: 'Dusk', blurb: 'gates, stairs and towers' },
+  { name: 'Starfall', palette: 'Night', blurb: 'the long climb to the sky' },
+];
+
+const chapter = (i, list) => list.map((s) => ({ ...s, chapter: CHAPTERS[i].name, palette: CHAPTERS[i].palette }));
+
 export const SHAPES = [
-  {
-    id: 'heart', name: 'Heart', fraction: 0.5,
-    ...extrude([
-      '.RR.RR.',
-      'RRRRRRR',
-      'RRRRRRR',
-      '.RRRRR.',
-      '..RRR..',
-      '...R...',
-    ], 2, { R: 0xe0546b }),
-  },
-  {
-    id: 'invader', name: 'Visitor', fraction: 0.7,
-    ...extrude([
-      '..G.....G..',
-      '...G...G...',
-      '..GGGGGGG..',
-      '.GG.GGG.GG.',
-      'GGGGGGGGGGG',
-      'G.GGGGGGG.G',
-      'G.G.....G.G',
-      '...GG.GG...',
-    ], 2, { G: 0x6cc28f }),
-  },
-  {
-    id: 'mushroom', name: 'Mushroom', dims: [7, 6, 7], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 3, dz = z - 3, r2 = dx * dx + dz * dz;
-      if (y <= 2) return r2 <= 1 ? 0xf3e6d0 : 0;
-      const r = [3.3, 3.0, 2.2][y - 3];
-      if (r2 > r * r) return 0;
-      const spot = y === 5 ? (dx + dz) % 2 === 0 && r2 > 0 : y === 4 && r2 >= 6 && (x + 2 * z) % 4 === 0;
-      return spot ? 0xfff4e6 : 0xd9455a;
+  // ---------------------------------------------------------------- First Light
+  // Small blocks, many clues, plain groups: learn to read counts in 3D.
+  ...chapter(0, [
+    {
+      id: 'steps', name: 'Steps', dims: [4, 4, 3], fraction: 0.5, seed: 8,
+      cell: (x, y) => (y > x ? 0 : y === x ? 0xfcefe0 : 0xe58f84),
     },
-  },
-  {
-    id: 'tree', name: 'Pine', dims: [7, 9, 7], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = Math.abs(x - 3), dz = Math.abs(z - 3);
-      if (y <= 1) return dx === 0 && dz === 0 ? 0x8a5a3c : 0;
-      const tier = [3, 2.2, 1.4, 2.4, 1.6, 0.8, 0.6][y - 2];
-      return dx * dx + dz * dz <= tier * tier ? 0x3f9a6b : 0;
+    {
+      id: 'heart', name: 'Heart', fraction: 0.5, seed: 6,
+      ...extrude([
+        '.RR.RR.',
+        'RRRRRRR',
+        'RRRRRRR',
+        '.RRRRR.',
+        '..RRR..',
+        '...R...',
+      ], 2, { R: 0xe0546b }),
     },
-  },
-  {
-    id: 'mug', name: 'Mug', dims: [8, 6, 6], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 2.5, dz = z - 2.5, r2 = dx * dx + dz * dz;
-      if (x <= 5 && r2 <= 2.6 * 2.6 && (y === 0 || r2 >= 1.7 * 1.7)) return y === 5 ? 0xf6efe4 : 0x5b8fd6;
-      const handle = (x === 6 && (y === 1 || y === 4)) || (x === 7 && y >= 1 && y <= 4);
-      return handle && (z === 2 || z === 3) ? 0x5b8fd6 : 0;
+    {
+      id: 'key', name: 'Key', fraction: 0.5, seed: 7, view: 0.35,
+      ...extrude([
+        '.KK.......',
+        'K..K......',
+        'K..KKKKKKK',
+        '.KK...K.KK',
+        '......K..K',
+      ], 2, { K: 0xe9b949 }),
     },
-  },
-  {
-    id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 2, dz = z - 2;
-      const ball = (cy, r) => dx * dx + dz * dz + (y - cy) ** 2 <= r * r;
-      if (y === 8) return dx === 0 && dz === 0 ? 0x2f2b3a : 0;
-      if (y === 6 && dx === 0 && dz === 2) return 0xf08a3c;
-      if (ball(1.5, 2.3) || ball(4.4, 1.6) || ball(6.6, 1.2)) return 0xf7f4ef;
-      return 0;
+    {
+      id: 'chair', name: 'Chair', dims: [4, 6, 4], fraction: 0.5, seed: 8,
+      cell(x, y, z) {
+        const edgeX = x === 0 || x === 3, edgeZ = z === 0 || z === 3;
+        if (y <= 1) return edgeX && edgeZ ? 0xa8714c : 0;
+        if (y === 2) return 0xe0546b;
+        if (z !== 0) return 0;
+        return edgeX || y === 5 ? 0xa8714c : 0;
+      },
     },
-  },
-  {
-    id: 'rocket', name: 'Rocket', dims: [5, 10, 5], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 2, dz = z - 2, r2 = dx * dx + dz * dz;
-      if (y <= 1) {
-        const fin = (dx === 0 || dz === 0) && r2 === 4;
-        if (fin) return 0xe0546b;
-      }
-      if (y <= 6) return r2 <= 1.5 * 1.5 ? (y === 4 && dz === 1 && dx === 0 ? 0x6fd3e8 : 0xeee6f2) : 0;
-      if (y <= 8) return r2 <= (y === 7 ? 1.1 : 0.5) ** 2 ? 0xe0546b : 0;
-      return r2 === 0 ? 0xe0546b : 0;
+    {
+      id: 'invader', name: 'Visitor', fraction: 0.5, seed: 7,
+      ...extrude([
+        '..G.....G..',
+        '...G...G...',
+        '..GGGGGGG..',
+        '.GG.GGG.GG.',
+        'GGGGGGGGGGG',
+        'G.GGGGGGG.G',
+        'G.G.....G.G',
+        '...GG.GG...',
+      ], 2, { G: 0x6cc28f }),
     },
-  },
-  {
-    id: 'torus', name: 'Ring', dims: [8, 3, 8], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 3.5, dz = z - 3.5;
-      const d = Math.sqrt(dx * dx + dz * dz) - 2.6;
-      return d * d + (y - 1) ** 2 <= 1.25 ? 0xe9b949 : 0;
+  ]),
+
+  // ---------------------------------------------------------------- Moss Garden
+  // Round, living forms: circled clues and the first hollow (the teapot).
+  ...chapter(1, [
+    {
+      id: 'cat', name: 'Cat', dims: [7, 6, 4], fraction: 0.65, seed: 4,
+      cell(x, y, z) {
+        const orange = y === 1 ? 0xd9824a : 0xf2a65a;
+        // ears, head, eyes and nose
+        if (y === 5) return (x === 1 || x === 5) && z === 2 ? 0xf2a65a : 0;
+        if (y >= 3) {
+          if (x < 1 || x > 5 || z < 1) return 0;
+          if (z === 3 && y === 4 && (x === 2 || x === 4)) return 0x3f9a6b;
+          if (z === 3 && y === 3 && x === 3) return 0xf08a9a;
+          return 0xf2a65a;
+        }
+        // body, white chest, paws and a tail curled round the front
+        if (x >= 1 && x <= 5 && z <= 2) return z === 2 && x >= 2 && x <= 4 && y >= 1 ? 0xfff6ea : orange;
+        if (y === 0 && z === 3 && (x === 2 || x === 4)) return 0xfff6ea;
+        if (y === 0 && ((x === 6 && z >= 1) || (x === 5 && z === 3))) return 0xd9824a;
+        return 0;
+      },
     },
-  },
-  {
-    id: 'arch', name: 'Arch', dims: [9, 7, 3], fraction: 0.85,
-    cell(x, y, z) {
-      const dx = x - 4, dy = y;
-      const outer = dx * dx + dy * dy <= 4.4 * 4.4 || (Math.abs(dx) >= 3 && y <= 3);
-      const inner = dx * dx + dy * dy <= 2.4 * 2.4;
-      return outer && !inner && Math.abs(dx) <= 4 ? 0xc98fb4 : 0;
+    {
+      id: 'mushroom', name: 'Mushroom', dims: [7, 6, 7], fraction: 0.65, seed: 2,
+      cell(x, y, z) {
+        const dx = x - 3, dz = z - 3, r2 = dx * dx + dz * dz;
+        if (y <= 2) return r2 <= 1 ? 0xf3e6d0 : 0;
+        const r = [3.3, 3.0, 2.2][y - 3];
+        if (r2 > r * r) return 0;
+        const spot = y === 5 ? (dx + dz) % 2 === 0 && r2 > 0 : y === 4 && r2 >= 6 && (x + 2 * z) % 4 === 0;
+        return spot ? 0xfff4e6 : 0xd9455a;
+      },
     },
-  },
+    {
+      id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
+      cell(x, y, z) {
+        if (y <= 1) return x >= 1 && x <= 5 && z >= 1 && z <= 3 ? (y === 1 && x >= 2 && x <= 4 && z === 2 ? 0x6b4a3a : 0x4f7fb8) : 0;
+        const trunk = [[3, 2], [3, 3], [2, 4], [4, 4], [5, 5]];
+        if (z === 2 && trunk.some(([tx, ty]) => tx === x && ty === y)) return 0x8a5a3c;
+        if (ell(x - 1.5, y - 5.2, z - 2, 1.7, 0.9, 1.6)) return 0x5fae6e;
+        if (ell(x - 4.8, y - 6, z - 2, 1.6, 0.7, 1.4)) return 0x3f9a6b;
+        return 0;
+      },
+    },
+    {
+      id: 'tree', name: 'Pine', dims: [5, 9, 5], fraction: 0.65, seed: 3,
+      cell(x, y, z) {
+        const dx = Math.abs(x - 2), dz = Math.abs(z - 2), r2 = dx * dx + dz * dz;
+        if (y <= 1) return r2 === 0 ? 0x8a5a3c : 0;
+        if (y === 8) return r2 === 0 ? 0xf6d365 : 0;
+        const tier = [2.3, 1.5, 1.0, 1.8, 1.0, 0.5][y - 2];
+        return r2 <= tier * tier ? (y === 2 || y === 5 ? 0x2f7f58 : 0x3f9a6b) : 0;
+      },
+    },
+    {
+      // A hollow pot: the empty belly is only reachable by peeling.
+      id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.65, seed: 4,
+      cell(x, y, z) {
+        const dx = x - 4, dz = z - 2, r = ring(dx, dz);
+        if (y <= 3) {
+          const [out, hole] = [[1.6, 0], [2.3, 1.5], [2.3, 1.5], [1.9, 1.0]][y];
+          if (r <= out && r >= hole) return y === 2 ? 0x5b8fd6 : 0xf6efe4;
+        }
+        if (y === 4) return r <= 1.5 ? 0x5b8fd6 : 0;
+        if (y === 5) return r === 0 ? 0x5b8fd6 : 0;
+        if (z !== 2) return 0;
+        const handle = (x === 1 && (y === 1 || y === 3)) || (x === 0 && y >= 1 && y <= 3);
+        const spout = (x === 7 && (y === 1 || y === 2)) || (x === 8 && y === 3);
+        return handle || spout ? 0xf6efe4 : 0;
+      },
+    },
+  ]),
+
+  // ---------------------------------------------------------------- The Lagoon
+  // Hulls, rings and a lamp hidden in a tower: give-away clues start to vanish.
+  ...chapter(2, [
+    {
+      id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
+      cell(x, y, z) {
+        if (x === 6 && z === 1 && y >= 1 && y <= 3) return 0xf2b45a;
+        if (x === 7 && z === 1 && y !== 2) return 0xf2b45a;
+        const r = z === 1 ? [2.7, 2.1] : [2.0, 1.3];
+        if (!ell(x - 3, y - 2, 0, r[0], r[1], 1)) return 0;
+        if (x === 2 && y === 3 && z !== 1) return 0x2f2b3a;
+        return y === 2 && z !== 1 ? 0xffd58a : 0xf28c3c;
+      },
+    },
+    {
+      id: 'boat', name: 'Sailboat', dims: [8, 8, 3], fraction: 0.65, seed: 3,
+      cell(x, y, z) {
+        if (y === 0) return x >= 2 && x <= 5 ? 0xe0546b : 0;
+        if (y === 1) return x >= 1 && x <= 6 ? 0xf6efe4 : 0;
+        if (y === 2) return (z !== 1 || x === 0 || x === 7) ? 0xe0546b : x === 3 ? 0x8a5a3c : 0;
+        if (z !== 1) return 0;
+        if (x === 3) return y === 7 ? 0xe9b949 : 0x8a5a3c;
+        const main = x >= 4 && x - 4 <= 6 - y;
+        const jib = y <= 4 && x <= 2 && 2 - x <= 4 - y;
+        return main || jib ? 0xfffaf0 : 0;
+      },
+    },
+    {
+      id: 'lighthouse', name: 'Lighthouse', dims: [5, 10, 5], fraction: 1.0, seed: 5,
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2, adx = Math.abs(dx), adz = Math.abs(dz);
+        const wide = adx + adz <= 3;
+        if (y === 0) return wide ? 0x8d8a99 : 0;
+        if (y <= 5) return adx <= 1 && adz <= 1 ? (y % 2 ? 0xfff6ea : 0xe0546b) : 0;
+        if (y === 6) return wide ? 0x3d3a52 : 0;
+        if (y === 7) return adx === 1 && adz === 1 ? 0x3d3a52 : adx === 0 && adz === 0 ? 0xffe596 : 0;
+        if (y === 8) return adx <= 1 && adz <= 1 ? 0xe0546b : 0;
+        return adx === 0 && adz === 0 ? 0x3d3a52 : 0;
+      },
+    },
+    {
+      id: 'turtle', name: 'Turtle', dims: [7, 4, 8], fraction: 0.9, seed: 5,
+      cell(x, y, z) {
+        const dx = x - 3, dz = z - 3.5;
+        if (y >= 1 && ell(dx, y - 0.6, dz, 2.9, 2.6, 3.0)) {
+          if (y === 1) return 0xd6b46a;
+          return (Math.round(dx) + Math.round(dz)) % 2 === 0 ? 0xa8804c : 0x7f5f3a;
+        }
+        if (y === 0) return (x === 1 || x === 5) && (z === 1 || z === 6) ? 0x9fcf7a : 0;
+        if (y === 1) return x === 3 && z === 7 ? 0x9fcf7a : 0;
+        return 0;
+      },
+    },
+    {
+      id: 'torus', name: 'Life Ring', dims: [8, 3, 8], fraction: 0.9, seed: 4,
+      cell(x, y, z) {
+        const dx = x - 3.5, dz = z - 3.5;
+        const d = Math.sqrt(dx * dx + dz * dz) - 2.6;
+        if (d * d + (y - 1) ** 2 > 1.25) return 0;
+        return (dx > 0) === (dz > 0) ? 0xe0546b : 0xfff6ea;
+      },
+    },
+    {
+      id: 'mug', name: 'Mug', dims: [8, 6, 6], fraction: 0.8, seed: 3,
+      cell(x, y, z) {
+        const dx = x - 2.5, dz = z - 2.5, r2 = dx * dx + dz * dz;
+        if (x <= 5 && r2 <= 2.6 * 2.6 && (y === 0 || r2 >= 1.7 * 1.7)) return y === 5 ? 0xf6efe4 : 0x5b8fd6;
+        if (x <= 5 && y === 4 && r2 < 1.7 * 1.7) return 0x6b4a3a;
+        const handle = (x === 6 && (y === 1 || y === 4)) || (x === 7 && y >= 1 && y <= 4);
+        return handle && (z === 2 || z === 3) ? 0x5b8fd6 : 0;
+      },
+    },
+  ]),
+
+  // ---------------------------------------------------------------- Ember Steps
+  // Architecture: overhangs, enclosed rooms and long chains of deduction.
+  ...chapter(3, [
+    {
+      // A torii: two beams with a gap between them make split rows.
+      id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
+      cell(x, y) {
+        if (y === 5) return 0x3d2e3a;
+        if (y === 3) return x >= 1 && x <= 7 ? 0xe2553f : 0;
+        if (y === 4 && x === 4) return 0xe2553f;
+        return x === 2 || x === 6 ? (y === 0 ? 0x3d2e3a : 0xe2553f) : 0;
+      },
+    },
+    {
+      id: 'pagoda', name: 'Pagoda', dims: [7, 9, 7], fraction: 1.0, seed: 8,
+      cell(x, y, z) {
+        const dx = Math.abs(x - 3), dz = Math.abs(z - 3), m = Math.max(dx, dz);
+        const roof = 0x3f7f7a;
+        if (y === 0) return m <= 2 ? 0x8d8a99 : 0;
+        if (y === 1 || y === 2) return m === 1 ? 0xd9553f : 0;
+        if (y === 3) return dx + dz <= 5 ? roof : 0;
+        if (y === 4 || y === 5) return m === 1 ? 0xd9553f : m === 0 && y === 4 ? 0xf2c14e : 0;
+        if (y === 6) return m <= 2 && dx + dz <= 3 ? roof : 0;
+        if (y === 7) return m <= 1 ? roof : 0;
+        return m === 0 ? 0xf2c14e : 0;
+      },
+    },
+    {
+      id: 'arch', name: 'Arch', dims: [9, 7, 3], fraction: 0.9, seed: 6,
+      cell(x, y) {
+        const dx = x - 4, dy = y;
+        const outer = dx * dx + dy * dy <= 4.4 * 4.4 || (Math.abs(dx) >= 3 && y <= 3);
+        const inner = dx * dx + dy * dy <= 2.4 * 2.4;
+        if (!outer || inner || Math.abs(dx) > 4) return 0;
+        return y === 4 && dx === 0 ? 0xffd58a : 0xc98fb4;
+      },
+    },
+    {
+      id: 'hourglass', name: 'Hourglass', dims: [5, 8, 5], fraction: 0.9, seed: 7,
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2, corner = Math.abs(dx) === 2 && Math.abs(dz) === 2;
+        if (y === 0 || y === 7) return 0x8a5a3c;
+        if (corner) return 0xa8714c;
+        const centre = dx === 0 && dz === 0, near = Math.abs(dx) <= 1 && Math.abs(dz) <= 1;
+        if (y === 6 || y === 1) return near ? 0xf2b45a : 0;
+        return centre ? 0xf2b45a : 0;
+      },
+    },
+    {
+      id: 'spiral', name: 'Spiral Stair', dims: [5, 9, 5], fraction: 0.8, seed: 2,
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2;
+        if (dx === 0 && dz === 0) return 0xfcefe0;
+        const [ux, uz] = DIRS8[y % 8];
+        const onStep = (dx === ux && dz === uz) || (dx === 2 * ux && dz === 2 * uz);
+        const ramp = [0xffd58a, 0xf6b07a, 0xec938a, 0xd9809c, 0xb878a8, 0x9a74b0, 0x7d6eb0, 0x6c63a6, 0x5c5a9a];
+        return onStep ? ramp[y] : 0;
+      },
+    },
+  ]),
+
+  // ---------------------------------------------------------------- Starfall
+  // Fewest clues, deepest interiors; the observatory is the finale.
+  ...chapter(4, [
+    {
+      id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2;
+        const ball = (cy, r) => dx * dx + dz * dz + (y - cy) ** 2 <= r * r;
+        if (y === 8) return dx === 0 && dz === 0 ? 0x2f2b3a : 0;
+        if (y === 6 && dx === 0 && dz === 2) return 0xf08a3c;
+        if (y === 5 && ball(4.4, 1.6)) return 0xe0546b;
+        if (ball(1.5, 2.3) || ball(4.4, 1.6) || ball(6.6, 1.2)) return 0xf7f4ef;
+        return 0;
+      },
+    },
+    {
+      id: 'owl', name: 'Owl', dims: [6, 7, 4], fraction: 1.0, seed: 1,
+      cell(x, y, z) {
+        if (y === 6) return (x === 1 || x === 4) && z === 1 ? 0x8a6a8e : 0;
+        if (y === 0) return (x === 1 || x === 4) && z === 3 ? 0xf2b45a : 0;
+        if (!ell(x - 2.5, y - 3.1, z - 1.5, 2.9, 2.9, 1.9)) return 0;
+        if (z === 3 && y === 4 && (x === 1 || x === 4)) return 0xffe596;
+        if (z === 3 && y === 3 && (x === 2 || x === 3)) return 0xf2b45a;
+        if (x === 0 || x === 5) return 0x6c5476;
+        return z === 3 && y <= 2 ? 0xe6d3c2 : 0x8a6a8e;
+      },
+    },
+    {
+      id: 'rocket', name: 'Rocket', dims: [5, 10, 5], fraction: 1.0, seed: 5,
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2, r2 = dx * dx + dz * dz;
+        if (y <= 1) {
+          const fin = (dx === 0 || dz === 0) && r2 === 4;
+          if (fin) return 0xe0546b;
+        }
+        if (y <= 6) return r2 <= 1.5 * 1.5 ? (y === 4 && dz === 1 && dx === 0 ? 0x6fd3e8 : 0xeee6f2) : 0;
+        if (y <= 8) return r2 <= (y === 7 ? 1.1 : 0.5) ** 2 ? 0xe0546b : 0;
+        return r2 === 0 ? 0xe0546b : 0;
+      },
+    },
+    {
+      id: 'planet', name: 'Ringed Planet', dims: [9, 5, 9], fraction: 0.9, seed: 4,
+      cell(x, y, z) {
+        const dx = x - 4, dy = y - 2, dz = z - 4, r = ring(dx, dz);
+        if (dx * dx + dy * dy + dz * dz <= 2.3 * 2.3) return [0x8a74c0, 0xc79ad0, 0xf2c6b4, 0xc79ad0, 0x8a74c0][y];
+        if (y === 2 && r >= 3.2 && r <= 4.3) return 0xf2d58a;
+        return 0;
+      },
+    },
+    {
+      // Finale: a hollow drum and dome around a telescope that leans out of
+      // the slit. Most of the inside is only reachable by peeling.
+      id: 'observatory', name: 'Observatory', dims: [7, 7, 7], fraction: 0.9, seed: 1,
+      cell(x, y, z) {
+        const dx = x - 3, dz = z - 3, r = ring(dx, dz);
+        if (y === 0) return r <= 3.2 ? 0x8d8a99 : 0;
+        const scope = [[3, 4, 3], [3, 4, 4], [3, 5, 4], [3, 5, 5], [3, 6, 5], [3, 6, 6]];
+        if (scope.some(([a, b, c]) => a === x && b === y && c === z)) return 0xffd58a;
+        if (x === 3 && z === 3 && y <= 3) return 0x6c63a6;
+        if (y <= 3) {
+          const door = x === 3 && z === 6 && y <= 2;
+          return r <= 3.2 && r >= 2.2 && !door ? (y === 3 ? 0xc7c0dc : 0xe8e2f2) : 0;
+        }
+        const d = Math.sqrt(dx * dx + dz * dz + (y - 3.5) ** 2);
+        const slit = x === 3 && z >= 3;
+        return d <= 2.8 && d >= 1.8 && !slit ? 0x8fa3d9 : 0;
+      },
+    },
+  ]),
 ];
 
 // Random puzzle: a few overlapping spheres, coloured by height band.
