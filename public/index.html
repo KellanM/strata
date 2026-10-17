@@ -111,23 +111,18 @@
         <h2 id="win-name"></h2>
         <p id="win-stats" class="sub"></p>
       </div>
-      <div class="result">
-        <div id="win-stars" class="stars">
-          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i>solved</i></span>
-          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i id="win-allow"></i></span>
-          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i>no slips</i></span>
-        </div>
-        <p id="win-score" class="score">0</p>
-        <ul id="win-lines" class="lines"></ul>
-        <p id="win-best" class="best">new best</p>
-      </div>
       <div class="row">
         <button id="win-menu">Map</button>
-        <button id="win-replay">Replay</button>
         <button id="win-next" class="primary">Next</button>
       </div>
     </div>
   </section>
+
+  <nav id="actions" aria-label="Next steps">
+    <button id="act-map">Map</button>
+    <button id="act-replay">Replay</button>
+    <button id="act-next" class="primary">Next</button>
+  </nav>
 
   <div id="loading" aria-live="polite"></div>
 

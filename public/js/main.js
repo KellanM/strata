@@ -5,6 +5,7 @@ import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
 import { sound } from './audio.js';
+import { Finale } from './finale.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
@@ -43,6 +44,8 @@ const motes = new Motes();
 const shards = new Shards();
 const handles = new PeelHandles(cubes.uniforms.uLight);
 scene.add(background.mesh, motes.points, shards.points, handles.group);
+const finale = new Finale(cubes.uniforms.uLight);
+scene.add(finale.group);
 
 // shockwave rings that roll out across the ground when a puzzle is solved
 const winRings = [0, 0.22, 0.5].map((delay) => {
@@ -116,6 +119,9 @@ function startPuzzle(entry) {
   for (const r of winRings) r.mesh.visible = false;
   $('#win-title').classList.remove('show');
   document.body.classList.remove('solved');
+  finale.hide();
+  clearResult();
+  $('#actions').classList.remove('show');
   // look square-on at the broad face of flat puzzles, isometric otherwise
   game.homeAz = shape.view ?? (Z < X * 0.6 ? 0.42 : X < Z * 0.6 ? Math.PI / 2 - 0.42 : Math.PI / 4);
   game.homeEl = 0.56;
@@ -378,14 +384,32 @@ function win() {
   focus.divideScalar(Math.max(1, cells.length));
   let radius = 0;
   for (const i of cells) radius = Math.max(radius, cellWorld(i).distanceTo(focus) + 0.87);
-  // fit the object into the band between the title and the result card
+  // stage it: a plinth under the object, stars in front (not for lessons)
+  const box = new THREE.Box3().setFromCenterAndSize(focus, new THREE.Vector3(radius * 2, radius * 2, radius * 2));
+  if (!g.entry.lesson) {
+    let bottom = Infinity;
+    const fp = [Infinity, -Infinity, Infinity, -Infinity];
+    for (const i of cells) {
+      const w = cellWorld(i);
+      bottom = Math.min(bottom, w.y - 0.5);
+      fp[0] = Math.min(fp[0], w.x); fp[1] = Math.max(fp[1], w.x);
+      fp[2] = Math.min(fp[2], w.z); fp[3] = Math.max(fp[3], w.z);
+    }
+    // the plinth is square under the spinning object so the turn never overhangs it
+    const r = Math.max(fp[1] - fp[0], fp[3] - fp[2]) / 2, mx = (fp[0] + fp[1]) / 2, mz = (fp[2] + fp[3]) / 2;
+    const ink = '#' + new THREE.Color(g.palette.under).multiplyScalar(0.62).getHexString();
+    finale.stage({ palette: g.palette, bottom, footprint: [mx - r, mx + r, mz - r, mz + r], camDir: camDir.clone(), ink, t0: t });
+    box.union(finale.bounds());
+  }
+  // fit everything into the band between the title and the actions
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
   const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
-  const bandTop = g.entry.lesson ? H * 0.2 : H * 0.24;
-  const bandBottom = g.entry.lesson ? H - 90 : H - 330;
+  const bandTop = H * (g.entry.lesson ? 0.2 : 0.25);
+  const bandBottom = g.entry.lesson ? H - 90 : H - 96;
   const band = Math.max(180, bandBottom - bandTop);
-  const zoom = THREE.MathUtils.clamp((band / 2) / ((radius + 0.2) * pxPerUnit), 0.55, 1.35);
+  const zoom = THREE.MathUtils.clamp((band / 2) / (sphere.radius * 0.92 * pxPerUnit), 0.5, 1.35);
   const shiftPx = H / 2 - (bandTop + bandBottom) / 2;
-  const target = focus.clone();
+  const target = sphere.center.clone();
   target.y -= shiftPx / (pxPerUnit * zoom) / Math.cos(g.homeEl);
   g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson };
   if (!g.entry.lesson) document.body.classList.add('solved');
@@ -439,7 +463,7 @@ function win() {
   setTimeout(() => {
     if (game !== g) return;
     showResult(g, result, isBest);
-  }, 2900);
+  }, 1800);
 }
 
 // ---------------------------------------------------------------- tutorial
@@ -582,7 +606,9 @@ function endPointer(e, cancelled) {
   }
   if (!press) return;
   clearTimeout(press.timer);
-  if (!cancelled && !press.moved && !press.done) {
+  if (!cancelled && !press.moved && !press.done && game?.solved && resultFinish) {
+    resultFinish();
+  } else if (!cancelled && !press.moved && !press.done) {
     const i = pick(press.x, press.y);
     if (i < 0) {
       const t = now();
@@ -626,8 +652,18 @@ $('#coach-skip').addEventListener('click', () => {
   renderCoach();
   openMenu();
 });
+function goNext() {
+  clearResult();
+  const list = puzzleList();
+  const idx = list.findIndex((e) => e.shape.id === game.shape.id);
+  if (game.entry.lesson) startPuzzle(list[0]);
+  else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
+  else startRandom(game.shape.dims[0]);
+}
 $('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); openMenu(); });
-$('#win-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
+$('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); openMenu(); });
+$('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
+$('#act-next').addEventListener('click', goNext);
 $('#win-next').addEventListener('click', () => {
   clearResult();
   const list = puzzleList();
@@ -683,65 +719,52 @@ function clearResult() {
 
 function showResult(g, result, isBest) {
   clearResult();
-  const card = $('#win');
-  card.classList.add('result-mode');
-  card.classList.remove('done');
-  $('#win-next').textContent = 'Next';
-  $('#win-allow').textContent = `≤ ${result.allowance} slip${result.allowance > 1 ? 's' : ''}`;
-  const stars = [...document.querySelectorAll('#win-stars .star')];
-  stars.forEach((st) => st.classList.remove('on'));
-  const scoreEl = $('#win-score'), linesEl = $('#win-lines'), best = $('#win-best');
-  best.classList.remove('in');
-  best.style.display = isBest ? '' : 'none';
-  linesEl.innerHTML = result.lines.map((l) => `<li><span>${l.label}</span><b>+${l.value.toLocaleString()}</b></li>`).join('');
-  const items = [...linesEl.children];
-  scoreEl.textContent = '0';
-  show('#win', true);
+  const at = (ms, fn) => resultTimers.push(setTimeout(() => { if (game === g) fn(); }, ms));
+  const actions = $('#actions');
+  actions.classList.remove('show');
 
-  let shown = 0, anim = null;
-  const setScore = (v) => { shown = v; scoreEl.textContent = Math.round(v).toLocaleString(); };
+  // the score carves itself into the plinth, climbing
+  let anim = null, shown = 0;
   const countTo = (target, ms) => {
-    cancelAnimationFrame(anim);
     const from = shown, t0 = performance.now();
     let lastTick = 0, ticks = 0;
     const step = (now2) => {
       const k = Math.min(1, (now2 - t0) / ms);
-      setScore(from + (target - from) * (1 - Math.pow(1 - k, 3)));
-      if (now2 - lastTick > 70) { lastTick = now2; scoreEl.classList.remove('tick'); void scoreEl.offsetWidth; scoreEl.classList.add('tick'); sound.tick(ticks++); }
+      shown = from + (target - from) * (1 - Math.pow(1 - k, 3));
+      finale.setScore(shown, false);
+      if (now2 - lastTick > 75 && k < 1) { lastTick = now2; sound.tick(ticks++); }
       if (k < 1) anim = requestAnimationFrame(step);
     };
     anim = requestAnimationFrame(step);
   };
-  const at = (ms, fn) => resultTimers.push(setTimeout(() => { if (game === g) fn(); }, ms));
+  finale.setScore(0, false);
+  at(100, () => countTo(result.total, 1300));
 
-  let t = 300, running = 0;
-  result.lines.forEach((l, k) => {
-    const dur = k === 0 ? 900 : 380;
-    running += l.value;
-    const target = running;
-    at(t, () => { items[k].classList.add('in'); countTo(target, dur); });
-    t += dur + (k === 0 ? 150 : 120);
-  });
+  // then the stars light, one at a time
+  let t = 1550;
   for (let k = 0; k < result.stars; k++) {
-    at(t, () => { stars[k].classList.add('on'); buzz(10 + k * 6); sound.star(k); });
-    t += 380;
+    at(t, () => {
+      finale.lightStar(k, now());
+      buzz(10 + k * 6);
+      sound.star(k);
+      const s = finale.stars[k].mesh;
+      const c = (h) => new THREE.Color(h);
+      shards.burst(s.position, now(), [c(g.palette.paintTop), c(g.palette.glow)], 10, 0.5, { size: 0.45, life: 0.8, gravity: 1, spread: 0.3 });
+      rayBoost = Math.max(rayBoost, 0.6);
+    });
+    t += 420;
   }
-  if (isBest) at(t + 50, () => { best.classList.add('in'); sound.best(); });
-  at(t + 250, () => card.classList.add('done'));
+  if (isBest) at(t + 80, () => { finale.setScore(result.total, true); sound.best(); });
+  at(t + 200, () => actions.classList.add('show'));
 
   resultFinish = () => {
     clearResult();
     cancelAnimationFrame(anim);
-    setScore(result.total);
-    items.forEach((li) => li.classList.add('in'));
-    stars.forEach((st, k) => st.classList.toggle('on', k < result.stars));
-    if (isBest) best.classList.add('in');
-    card.classList.add('done');
+    finale.setScore(result.total, isBest);
+    for (let k = 0; k < result.stars; k++) if (finale.stars[k].lit < 0) finale.lightStar(k, now() - 1);
+    actions.classList.add('show');
   };
 }
-$('#win .panel').addEventListener('click', (e) => {
-  if (resultFinish && !e.target.closest('button')) resultFinish();
-});
 
 function fmt(s) {
   const m = Math.floor(s / 60), r = Math.floor(s % 60);
@@ -852,7 +875,7 @@ function frame() {
     if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 1.5));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
 
-    if (game.win) stepCelebration(t);
+    if (game.win) { stepCelebration(t); finale.update(t, camera); }
 
     camDir.copy(camera.position).sub(controls.target).normalize();
     handles.group.visible = !game.solved && game.shape.handles !== false;
@@ -882,6 +905,8 @@ function frame() {
       const vis = handles.group.visible;
       background.mesh.visible = motes.points.visible = shards.points.visible = handles.group.visible = false;
       const ringsOn = winRings.map((r) => r.mesh.visible);
+      const finaleOn = finale.group.visible;
+      finale.group.visible = false;
       for (const r of winRings) r.mesh.visible = false;
       cubes.uniforms.uMask.value = 1;
       renderer.render(scene, camera);
@@ -889,6 +914,7 @@ function frame() {
       background.mesh.visible = motes.points.visible = shards.points.visible = true;
       handles.group.visible = vis;
       winRings.forEach((r, k) => { r.mesh.visible = ringsOn[k]; });
+      finale.group.visible = finaleOn;
     });
   }
 
