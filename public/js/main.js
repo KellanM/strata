@@ -387,11 +387,6 @@ function act(i, which) {
   let left = 0, total = 0;
   for (let k = 0; k < pz.size; k++) if (!pz.solid[k]) { total++; if (!game.broken[k]) left++; }
   sound.chisel(total ? 1 - left / total : 1);
-  // a row just came clean: every cube that had to go is gone
-  if (left > 0 && [0, 1, 2].some((a) => {
-    const line = pz.lineOf(i, a);
-    return line.cells.length > 1 && line.cells.every((c) => pz.solid[c] || game.broken[c]);
-  })) sound.rowDone();
   refreshAO();
   tutorialEvent('break');
   if (game.puzzle.isSolved(game.broken)) win();

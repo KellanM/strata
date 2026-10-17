@@ -40,7 +40,6 @@ class Sound {
     this.chord = MAJOR.chords[0];
     this.progress = 0;
     this.chain = { step: 0, last: -9 };
-    this.rows = 0;
     this.lastChisel = 0;
   }
 
@@ -102,7 +101,6 @@ class Sound {
     const changed = k !== this.key;
     this.key = k;
     this.progress = 0;
-    this.rows = 0;
     this.chain.step = 0;
     if (changed && this.ctx) this.nextChord(true);
   }
@@ -382,18 +380,6 @@ class Sound {
     if (!this.ctx) return;
     const midi = this.key.root + 24 + this.chordTones()[1];
     this.tone(midi, { type: 'sine', attack: 0.03, decay: 0.12, gain: 0.09, glideTo: -300, glideTime: 0.08 });
-  }
-
-  // a row came clean: a four-note arpeggio on the grid, each new row a step higher
-  rowDone() {
-    if (!this.ctx) return;
-    this.nudge(700, 1.6);
-    this.duck(-3, 0.5);
-    const start = this.nextSixteenth(), base = this.startDegree() + this.rows;
-    this.rows = (this.rows + 1) % 5;
-    for (let k = 0; k < 4; k++) {
-      this.fmBell(this.degree(base + k * 2, this.key.root + 24), { at: start + k * SIXTEENTH / 2, gain: 0.08, decay: 1.2 });
-    }
   }
 
   peel() {
