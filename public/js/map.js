@@ -3,6 +3,8 @@
 // puzzle's palette, so moving down the trail moves through the colour script.
 // Plain DOM + SVG so it stays light over the live scene.
 
+import { recordStars } from './score.js';
+
 const NS = 'http://www.w3.org/2000/svg';
 const STEP = 116;          // vertical distance between nodes
 const REGION_GAP = 92;     // room for a chapter label
@@ -78,9 +80,9 @@ export function renderMap(root, opts) {
   k++; y += STEP * 0.9;
 
   regions.forEach((r, ri) => {
-    const done = r.items.filter((e) => solved[e.shape.id]).length;
+    const done = r.items.reduce((n, e) => n + recordStars(e.shape, solved[e.shape.id]), 0);
     y += REGION_GAP * 0.35;
-    labels.push({ y, top: y - REGION_GAP * 0.35, text: r.name, sub: `${ROMAN[ri] ?? ri + 1} · ${done} of ${r.items.length}`, palette: r.items[0].palette });
+    labels.push({ y, top: y - REGION_GAP * 0.35, text: r.name, sub: `${ROMAN[ri] ?? ri + 1} · ${done} / ${r.items.length * 3} ★`, palette: r.items[0].palette });
     y += REGION_GAP * 0.65;
     for (const e of r.items) {
       const i = entries.indexOf(e);
@@ -198,7 +200,7 @@ export function renderMap(root, opts) {
       const s = solved[shape.id];
       num = String(number).padStart(2, '0');
       name = s ? shape.name : n.state === 'locked' ? '' : '???';
-      meta = s ? fmt(s.time) : '';
+      meta = s ? starRow(recordStars(shape, s)) : '';
       b.setAttribute('aria-label', `Puzzle ${number}` +
         (s ? `, ${shape.name}, solved` : n.state === 'locked' ? ', locked' : ''));
       if (n.state === 'locked') {
@@ -212,7 +214,7 @@ export function renderMap(root, opts) {
     }
     b.innerHTML = `<span class="halo"></span><span class="ring"></span>${cube(hex(faces[0]), hex(faces[1]), hex(faces[2]), n.kind === 'drift' ? 38 : 46)}
       ${n.state === 'solved' ? '<span class="mark" aria-hidden="true"></span>' : ''}
-      <span class="label">${num ? `<span class="n">${num}</span>` : ''}<span class="nm">${esc(name)}</span><span class="mt">${esc(meta)}</span></span>`;
+      <span class="label">${num ? `<span class="n">${num}</span>` : ''}<span class="nm">${esc(name)}</span><span class="mt">${meta}</span></span>`;
     root.appendChild(b);
     if (n.state === 'current' && !current) current = n;
   }
@@ -224,4 +226,9 @@ export function renderMap(root, opts) {
     scroller.scrollTop = Math.max(0, headH + target.y - scroller.clientHeight * 0.45);
   }
   return { current };
+}
+
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg>';
+function starRow(n) {
+  return `<span class="stars-mini" aria-label="${n} of 3 stars">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
 }

@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Puzzle, hideClues } from './puzzle.js';
 import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
+import { scoreFor } from './score.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
@@ -112,6 +113,7 @@ function startPuzzle(entry) {
   controls.target.set(0, 0, 0);
   for (const r of winRings) r.mesh.visible = false;
   $('#win-title').classList.remove('show');
+  document.body.classList.remove('solved');
   // look square-on at the broad face of flat puzzles, isometric otherwise
   game.homeAz = shape.view ?? (Z < X * 0.6 ? 0.42 : X < Z * 0.6 ? Math.PI / 2 - 0.42 : Math.PI / 4);
   game.homeEl = 0.56;
@@ -171,7 +173,7 @@ function resetView() {
     t0: now(), theta0: spherical.theta, dTheta,
     phi0: spherical.phi, phi1: Math.PI / 2 - game.homeEl, zoom0: camera.zoom,
     zoom1: game.win?.zoom ?? 1,
-    target0: controls.target.clone(), target1: game.win?.focus ?? new THREE.Vector3(),
+    target0: controls.target.clone(), target1: game.win?.target ?? new THREE.Vector3(),
     duration: game.win && !game.win.framed ? 1.1 : 0.7,
   };
   if (game.win) game.win.framed = true;
@@ -359,7 +361,17 @@ function win() {
   focus.divideScalar(Math.max(1, cells.length));
   let radius = 0;
   for (const i of cells) radius = Math.max(radius, cellWorld(i).distanceTo(focus) + 0.87);
-  g.win = { t0: t, focus, zoom: THREE.MathUtils.clamp(viewRadius / (radius + 1.4), 1, 1.35), framed: false, lesson: !!g.entry.lesson };
+  // fit the object into the band between the title and the result card
+  const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
+  const bandTop = g.entry.lesson ? H * 0.2 : H * 0.24;
+  const bandBottom = g.entry.lesson ? H - 90 : H - 330;
+  const band = Math.max(180, bandBottom - bandTop);
+  const zoom = THREE.MathUtils.clamp((band / 2) / ((radius + 0.2) * pxPerUnit), 0.55, 1.35);
+  const shiftPx = H / 2 - (bandTop + bandBottom) / 2;
+  const target = focus.clone();
+  target.y -= shiftPx / (pxPerUnit * zoom) / Math.cos(g.homeEl);
+  g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson };
+  if (!g.entry.lesson) document.body.classList.add('solved');
   resetView();
 
   cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], t + 0.3, 2.2, 5);
@@ -391,15 +403,25 @@ function win() {
     [...g.shape.name].map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>';
   title.classList.remove('show'); void title.offsetWidth;
   setTimeout(() => { if (game === g) title.classList.add('show'); }, 1100);
+  // a run of flawless solves feeds the streak bonus
+  const streak = g.mistakes === 0 ? (Number(localStorage.getItem('strata.streak')) || 0) + 1 : 0;
+  localStorage.setItem('strata.streak', String(streak));
+  const result = scoreFor(g.shape, { mistakes: g.mistakes, time: g.elapsed, streak });
   const prev = solvedStore[g.shape.id];
-  if (!g.shape.id.startsWith('random') && (!prev || g.elapsed < prev.time)) {
-    solvedStore[g.shape.id] = { time: g.elapsed, mistakes: g.mistakes };
+  const isBest = !!prev && result.total > (prev.score ?? 0);
+  if (!g.shape.id.startsWith('random')) {
+    solvedStore[g.shape.id] = {
+      time: Math.min(g.elapsed, prev?.time ?? Infinity),
+      mistakes: Math.min(g.mistakes, prev?.mistakes ?? Infinity),
+      stars: Math.max(result.stars, prev?.stars ?? 0),
+      score: Math.max(result.total, prev?.score ?? 0),
+    };
     localStorage.setItem('strata.solved', JSON.stringify(solvedStore));
   }
   setTimeout(() => {
     if (game !== g) return;
-    showWin(g.shape.name, `${fmt(g.elapsed)} · ${g.mistakes ? g.mistakes + ' mistake' + (g.mistakes > 1 ? 's' : '') : 'flawless'}`, 'Next');
-  }, 3200);
+    showResult(g, result, isBest);
+  }, 2900);
 }
 
 // ---------------------------------------------------------------- tutorial
@@ -586,8 +608,10 @@ $('#coach-skip').addEventListener('click', () => {
   renderCoach();
   openMenu();
 });
-$('#win-menu').addEventListener('click', () => { show('#win', false); openMenu(); });
+$('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); openMenu(); });
+$('#win-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#win-next').addEventListener('click', () => {
+  clearResult();
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
   if (game.entry.lesson) startPuzzle(list[0]);
@@ -622,11 +646,84 @@ function startRandom(n) {
 function show(sel, on) { $(sel).classList.toggle('show', on); }
 
 function showWin(name, stats, nextLabel) {
+  clearResult();
+  $('#win').classList.remove('result-mode');
   $('#win-name').textContent = name;
   $('#win-stats').textContent = stats;
   $('#win-next').textContent = nextLabel;
   show('#win', true);
 }
+
+// The result card: the score counts up line by line, then the stars land one
+// at a time, then a "new best" stamp. A tap on the card skips to the end.
+let resultTimers = [], resultFinish = null;
+function clearResult() {
+  resultTimers.forEach(clearTimeout);
+  resultTimers = [];
+  resultFinish = null;
+}
+
+function showResult(g, result, isBest) {
+  clearResult();
+  const card = $('#win');
+  card.classList.add('result-mode');
+  card.classList.remove('done');
+  $('#win-next').textContent = 'Next';
+  $('#win-allow').textContent = `≤ ${result.allowance} slip${result.allowance > 1 ? 's' : ''}`;
+  const stars = [...document.querySelectorAll('#win-stars .star')];
+  stars.forEach((st) => st.classList.remove('on'));
+  const scoreEl = $('#win-score'), linesEl = $('#win-lines'), best = $('#win-best');
+  best.classList.remove('in');
+  best.style.display = isBest ? '' : 'none';
+  linesEl.innerHTML = result.lines.map((l) => `<li><span>${l.label}</span><b>+${l.value.toLocaleString()}</b></li>`).join('');
+  const items = [...linesEl.children];
+  scoreEl.textContent = '0';
+  show('#win', true);
+
+  let shown = 0, anim = null;
+  const setScore = (v) => { shown = v; scoreEl.textContent = Math.round(v).toLocaleString(); };
+  const countTo = (target, ms) => {
+    cancelAnimationFrame(anim);
+    const from = shown, t0 = performance.now();
+    let lastTick = 0;
+    const step = (now2) => {
+      const k = Math.min(1, (now2 - t0) / ms);
+      setScore(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+      if (now2 - lastTick > 70) { lastTick = now2; scoreEl.classList.remove('tick'); void scoreEl.offsetWidth; scoreEl.classList.add('tick'); }
+      if (k < 1) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  };
+  const at = (ms, fn) => resultTimers.push(setTimeout(() => { if (game === g) fn(); }, ms));
+
+  let t = 300, running = 0;
+  result.lines.forEach((l, k) => {
+    const dur = k === 0 ? 900 : 380;
+    running += l.value;
+    const target = running;
+    at(t, () => { items[k].classList.add('in'); countTo(target, dur); });
+    t += dur + (k === 0 ? 150 : 120);
+  });
+  for (let k = 0; k < result.stars; k++) {
+    at(t, () => { stars[k].classList.add('on'); buzz(10 + k * 6); });
+    t += 380;
+  }
+  if (isBest) at(t + 50, () => best.classList.add('in'));
+  at(t + 250, () => card.classList.add('done'));
+
+  resultFinish = () => {
+    clearResult();
+    cancelAnimationFrame(anim);
+    setScore(result.total);
+    items.forEach((li) => li.classList.add('in'));
+    stars.forEach((st, k) => st.classList.toggle('on', k < result.stars));
+    if (isBest) best.classList.add('in');
+    card.classList.add('done');
+  };
+}
+$('#win .panel').addEventListener('click', (e) => {
+  if (resultFinish && !e.target.closest('button')) resultFinish();
+});
 
 function fmt(s) {
   const m = Math.floor(s / 60), r = Math.floor(s % 60);
@@ -755,7 +852,7 @@ function frame() {
   const gain = game?.palette.rayGain ?? 1;
   rays.compUniforms.uIntensity.value = gain * (0.42 + rayBoost * 0.5 + 0.05 * Math.sin(t * 0.7));
 
-  centerNdc.copy(controls.target).project(camera);
+  centerNdc.copy(game?.win ? game.win.focus : controls.target).project(camera);
   const cx = centerNdc.x * 0.5 + 0.5, cy = centerNdc.y * 0.5 + 0.5;
   rays.uniforms.uCenter.value.set(cx, cy);
   background.uniforms.uCenter.value.set(cx, cy);

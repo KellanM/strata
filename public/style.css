@@ -230,6 +230,10 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .map-node .nm { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; }
 .map-node.lbl-left .nm { margin-right: -.26em; }
 .map-node .mt { font-size: 9.5px; letter-spacing: .2em; opacity: .62; font-variant-numeric: tabular-nums; }
+.stars-mini { display: inline-flex; gap: 3px; margin-top: 3px; }
+.stars-mini i { display: block; width: 9px; height: 9px; }
+.stars-mini svg { width: 9px; height: 9px; display: block; fill: none; stroke: currentColor; stroke-width: 2; opacity: .55; }
+.stars-mini i.on svg { fill: currentColor; opacity: 1; }
 .map-node .nm:empty { display: none; }
 
 .map-node .ring {
@@ -307,11 +311,49 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   60% { opacity: 1; filter: blur(0); }
   100% { opacity: 1; transform: none; filter: blur(0); }
 }
-/* the title carries the name, so the card below keeps just stats and buttons */
-#win .panel > .sub:first-child, #win #win-name {
-  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+/* ---------- result card: stars and the rolling score ---------- */
+#win .result, #win.result-mode .plain, #win.result-mode #win-replay { display: none; }
+#win.result-mode .result { display: block; }
+#win.result-mode #win-replay { display: inline-block; }
+#win .row { gap: 8px; }
+.stars { display: flex; justify-content: center; gap: 22px; margin: 2px 0 8px; }
+.star { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.star svg { width: 34px; height: 34px; fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: .28; transition: opacity .2s; }
+.star:nth-child(2) svg { width: 40px; height: 40px; margin-top: -6px; }
+.star i { font-style: normal; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+.star.on svg { fill: var(--ink); stroke: var(--ink); opacity: 1; animation: star-pop .42s cubic-bezier(.2,1.6,.4,1) both; }
+.star.on i { color: var(--ink); }
+.star.on { position: relative; }
+.star.on::after {
+  content: ""; position: absolute; left: 50%; top: 17px; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%;
+  border: 1.5px solid var(--ink); opacity: 0; animation: star-ring .7s ease-out both; pointer-events: none;
 }
+@keyframes star-pop { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.18) rotate(4deg); } 100% { transform: none; } }
+@keyframes star-ring { 0% { transform: scale(.3); opacity: .5; } 100% { transform: scale(1.3); opacity: 0; } }
+#win .score { font-size: 34px; font-weight: 500; letter-spacing: .08em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.score.tick { animation: score-tick .12s ease-out; }
+@keyframes score-tick { 50% { transform: scale(1.05); } }
+.lines { list-style: none; padding: 0; margin: 0 auto 6px; width: min(240px, 100%); }
+.lines li {
+  display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-soft); padding: 3px 0; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s;
+}
+.lines li.in { opacity: 1; transform: none; }
+.lines li b { font-weight: 500; color: var(--ink); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.best {
+  display: inline-block; margin: 2px 0 10px; padding: 3px 10px; border: 1px solid var(--ink); border-radius: 999px;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: 0; transform: scale(1.6);
+}
+.best.in { animation: best-stamp .38s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes best-stamp { from { opacity: 0; transform: scale(1.6) rotate(-6deg); } to { opacity: 1; transform: rotate(-3deg); } }
+#win.result-mode .row button { opacity: 0; transition: opacity .4s; }
+#win.result-mode.done .row button { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   #flash.go { animation-duration: .01s; }
   #win-title.show .sub, #win-title.show .name span { animation: none; opacity: 1; }
 }
+
+/* after a solve the tools step aside for the result card */
+.hud.bottom { transition: opacity .5s ease; }
+body.solved .hud.bottom { opacity: 0; }
+body.solved .hud.bottom * { pointer-events: none !important; }

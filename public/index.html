@@ -95,17 +95,31 @@
         <span class="glyph square">4</span> into three or more.</p>
       <p><b>Tap</b> to chisel. <b>Hold</b> (or right-click) to mark a cube you know stays, which protects it.</p>
       <p><b>Drag</b> to turn the block and pinch to zoom. Drag a <b>diamond handle</b> along an edge to peel layers away and see inside. <b>Double-tap</b> empty space to reset the view.</p>
+      <p><b>Stars:</b> one for uncovering the shape, two for only a few slips, three for none. Undo, marking and peeling never cost a star, and there's no rush.</p>
       <button class="primary" data-close>Begin</button>
     </div>
   </section>
 
   <section id="win" class="overlay" aria-label="Solved">
     <div class="panel narrow center">
-      <p class="sub">you uncovered</p>
-      <h2 id="win-name"></h2>
-      <p id="win-stats" class="sub"></p>
+      <div class="plain">
+        <p class="sub">you uncovered</p>
+        <h2 id="win-name"></h2>
+        <p id="win-stats" class="sub"></p>
+      </div>
+      <div class="result">
+        <div id="win-stars" class="stars">
+          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i>solved</i></span>
+          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i id="win-allow"></i></span>
+          <span class="star"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg><i>no slips</i></span>
+        </div>
+        <p id="win-score" class="score">0</p>
+        <ul id="win-lines" class="lines"></ul>
+        <p id="win-best" class="best">new best</p>
+      </div>
       <div class="row">
-        <button id="win-menu">Puzzles</button>
+        <button id="win-menu">Map</button>
+        <button id="win-replay">Replay</button>
         <button id="win-next" class="primary">Next</button>
       </div>
     </div>
