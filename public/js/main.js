@@ -4,6 +4,7 @@ import { Puzzle, hideClues } from './puzzle.js';
 import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
+import { sound } from './audio.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
@@ -100,6 +101,7 @@ function startPuzzle(entry) {
   if (!cubes.mesh || !cubes.mesh.parent) scene.add(cubes.build(puzzle));
   else cubes.build(puzzle);
   applyPalette(palette);
+  sound.setKey(palette.base ?? palette.name);
 
   const [X, Y, Z] = shape.dims;
   viewRadius = 0.5 * Math.hypot(X, Y, Z) + 1.1;
@@ -225,7 +227,7 @@ function setPeeled(n, silent = false) {
   peel.peeled = next;
   peel.keepVisual = dim - next;
   if (changed || silent) refreshAO();
-  if (changed && !silent) { buzz(6); if (next > 0) tutorialEvent('peel'); }
+  if (changed && !silent) { buzz(6); sound.peel(); if (next > 0) tutorialEvent('peel'); }
 }
 
 // ---------------------------------------------------------------- picking
@@ -288,6 +290,7 @@ function act(i, which) {
     game.undo.push({ kind: 'paint', i });
     cubes.ripple(cell, t, 0.45, 10);
     buzz(8);
+    sound.mark(!!game.painted[i]);
     if (game.painted[i]) tutorialEvent('paint');
     return;
   }
@@ -296,6 +299,7 @@ function act(i, which) {
     cubes.ripple(cell, t, 0.25, 12);
     cubes.setState(i, undefined, undefined, undefined, t - 0.35);
     buzz(4);
+    sound.protectedTap();
     return;
   }
 
@@ -306,6 +310,7 @@ function act(i, which) {
     cubes.ripple(cell, t, 1.5, 9);
     rayBoost = Math.max(rayBoost, 0.5);
     buzz([30, 40, 30]);
+    sound.mistake();
     updateStrikes();
     return;
   }
@@ -315,9 +320,20 @@ function act(i, which) {
   game.undo.push({ kind: 'break', i });
   cubes.ripple(cell, t, 1, 7);
   const c = (h) => new THREE.Color(h);
-  shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.shade)], reduceMotion ? 4 : 14);
+  // a small puff of stone dust from the cube itself, in the block's own tones
+  shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 3 : 6, 0.32,
+    { size: 0.5, life: 0.6, gravity: 1.2, spread: 0.85 });
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
+  const pz = game.puzzle;
+  let left = 0, total = 0;
+  for (let k = 0; k < pz.size; k++) if (!pz.solid[k]) { total++; if (!game.broken[k]) left++; }
+  sound.chisel(total ? 1 - left / total : 1);
+  // a row just came clean: every cube that had to go is gone
+  if (left > 0 && [0, 1, 2].some((a) => {
+    const line = pz.lineOf(i, a);
+    return line.cells.length > 1 && line.cells.every((c) => pz.solid[c] || game.broken[c]);
+  })) sound.rowDone();
   refreshAO();
   tutorialEvent('break');
   if (game.puzzle.isSolved(game.broken)) win();
@@ -338,6 +354,7 @@ function undo() {
   }
   cubes.ripple(game.puzzle.coords(u.i), t, 0.5, 9);
   buzz(6);
+  sound.undo();
 }
 
 // The finale: the block holds its breath, the stone falls away to true colour
@@ -378,6 +395,7 @@ function win() {
   cubes.ripple([(d[0] - 1) / 2, -1, (d[2] - 1) / 2], t + 1.0, 1.4, 8);   // the landing
   rayBoost = 2.6;
   buzz([12, 50, 30, 400, 60]);
+  sound.win();
   $('#pz-name').textContent = g.shape.name;
 
   // confetti in the object's own colours, thrown from all over it
@@ -685,11 +703,11 @@ function showResult(g, result, isBest) {
   const countTo = (target, ms) => {
     cancelAnimationFrame(anim);
     const from = shown, t0 = performance.now();
-    let lastTick = 0;
+    let lastTick = 0, ticks = 0;
     const step = (now2) => {
       const k = Math.min(1, (now2 - t0) / ms);
       setScore(from + (target - from) * (1 - Math.pow(1 - k, 3)));
-      if (now2 - lastTick > 70) { lastTick = now2; scoreEl.classList.remove('tick'); void scoreEl.offsetWidth; scoreEl.classList.add('tick'); }
+      if (now2 - lastTick > 70) { lastTick = now2; scoreEl.classList.remove('tick'); void scoreEl.offsetWidth; scoreEl.classList.add('tick'); sound.tick(ticks++); }
       if (k < 1) anim = requestAnimationFrame(step);
     };
     anim = requestAnimationFrame(step);
@@ -705,10 +723,10 @@ function showResult(g, result, isBest) {
     t += dur + (k === 0 ? 150 : 120);
   });
   for (let k = 0; k < result.stars; k++) {
-    at(t, () => { stars[k].classList.add('on'); buzz(10 + k * 6); });
+    at(t, () => { stars[k].classList.add('on'); buzz(10 + k * 6); sound.star(k); });
     t += 380;
   }
-  if (isBest) at(t + 50, () => best.classList.add('in'));
+  if (isBest) at(t + 50, () => { best.classList.add('in'); sound.best(); });
   at(t + 250, () => card.classList.add('done'));
 
   resultFinish = () => {
@@ -882,6 +900,18 @@ function frame() {
 
   requestAnimationFrame(frame);
 }
+
+// ---------------------------------------------------------------- sound
+
+document.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
+document.addEventListener('keydown', () => sound.unlock(), { capture: true });
+function renderSoundToggles() {
+  $('#toggle-sfx').classList.toggle('on', sound.sfxOn);
+  $('#toggle-music').classList.toggle('on', sound.musicOn);
+}
+$('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); renderSoundToggles(); });
+$('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
+renderSoundToggles();
 
 // ---------------------------------------------------------------- boot
 

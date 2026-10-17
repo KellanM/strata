@@ -208,7 +208,9 @@ export class Shards {
     this.vel = new Float32Array(capacity * 3);
     this.start = new Float32Array(capacity).fill(-99);
     this.color = new Float32Array(capacity * 3);
+    this.meta = new Float32Array(capacity * 3);   // size, life, gravity
     geo.setAttribute('position', new THREE.BufferAttribute(this.origin, 3));
+    geo.setAttribute('aMeta', new THREE.BufferAttribute(this.meta, 3));
     geo.setAttribute('aVel', new THREE.BufferAttribute(this.vel, 3));
     geo.setAttribute('aStart', new THREE.BufferAttribute(this.start, 1));
     geo.setAttribute('aColor', new THREE.BufferAttribute(this.color, 3));
@@ -217,18 +219,20 @@ export class Shards {
     this.points = new THREE.Points(geo, new THREE.ShaderMaterial({
       uniforms: this.uniforms, transparent: true, depthWrite: false,
       vertexShader: /* glsl */ `
-        attribute vec3 aVel, aColor;
+        attribute vec3 aVel, aColor, aMeta;
         attribute float aStart;
         uniform float uTime, uUnitPx;
         varying vec3 vColor;
         varying float vAlpha, vSpin;
         void main() {
           float t = uTime - aStart;
-          if (t < 0.0 || t > 1.1) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-          vec3 p = position + aVel * t + vec3(0.0, -5.0, 0.0) * t * t * 0.5;
+          if (t < 0.0 || t > aMeta.y) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+          // drag eases the throw so chips drift rather than fly
+          float travel = (1.0 - exp(-t * 3.0)) / 3.0;
+          vec3 p = position + aVel * travel + vec3(0.0, -aMeta.z, 0.0) * t * t * 0.5;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          float life = t / 1.1;
-          gl_PointSize = max(1.0, (0.2 + 0.1 * fract(aStart * 37.0)) * (1.0 - life * 0.7) * uUnitPx);
+          float life = t / aMeta.y;
+          gl_PointSize = max(1.0, (0.2 + 0.1 * fract(aStart * 37.0)) * aMeta.x * (1.0 - life * 0.7) * uUnitPx);
           vColor = aColor;
           vAlpha = 1.0 - life * life;
           vSpin = aStart * 13.0 + t * 9.0 * (fract(aStart * 7.0) - 0.5);
@@ -248,16 +252,19 @@ export class Shards {
     this.points.frustumCulled = false;
   }
 
-  burst(center, time, colors, count = 14, power = 1) {
+  // power scales the throw, size the chips, life their time; drag (in the
+  // shader) makes them drift. Defaults are the celebratory confetti.
+  burst(center, time, colors, count = 14, power = 1, { size = 1, life = 1.1, gravity = 5, spread = 0.6 } = {}) {
     for (let k = 0; k < count; k++) {
       const i = this.next++ % this.capacity;
       const a = Math.random() * Math.PI * 2, up = (1.2 + Math.random() * 2.4) * power, sp = (0.8 + Math.random() * 1.8) * power;
-      this.origin.set([center.x + (Math.random() - 0.5) * 0.6, center.y + (Math.random() - 0.5) * 0.6, center.z + (Math.random() - 0.5) * 0.6], i * 3);
-      this.vel.set([Math.cos(a) * sp, up, Math.sin(a) * sp], i * 3);
+      this.origin.set([center.x + (Math.random() - 0.5) * spread, center.y + (Math.random() - 0.5) * spread, center.z + (Math.random() - 0.5) * spread], i * 3);
+      this.vel.set([Math.cos(a) * sp * 2.2, up * 2.2, Math.sin(a) * sp * 2.2], i * 3);
+      this.meta.set([size * (0.7 + Math.random() * 0.6), life * (0.75 + Math.random() * 0.5), gravity], i * 3);
       this.start[i] = time + Math.random() * 0.05;
       const c = colors[k % colors.length];
       this.color.set([c.r, c.g, c.b], i * 3);
     }
-    for (const name of ['position', 'aVel', 'aStart', 'aColor']) this.geo.getAttribute(name).needsUpdate = true;
+    for (const name of ['position', 'aVel', 'aStart', 'aColor', 'aMeta']) this.geo.getAttribute(name).needsUpdate = true;
   }
 }

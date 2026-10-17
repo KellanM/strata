@@ -357,3 +357,10 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .hud.bottom { transition: opacity .5s ease; }
 body.solved .hud.bottom { opacity: 0; }
 body.solved .hud.bottom * { pointer-events: none !important; }
+
+/* sound toggles in How to play */
+.toggles { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.toggle { opacity: .45; }
+.toggle::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; border: 1px solid currentColor; vertical-align: 1px; }
+.toggle.on { opacity: 1; }
+.toggle.on::before { background: currentColor; }
