@@ -40,6 +40,37 @@ function rampMaterial(light) {
 
 const clamp01 = (k) => Math.min(1, Math.max(0, k));
 const smooth = (k) => { k = clamp01(k); return k * k * (3 - 2 * k); };
+const easeOut = (k) => 1 - Math.pow(1 - clamp01(k), 3);
+// grows in and settles with the faintest overshoot
+const settle = (k) => { k = clamp01(k); const c = 1.3; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+const TRAVEL = 0.6;
+
+function glowTexture(ring) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  if (ring) {
+    grad.addColorStop(0.0, 'rgba(255,255,255,0)');
+    grad.addColorStop(0.72, 'rgba(255,255,255,0)');
+    grad.addColorStop(0.84, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+  } else {
+    grad.addColorStop(0.0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+  }
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function sprite(tex) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
+  s.renderOrder = 7;
+  s.visible = false;
+  return s;
+}
 
 export class Finale {
   constructor(lightUniform) {
@@ -54,14 +85,21 @@ export class Finale {
     this.label.renderOrder = 6;
     this.group.add(this.label);
 
-    const gem = new THREE.OctahedronGeometry(0.21);
+    // each gem: an empty outlined slot, a mote of light that travels from the
+    // object into it, the gem that forms where it lands, and a ring of light
+    const gem = new THREE.OctahedronGeometry(0.24);
     gem.scale(1, 1.4, 1);
+    const edges = new THREE.EdgesGeometry(gem);
+    const glow = glowTexture(false), ring = glowTexture(true);
     this.gems = [0, 1, 2].map(() => {
       const m = new THREE.Mesh(gem, rampMaterial(lightUniform));
       m.material.depthTest = false;
       m.renderOrder = 5;
-      this.group.add(m);
-      return { mesh: m, lit: -1 };
+      const slot = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ transparent: true, depthTest: false, depthWrite: false }));
+      slot.renderOrder = 4;
+      const mote = sprite(glow), halo = sprite(ring);
+      this.group.add(m, slot, mote, halo);
+      return { mesh: m, slot, mote, halo, sent: -1, lit: -1 };
     });
     this.text = { score: 0, best: false };
   }
@@ -82,7 +120,10 @@ export class Finale {
     for (const g of this.gems) {
       set(g.mesh.material, palette.paintTop, palette.paintLit, palette.paintShade);
       g.mesh.material.uniforms.cGlow.value.setHex(palette.glow);
-      g.lit = -1;
+      g.slot.material.color.set(ink);
+      g.mote.material.color.setHex(palette.glow);
+      g.halo.material.color.setHex(palette.glow);
+      g.sent = g.lit = -1;
     }
 
     this.drawLabel();
@@ -126,7 +167,10 @@ export class Finale {
     this.tex.needsUpdate = true;
   }
 
-  lightGem(k, t) { this.gems[k].lit = t; }
+  // a mote leaves the object now and the gem forms when it lands
+  sendGem(k, t) { this.gems[k].sent = t; this.gems[k].lit = t + TRAVEL; }
+  lightGem(k, t) { this.gems[k].sent = t - TRAVEL; this.gems[k].lit = t; }
+  static get travel() { return TRAVEL; }
 
   update(t, camera) {
     if (!this.group.visible) return;
@@ -139,19 +183,53 @@ export class Finale {
     const toward = new THREE.Vector3().subVectors(camera.position, anchor).setY(0).normalize();
     anchor.addScaledVector(toward, this.reach * 0.9 + 0.4);
 
+    const center = this.focus;
     this.gems.forEach((gm, k) => {
-      const appear = smooth((age - 1.8 - k * 0.12) / 0.9);
-      const m = gm.mesh;
-      m.position.copy(anchor).addScaledVector(right, (k - 1) * 0.78).addScaledVector(up, 0.04 * Math.sin(t * 0.9 + k * 2.1));
-      m.rotation.set(0, t * 0.35 + k * 0.9, 0);
+      const appear = smooth((age - 1.6 - k * 0.15) / 0.8);
+      const slotPos = anchor.clone().addScaledVector(right, (k - 1) * 0.9).addScaledVector(up, 0.04 * Math.sin(t * 0.9 + k * 2.1));
       const lit = gm.lit >= 0 && t >= gm.lit;
       const a = lit ? t - gm.lit : 0;
-      const bloom = lit ? smooth(a / 0.9) : 0;
-      m.scale.setScalar(appear * (0.82 + 0.18 * bloom));
-      const u = m.material.uniforms;
-      u.uOpacity.value = appear * (0.18 + 0.82 * bloom);
-      u.uGlow.value = lit ? 0.22 + 0.5 * Math.exp(-a * 1.1) * bloom : 0;
-      m.visible = appear > 0.01;
+
+      // the empty slot: a faint outline, turning slowly, that the gem fills
+      gm.slot.position.copy(slotPos);
+      gm.slot.rotation.set(0, t * 0.3 + k, 0);
+      gm.slot.material.opacity = appear * 0.4 * (1 - smooth(a / 0.4));
+      gm.slot.visible = gm.slot.material.opacity > 0.01;
+
+      // the mote: lifts off the object and arcs down into the slot
+      const flying = gm.sent >= 0 && t >= gm.sent && t < gm.lit;
+      gm.mote.visible = flying;
+      if (flying) {
+        const p = smooth((t - gm.sent) / TRAVEL);
+        const ctrl = center.clone().lerp(slotPos, 0.5).addScaledVector(up, 1.4).addScaledVector(right, (k - 1) * 0.6);
+        const q = 1 - p;
+        gm.mote.position.set(0, 0, 0)
+          .addScaledVector(center, q * q).addScaledVector(ctrl, 2 * q * p).addScaledVector(slotPos, p * p);
+        gm.mote.scale.setScalar(0.8 + 0.35 * Math.sin(p * Math.PI));
+        gm.mote.material.opacity = 0.9;
+      }
+
+      // the gem forms where it lands: grows and settles, spins fast then slows
+      const m = gm.mesh;
+      m.visible = lit;
+      if (lit) {
+        m.position.copy(slotPos);
+        m.scale.setScalar(settle(a / 0.7));
+        m.rotation.set(0, k * 0.9 + 0.4 * a + (9 / 2.6) * (1 - Math.exp(-2.6 * a)), 0);
+        const u = m.material.uniforms;
+        u.uOpacity.value = smooth(a / 0.25);
+        // and now and then one catches the light
+        const glint = a > 2 ? Math.pow(Math.max(0, Math.sin(t * 0.8 + k * 2.3)), 40) * 0.6 : 0;
+        u.uGlow.value = 0.2 + 0.85 * Math.exp(-a * 2.2) + glint;
+      }
+
+      // a ring of light opens from it as it lands
+      gm.halo.visible = lit && a < 1.3;
+      if (gm.halo.visible) {
+        gm.halo.position.copy(slotPos);
+        gm.halo.scale.setScalar(0.4 + 2.0 * easeOut(a / 1.3));
+        gm.halo.material.opacity = 0.75 * Math.pow(1 - a / 1.3, 2);
+      }
     });
 
     const show = smooth((age - 1.7) / 0.9);

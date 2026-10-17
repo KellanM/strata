@@ -806,17 +806,15 @@ function showResult(g, result, isBest) {
   finale.setScore(0, false);
   at(100, () => countTo(result.total, 1300));
 
-  // then the gems brighten, slowly, one at a time
-  let t = 1900;
+  // then, one at a time, a mote of light leaves the object and becomes a gem
+  let t = 2000;
+  const travel = Finale.travel * 1000;
   for (let k = 0; k < result.stars; k++) {
-    at(t, () => {
-      finale.lightGem(k, now());
-      buzz(8);
-      sound.star(k);
-      rayBoost = Math.max(rayBoost, 0.4);
-    });
-    t += 700;
+    at(t, () => finale.sendGem(k, now()));
+    at(t + travel, () => { buzz(8); sound.star(k); rayBoost = Math.max(rayBoost, 0.5); });
+    t += 820;
   }
+  t += travel - 400;
   if (isBest) at(t + 80, () => { finale.setScore(result.total, true); sound.best(); });
   at(t + 200, () => actions.classList.add('show'));
 
@@ -824,7 +822,7 @@ function showResult(g, result, isBest) {
     clearResult();
     cancelAnimationFrame(anim);
     finale.setScore(result.total, isBest);
-    for (let k = 0; k < result.stars; k++) if (finale.gems[k].lit < 0) finale.lightGem(k, now() - 1);
+    for (let k = 0; k < result.stars; k++) if (finale.gems[k].lit < 0 || finale.gems[k].lit > now()) finale.lightGem(k, now() - 2);
     actions.classList.add('show');
   };
 }
