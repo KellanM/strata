@@ -198,8 +198,8 @@ export function renderMap(root, opts) {
       const s = solved[shape.id];
       num = String(number).padStart(2, '0');
       name = s ? shape.name : n.state === 'locked' ? '' : '???';
-      meta = shape.dims.join('×') + (s ? ` · ${fmt(s.time)}` : '');
-      b.setAttribute('aria-label', `Puzzle ${number}, ${shape.dims.join(' by ')}` +
+      meta = s ? fmt(s.time) : '';
+      b.setAttribute('aria-label', `Puzzle ${number}` +
         (s ? `, ${shape.name}, solved` : n.state === 'locked' ? ', locked' : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');

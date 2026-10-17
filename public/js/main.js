@@ -124,7 +124,7 @@ function startPuzzle(entry) {
   $('#pz-name').textContent = entry.lesson ? shape.name : solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
   $('#pz-meta').textContent = entry.lesson
     ? `lesson ${entry.lesson} of ${TUTORIAL.length}`
-    : `${X} × ${Y} × ${Z} · ${palette.name}`;
+    : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
   updateStrikes();
   show('#menu', false);
   show('#win', false);
