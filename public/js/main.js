@@ -657,6 +657,7 @@ function goNext() {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
   if (game.entry.lesson) startPuzzle(list[0]);
+  else if (game.entry.bonus) { $('#actions').classList.remove('show'); openMenu(); }   // shrines lead back to the map
   else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
   else startRandom(game.shape.dims[0]);
 }
@@ -664,15 +665,7 @@ $('#win-menu').addEventListener('click', () => { clearResult(); show('#win', fal
 $('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); openMenu(); });
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
-$('#win-next').addEventListener('click', () => {
-  clearResult();
-  const list = puzzleList();
-  const idx = list.findIndex((e) => e.shape.id === game.shape.id);
-  if (game.entry.lesson) startPuzzle(list[0]);
-  else if (game.entry.bonus) { show('#win', false); openMenu(); }   // shrines lead back to the map
-  else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
-  else startRandom(game.shape.dims[0]);
-});
+$('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });
 $('#map-close').addEventListener('click', () => { if (game) show('#menu', false); });
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && game && $('#menu').classList.contains('show')) show('#menu', false);
