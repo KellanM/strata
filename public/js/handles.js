@@ -55,11 +55,12 @@ export class PeelHandles {
   }
 
   setPalette(p) {
-    this.uniforms.cTop.value.setHex(p.paintTop);
-    this.uniforms.cLit.value.setHex(p.paintLit);
-    this.uniforms.cShade.value.setHex(p.paintShade);
-    this.railMat.color.setHex(p.under);
-    for (const it of this.items) it.ticks.material.color.setHex(p.under);
+    // cut from the level's own stone, a step deeper than the block so they read against the sky
+    this.uniforms.cTop.value.setHex(p.lit);
+    this.uniforms.cLit.value.setHex(p.shade);
+    this.uniforms.cShade.value.setHex(p.under);
+    this.railMat.color.setHex(p.shade);
+    for (const it of this.items) it.ticks.material.color.setHex(p.shade);
   }
 
   // dims: puzzle dims. camDir: unit vector from target to camera.

@@ -578,6 +578,7 @@ document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', ()
 $('#undo').addEventListener('click', undo);
 $('#menu-btn').addEventListener('click', openMenu);
 $('#help-btn').addEventListener('click', () => show('#help', true));
+$('#map-help').addEventListener('click', () => show('#help', true));
 $('#help [data-close]').addEventListener('click', () => show('#help', false));
 $('#coach-skip').addEventListener('click', () => {
   localStorage.setItem('strata.tutorial', '1');
