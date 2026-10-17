@@ -175,7 +175,7 @@ export class Motes {
           gl_Position = projectionMatrix * mv;
           float dz = (-mv.z - uFocus) / uBox;            // < 0: closer than the block
           vBlur = clamp(-dz * 2.2, 0.0, 1.0);
-          float size = (0.05 + 0.09 * aSeed.z) * (1.0 + vBlur * 5.0);
+          float size = (0.05 + 0.09 * aSeed.z) * (1.0 + vBlur * 3.0);
           gl_PointSize = max(1.5, size * uUnitPx);
           float twinkle = 0.45 + 0.55 * (0.5 + 0.5 * sin(t * (0.6 + aSeed.w * 1.4) + aSeed.x * 40.0));
           float edge = smoothstep(0.0, 0.12, 0.5 - abs(p.y) / uBox);

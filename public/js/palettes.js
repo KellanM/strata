@@ -38,3 +38,58 @@ export const PALETTES = [
     rays: 0xc9d6ff, motes: 0xdfe6ff,
   },
 ];
+
+// Each level gets its own moment inside its chapter's colour script: the day
+// moves on as you walk the chapter (t: 0 first level -> 1 last), so the sky
+// drifts in hue and deepens, the key light swings round, and the marking
+// colour shifts a little per level. Shifts stay small so a chapter still
+// reads as one place.
+export function variant(base, t, seed = 0) {
+  const j = jitter(seed);                       // -1..1, stable per level
+  const dark = hsl(base.skyTop)[2] < 0.35;
+  const skyHue = lerp(-0.03, 0.03, t) + 0.012 * j;
+  const skyLight = dark ? lerp(-0.03, 0.04, t) : lerp(0.03, -0.05, t);
+  const sky = (h) => shift(h, skyHue, 0, skyLight);
+  const stone = (h) => shift(h, skyHue * 0.5, 0, 0);
+  const paint = (h) => shift(h, 0.045 * j, 0.03 * j, 0);
+  return {
+    ...base,
+    base: base.name,
+    skyTop: sky(base.skyTop), skyBottom: shift(base.skyBottom, skyHue * 1.2, 0, skyLight * 0.6),
+    glow: shift(base.glow, skyHue * 0.7, 0, 0), rays: shift(base.rays, skyHue * 0.7, 0, 0),
+    motes: shift(base.motes, skyHue * 0.7, 0, 0),
+    top: stone(base.top), lit: stone(base.lit), shade: stone(base.shade), under: stone(base.under),
+    paintTop: paint(base.paintTop), paintLit: paint(base.paintLit), paintShade: paint(base.paintShade),
+    lightAngle: lerp(-0.35, 0.35, t) + 0.1 * j,
+    rayGain: base.rayGain * (0.85 + 0.3 * t),
+  };
+}
+
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function jitter(seed) {
+  let x = Math.imul(seed + 0x9e3779b9, 0x85ebca6b) >>> 0;
+  x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35) >>> 0;
+  return ((x ^ (x >>> 16)) >>> 0) / 0xffffffff * 2 - 1;
+}
+
+function hsl(hex) {
+  const r = (hex >> 16 & 255) / 255, g = (hex >> 8 & 255) / 255, b = (hex & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+
+function shift(hex, dh, ds, dl) {
+  let [h, s, l] = hsl(hex);
+  h = (h + dh + 1) % 1; s = Math.min(1, Math.max(0, s + ds)); l = Math.min(1, Math.max(0, l + dl));
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const ch = (t) => {
+    t = (t + 1) % 1;
+    const v = t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p;
+    return Math.round(v * 255);
+  };
+  return (ch(h + 1 / 3) << 16) | (ch(h) << 8) | ch(h - 1 / 3);
+}

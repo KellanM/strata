@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Puzzle, hideClues } from './puzzle.js';
 import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
-import { PALETTES } from './palettes.js';
+import { PALETTES, variant } from './palettes.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
@@ -72,11 +72,13 @@ const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 // ---------------------------------------------------------------- puzzles
 
 function puzzleList() {
-  return SHAPES.map((s, i) => ({
-    shape: s,
-    palette: PALETTES.find((p) => p.name === s.palette) ?? PALETTES[i % PALETTES.length],
-    number: i + 1,
-  }));
+  return SHAPES.map((s, i) => {
+    // where this level sits in its chapter sets its time of day
+    const mates = SHAPES.filter((o) => o.chapter === s.chapter);
+    const k = mates.indexOf(s), t = mates.length > 1 ? k / (mates.length - 1) : 0.5;
+    const base = PALETTES.find((p) => p.name === s.palette) ?? PALETTES[i % PALETTES.length];
+    return { shape: s, palette: variant(base, t, i + 1), number: i + 1 };
+  });
 }
 
 function startPuzzle(entry) {
@@ -134,6 +136,8 @@ function startPuzzle(entry) {
 }
 
 function applyPalette(p) {
+  const a = p.lightAngle ?? 0, c = Math.cos(a), s = Math.sin(a);
+  cubes.uniforms.uLight.value.set(-0.45 * c - 0.9 * s, -0.45 * s + 0.9 * c).normalize();
   const dark = new THREE.Color(p.skyTop).getHSL({}).l < 0.35;
   cubes.setPalette(p);
   background.setPalette(p);
@@ -145,6 +149,8 @@ function applyPalette(p) {
   document.documentElement.style.setProperty('--sky', sky);
   if (!dark) document.documentElement.style.setProperty('--ink', '#' + new THREE.Color(p.under).multiplyScalar(0.8).getHexString());
   else document.documentElement.style.removeProperty('--ink');
+  // the page behind the canvas wears the sky too, so no edge can ever show a seam
+  document.documentElement.style.backgroundColor = '#' + new THREE.Color(p.skyBottom).getHexString();
   document.querySelector('meta[name=theme-color]').content = '#' + new THREE.Color(p.skyTop).getHexString();
 }
 
@@ -607,7 +613,7 @@ window.addEventListener('keydown', (e) => {
 
 function startRandom(n) {
   const seed = Math.floor(Math.random() * 1e6) + 1;
-  startPuzzle({ shape: randomShape(n, seed), palette: PALETTES[seed % PALETTES.length], number: null });
+  startPuzzle({ shape: randomShape(n, seed), palette: variant(PALETTES[seed % PALETTES.length], (seed % 97) / 96, seed), number: null });
 }
 
 // ---------------------------------------------------------------- UI
@@ -670,7 +676,9 @@ const camDir = new THREE.Vector3();
 const centerNdc = new THREE.Vector3();
 
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight;
+  // measure the canvas itself: from the iOS home screen innerHeight stops short
+  // of the home-indicator strip, while the canvas is sized to the whole screen
+  const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
   const aspect = w / h;
   const half = viewRadius * (aspect < 1 ? 1.1 / aspect : 1.15);

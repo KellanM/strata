@@ -23,14 +23,17 @@ body.dark {
 
 html, body {
   margin: 0; height: 100%; overflow: hidden;
-  background: var(--sky);
   color: var(--ink);
   font-family: var(--font);
   -webkit-user-select: none; user-select: none;
   overscroll-behavior: none;
 }
 
-#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+html { min-height: 100vh; min-height: 100lvh; background: #c6a3c4; }
+body { background: transparent; }
+/* full large viewport: as a home-screen app iOS reports a shorter height for
+   100%/inset, which left a strip above the home indicator */
+#scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; touch-action: none; }
 
 button {
   font: inherit; color: inherit; cursor: pointer;
