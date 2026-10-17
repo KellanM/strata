@@ -579,7 +579,7 @@ $('#coach-skip').addEventListener('click', () => {
   renderCoach();
   openMenu();
 });
-$('#win-menu').addEventListener('click', openMenu);
+$('#win-menu').addEventListener('click', () => { show('#win', false); openMenu(); });
 $('#win-next').addEventListener('click', () => {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
