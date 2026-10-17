@@ -114,24 +114,7 @@ h2 { font-size: 22px; letter-spacing: .32em; margin-bottom: 14px; }
 .sub { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--ink-soft); text-align: center; margin: 8px 0 22px; }
 .panel p { font-size: 15px; line-height: 1.55; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; }
-.card {
-  aspect-ratio: 1; border-radius: 18px; position: relative; overflow: hidden;
-  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
-  padding: 12px; text-align: left; color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
-  transition: transform .35s cubic-bezier(.2,.9,.3,1.3);
-}
-.card:active { transform: scale(.95); }
-.card .num { position: absolute; top: 10px; left: 12px; font-size: 11px; letter-spacing: .2em; opacity: .85; }
-.card .gem { position: absolute; top: 22%; left: 50%; width: 38%; aspect-ratio: 1; transform: translateX(-50%) rotate(45deg); border-radius: 6px; }
-.card .name { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; text-shadow: 0 1px 6px rgba(0,0,0,.18); }
-.card .dims { font-size: 10px; letter-spacing: .2em; opacity: .85; }
-.card.solved::after { content: "✓"; position: absolute; top: 8px; right: 12px; font-size: 13px; }
-
-.random { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; }
-.random span { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); margin-right: 6px; }
-.random button, .row button {
+.row button {
   padding: 12px 18px; border-radius: 999px; font-size: 13px; letter-spacing: .2em; text-transform: uppercase;
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -150,7 +133,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   .tools { margin: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .overlay, .panel, .icon-btn, .card { transition: none; }
+  .overlay, .panel, .icon-btn { transition: none; }
 }
 
 /* the solved shape stays in full view behind the result card */
@@ -176,9 +159,113 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #coach-dots i.now { background: var(--ink); }
 #coach-skip { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 6px 10px; }
 
-.card.learn { background: linear-gradient(170deg, #fffaf2, #efe2d6); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
-.card.learn .name, .card.learn .dims { text-shadow: none; }
-.card .gem.steps {
-  background: linear-gradient(135deg, #fcf0de 0 50%, #f1c4a6 50% 100%);
-  box-shadow: -6px 6px 0 #a98cb6, -12px 12px 0 rgba(169, 140, 182, .4);
+/* ---------- puzzle map ---------- */
+#menu { display: block; padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.map-scroll {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  scrollbar-width: none; touch-action: pan-y;
+}
+.map-scroll::-webkit-scrollbar { display: none; }
+/* the trail floats over the live scene: a veil of the palettes, slightly see-through */
+.map-scroll::before {
+  content: ""; position: fixed; inset: 0; z-index: -1;
+  background: color-mix(in srgb, var(--sky) 55%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.map-head { text-align: center; padding: calc(56px + var(--safe-t)) 20px 6px; }
+.map-head .sub { margin: 10px 0 0; }
+#map-progress { margin-top: 4px; letter-spacing: .26em; }
+
+.map { position: relative; width: 100%; }
+.map::before {
+  content: ""; position: absolute; inset: -40px 0 0; z-index: -1;
+  background: var(--map-bg); opacity: .82;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 120px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 120px);
+}
+.map-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; stroke: none; }
+.trail { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; stroke-opacity: .55; }
+.trail.walked { stroke-dasharray: none; stroke-width: 2.2; stroke-opacity: .45; }
+.trail.tail { stroke-opacity: .3; }
+
+.map-region {
+  position: absolute; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 4px;
+  color: var(--ink); pointer-events: none;
+}
+.map-region.at-left { left: var(--edge); align-items: flex-start; }
+.map-region.at-right { right: var(--edge); align-items: flex-end; text-align: right; }
+.map-region .r-name { font-size: 15px; letter-spacing: .42em; text-transform: uppercase; }
+.map-region.at-right .r-name { margin-right: -.42em; }
+.map-region .r-sub { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: .62; }
+.on-dark { color: #eef0ff; }
+
+.map-node {
+  position: absolute; width: 72px; height: 72px; margin: -36px 0 0 -36px;
+  display: grid; place-items: center; color: var(--ink);
+  transition: transform .35s cubic-bezier(.2,.9,.3,1.4);
+}
+.map-node.on-dark { color: #eef0ff; }
+.map-node:active { transform: scale(.92); }
+.map-node .cube { stroke: none; position: relative; filter: drop-shadow(0 6px 10px rgba(40, 20, 60, .16)); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.map-node:hover .cube { transform: translateY(-3px); }
+.map-node .halo {
+  position: absolute; inset: -14px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow) 90%, transparent) 0, transparent 66%);
+  opacity: 0;
+}
+.map-node .label {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; white-space: nowrap; line-height: 1.3;
+}
+/* labels sit beside the stone, away from the trail, like map annotations */
+.map-node.lbl-right .label { left: 66px; align-items: flex-start; text-align: left; }
+.map-node.lbl-left .label { right: 66px; align-items: flex-end; text-align: right; }
+.map-node.drift .label { top: 58px; left: 50%; transform: translateX(-50%); align-items: center; }
+.map-node .n { font-size: 10px; letter-spacing: .26em; opacity: .62; }
+.map-node .nm { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; }
+.map-node.lbl-left .nm { margin-right: -.26em; }
+.map-node .mt { font-size: 9.5px; letter-spacing: .2em; opacity: .62; font-variant-numeric: tabular-nums; }
+.map-node .nm:empty { display: none; }
+
+.map-node .ring {
+  position: absolute; inset: 4px; border-radius: 50%; pointer-events: none;
+  border: 1.5px solid currentColor; opacity: 0;
+}
+/* the next stone to uncover breathes */
+.map-node.current .ring { animation: ripple 3.2s ease-out infinite; }
+@keyframes ripple { 0% { transform: scale(.6); opacity: .5; } 70%, 100% { transform: scale(1.35); opacity: 0; } }
+.map-node.current .halo { opacity: 1; animation: breathe 3.2s ease-in-out infinite; }
+.map-node.current .cube { animation: bob 3.2s ease-in-out infinite; }
+.map-node.current .nm { font-weight: 600; }
+@keyframes breathe { 0%, 100% { transform: scale(.82); opacity: .55; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* solved: the uncovered colour, and a small diamond mark */
+.map-node .mark {
+  position: absolute; top: 12px; right: 12px; width: 9px; height: 9px; transform: rotate(45deg);
+  background: currentColor; opacity: .7; box-shadow: 0 0 0 2px color-mix(in srgb, var(--glow) 70%, transparent);
+}
+.map-node.solved .halo { opacity: .35; }
+
+/* locked: a faint outline of stone, still on the trail */
+.map-node.locked { cursor: default; }
+.map-node.locked .cube { opacity: .32; filter: grayscale(.7) blur(.3px); }
+.map-node.locked .label { opacity: .5; }
+.map-node.nudge .cube { animation: nudge .4s ease; }
+@keyframes nudge { 20% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
+
+.map-node.learn .cube { transform: scale(1.04); }
+
+#map-close {
+  position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 1;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+#menu.has-game #map-close { opacity: 1; pointer-events: auto; }
+#menu:not(.show) #map-close { pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node.current .halo, .map-node.current .cube, .map-node.current .ring, .map-node.nudge .cube { animation: none; }
+  .map-node.current .ring { opacity: .35; }
 }
