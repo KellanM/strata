@@ -694,5 +694,10 @@ if (localStorage.getItem('strata.tutorial')) {
 }
 requestAnimationFrame(frame);
 
+// offline play: only over https (hosted build); the LAN dev server stays uncached
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
 window.strata = { get game() { return game; }, get peel() { return peel; }, act, startTutorial, setPeeled, setPeelAxis, resetView, handles, camera };

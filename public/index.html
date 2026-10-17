@@ -6,14 +6,18 @@
   <meta name="theme-color" content="#f7dccb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Strata">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <title>Strata — 3D Nonograms</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
     {
       "imports": {
-        "three": "/vendor/three/build/three.module.js",
-        "three/addons/": "/vendor/three/examples/jsm/"
+        "three": "./vendor/three/build/three.module.min.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
       }
     }
   </script>
