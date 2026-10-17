@@ -691,7 +691,6 @@ function setTool(t) {
 }
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
-$('#undo').addEventListener('click', undo);
 $('#menu-btn').addEventListener('click', openMenu);
 $('#map-help').addEventListener('click', () => show('#help', true));
 

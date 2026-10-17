@@ -69,11 +69,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 #strikes:not(:empty) { margin-left: .8em; }
 
 .tools {
-  /* mirrors the header: a round button at the left edge, the switch centred */
-  display: grid; grid-template-columns: 46px 1fr 46px; align-items: center;
+  /* the switch sits centred under the title */
+  display: flex; justify-content: center; align-items: center;
   width: 100%;
 }
-.tools::after { content: ""; }
 
 .segmented {
   justify-self: center; display: flex; padding: 4px; border-radius: 999px; position: relative;
