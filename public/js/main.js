@@ -682,6 +682,7 @@ controls.addEventListener('end', () => {
 
 function setTool(t) {
   tool = t;
+  $('.segmented').dataset.tool = t;
   document.querySelectorAll('.tool').forEach((b) => {
     const on = b.dataset.tool === t;
     b.classList.toggle('on', on);
