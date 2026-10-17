@@ -27,6 +27,11 @@
   <div id="press-ring" aria-hidden="true"></div>
   <div id="flash" aria-hidden="true"></div>
   <div id="win-title" aria-hidden="true"></div>
+  <div id="chapter-card" role="status" aria-live="polite">
+    <span class="numeral"></span>
+    <h2 class="cname"></h2>
+    <p class="cline"></p>
+  </div>
 
   <header class="hud top">
     <button id="menu-btn" class="icon-btn" aria-label="Puzzles">
@@ -81,9 +86,37 @@
     <button id="map-help" class="icon-btn" aria-label="How to play">
       <svg viewBox="0 0 24 24"><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg>
     </button>
+    <button id="map-journal" class="icon-btn" aria-label="Journal">
+      <svg viewBox="0 0 24 24"><path d="M5 4.5h9a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3zM17 7.5h2V20h-2M8.5 9h5M8.5 12h5"/></svg>
+    </button>
     <button id="map-close" class="icon-btn" aria-label="Back to the puzzle">
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
+  </section>
+
+  <section id="journal" class="overlay" aria-label="Journal">
+    <div class="jr-scroll">
+      <header class="jr-head">
+        <h2>Journal</h2>
+        <p id="journal-count" class="sub"></p>
+      </header>
+      <div id="journal-grid"></div>
+    </div>
+    <button id="journal-close" class="icon-btn" aria-label="Close the journal">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <div id="journal-view" aria-live="polite">
+      <canvas></canvas>
+      <div class="jv-text">
+        <p class="jv-chapter sub"></p>
+        <h2 class="jv-name"></h2>
+        <p class="jv-story"></p>
+        <p class="jv-hint sub">drag to turn</p>
+      </div>
+      <button id="journal-back" class="icon-btn" aria-label="Back to the journal">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+    </div>
   </section>
 
   <section id="help" class="overlay" aria-label="How to play">

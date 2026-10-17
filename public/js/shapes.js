@@ -19,12 +19,18 @@ const DIRS8 = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, 
 
 // Regions of the map, in play order. Each shares a palette so a chapter reads
 // as one place; puzzles inside rise in size and in how few clues they show.
+// `line` is the one line shown on the chapter's title card.
 export const CHAPTERS = [
-  { name: 'First Light', palette: 'Dawn', blurb: 'small stones, warm light' },
-  { name: 'Moss Garden', palette: 'Mint', blurb: 'living things, first hollows' },
-  { name: 'The Lagoon', palette: 'Lagoon', blurb: 'boats, buoys and a lamp to find' },
-  { name: 'Ember Steps', palette: 'Dusk', blurb: 'gates, stairs and towers' },
-  { name: 'Starfall', palette: 'Night', blurb: 'the long climb to the sky' },
+  { name: 'First Light', numeral: 'I', palette: 'Dawn', blurb: 'small stones, warm light',
+    line: 'Morning finds what the stone was keeping.' },
+  { name: 'Moss Garden', numeral: 'II', palette: 'Mint', blurb: 'living things, first hollows',
+    line: 'Green things grow slowly inside the quiet rock.' },
+  { name: 'The Lagoon', numeral: 'III', palette: 'Lagoon', blurb: 'boats, buoys and a lamp to find',
+    line: 'The tide remembers everything it carried.' },
+  { name: 'Ember Steps', numeral: 'IV', palette: 'Dusk', blurb: 'gates, stairs and towers',
+    line: 'Climb slowly. The evening is climbing too.' },
+  { name: 'Starfall', numeral: 'V', palette: 'Night', blurb: 'the long climb to the sky',
+    line: 'What the sky let fall, the stone held.' },
 ];
 
 const chapter = (i, list) => list.map((s) => ({ ...s, chapter: CHAPTERS[i].name, palette: CHAPTERS[i].palette }));
@@ -35,10 +41,12 @@ export const SHAPES = [
   ...chapter(0, [
     {
       id: 'steps', name: 'Steps', dims: [4, 4, 3], fraction: 0.5, seed: 8,
+      story: 'Four steps down to a door nobody has opened yet.',
       cell: (x, y) => (y > x ? 0 : y === x ? 0xfcefe0 : 0xe58f84),
     },
     {
       id: 'heart', name: 'Heart', fraction: 0.5, seed: 6,
+      story: 'Carved by someone patient, for whoever would find it.',
       ...extrude([
         '.RR.RR.',
         'RRRRRRR',
@@ -50,6 +58,7 @@ export const SHAPES = [
     },
     {
       id: 'key', name: 'Key', fraction: 0.5, seed: 7, view: 0.35,
+      story: 'It fits a lock somewhere further down the trail.',
       ...extrude([
         '.KK.......',
         'K..K......',
@@ -60,6 +69,7 @@ export const SHAPES = [
     },
     {
       id: 'chair', name: 'Chair', dims: [4, 6, 4], fraction: 0.5, seed: 8,
+      story: 'Set out at dawn for whoever arrives first.',
       cell(x, y, z) {
         const edgeX = x === 0 || x === 3, edgeZ = z === 0 || z === 3;
         if (y <= 1) return edgeX && edgeZ ? 0xa8714c : 0;
@@ -70,6 +80,7 @@ export const SHAPES = [
     },
     {
       id: 'invader', name: 'Visitor', fraction: 0.5, seed: 7,
+      story: 'It came a very long way, and seems glad to be found.',
       ...extrude([
         '..G.....G..',
         '...G...G...',
@@ -88,6 +99,7 @@ export const SHAPES = [
   ...chapter(1, [
     {
       id: 'cat', name: 'Cat', dims: [7, 6, 4], fraction: 0.65, seed: 4,
+      story: 'She has slept in this rock since before the moss.',
       cell(x, y, z) {
         const orange = y === 1 ? 0xd9824a : 0xf2a65a;
         // ears, head, eyes and nose
@@ -107,6 +119,7 @@ export const SHAPES = [
     },
     {
       id: 'mushroom', name: 'Mushroom', dims: [7, 6, 7], fraction: 0.65, seed: 2,
+      story: 'After the rain, a whole village of them, overnight.',
       cell(x, y, z) {
         const dx = x - 3, dz = z - 3, r2 = dx * dx + dz * dz;
         if (y <= 2) return r2 <= 1 ? 0xf3e6d0 : 0;
@@ -118,6 +131,7 @@ export const SHAPES = [
     },
     {
       id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
+      story: 'Three hundred years of careful pruning, and one stubborn branch.',
       cell(x, y, z) {
         if (y <= 1) return x >= 1 && x <= 5 && z >= 1 && z <= 3 ? (y === 1 && x >= 2 && x <= 4 && z === 2 ? 0x6b4a3a : 0x4f7fb8) : 0;
         const trunk = [[3, 2], [3, 3], [2, 4], [4, 4], [5, 5]];
@@ -129,6 +143,7 @@ export const SHAPES = [
     },
     {
       id: 'tree', name: 'Pine', dims: [5, 9, 5], fraction: 0.65, seed: 3,
+      story: 'The tallest thing in the garden, keeping a star for later.',
       cell(x, y, z) {
         const dx = Math.abs(x - 2), dz = Math.abs(z - 2), r2 = dx * dx + dz * dz;
         if (y <= 1) return r2 === 0 ? 0x8a5a3c : 0;
@@ -140,6 +155,7 @@ export const SHAPES = [
     {
       // A hollow pot: the empty belly is only reachable by peeling.
       id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.65, seed: 4,
+      story: 'Still warm. Someone was here a moment ago.',
       cell(x, y, z) {
         const dx = x - 4, dz = z - 2, r = ring(dx, dz);
         if (y <= 3) {
@@ -161,6 +177,7 @@ export const SHAPES = [
   ...chapter(2, [
     {
       id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
+      story: 'It swam into the stone and decided to stay.',
       cell(x, y, z) {
         if (x === 6 && z === 1 && y >= 1 && y <= 3) return 0xf2b45a;
         if (x === 7 && z === 1 && y !== 2) return 0xf2b45a;
@@ -172,6 +189,7 @@ export const SHAPES = [
     },
     {
       id: 'boat', name: 'Sailboat', dims: [8, 8, 3], fraction: 0.65, seed: 3,
+      story: 'Small sails, long water, and the far shore always moving.',
       cell(x, y, z) {
         if (y === 0) return x >= 2 && x <= 5 ? 0xe0546b : 0;
         if (y === 1) return x >= 1 && x <= 6 ? 0xf6efe4 : 0;
@@ -185,6 +203,7 @@ export const SHAPES = [
     },
     {
       id: 'lighthouse', name: 'Lighthouse', dims: [5, 10, 5], fraction: 1.0, seed: 5,
+      story: 'The keeper left the lamp lit, just in case.',
       cell(x, y, z) {
         const dx = x - 2, dz = z - 2, adx = Math.abs(dx), adz = Math.abs(dz);
         const wide = adx + adz <= 3;
@@ -198,6 +217,7 @@ export const SHAPES = [
     },
     {
       id: 'turtle', name: 'Turtle', dims: [7, 4, 8], fraction: 0.9, seed: 5,
+      story: 'Slow is a direction, too.',
       cell(x, y, z) {
         const dx = x - 3, dz = z - 3.5;
         if (y >= 1 && ell(dx, y - 0.6, dz, 2.9, 2.6, 3.0)) {
@@ -211,6 +231,7 @@ export const SHAPES = [
     },
     {
       id: 'torus', name: 'Life Ring', dims: [8, 3, 8], fraction: 0.9, seed: 4,
+      story: 'Thrown once, to someone who caught it.',
       cell(x, y, z) {
         const dx = x - 3.5, dz = z - 3.5;
         const d = Math.sqrt(dx * dx + dz * dz) - 2.6;
@@ -220,6 +241,7 @@ export const SHAPES = [
     },
     {
       id: 'mug', name: 'Mug', dims: [8, 6, 6], fraction: 0.8, seed: 3,
+      story: 'The keeper’s mug, half full, between one watch and the next.',
       cell(x, y, z) {
         const dx = x - 2.5, dz = z - 2.5, r2 = dx * dx + dz * dz;
         if (x <= 5 && r2 <= 2.6 * 2.6 && (y === 0 || r2 >= 1.7 * 1.7)) return y === 5 ? 0xf6efe4 : 0x5b8fd6;
@@ -236,6 +258,7 @@ export const SHAPES = [
     {
       // A torii: two beams with a gap between them make split rows.
       id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
+      story: 'Pass beneath it and leave the day behind.',
       cell(x, y) {
         if (y === 5) return 0x3d2e3a;
         if (y === 3) return x >= 1 && x <= 7 ? 0xe2553f : 0;
@@ -245,6 +268,7 @@ export const SHAPES = [
     },
     {
       id: 'pagoda', name: 'Pagoda', dims: [7, 9, 7], fraction: 1.0, seed: 8,
+      story: 'A bell sleeps in the top room. Try not to wake it.',
       cell(x, y, z) {
         const dx = Math.abs(x - 3), dz = Math.abs(z - 3), m = Math.max(dx, dz);
         const roof = 0x3f7f7a;
@@ -259,6 +283,7 @@ export const SHAPES = [
     },
     {
       id: 'arch', name: 'Arch', dims: [9, 7, 3], fraction: 0.9, seed: 6,
+      story: 'One stone holds all the others up, and never says so.',
       cell(x, y) {
         const dx = x - 4, dy = y;
         const outer = dx * dx + dy * dy <= 4.4 * 4.4 || (Math.abs(dx) >= 3 && y <= 3);
@@ -269,6 +294,7 @@ export const SHAPES = [
     },
     {
       id: 'hourglass', name: 'Hourglass', dims: [5, 8, 5], fraction: 0.9, seed: 7,
+      story: 'The sand still falls, though no one is counting anymore.',
       cell(x, y, z) {
         const dx = x - 2, dz = z - 2, corner = Math.abs(dx) === 2 && Math.abs(dz) === 2;
         if (y === 0 || y === 7) return 0x8a5a3c;
@@ -280,6 +306,7 @@ export const SHAPES = [
     },
     {
       id: 'spiral', name: 'Spiral Stair', dims: [5, 9, 5], fraction: 0.8, seed: 2,
+      story: 'Each step turns a little, until you are somewhere else.',
       cell(x, y, z) {
         const dx = x - 2, dz = z - 2;
         if (dx === 0 && dz === 0) return 0xfcefe0;
@@ -296,6 +323,7 @@ export const SHAPES = [
   ...chapter(4, [
     {
       id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
+      story: 'Built on the coldest night, and smiling about it.',
       cell(x, y, z) {
         const dx = x - 2, dz = z - 2;
         const ball = (cy, r) => dx * dx + dz * dz + (y - cy) ** 2 <= r * r;
@@ -308,6 +336,7 @@ export const SHAPES = [
     },
     {
       id: 'owl', name: 'Owl', dims: [6, 7, 4], fraction: 1.0, seed: 1,
+      story: 'It watched every star fall, and kept a list.',
       cell(x, y, z) {
         if (y === 6) return (x === 1 || x === 4) && z === 1 ? 0x8a6a8e : 0;
         if (y === 0) return (x === 1 || x === 4) && z === 3 ? 0xf2b45a : 0;
@@ -320,6 +349,7 @@ export const SHAPES = [
     },
     {
       id: 'rocket', name: 'Rocket', dims: [5, 10, 5], fraction: 1.0, seed: 5,
+      story: 'Packed for a short trip. Planning a long one.',
       cell(x, y, z) {
         const dx = x - 2, dz = z - 2, r2 = dx * dx + dz * dz;
         if (y <= 1) {
@@ -333,6 +363,7 @@ export const SHAPES = [
     },
     {
       id: 'planet', name: 'Ringed Planet', dims: [9, 5, 9], fraction: 0.9, seed: 4,
+      story: 'A ring around a faraway world, still waiting for a name.',
       cell(x, y, z) {
         const dx = x - 4, dy = y - 2, dz = z - 4, r = ring(dx, dz);
         if (dx * dx + dy * dy + dz * dz <= 2.3 * 2.3) return [0x8a74c0, 0xc79ad0, 0xf2c6b4, 0xc79ad0, 0x8a74c0][y];
@@ -344,6 +375,7 @@ export const SHAPES = [
       // Finale: a hollow drum and dome around a telescope that leans out of
       // the slit. Most of the inside is only reachable by peeling.
       id: 'observatory', name: 'Observatory', dims: [7, 7, 7], fraction: 0.9, seed: 1,
+      story: 'Where the night was measured, star by careful star.',
       cell(x, y, z) {
         const dx = x - 3, dz = z - 3, r = ring(dx, dz);
         if (y === 0) return r <= 3.2 ? 0x8d8a99 : 0;
@@ -360,6 +392,97 @@ export const SHAPES = [
       },
     },
   ]),
+];
+
+// One bonus stone per chapter, opened by stars (the map decides when). Each is
+// a little harder than its chapter's hardest level and never blocks the path.
+const bonus = (i, s) => ({
+  ...s, id: `bonus-${CHAPTERS[i].name.toLowerCase().replace(/[^a-z]+/g, '-')}`,
+  chapter: CHAPTERS[i].name, palette: CHAPTERS[i].palette, bonus: true,
+});
+
+export const BONUS = [
+  bonus(0, {
+    // A pitched roof over a solid house, with a chimney off-centre.
+    name: 'Cottage', dims: [7, 7, 5], fraction: 0.65, seed: 8,
+    story: 'Smoke from the chimney means someone is home.',
+    cell(x, y, z) {
+      if (x === 5 && z === 1 && y >= 5) return 0xb4867a;                      // chimney
+      if (y <= 2) {
+        if (x < 1 || x > 5 || z < 1 || z > 3) return 0;
+        if (z === 3 && x === 3 && y <= 1) return 0x7a5a8c;                     // door
+        if (z === 3 && (x === 1 || x === 5) && y === 1) return 0xffd58a;       // windows
+        return 0xf6e7d2;
+      }
+      const half = 3 - (y - 3);                                                // roof narrows upward
+      return Math.abs(x - 3) <= half ? (y === 6 ? 0xb85a4a : 0xd9725e) : 0;
+    },
+  }),
+  bonus(1, {
+    // A frog on a notched lily pad.
+    name: 'Frog', dims: [7, 4, 7], fraction: 0.8, seed: 6,
+    story: 'It has been sitting on the same leaf all summer.',
+    cell(x, y, z) {
+      const dx = x - 3, dz = z - 3;
+      if (y === 0) {
+        const notch = x === 3 && z >= 5;
+        return ring(dx, dz) <= 3.2 && !notch ? 0x3f8f6a : 0;
+      }
+      if (x === 1 && z === 1 && y >= 1 && y <= 2) return y === 2 ? 0xffd6df : 0xf6b3c2;  // a lotus on the pad's edge
+      if (y === 1) {
+        if ((dx * dx) / 4.4 + (dz * dz) / 2.6 <= 1) return z === 5 ? 0xe8e6a8 : 0x7cc46a;
+        return (Math.abs(dx) === 3 && z === 2) || (Math.abs(dx) === 2 && z === 5) ? 0x7cc46a : 0;   // legs
+      }
+      if (y === 2) return Math.abs(dx) <= 1 && dz >= -1 && dz <= 1 ? 0x7cc46a : 0;
+      return Math.abs(dx) === 1 && z === 4 ? 0xfaf5e4 : 0;                     // eyes
+    },
+  }),
+  bonus(2, {
+    // A whale, tail flukes raised, with a spout of water.
+    name: 'Whale', dims: [10, 5, 5], fraction: 0.9, seed: 7,
+    story: 'The lagoon’s oldest swimmer, singing to no one in particular.',
+    cell(x, y, z) {
+      if (x === 2 && z === 2 && y === 4) return 0x9fd9f0;                      // spout
+      if (x <= 7 && ell(x - 3.6, y - 1.1, z - 2, 3.9, 1.9, 2.1)) {
+        if (x === 1 && y === 1 && (z === 1 || z === 3)) return 0x1d2740;      // eyes
+        return y === 0 ? 0xdde8f2 : 0x4f78b0;
+      }
+      if (x === 8 && z === 2 && (y === 1 || y === 2)) return 0x4f78b0;
+      if (x === 9 && y === 2) return 0x4f78b0;                                 // flukes spread wide
+      if (x === 9 && y === 3 && (z === 0 || z === 4)) return 0x4f78b0;
+      return 0;
+    },
+  }),
+  bonus(3, {
+    // A paper lantern: a hollow shell with a candle burning inside.
+    name: 'Paper Lantern', dims: [7, 9, 7], fraction: 0.9, seed: 1,
+    story: 'One small flame inside, keeping the whole dusk company.',
+    cell(x, y, z) {
+      const dx = x - 3, dz = z - 3, r = ring(dx, dz);
+      if (y === 0) return r <= 1.5 ? 0x5a3a4a : 0;
+      if (y === 8) return r <= 1.0 ? 0x5a3a4a : 0;
+      if (dx === 0 && dz === 0 && y <= 2) return 0xf6efe4;                    // candle
+      if (dx === 0 && dz === 0 && y === 3) return 0xffd58a;                   // flame
+      const out = [0, 2.3, 2.9, 3.2, 3.2, 3.2, 2.9, 2.3][y];
+      if (r > out || r < out - 1.15) return 0;
+      return y === 2 || y === 6 ? 0xa53b52 : 0xe0546b;
+    },
+  }),
+  bonus(4, {
+    // A crescent moon with a small star caught in its curve.
+    name: 'Crescent Moon', dims: [9, 9, 4], fraction: 0.9, seed: 1,
+    story: 'The moon came down to rest, and forgot to leave.',
+    cell(x, y, z) {
+      const inMoon = (px, py) => ring(px - 4, py - 4) <= 4.3 && ring(px - 6, py - 5.2) > 3.5;
+      if (inMoon(x, y)) {
+        const deep = [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([a, b]) => inMoon(x + a, y + b));
+        if (!deep && (z === 0 || z === 3)) return 0;
+        return z === 0 ? 0xe8dcb8 : 0xfff1c9;
+      }
+      const star = Math.abs(x - 6) + Math.abs(y - 3) <= 1;                     // a small plus, in the crook
+      return star && (z === 1 || z === 2) ? 0xffd58a : 0;
+    },
+  }),
 ];
 
 // Random puzzle: a few overlapping spheres, coloured by height band.

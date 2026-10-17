@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Puzzle, hideClues } from './puzzle.js';
-import { SHAPES, TUTORIAL, randomShape, buildCells } from './shapes.js';
+import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
 import { sound } from './audio.js';
@@ -10,6 +10,7 @@ import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
+import { renderJournal, closeView, viewOpen } from './journal.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -139,11 +140,37 @@ function startPuzzle(entry) {
   show('#menu', false);
   show('#win', false);
   renderCoach();
+  maybeChapterCard(entry);
 
   // the block rises in with a wave from its base
   cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], now(), 1.6, 6);
   rayBoost = 1;
 }
+
+// The first time you step into a chapter, its title card rises over the
+// block for a breath: numeral, name, one line. Tap to let it go.
+const chapterCard = $('#chapter-card');
+let chapterCardTimer = 0;
+function maybeChapterCard(entry) {
+  const ch = !entry.lesson && CHAPTERS.find((c) => c.name === entry.shape.chapter);
+  if (!ch) return;
+  // wait a beat: boot starts a puzzle quietly behind the map, which isn't entering it
+  setTimeout(() => {
+    if (game?.entry !== entry || $('#menu').classList.contains('show')) return;
+    const seen = JSON.parse(localStorage.getItem('strata.chapters') || '[]');
+    if (seen.includes(ch.name)) return;
+    seen.push(ch.name);
+    localStorage.setItem('strata.chapters', JSON.stringify(seen));
+    chapterCard.querySelector('.numeral').textContent = ch.numeral;
+    chapterCard.querySelector('.cname').textContent = ch.name;
+    chapterCard.querySelector('.cline').textContent = ch.line;
+    chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
+    chapterCard.classList.add('show');
+    clearTimeout(chapterCardTimer);
+    chapterCardTimer = setTimeout(() => chapterCard.classList.remove('show'), 2900);
+  }, 60);
+}
+chapterCard.addEventListener('click', () => { clearTimeout(chapterCardTimer); chapterCard.classList.remove('show'); });
 
 function applyPalette(p) {
   const a = p.lightAngle ?? 0, c = Math.cos(a), s = Math.sin(a);
@@ -404,7 +431,7 @@ function win() {
   // fit everything into the band between the title and the actions
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
-  const bandTop = H * (g.entry.lesson ? 0.2 : 0.25);
+  const bandTop = H * (g.entry.lesson ? 0.2 : 0.25) + (!g.entry.lesson && g.shape.story ? 44 : 0);
   const bandBottom = g.entry.lesson ? H - 90 : H - 96;
   const band = Math.max(180, bandBottom - bandTop);
   const zoom = THREE.MathUtils.clamp((band / 2) / (sphere.radius * 0.92 * pxPerUnit), 0.5, 1.35);
@@ -441,8 +468,11 @@ function win() {
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
 
   const title = $('#win-title');
-  title.innerHTML = '<span class="sub">you uncovered</span><span class="name">' +
-    [...g.shape.name].map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>';
+  const letters = [...g.shape.name];
+  title.innerHTML = '<span class="sub">you uncovered</span><span class="name' + (letters.length > 9 ? ' long' : '') + '">' +
+    letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
+    (g.shape.story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
+  if (g.shape.story) title.querySelector('.story').textContent = g.shape.story;
   title.classList.remove('show'); void title.offsetWidth;
   setTimeout(() => { if (game === g) title.classList.add('show'); }, 1100);
   // a run of flawless solves feeds the streak bonus
@@ -645,6 +675,29 @@ $('#undo').addEventListener('click', undo);
 $('#menu-btn').addEventListener('click', openMenu);
 $('#help-btn').addEventListener('click', () => show('#help', true));
 $('#map-help').addEventListener('click', () => show('#help', true));
+
+// every level and bonus stone, each in its chapter's palette for the journal
+function journalEntries() {
+  const bonus = BONUS.map((shape, k) => {
+    const base = PALETTES.find((p) => p.name === shape.palette) ?? PALETTES[0];
+    return { shape, palette: variant(base, 1, 100 + k) };
+  });
+  return [...puzzleList(), ...bonus];
+}
+function openJournal() {
+  renderJournal($('#journal'), { entries: journalEntries(), solved: solvedStore });
+  $('#journal .jr-scroll').scrollTop = 0;
+  show('#journal', true);
+}
+function closeJournal() { closeView(); show('#journal', false); }
+$('#map-journal').addEventListener('click', openJournal);
+$('#journal-close').addEventListener('click', closeJournal);
+$('#journal-back').addEventListener('click', closeView);
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !$('#journal').classList.contains('show')) return;
+  e.stopImmediatePropagation();   // don't also close the map beneath
+  if (viewOpen()) closeView(); else closeJournal();
+}, true);
 $('#help [data-close]').addEventListener('click', () => show('#help', false));
 $('#coach-skip').addEventListener('click', () => {
   localStorage.setItem('strata.tutorial', '1');
@@ -988,4 +1041,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { get game() { return game; }, get peel() { return peel; }, act, startTutorial, setPeeled, setPeelAxis, resetView, handles, camera };
+window.strata = { get game() { return game; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera };
