@@ -733,7 +733,7 @@ function showResult(g, result, isBest) {
       shown = from + (target - from) * (1 - Math.pow(1 - k, 3));
       finale.setScore(shown, false);
       if (now2 - lastTick > 75 && k < 1) { lastTick = now2; sound.tick(ticks++); }
-      if (k < 1) anim = requestAnimationFrame(step);
+      if (k < 1) anim = requestAnimationFrame(step); else sound.tickDone();
     };
     anim = requestAnimationFrame(step);
   };
@@ -931,6 +931,12 @@ function frame() {
 
 document.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
 document.addEventListener('keydown', () => sound.unlock(), { capture: true });
+// every control answers: map stones pluck a string, buttons tick
+document.addEventListener('click', (e) => {
+  const stone = e.target.closest('.map-node');
+  if (stone) sound.stone([...document.querySelectorAll('.map-node')].indexOf(stone));
+  else if (e.target.closest('button')) sound.ui();
+}, { capture: true });
 function renderSoundToggles() {
   $('#toggle-sfx').classList.toggle('on', sound.sfxOn);
   $('#toggle-music').classList.toggle('on', sound.musicOn);
