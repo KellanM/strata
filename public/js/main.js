@@ -615,6 +615,7 @@ $('#win-next').addEventListener('click', () => {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
   if (game.entry.lesson) startPuzzle(list[0]);
+  else if (game.entry.bonus) { show('#win', false); openMenu(); }   // shrines lead back to the map
   else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
   else startRandom(game.shape.dims[0]);
 });
@@ -736,7 +737,7 @@ function updateStrikes() {
 
 const DRIFT_SIZES = [6, 8, 10];
 
-function renderMenu(scroll = true) {
+function renderMenu(scroll = true, celebrate = false) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
   $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
@@ -750,18 +751,47 @@ function renderMenu(scroll = true) {
     driftPalette: PALETTES.find((p) => p.name === 'Night') ?? PALETTES[PALETTES.length - 1],
     fmt,
     scroll,
-    onLearn: () => startTutorial(0),
-    onDrift: (n) => startRandom(n),
-    onPlay: (entry) => {
-      loading(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => { startPuzzle(entry); loading(false); }));
-    },
+    celebrate,
+    onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0)),
+    onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
+    onPlay: (entry, el) => diveInto(el, entry.palette, () => startPuzzle(entry)),
   });
 }
 
 function openMenu() {
   show('#menu', true);
-  renderMenu();
+  renderMenu(true, true);
+}
+
+// Map -> level: the map swells toward the tapped stone while the level's own
+// sky washes over it, the puzzle is carved behind that veil, then the veil lifts.
+const veil = document.createElement('div');
+veil.id = 'veil';
+veil.setAttribute('aria-hidden', 'true');
+document.body.appendChild(veil);
+let diving = false;
+function diveInto(el, palette, start) {
+  if (diving) return;
+  const hexOf = (h) => '#' + new THREE.Color(h).getHexString();
+  if (reduceMotion || !el) {
+    loading(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => { start(); loading(false); }));
+    return;
+  }
+  diving = true;
+  const r = el.getBoundingClientRect(), menu = $('#menu');
+  menu.style.setProperty('--dive-x', `${r.left + r.width / 2}px`);
+  menu.style.setProperty('--dive-y', `${r.top + r.height / 2}px`);
+  menu.classList.add('diving');
+  veil.style.background = `radial-gradient(circle at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, ${hexOf(palette.glow)}, ${hexOf(palette.skyTop)} 45%, ${hexOf(palette.skyBottom)})`;
+  veil.classList.add('in');
+  setTimeout(() => {
+    start();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      veil.classList.remove('in');
+      setTimeout(() => { menu.classList.remove('diving'); diving = false; }, 520);
+    }));
+  }, 460);
 }
 
 window.addEventListener('resize', () => { if ($('#menu').classList.contains('show')) renderMenu(false); });
