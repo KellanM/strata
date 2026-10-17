@@ -6,6 +6,7 @@ import { PALETTES } from './palettes.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
+import { renderMap } from './map.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -71,7 +72,11 @@ const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 // ---------------------------------------------------------------- puzzles
 
 function puzzleList() {
-  return SHAPES.map((s, i) => ({ shape: s, palette: PALETTES[i % PALETTES.length], number: i + 1 }));
+  return SHAPES.map((s, i) => ({
+    shape: s,
+    palette: PALETTES.find((p) => p.name === s.palette) ?? PALETTES[i % PALETTES.length],
+    number: i + 1,
+  }));
 }
 
 function startPuzzle(entry) {
@@ -565,17 +570,16 @@ function setTool(t) {
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 $('#undo').addEventListener('click', undo);
-$('#menu-btn').addEventListener('click', () => { renderMenu(); show('#menu', true); });
+$('#menu-btn').addEventListener('click', openMenu);
 $('#help-btn').addEventListener('click', () => show('#help', true));
 $('#help [data-close]').addEventListener('click', () => show('#help', false));
 $('#coach-skip').addEventListener('click', () => {
   localStorage.setItem('strata.tutorial', '1');
   tutorial = null;
   renderCoach();
-  renderMenu();
-  show('#menu', true);
+  openMenu();
 });
-$('#win-menu').addEventListener('click', () => { renderMenu(); show('#menu', true); });
+$('#win-menu').addEventListener('click', openMenu);
 $('#win-next').addEventListener('click', () => {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
@@ -583,8 +587,10 @@ $('#win-next').addEventListener('click', () => {
   else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
   else startRandom(game.shape.dims[0]);
 });
-document.querySelectorAll('[data-random]').forEach((b) => b.addEventListener('click', () => startRandom(+b.dataset.random)));
-$('#menu').addEventListener('click', (e) => { if (e.target.id === 'menu' && game) show('#menu', false); });
+$('#map-close').addEventListener('click', () => { if (game) show('#menu', false); });
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && game && $('#menu').classList.contains('show')) show('#menu', false);
+});
 
 window.addEventListener('keydown', (e) => {
   if (!game) return;
@@ -624,38 +630,37 @@ function updateStrikes() {
   $('#strikes').textContent = game.mistakes ? '✕'.repeat(Math.min(game.mistakes, 5)) + (game.mistakes > 5 ? '+' : '') : '';
 }
 
-function renderMenu() {
-  const grid = $('#grid');
-  grid.innerHTML = '';
-  const hex = (h) => '#' + h.toString(16).padStart(6, '0');
+const DRIFT_SIZES = [6, 8, 10];
 
-  const learned = localStorage.getItem('strata.tutorial');
-  const learn = document.createElement('button');
-  learn.className = 'card learn' + (learned ? ' solved' : '');
-  learn.innerHTML = `<span class="num">00</span><span class="gem steps"></span>
-    <span class="name">Learn</span><span class="dims">${TUTORIAL.length} short lessons</span>`;
-  learn.addEventListener('click', () => startTutorial(0));
-  grid.appendChild(learn);
-
-  for (const entry of puzzleList()) {
-    const { shape, palette, number } = entry;
-    const solved = solvedStore[shape.id];
-    const b = document.createElement('button');
-    b.className = 'card' + (solved ? ' solved' : '');
-    b.style.background = `linear-gradient(170deg, ${hex(palette.skyTop)}, ${hex(palette.skyBottom)})`;
-    b.innerHTML = `
-      <span class="num">${String(number).padStart(2, '0')}</span>
-      <span class="gem" style="background:linear-gradient(135deg, ${hex(palette.top)} 0 50%, ${hex(palette.lit)} 50% 100%);
-        box-shadow: -6px 6px 0 ${hex(palette.shade)}"></span>
-      <span class="name">${solved ? shape.name : '???'}</span>
-      <span class="dims">${shape.dims.join('×')}${solved ? ' · ' + fmt(solved.time) : ''}</span>`;
-    b.addEventListener('click', () => {
+function renderMenu(scroll = true) {
+  const entries = puzzleList();
+  const done = entries.filter((e) => solvedStore[e.shape.id]).length;
+  $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
+  $('#menu').classList.toggle('has-game', !!game);
+  renderMap($('#map'), {
+    entries,
+    solved: solvedStore,
+    learned: !!localStorage.getItem('strata.tutorial'),
+    lessons: TUTORIAL.length,
+    drift: DRIFT_SIZES,
+    driftPalette: PALETTES.find((p) => p.name === 'Night') ?? PALETTES[PALETTES.length - 1],
+    fmt,
+    scroll,
+    onLearn: () => startTutorial(0),
+    onDrift: (n) => startRandom(n),
+    onPlay: (entry) => {
       loading(true);
       requestAnimationFrame(() => requestAnimationFrame(() => { startPuzzle(entry); loading(false); }));
-    });
-    grid.appendChild(b);
-  }
+    },
+  });
 }
+
+function openMenu() {
+  show('#menu', true);
+  renderMenu();
+}
+
+window.addEventListener('resize', () => { if ($('#menu').classList.contains('show')) renderMenu(false); });
 
 function loading(on) { $('#loading').textContent = on ? 'carving' : ''; }
 
@@ -780,7 +785,7 @@ renderMenu();
 if (localStorage.getItem('strata.tutorial')) {
   // a quiet block behind the menu so the first screen already breathes
   startPuzzle(puzzleList()[0]);
-  show('#menu', true);
+  openMenu();
 } else {
   startTutorial(0);
 }

@@ -70,17 +70,17 @@
   </footer>
 
   <section id="menu" class="overlay show" aria-label="Puzzles">
-    <div class="panel">
-      <h1>Strata</h1>
-      <p class="sub">peel the stone · find the shape</p>
-      <div id="grid" class="grid"></div>
-      <div class="random">
-        <span>Drift</span>
-        <button data-random="6">6³</button>
-        <button data-random="8">8³</button>
-        <button data-random="10">10³</button>
-      </div>
+    <div class="map-scroll">
+      <header class="map-head">
+        <h1>Strata</h1>
+        <p class="sub">peel the stone · find the shape</p>
+        <p id="map-progress" class="sub"></p>
+      </header>
+      <div id="map" class="map"></div>
     </div>
+    <button id="map-close" class="icon-btn" aria-label="Back to the puzzle">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
   </section>
 
   <section id="help" class="overlay" aria-label="How to play">
