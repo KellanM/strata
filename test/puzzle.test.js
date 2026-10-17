@@ -99,3 +99,38 @@ test('tutorial lessons are solvable with exactly the clues they show', async () 
     assert.ok(lineSolve(p), `${lesson.id} not solvable`);
   }
 });
+
+test('bonus stones: one per chapter, solvable, phone-sized, harder than their chapter', async () => {
+  const { BONUS } = await import('../public/js/shapes.js');
+  assert.deepEqual(BONUS.map((b) => b.chapter), CHAPTERS.map((c) => c.name), 'one bonus per chapter, in order');
+  const ids = new Set([...SHAPES, ...BONUS].map((s) => s.id));
+  assert.equal(ids.size, SHAPES.length + BONUS.length, 'bonus ids collide');
+  for (const b of BONUS) {
+    assert.ok(b.bonus && b.id.startsWith('bonus-'), `${b.id} flagged`);
+    assert.ok(b.dims.every((d) => d >= 2 && d <= 11), `${b.id} dims ${b.dims}`);
+    const { p, ok } = prepared(b);
+    assert.ok(ok && lineSolve(p), `${b.id} not uniquely line-solvable with its clues`);
+    const chisel = p.size - p.solid.reduce((a, c) => a + c, 0);
+    assert.ok(chisel <= 330, `${b.id} needs ${chisel} chisels`);
+    const hardest = Math.max(...SHAPES.filter((s) => s.chapter === b.chapter).map((s) => {
+      const q = prepared(s).p;
+      return difficulty(solveStats(q), q);
+    }));
+    const { p: q } = prepared(b);
+    const d = difficulty(solveStats(q), q);
+    console.log(`${b.id.padEnd(18)} D ${d.toFixed(1)}  (chapter hardest ${hardest.toFixed(1)})`);
+    assert.ok(d > hardest, `${b.id} (${d.toFixed(1)}) should be harder than its chapter (${hardest.toFixed(1)})`);
+  }
+});
+
+test('every object has a short story and every chapter a title line', async () => {
+  const { BONUS } = await import('../public/js/shapes.js');
+  for (const s of [...SHAPES, ...BONUS]) {
+    assert.ok(typeof s.story === 'string' && s.story.length > 0, `${s.id} has no story`);
+    assert.ok(s.story.split(/\s+/).length <= 14, `${s.id} story too long`);
+  }
+  for (const c of CHAPTERS) {
+    assert.ok(c.numeral && c.line, `${c.name} missing numeral/line`);
+    assert.ok(c.line.split(/\s+/).length <= 9, `${c.name} line too long`);
+  }
+});
