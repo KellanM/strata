@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Puzzle, lineSolve, hideClues, STYLE_CIRCLE, STYLE_SQUARE } from '../public/js/puzzle.js';
-import { SHAPES, randomShape, buildCells } from '../public/js/shapes.js';
+import { Puzzle, lineSolve, hideClues, solveStats, STYLE_CIRCLE, STYLE_SQUARE } from '../public/js/puzzle.js';
+import { SHAPES, CHAPTERS, randomShape, buildCells } from '../public/js/shapes.js';
+import { PALETTES } from '../public/js/palettes.js';
+import { difficulty } from './difficulty.js';
 
 function make(shape) {
   const { solid, colors } = buildCells(shape);
@@ -18,15 +20,58 @@ test('clue styles count groups', () => {
   assert.equal(q.lineOf(0, 0).style, STYLE_CIRCLE);
 });
 
-test('every built-in shape is line-solvable after hiding clues', () => {
+// Same clue set the game builds (main.js: hideClues(puzzle, fraction ?? 0.85, seed ?? 7)).
+function prepared(shape) {
+  const p = make(shape);
+  const ok = hideClues(p, shape.fraction ?? 0.85, shape.seed ?? 7);
+  return { p, ok };
+}
+
+test('every level is uniquely line-solvable with the clues the game shows', () => {
   for (const shape of SHAPES) {
-    const p = make(shape);
     const t0 = performance.now();
-    assert.ok(hideClues(p, shape.fraction, 7), `${shape.id} not solvable with full clues`);
+    const { p, ok } = prepared(shape);
     const ms = performance.now() - t0;
+    assert.ok(ok, `${shape.id} not solvable even with every clue`);
+    // line logic reaching every cell means the solution is unique
     assert.ok(lineSolve(p), `${shape.id} unsolvable after hiding`);
-    const hidden = p.lines.filter((l) => l.hidden).length;
-    console.log(`${shape.id} ${shape.dims.join('x')}: hid ${hidden}/${p.lines.length} in ${ms.toFixed(0)}ms`);
+    assert.ok(ms < 1500, `${shape.id} took ${ms.toFixed(0)}ms to prepare`);
+  }
+});
+
+test('level set is well-formed for the map', () => {
+  const ids = new Set(SHAPES.map((s) => s.id));
+  assert.equal(ids.size, SHAPES.length, 'duplicate ids');
+  // players' saves are keyed by these
+  for (const id of ['heart', 'invader', 'mushroom', 'tree', 'mug', 'snowman', 'rocket', 'torus', 'arch'])
+    assert.ok(ids.has(id), `missing legacy id ${id}`);
+  const paletteNames = new Set(PALETTES.map((p) => p.name));
+  const order = SHAPES.map((s) => s.chapter).filter((c, i, a) => c !== a[i - 1]);
+  assert.deepEqual(order, CHAPTERS.map((c) => c.name), 'chapters contiguous and in CHAPTERS order');
+  for (const shape of SHAPES) {
+    assert.ok(paletteNames.has(shape.palette), `${shape.id} palette ${shape.palette}`);
+    assert.ok(shape.dims.every((d) => d >= 2 && d <= 11), `${shape.id} dims ${shape.dims}`);
+    const p = make(shape);
+    const chisel = p.size - p.solid.reduce((a, b) => a + b, 0);
+    assert.ok(chisel <= 330, `${shape.id} needs ${chisel} chisels, too many taps for a phone`);
+  }
+});
+
+test('difficulty rises across chapters', () => {
+  const byChapter = new Map();
+  for (const shape of SHAPES) {
+    const { p } = prepared(shape);
+    const d = difficulty(solveStats(p), p);
+    if (!byChapter.has(shape.chapter)) byChapter.set(shape.chapter, []);
+    byChapter.get(shape.chapter).push(d);
+  }
+  let prevMean = 0;
+  for (const [name, ds] of byChapter) {
+    const mean = ds.reduce((a, b) => a + b, 0) / ds.length;
+    console.log(`${name.padEnd(12)} mean ${mean.toFixed(1)}  [${ds.map((d) => d.toFixed(1)).join(' ')}]`);
+    assert.ok(mean > prevMean, `${name} (${mean.toFixed(1)}) is not harder than the chapter before`);
+    assert.ok(ds.at(-1) > ds[0], `${name} should end harder than it starts`);
+    prevMean = mean;
   }
 });
 
