@@ -41,6 +41,18 @@ const shards = new Shards();
 const handles = new PeelHandles(cubes.uniforms.uLight);
 scene.add(background.mesh, motes.points, shards.points, handles.group);
 
+// shockwave rings that roll out across the ground when a puzzle is solved
+const winRings = [0, 0.22, 0.5].map((delay) => {
+  const mesh = new THREE.Mesh(
+    new THREE.RingGeometry(0.97, 1, 128).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }),
+  );
+  mesh.visible = false;
+  mesh.renderOrder = 2;
+  scene.add(mesh);
+  return { mesh, delay };
+});
+
 const CAM_DIST = 120;
 let viewRadius = 6;
 let game = null;
@@ -91,6 +103,8 @@ function startPuzzle(entry) {
 
   controls.autoRotate = false;
   controls.target.set(0, 0, 0);
+  for (const r of winRings) r.mesh.visible = false;
+  $('#win-title').classList.remove('show');
   // look square-on at the broad face of flat puzzles, isometric otherwise
   game.homeAz = shape.view ?? (Z < X * 0.6 ? 0.42 : X < Z * 0.6 ? Math.PI / 2 - 0.42 : Math.PI / 4);
   game.homeEl = 0.56;
@@ -139,23 +153,28 @@ function placeCamera(az, el) {
 
 function resetView() {
   if (!game) return;
-  spherical.setFromVector3(camera.position);
+  spherical.setFromVector3(camera.position.clone().sub(controls.target));
   let dTheta = game.homeAz - spherical.theta;
   dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));   // shortest way round
   viewAnim = {
     t0: now(), theta0: spherical.theta, dTheta,
     phi0: spherical.phi, phi1: Math.PI / 2 - game.homeEl, zoom0: camera.zoom,
+    zoom1: game.win?.zoom ?? 1,
+    target0: controls.target.clone(), target1: game.win?.focus ?? new THREE.Vector3(),
+    duration: game.win && !game.win.framed ? 1.1 : 0.7,
   };
+  if (game.win) game.win.framed = true;
   buzz(8);
 }
 
 function stepViewAnim(t) {
   if (!viewAnim) return;
-  const k = Math.min(1, (t - viewAnim.t0) / (reduceMotion ? 0.01 : 0.7));
+  const k = Math.min(1, (t - viewAnim.t0) / (reduceMotion ? 0.01 : viewAnim.duration));
   const e = 1 - Math.pow(1 - k, 3);
   spherical.set(CAM_DIST, viewAnim.phi0 + (viewAnim.phi1 - viewAnim.phi0) * e, viewAnim.theta0 + viewAnim.dTheta * e);
-  camera.position.setFromSpherical(spherical);
-  camera.zoom = viewAnim.zoom0 + (1 - viewAnim.zoom0) * e;
+  controls.target.lerpVectors(viewAnim.target0, viewAnim.target1, e);
+  camera.position.setFromSpherical(spherical).add(controls.target);
+  camera.zoom = viewAnim.zoom0 + (viewAnim.zoom1 - viewAnim.zoom0) * e;
   camera.updateProjectionMatrix();
   if (k >= 1) viewAnim = null;
 }
@@ -308,21 +327,59 @@ function undo() {
   buzz(6);
 }
 
+// The finale: the block holds its breath, the stone falls away to true colour
+// under a band of light, the object leaps and whirls with confetti and a
+// shockwave, lands with a hop that climbs it, then turns slowly on show.
 function win() {
   const g = game;
+  const t = now();
   g.solved = true;
-  g.elapsed = now() - g.start;
-  g.revealStart = now() + 0.3;
+  g.elapsed = t - g.start;
+  g.revealStart = t + 0.3;
   setPeeled(0, true);
+  cubes.uniforms.uHover.value.set(-99, -99, -99);
+  cubes.uniforms.uWin.value = t;
   const d = g.puzzle.dims;
-  cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], now(), 2.2, 5);
-  rayBoost = 2.2;
-  buzz([20, 60, 20, 60, 40]);
+
+  // frame what's left, not the original block
+  const focus = new THREE.Vector3(), cells = [];
+  for (let i = 0; i < g.puzzle.size; i++) if (!g.broken[i]) cells.push(i);
+  for (const i of cells) focus.add(cellWorld(i));
+  focus.divideScalar(Math.max(1, cells.length));
+  let radius = 0;
+  for (const i of cells) radius = Math.max(radius, cellWorld(i).distanceTo(focus) + 0.87);
+  g.win = { t0: t, focus, zoom: THREE.MathUtils.clamp(viewRadius / (radius + 1.4), 1, 1.35), framed: false, lesson: !!g.entry.lesson };
+  resetView();
+
+  cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], t + 0.3, 2.2, 5);
+  cubes.ripple([(d[0] - 1) / 2, -1, (d[2] - 1) / 2], t + 1.0, 1.4, 8);   // the landing
+  rayBoost = 2.6;
+  buzz([12, 50, 30, 400, 60]);
   $('#pz-name').textContent = g.shape.name;
+
+  // confetti in the object's own colours, thrown from all over it
+  const hues = [...new Set(cells.map((i) => g.puzzle.colors[i] || 0xffffff))].slice(0, 5).map((h) => new THREE.Color(h));
+  hues.push(new THREE.Color(g.palette.rays));
+  const bursts = reduceMotion ? 2 : g.entry.lesson ? 4 : 9;
+  for (let k = 0; k < bursts; k++) {
+    const at = cellWorld(cells[Math.floor(Math.random() * cells.length)]);
+    shards.burst(at, t + 0.34 + k * 0.07, hues, g.entry.lesson ? 18 : 34, 1.7);
+  }
+  for (const r of winRings) {
+    r.mesh.material.color.setHex(g.palette.rays);
+    r.mesh.position.set(focus.x, -d[1] / 2 - 0.05, focus.z);
+  }
+
+  const flash = $('#flash');
+  flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
 
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
 
-  controls.autoRotate = !reduceMotion;
+  const title = $('#win-title');
+  title.innerHTML = '<span class="sub">you uncovered</span><span class="name">' +
+    [...g.shape.name].map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>';
+  title.classList.remove('show'); void title.offsetWidth;
+  setTimeout(() => { if (game === g) title.classList.add('show'); }, 1100);
   const prev = solvedStore[g.shape.id];
   if (!g.shape.id.startsWith('random') && (!prev || g.elapsed < prev.time)) {
     solvedStore[g.shape.id] = { time: g.elapsed, mistakes: g.mistakes };
@@ -331,7 +388,7 @@ function win() {
   setTimeout(() => {
     if (game !== g) return;
     showWin(g.shape.name, `${fmt(g.elapsed)} · ${g.mistakes ? g.mistakes + ' mistake' + (g.mistakes > 1 ? 's' : '') : 'flawless'}`, 'Next');
-  }, 2600);
+  }, 3200);
 }
 
 // ---------------------------------------------------------------- tutorial
@@ -455,7 +512,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'mouse' && game && !e.buttons) {
     const onHandle = !game.solved && handles.group.visible && handles.hit(e.clientX, e.clientY, camera, canvas.getBoundingClientRect(), 22);
     canvas.style.cursor = onHandle ? 'grab' : '';
-    const i = onHandle ? -1 : pick(e.clientX, e.clientY);
+    const i = onHandle || game.solved ? -1 : pick(e.clientX, e.clientY);
     const h = cubes.uniforms.uHover.value;
     if (i >= 0) h.set(...game.puzzle.coords(i)); else h.set(-99, -99, -99);
   }
@@ -622,6 +679,36 @@ function resize() {
 window.addEventListener('resize', resize);
 
 let last = now();
+// Spin with a wind-up: ease back a touch, then flick into a fast whirl that
+// decays to a slow turntable. The object turns about its own centre.
+function stepCelebration(t) {
+  const w = game.win, mesh = cubes.mesh;
+  const age = t - w.t0;
+  let angle = 0, lift = 0;
+  if (!reduceMotion) {
+    const windup = Math.min(1, age / 0.34);
+    const s = Math.max(0, age - 0.34);
+    const whirl = w.lesson ? Math.PI * 2 : Math.PI * 4;
+    angle = -0.25 * Math.sin(windup * Math.PI / 2) + whirl * (1 - Math.exp(-s / 0.7)) + 0.42 * s;
+    const leap = Math.min(1, s / 0.66);
+    lift = 0.5 * Math.sin(Math.PI * leap) * (leap < 1 ? 1 : 0)
+      + 0.09 * Math.sin((s - 0.66) * 1.5) * THREE.MathUtils.smoothstep(s, 0.66, 2.2);
+  }
+  const c = Math.cos(angle), sn = Math.sin(angle);
+  const fx = w.focus.x, fz = w.focus.z;
+  mesh.rotation.y = angle;
+  mesh.position.set(fx - (fx * c + fz * sn), lift, fz - (-fx * sn + fz * c));
+
+  for (const r of winRings) {
+    const a = (age - 0.34 - r.delay) / 1.5;
+    r.mesh.visible = a > 0 && a < 1 && !reduceMotion;
+    if (!r.mesh.visible) continue;
+    const e = 1 - Math.pow(1 - a, 3);
+    r.mesh.scale.setScalar(0.6 + viewRadius * 2.4 * e);
+    r.mesh.material.opacity = 0.55 * (1 - a) * (1 - a);
+  }
+}
+
 function frame() {
   const t = now();
   const dt = Math.min(0.05, t - last);
@@ -633,8 +720,10 @@ function frame() {
     const u = cubes.uniforms;
     u.uTime.value = t;
     u.uPeel.value.y += (peel.keepVisual - u.uPeel.value.y) * Math.min(1, dt * (reduceMotion || drag ? 60 : 9));
-    if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 2.2));
+    if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 1.5));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
+
+    if (game.win) stepCelebration(t);
 
     camDir.copy(camera.position).sub(controls.target).normalize();
     handles.group.visible = !game.solved && game.shape.handles !== false;
@@ -652,7 +741,7 @@ function frame() {
   const gain = game?.palette.rayGain ?? 1;
   rays.compUniforms.uIntensity.value = gain * (0.42 + rayBoost * 0.5 + 0.05 * Math.sin(t * 0.7));
 
-  centerNdc.set(0, 0, 0).project(camera);
+  centerNdc.copy(controls.target).project(camera);
   const cx = centerNdc.x * 0.5 + 0.5, cy = centerNdc.y * 0.5 + 0.5;
   rays.uniforms.uCenter.value.set(cx, cy);
   background.uniforms.uCenter.value.set(cx, cy);
@@ -663,11 +752,14 @@ function frame() {
     rays.render(renderer, () => {
       const vis = handles.group.visible;
       background.mesh.visible = motes.points.visible = shards.points.visible = handles.group.visible = false;
+      const ringsOn = winRings.map((r) => r.mesh.visible);
+      for (const r of winRings) r.mesh.visible = false;
       cubes.uniforms.uMask.value = 1;
       renderer.render(scene, camera);
       cubes.uniforms.uMask.value = 0;
       background.mesh.visible = motes.points.visible = shards.points.visible = true;
       handles.group.visible = vis;
+      winRings.forEach((r, k) => { r.mesh.visible = ringsOn[k]; });
     });
   }
 

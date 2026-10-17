@@ -248,10 +248,10 @@ export class Shards {
     this.points.frustumCulled = false;
   }
 
-  burst(center, time, colors, count = 14) {
+  burst(center, time, colors, count = 14, power = 1) {
     for (let k = 0; k < count; k++) {
       const i = this.next++ % this.capacity;
-      const a = Math.random() * Math.PI * 2, up = 1.2 + Math.random() * 2.4, sp = 0.8 + Math.random() * 1.8;
+      const a = Math.random() * Math.PI * 2, up = (1.2 + Math.random() * 2.4) * power, sp = (0.8 + Math.random() * 1.8) * power;
       this.origin.set([center.x + (Math.random() - 0.5) * 0.6, center.y + (Math.random() - 0.5) * 0.6, center.z + (Math.random() - 0.5) * 0.6], i * 3);
       this.vel.set([Math.cos(a) * sp, up, Math.sin(a) * sp], i * 3);
       this.start[i] = time + Math.random() * 0.05;

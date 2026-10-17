@@ -182,3 +182,45 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   background: linear-gradient(135deg, #fcf0de 0 50%, #f1c4a6 50% 100%);
   box-shadow: -6px 6px 0 #a98cb6, -12px 12px 0 rgba(169, 140, 182, .4);
 }
+
+/* ---------- win celebration ---------- */
+#flash {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 252, 240, 0.95), rgba(255, 245, 225, 0.35) 38%, rgba(255, 245, 225, 0) 70%);
+  mix-blend-mode: screen;
+}
+#flash.go { animation: win-flash 1.3s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes win-flash { 0% { opacity: 0; } 26% { opacity: 0.85; } 100% { opacity: 0; } }
+
+#win-title {
+  position: fixed; z-index: 2; left: 0; right: 0; top: calc(86px + var(--safe-t));
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  pointer-events: none; text-align: center; color: var(--ink);
+  opacity: 0; transition: opacity .6s ease;
+}
+#win-title.show { opacity: 1; }
+#win-title .sub {
+  font-size: 11px; letter-spacing: .42em; text-transform: uppercase; opacity: 0;
+}
+#win-title .name {
+  font-size: clamp(28px, 8.5vw, 44px); font-weight: 500; letter-spacing: .28em; text-transform: uppercase;
+  padding-left: .28em; white-space: nowrap;
+  text-shadow: 0 0 24px rgba(255, 250, 235, 0.9), 0 0 2px rgba(255, 250, 235, 0.6);
+}
+#win-title .name span { display: inline-block; opacity: 0; }
+#win-title.show .sub { animation: win-sub .9s ease .1s both; }
+#win-title.show .name span { animation: win-letter .9s cubic-bezier(.2,.9,.25,1.15) both; animation-delay: calc(var(--k) * 55ms + .25s); }
+@keyframes win-sub { from { opacity: 0; letter-spacing: .1em; } to { opacity: .75; letter-spacing: .42em; } }
+@keyframes win-letter {
+  0% { opacity: 0; transform: translateY(18px) scale(.7); filter: blur(6px); }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+/* the title carries the name, so the card below keeps just stats and buttons */
+#win .panel > .sub:first-child, #win #win-name {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  #flash.go { animation-duration: .01s; }
+  #win-title.show .sub, #win-title.show .name span { animation: none; opacity: 1; }
+}

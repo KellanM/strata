@@ -55,8 +55,10 @@ const vertexShader = /* glsl */ `
   uniform vec4 uRip[${MAX_RIPPLES}];       // origin.xyz, start time
   uniform vec2 uRipParam[${MAX_RIPPLES}];  // amplitude, speed
   uniform vec3 uHint;
+  uniform float uWin;      // time the puzzle was solved (-99 while playing)
 
   varying vec3 vN;
+  varying vec3 vWN;
   varying vec3 vLocal;
   varying vec2 vUv;
   varying float vTile;
@@ -128,14 +130,33 @@ const vertexShader = /* glsl */ `
 
     if (distance(aCell, uHint) < 0.1) offset.y += 0.07 * (0.5 + 0.5 * sin(uTime * 4.0));
 
+    float height = aCell.y / max(uDims.y - 1.0, 1.0);
+
+    // solved: a held breath (the block tightens), then after the landing every
+    // cube hops in a wave that climbs from the base to the crown
+    float won = uTime - uWin;
+    if (won >= 0.0 && won < 3.0) {
+      float squeeze = sin(3.14159 * clamp(won / 0.32, 0.0, 1.0));
+      scale *= 1.0 - 0.09 * squeeze;
+      offset -= center * 0.05 * squeeze;
+      float h = (won - 1.0 - height * 0.55) / 0.42;
+      if (h > 0.0 && h < 1.0) {
+        float b = sin(3.14159 * h);
+        offset.y += 0.26 * b;
+        scale *= 1.0 + 0.07 * b;
+        glow += 0.9 * b;
+      }
+    }
+
     vGlow = glow;
     vN = n;
+    vWN = normalize(mat3(modelMatrix) * n);
     vLocal = position;
     vUv = uv;
     vState = aState;
     vColor = aColor;
     vCell = aCell;
-    vHeight = aCell.y / max(uDims.y - 1.0, 1.0);
+    vHeight = height;
 
     vec3 p = position * 0.965 * scale + center + offset;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -147,6 +168,8 @@ const fragmentShader = /* glsl */ `
   uniform float uTime;
   uniform float uMask;
   uniform float uReveal;
+  uniform float uWin;
+  uniform vec3 uDims;
   uniform vec3 uHover;
   uniform vec3 uHint;
   uniform vec2 uLight;     // xz direction of the key light
@@ -155,6 +178,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 cHaze, cGlow, cMistake;
 
   varying vec3 vN;
+  varying vec3 vWN;
   varying vec3 vLocal;
   varying vec2 vUv;
   varying float vTile;
@@ -178,15 +202,16 @@ const fragmentShader = /* glsl */ `
   void main() {
     if (uMask > 0.5) { gl_FragColor = vec4(vec3(vPeelFade), 1.0); return; }
 
-    vec3 n = normalize(vN);
-    vec3 base = ramp(n, cTop, cLit, cShade, cUnder);
+    vec3 n = normalize(vN);       // block space: face layout, creases, glyphs
+    vec3 wn = normalize(vWN);     // world space: lighting, so a turning object turns through the ramp
+    vec3 base = ramp(wn, cTop, cLit, cShade, cUnder);
 
     // painted: colour blooms out from the face centre
     if (vState.x > 0.5) {
       float t = clamp((uTime - vState.y) / 0.35, 0.0, 1.0);
       float r = length(vUv - 0.5);
       float fill = smoothstep(t * 0.75, t * 0.75 - 0.05, r);
-      vec3 paint = ramp(n, pTop, pLit, pShade, pShade * 0.7);
+      vec3 paint = ramp(wn, pTop, pLit, pShade, pShade * 0.7);
       base = mix(base, paint, max(fill, step(1.0, t)));
     }
 
@@ -205,7 +230,7 @@ const fragmentShader = /* glsl */ `
     // crisp edge line, lighter on the upper rim like sunlit masonry
     float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
     float edge = 1.0 - smoothstep(0.0, 0.04, e);
-    base = mix(base, base * (n.y > 0.5 ? 1.07 : 0.9), edge);
+    base = mix(base, base * (wn.y > 0.5 ? 1.07 : 0.9), edge);
 
     // vertical gradient: bases sink into haze
     base = mix(cHaze, base, 0.78 + 0.22 * smoothstep(0.0, 0.85, vHeight));
@@ -224,9 +249,22 @@ const fragmentShader = /* glsl */ `
     // solved: the true colours sweep upward, lit by the same ramp
     float rev = smoothstep(vHeight - 0.15, vHeight + 0.15, uReveal * 1.3 - 0.15);
     if (rev > 0.0) {
-      vec3 sc = vColor * ramp(n, vec3(1.08), vec3(0.96), vec3(0.7), vec3(0.5));
-      sc = mix(sc, cShade, 0.12 * (1.0 - step(0.5, n.y)));
+      vec3 sc = vColor * ramp(wn, vec3(1.08), vec3(0.96), vec3(0.7), vec3(0.5));
+      sc = mix(sc, cShade, 0.12 * (1.0 - step(0.5, wn.y)));
       col = mix(col, sc, rev);
+    }
+
+    // a band of light rides the front of the colour sweep
+    float front = uReveal * 1.3 - 0.15;
+    float band = exp(-pow((vHeight - front) * 7.0, 2.0)) * (1.0 - smoothstep(0.8, 1.0, uReveal)) * step(0.001, uReveal);
+    col += cGlow * band * 0.6;
+
+    // once it settles, a slow gleam crosses the finished object now and then
+    float won = uTime - uWin;
+    if (won > 2.4) {
+      float diag = (vCell.x + vCell.y * 1.4 + vCell.z) / (uDims.x + uDims.y * 1.4 + uDims.z);
+      float g = fract((won - 2.4) / 4.5) * 1.8 - 0.4 - diag;
+      col += cGlow * exp(-g * g * 160.0) * 0.32 * smoothstep(0.0, 0.5, wn.y + 0.6);
     }
 
     // hover
@@ -253,6 +291,7 @@ export class Cubes {
       uTime: { value: 0 },
       uMask: { value: 0 },
       uReveal: { value: 0 },
+      uWin: { value: -99 },
       uDims: { value: new THREE.Vector3(1, 1, 1) },
       uPeel: { value: new THREE.Vector3(1, 99, 1) },
       uHover: { value: new THREE.Vector3(-99, -99, -99) },
@@ -322,6 +361,9 @@ export class Cubes {
     }
     this.uniforms.uDims.value.set(...puzzle.dims);
     this.uniforms.uReveal.value = 0;
+    this.uniforms.uWin.value = -99;
+    this.mesh.rotation.set(0, 0, 0);
+    this.mesh.position.set(0, 0, 0);
     for (const r of this.uniforms.uRip.value) r.w = -99;
     return this.mesh;
   }
