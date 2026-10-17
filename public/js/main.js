@@ -431,21 +431,20 @@ function win() {
   focus.divideScalar(Math.max(1, cells.length));
   let radius = 0;
   for (const i of cells) radius = Math.max(radius, cellWorld(i).distanceTo(focus) + 0.87);
-  // stage it: a plinth under the object, stars in front (not for lessons)
+  // stage it: gems and score beneath the object (not for lessons)
   const box = new THREE.Box3().setFromCenterAndSize(focus, new THREE.Vector3(radius * 2, radius * 2, radius * 2));
   if (!g.entry.lesson) {
-    let bottom = Infinity;
-    const fp = [Infinity, -Infinity, Infinity, -Infinity];
+    // the gems and score sit beneath the object, clear of its turning sweep
+    let bottom = Infinity, reach = 0;
     for (const i of cells) {
       const w = cellWorld(i);
       bottom = Math.min(bottom, w.y - 0.5);
-      fp[0] = Math.min(fp[0], w.x); fp[1] = Math.max(fp[1], w.x);
-      fp[2] = Math.min(fp[2], w.z); fp[3] = Math.max(fp[3], w.z);
+      reach = Math.max(reach, Math.hypot(w.x - focus.x, w.z - focus.z) + 0.5);
     }
-    // the plinth is square under the spinning object so the turn never overhangs it
-    const r = Math.max(fp[1] - fp[0], fp[3] - fp[2]) / 2, mx = (fp[0] + fp[1]) / 2, mz = (fp[2] + fp[3]) / 2;
-    const ink = '#' + new THREE.Color(g.palette.under).multiplyScalar(0.62).getHexString();
-    finale.stage({ palette: g.palette, bottom, footprint: [mx - r, mx + r, mz - r, mz + r], camDir: camDir.clone(), ink, t0: t });
+    // the number sits low in the sky, inside the rays: pick its ink against the lower sky
+    const lowSky = new THREE.Color(g.palette.skyBottom).getHSL({}).l;
+    const ink = lowSky > 0.45 ? '#' + new THREE.Color(g.palette.under).multiplyScalar(0.7).getHexString() : '#f6f3ff';
+    finale.stage({ palette: g.palette, focus, bottom, reach, ink, t0: t });
     box.union(finale.bounds());
   }
   // fit everything into the band between the title and the actions
@@ -693,7 +692,6 @@ function setTool(t) {
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 $('#undo').addEventListener('click', undo);
 $('#menu-btn').addEventListener('click', openMenu);
-$('#help-btn').addEventListener('click', () => show('#help', true));
 $('#map-help').addEventListener('click', () => show('#help', true));
 
 // every level and bonus stone, each in its chapter's palette for the journal
@@ -807,19 +805,16 @@ function showResult(g, result, isBest) {
   finale.setScore(0, false);
   at(100, () => countTo(result.total, 1300));
 
-  // then the stars light, one at a time
-  let t = 1550;
+  // then the gems brighten, slowly, one at a time
+  let t = 1900;
   for (let k = 0; k < result.stars; k++) {
     at(t, () => {
-      finale.lightStar(k, now());
-      buzz(10 + k * 6);
+      finale.lightGem(k, now());
+      buzz(8);
       sound.star(k);
-      const s = finale.stars[k].mesh;
-      const c = (h) => new THREE.Color(h);
-      shards.burst(s.position, now(), [c(g.palette.paintTop), c(g.palette.glow)], 10, 0.5, { size: 0.45, life: 0.8, gravity: 1, spread: 0.3 });
-      rayBoost = Math.max(rayBoost, 0.6);
+      rayBoost = Math.max(rayBoost, 0.4);
     });
-    t += 420;
+    t += 700;
   }
   if (isBest) at(t + 80, () => { finale.setScore(result.total, true); sound.best(); });
   at(t + 200, () => actions.classList.add('show'));
@@ -828,7 +823,7 @@ function showResult(g, result, isBest) {
     clearResult();
     cancelAnimationFrame(anim);
     finale.setScore(result.total, isBest);
-    for (let k = 0; k < result.stars; k++) if (finale.stars[k].lit < 0) finale.lightStar(k, now() - 1);
+    for (let k = 0; k < result.stars; k++) if (finale.gems[k].lit < 0) finale.lightGem(k, now() - 1);
     actions.classList.add('show');
   };
 }
@@ -945,6 +940,7 @@ function stepCelebration(t) {
   const c = Math.cos(angle), sn = Math.sin(angle);
   const fx = w.focus.x, fz = w.focus.z;
   mesh.rotation.y = angle;
+  w.angle = angle;
   mesh.position.set(fx - (fx * c + fz * sn), lift, fz - (-fx * sn + fz * c));
 
   for (const r of winRings) {

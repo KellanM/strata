@@ -1,7 +1,7 @@
-// The solved object's stage: a stepped plinth of the level's own stone rises
-// beneath it, the score is carved into the plinth's face as it counts, and
-// three star gems sit in front, lighting one at a time. Unearned stars stay as
-// faint glass. Everything lives in the scene, under the same light and rays.
+// The solved object's quiet aftermath: beneath it, three small diamonds (the
+// same form as the peel handles) brighten one by one, and the score sits below
+// in letterspaced type that always faces you. Slow, soft, nothing pops; the
+// object itself floats on its own in the light.
 import * as THREE from 'three';
 
 const vertexShader = /* glsl */ `
@@ -23,7 +23,7 @@ const fragmentShader = /* glsl */ `
     float l = dot(normalize(n.xz + 1e-4), uLight) * 0.5 + 0.5;
     vec3 c = mix(cShade, cLit, smoothstep(0.1, 0.9, l));
     c = mix(c, cTop, smoothstep(0.35, 0.8, n.y));
-    c = mix(c, cGlow, uGlow * 0.55);
+    c = mix(c, cGlow, uGlow * 0.6);
     gl_FragColor = vec4(c, uOpacity);
   }
 `;
@@ -38,157 +38,129 @@ function rampMaterial(light) {
   });
 }
 
-function starGeometry() {
-  const shape = new THREE.Shape();
-  for (let k = 0; k < 10; k++) {
-    const r = k % 2 ? 0.22 : 0.5, a = Math.PI / 2 + (k * Math.PI) / 5;
-    const x = Math.cos(a) * r, y = Math.sin(a) * r;
-    if (k === 0) shape.moveTo(x, y); else shape.lineTo(x, y);
-  }
-  shape.closePath();
-  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.14, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.06, bevelSegments: 1 });
-  g.center();
-  return g;
-}
-
-const ease = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+const clamp01 = (k) => Math.min(1, Math.max(0, k));
+const smooth = (k) => { k = clamp01(k); return k * k * (3 - 2 * k); };
 
 export class Finale {
   constructor(lightUniform) {
     this.group = new THREE.Group();
     this.group.visible = false;
-    this.stoneMat = rampMaterial(lightUniform);
-    this.lower = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.stoneMat);
-    this.upper = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.stoneMat);
-    this.group.add(this.lower, this.upper);
-
-    // the carving: a canvas decal laid on the plinth face toward the camera
+    // the score: crisp type on a plane that always faces the camera
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 512; this.canvas.height = 160;
+    this.canvas.width = 1024; this.canvas.height = 256;
     this.tex = new THREE.CanvasTexture(this.canvas);
     this.tex.anisotropy = 8;
-    this.carve = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthWrite: false }));
-    this.group.add(this.carve);
+    this.label = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.25), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false, depthWrite: false }));
+    this.label.renderOrder = 6;
+    this.group.add(this.label);
 
-    const sg = starGeometry();
-    this.stars = [0, 1, 2].map(() => {
-      const m = new THREE.Mesh(sg, rampMaterial(lightUniform));
+    const gem = new THREE.OctahedronGeometry(0.21);
+    gem.scale(1, 1.4, 1);
+    this.gems = [0, 1, 2].map(() => {
+      const m = new THREE.Mesh(gem, rampMaterial(lightUniform));
       m.material.depthTest = false;
       m.renderOrder = 5;
       this.group.add(m);
       return { mesh: m, lit: -1 };
     });
-    this.shown = -1;
+    this.text = { score: 0, best: false };
   }
 
-  // focus: object centre. bottom: world y of the object's lowest face.
-  // footprint: [minX, maxX, minZ, maxZ] of the object. face: 'x' or 'z' side toward the camera.
-  stage({ palette, bottom, footprint, camDir, ink, t0 }) {
-    const [x0, x1, z0, z1] = footprint;
-    const w = x1 - x0 + 1.5, d = z1 - z0 + 1.5, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-    this.dims = { w, d, cx, cz, top: bottom };
-    this.lower.scale.set(w + 0.7, 0.45, d + 0.7);
-    this.upper.scale.set(w, 0.55, d);
+  // focus: the object's turning centre. bottom: world y of its lowest face.
+  // reach: horizontal distance from focus to the object's farthest edge.
+  stage({ palette, focus, bottom, reach, ink, t0 }) {
     this.t0 = t0;
     this.ink = ink;
+    this.focus = focus.clone();
+    this.top = bottom;
+    this.reach = reach;
     this.text = { score: 0, best: false };
-    this.shown = -1;
 
-    const u = this.stoneMat.uniforms;
-    u.cTop.value.setHex(palette.top); u.cLit.value.setHex(palette.lit); u.cShade.value.setHex(palette.shade);
-    for (const s of this.stars) {
-      const su = s.mesh.material.uniforms;
-      su.cTop.value.setHex(palette.paintTop); su.cLit.value.setHex(palette.paintLit); su.cShade.value.setHex(palette.paintShade);
-      su.cGlow.value.setHex(palette.glow);
-      s.lit = -1;
+    const set = (m, top, lit, shade) => {
+      m.uniforms.cTop.value.setHex(top); m.uniforms.cLit.value.setHex(lit); m.uniforms.cShade.value.setHex(shade);
+    };
+    for (const g of this.gems) {
+      set(g.mesh.material, palette.paintTop, palette.paintLit, palette.paintShade);
+      g.mesh.material.uniforms.cGlow.value.setHex(palette.glow);
+      g.lit = -1;
     }
 
-    // carve on whichever side face looks most toward the camera
-    const alongX = Math.abs(camDir.x) > Math.abs(camDir.z);
-    const sgn = alongX ? Math.sign(camDir.x) || 1 : Math.sign(camDir.z) || 1;
-    this.face = { alongX, sgn };
-    this.drawCarving();
+    this.drawLabel();
     this.group.visible = true;
   }
 
-  // world-space box of the whole stage, for framing
+  // world box of the whole stage, for framing
   bounds() {
-    const { w, d, cx, cz, top } = this.dims;
-    return new THREE.Box3(new THREE.Vector3(cx - w / 2 - 1.2, top - 2.7, cz - d / 2 - 1.2), new THREE.Vector3(cx + w / 2 + 1.2, top, cz + d / 2 + 1.2));
+    const r = this.reach, f = this.focus;
+    return new THREE.Box3(new THREE.Vector3(f.x - r, this.top - 2.6, f.z - r), new THREE.Vector3(f.x + r, this.top, f.z + r));
   }
 
   setScore(v, best) {
     v = Math.round(v);
     if (v === this.text.score && best === this.text.best) return;
     this.text = { score: v, best };
-    this.drawCarving();
+    this.drawLabel();
   }
 
-  drawCarving() {
+  drawLabel() {
     const g = this.canvas.getContext('2d'), W = this.canvas.width, H = this.canvas.height;
     g.clearRect(0, 0, W, H);
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    const label = this.text.score.toLocaleString();
-    g.font = `600 ${this.text.best ? 78 : 92}px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif`;
-    const y = this.text.best ? 92 : H / 2 + 4;
-    // carved: a pale lip below, the cut in a deep tone of the stone
-    g.fillStyle = 'rgba(255,255,255,0.5)';
-    g.fillText(label, W / 2, y + 3);
-    g.fillStyle = this.ink;
-    g.fillText(label, W / 2, y);
+    g.fillStyle = this.ink ?? '#4a3d63';
+    // a soft halo in the opposite tone keeps the digits clear of the rays
+    const light = parseInt((this.ink ?? '#000000').slice(1, 3), 16) > 128;
+    g.shadowColor = light ? 'rgba(20, 16, 40, 0.45)' : 'rgba(255, 252, 245, 0.7)';
+    g.shadowBlur = 24;
+    const font = '"Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif';
+    g.font = `500 120px ${font}`;
+    g.letterSpacing = '22px';
+    g.fillText(this.text.score.toLocaleString(), W / 2 + 11, H * 0.6);
     if (this.text.best) {
-      g.font = '600 26px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif';
-      g.letterSpacing = '10px';
-      g.fillText('BEST', W / 2 + 5, 30);
-      g.letterSpacing = '0px';
+      g.globalAlpha = 0.6;
+      g.font = `500 30px ${font}`;
+      g.letterSpacing = '16px';
+      g.fillText('BEST', W / 2 + 8, H * 0.14);
+      g.globalAlpha = 1;
     }
+    g.letterSpacing = '0px';
     this.tex.needsUpdate = true;
   }
 
-  lightStar(k, t) { this.stars[k].lit = t; }
+  lightGem(k, t) { this.gems[k].lit = t; }
 
-  // earned: how many stars to show as gems (others are glass)
-  update(t, camera, earned) {
+  update(t, camera) {
     if (!this.group.visible) return;
-    const { w, d, cx, cz, top } = this.dims;
-    const rise = ease((t - this.t0 - 0.95) / 0.75);
-    const sink = (1 - rise) * 1.6;
-    this.upper.position.set(cx, top - 0.275 - sink, cz);
-    this.lower.position.set(cx, top - 0.775 - sink, cz);
-    this.stoneMat.uniforms.uOpacity.value = Math.min(1, rise * 1.4);
+    const age = t - this.t0;
 
-    const { alongX, sgn } = this.face;
-    const fw = alongX ? d : w;
-    const half = (alongX ? w : d) / 2;
-    const cw = Math.min(fw * 0.95, 4.2);
-    this.carve.scale.set(cw, Math.min(cw * 160 / 512, 0.52), 1);
-    this.carve.position.set(alongX ? cx + sgn * (half + 0.01) : cx, top - 0.28 - sink, alongX ? cz : cz + sgn * (half + 0.01));
-    this.carve.rotation.set(0, alongX ? sgn * Math.PI / 2 : sgn > 0 ? 0 : Math.PI, 0);
-    this.carve.material.opacity = ease((t - this.t0 - 1.6) / 0.5);
-    this.carve.visible = this.carve.material.opacity > 0.01;
-
-    // the stars hang in a shallow arc in front of the plinth, facing you
+    // just beneath the object, toward the viewer: gems, then the number
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-    right.y = 0; right.normalize();
-    const toward = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(cx, top, cz)).setY(0).normalize();
-    const base = new THREE.Vector3(cx, top - 2.15 - sink, cz).addScaledVector(toward, Math.max(w, d) * 0.72 + 0.3);
-    this.stars.forEach((s, k) => {
-      const appear = ease((t - this.t0 - 1.9 - k * 0.08) / 0.5);
-      const m = s.mesh;
-      m.position.copy(base).addScaledVector(right, (k - 1) * 1.15);
-      m.position.y += (k === 1 ? 0.22 : 0) + 0.05 * Math.sin(t * 1.4 + k);
-      m.quaternion.copy(camera.quaternion);
-      m.rotateY(0.25 * Math.sin(t * 0.9 + k * 1.7));
-      const lit = s.lit >= 0 && t >= s.lit;
-      const a = lit ? t - s.lit : 0;
-      const pop = lit ? 1 + 0.35 * Math.exp(-a * 6) * Math.sin(Math.min(a, 0.5) * Math.PI * 2) : 1;
-      m.scale.setScalar(appear * (k === 1 ? 1.12 : 1) * pop * (lit ? 1 : 0.86));
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+    const anchor = new THREE.Vector3(this.focus.x, this.top - 1.05, this.focus.z);
+    const toward = new THREE.Vector3().subVectors(camera.position, anchor).setY(0).normalize();
+    anchor.addScaledVector(toward, this.reach * 0.9 + 0.4);
+
+    this.gems.forEach((gm, k) => {
+      const appear = smooth((age - 1.8 - k * 0.12) / 0.9);
+      const m = gm.mesh;
+      m.position.copy(anchor).addScaledVector(right, (k - 1) * 0.78).addScaledVector(up, 0.04 * Math.sin(t * 0.9 + k * 2.1));
+      m.rotation.set(0, t * 0.35 + k * 0.9, 0);
+      const lit = gm.lit >= 0 && t >= gm.lit;
+      const a = lit ? t - gm.lit : 0;
+      const bloom = lit ? smooth(a / 0.9) : 0;
+      m.scale.setScalar(appear * (0.82 + 0.18 * bloom));
       const u = m.material.uniforms;
-      u.uOpacity.value = lit ? 1 : 0.22 * appear;
-      u.uGlow.value = lit ? 0.25 + 0.75 * Math.exp(-a * 2.5) : 0;
+      u.uOpacity.value = appear * (0.18 + 0.82 * bloom);
+      u.uGlow.value = lit ? 0.22 + 0.5 * Math.exp(-a * 1.1) * bloom : 0;
       m.visible = appear > 0.01;
     });
-    void earned;
+
+    const show = smooth((age - 1.7) / 0.9);
+    this.label.visible = show > 0.01;
+    this.label.material.opacity = show;
+    this.label.quaternion.copy(camera.quaternion);
+    this.label.position.copy(anchor).addScaledVector(up, -0.85);
+    const w = 3.8;
+    this.label.scale.set(w, w, 1);
   }
 
   hide() { this.group.visible = false; }
