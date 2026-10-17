@@ -309,7 +309,32 @@ function cellWorld(i) {
 
 // ---------------------------------------------------------------- actions
 
-function buzz(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+// Haptics. Android: the Vibration API. iOS Safari has none, but toggling a
+// native switch control gives one system tick (Safari 17.4+). It only fires
+// from inside a touch handler, so on iOS a pattern becomes a single tick and
+// delayed moments (stars landing) stay silent to the hand.
+const iosTick = (() => {
+  if (navigator.vibrate || !/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent) || !('ontouchend' in document)) return null;
+  const label = document.createElement('label');
+  label.setAttribute('aria-hidden', 'true');
+  label.style.cssText = 'position:fixed;left:-100px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.setAttribute('switch', '');
+  input.tabIndex = -1;
+  label.appendChild(input);
+  document.body.appendChild(label);
+  return () => label.click();
+})();
+let lastTick = 0;
+function buzz(pattern) {
+  if (navigator.vibrate) { navigator.vibrate(pattern); return; }
+  if (!iosTick) return;
+  const t = performance.now();
+  if (t - lastTick < 35) return;      // ticks closer than this blur together
+  lastTick = t;
+  iosTick();
+}
 
 function act(i, which) {
   if (!game || game.solved || i < 0) return;
