@@ -385,7 +385,6 @@ class Sound {
   peel() {
     if (!this.ctx) return;
     this.noise({ dest: this.sfxTonal, dur: 0.35, gain: 0.07, freq: 400, sweepTo: 3000, q: 2, attack: 0.12, pan: [-0.4, 0.4] });
-    this.tone(this.key.root + 24 + 7, { at: this.nextSixteenth(), type: 'sine', gain: 0.06, decay: 0.3, partial: 4, partialGain: 0.2 });
   }
 
   // UI: a tiny dry tick
