@@ -61,6 +61,7 @@ let rayBoost = 0;
 let tutorial = null;          // { step, hint }
 let updateReady = false;      // a new version has taken over; reload at a calm moment
 let lastTouch = null;         // { i, point }: where the last pick met its cube
+let introDelay = 0;           // set by the map dive so the block assembles once the veil has lifted
 let viewAnim = null;
 const clock0 = performance.now();
 const now = () => (performance.now() - clock0) / 1000;
@@ -138,10 +139,11 @@ function startPuzzle(entry) {
 
   // the block assembles itself: cubes drop into place from the base up, then a
   // soft wave runs through the finished stone; taps wait until it's whole
-  const t0 = now();
+  // (after a map dive, it waits for the veil to lift so the whole drop is seen)
+  const t0 = now() + introDelay;
   cubes.uniforms.uIntro.value = reduceMotion ? -99 : t0;
   game.introEnd = reduceMotion ? 0 : t0 + INTRO_TIME;
-  sound.intro(Y, reduceMotion ? 0 : INTRO_TIME);
+  sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
   cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   rayBoost = 1;
 }
@@ -922,10 +924,14 @@ function diveInto(el, palette, start) {
   veil.style.background = `radial-gradient(circle at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, ${hexOf(palette.glow)}, ${hexOf(palette.skyTop)} 45%, ${hexOf(palette.skyBottom)})`;
   veil.classList.add('in');
   setTimeout(() => {
+    introDelay = 0.35;                 // the veil takes ~0.45 s to lift
     start();
+    introDelay = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       veil.classList.remove('in');
-      setTimeout(() => { menu.classList.remove('diving'); diving = false; }, 520);
+      // reset the (hidden) map only after the block has assembled: restyling the
+      // whole map mid-animation dropped a frame on phones
+      setTimeout(() => { menu.classList.remove('diving'); diving = false; }, (0.35 + INTRO_TIME) * 1000 + 250);
     }));
   }, 460);
 }

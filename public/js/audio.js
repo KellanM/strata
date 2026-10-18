@@ -421,9 +421,9 @@ class Sound {
 
   // the level begins: as the block assembles, a soft note for each layer
   // landing, rising up the chord, and a low settle when it's whole
-  intro(layers, dur) {
+  intro(layers, dur, delay = 0) {
     if (!this.ctx || !dur) return;
-    const t = this.now, n = Math.max(2, Math.min(layers, 8));
+    const t = this.now + delay, n = Math.max(2, Math.min(layers, 8));
     const tones = this.chordTones();
     for (let k = 0; k < n; k++) {
       const midi = this.key.root + 24 + tones[k % tones.length] + 12 * Math.floor(k / tones.length);
