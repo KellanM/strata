@@ -216,6 +216,7 @@ export class Finale {
 
     // pinned to the screen: unproject a fixed screen point, and divide sizes
     // by the current zoom so they stay the same on screen whatever you do
+    camera.updateMatrixWorld();             // this frame's view, not last frame's
     const unitPx = H / ((camera.top - camera.bottom) / camera.zoom);
     const at = (xPx, yPx) => new THREE.Vector3(xPx, 1 - 2 * (yPx / H), 0).unproject(camera);
     const gemPx = 30;                       // half-height of a gem on screen
