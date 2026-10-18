@@ -13,15 +13,16 @@ const fur = 0xb9b3ad, dfur = 0x8d8580, cocoa = 0x8a5a3c, toast = 0xe0a96a, crust
 export default [
   // a cat asleep in a mug: the ears and a curled paw over the rim
   (() => {
-    const g = grid(5, 6, 5);
+    const g = grid(6, 6, 5);
     g.cylinder('y', [2, 2], 2.2, [0, 3], C.coral)
       .cylinder('y', [2, 2], 1.3, [1, 3], 0)                     // hollow
       .cylinder('y', [2, 2], 1.3, [2, 3], fur)                    // the cat fills it
-      .set(1, 4, 2, fur).set(2, 4, 2, fur).set(3, 4, 2, fur).set(2, 4, 1, fur).set(2, 4, 3, fur)
+      .box([1, 3], [4, 4], [1, 3], fur)                           // its head above the rim
       .set(1, 5, 2, dfur).set(3, 5, 2, dfur)                      // ears
-      .set(2, 4, 3, C.ink)                                        // a closed eye toward you
-      .set(3, 3, 3, C.white)                                      // a paw over the rim
-      .box([4, 4], [1, 2], [2, 2], C.coral);                      // handle stub
+      .set(1, 4, 3, C.ink).set(3, 4, 3, C.ink)                    // two closed eyes toward you
+      .set(2, 4, 3, C.pink)                                       // a pink nose between them
+      .set(1, 3, 3, C.white).set(3, 3, 3, C.white)                // two paws over the rim
+      .box([5, 5], [1, 2], [2, 2], C.coral);                      // the handle
     return { ...g.entry({ id: 'cand-cat-in-a-mug', name: 'Cat in a Mug' }), fraction: 0.2, seed: 5 };
   })(),
 
@@ -49,13 +50,14 @@ export default [
 
   // a slipper with a mouse asleep inside: ears and a pink nose at the toe
   (() => {
-    const g = grid(6, 3, 4);
-    g.box([0, 5], [0, 0], [0, 3], C.white)
-      .box([0, 4], [1, 1], [0, 3], felt).box([0, 1], [2, 2], [0, 3], felt)
-      .box([1, 3], [1, 1], [1, 2], mouse)                          // the mouse, curled in the toe
-      .set(2, 2, 1, C.pink).set(2, 2, 2, C.pink)                  // ears
-      .set(4, 1, 2, C.rose)                                       // a nose poking over the toe
-      .set(5, 1, 1, felt).set(5, 1, 2, felt);
+    const g = grid(6, 4, 4);
+    g.box([0, 5], [0, 0], [0, 3], C.white)                        // sole
+      .box([3, 5], [1, 2], [0, 3], felt)                          // the toe cap
+      .box([0, 2], [1, 1], [0, 0], felt)                          // the heel wall behind
+      .box([0, 2], [1, 2], [1, 2], mouse)                         // the mouse, sitting up in the heel
+      .set(0, 3, 1, C.pink).set(2, 3, 1, C.pink)                  // two round ears
+      .set(0, 2, 2, C.ink).set(2, 2, 2, C.ink)                    // two eyes toward you
+      .set(1, 2, 2, C.pink);                                      // and a pink nose between
     return { ...g.entry({ id: 'cand-slipper-mouse', name: 'Slipper Mouse' }), fraction: 0.5, seed: 5 };
   })(),
 
@@ -85,13 +87,13 @@ export default [
 
   // hot cocoa with a marshmallow snowman bobbing in it
   (() => {
-    const g = grid(5, 6, 5);
+    const g = grid(6, 6, 5);
     g.cylinder('y', [2, 2], 2.2, [0, 2], C.teal)
       .cylinder('y', [2, 2], 1.3, [2, 2], cocoa)
       .set(2, 3, 2, marsh).set(2, 3, 3, marsh).set(2, 4, 2, marsh)
       .set(2, 4, 3, C.orange)                                     // carrot nose toward you
       .set(2, 5, 2, C.ink)                                        // a tiny hat
-      .box([4, 4], [1, 2], [2, 2], C.teal);
+      .box([5, 5], [0, 1], [2, 2], C.teal);                       // the handle
     return { ...g.entry({ id: 'cand-cocoa-snowman', name: 'Cocoa Snowman' }), fraction: 0.2, seed: 3 };
   })(),
 
@@ -117,18 +119,20 @@ export default [
       .box([0, 5], [2, 2], [1, 2], crust).box([1, 4], [2, 2], [0, 3], crust)
       .box([4, 4], [3, 5], [1, 1], crust).set(4, 4, 1, C.pink)    // one long ear up, pink inside
       .box([4, 4], [3, 4], [2, 2], crust).set(5, 4, 2, crust)     // the other, flopped forward
-      .set(5, 1, 1, C.ink).set(5, 1, 2, C.pink);                  // eye and nose
+      .set(5, 1, 1, C.ink).set(5, 1, 2, C.ink)                    // two eyes on the face end
+      .set(5, 0, 1, C.pink).set(5, 0, 2, C.pink);                 // and a nose under them
     return { ...g.entry({ id: 'cand-bread-bunny', name: 'Bread Bunny' }), fraction: 0.3, seed: 2 };
   })(),
 
   // a teabag with a smiling face, string and tag over the top
   (() => {
-    const g = grid(4, 7, 2);
-    g.box([0, 3], [0, 3], [0, 1], tea)
-      .box([1, 2], [4, 4], [0, 1], tea)
-      .set(1, 2, 1, C.ink).set(2, 2, 1, C.ink)                    // eyes
+    const g = grid(5, 7, 2);
+    g.box([0, 4], [0, 3], [0, 1], tea)
+      .box([1, 3], [4, 4], [0, 1], tea)
+      .set(1, 2, 1, C.ink).set(3, 2, 1, C.ink)                    // two eyes
+      .set(2, 1, 1, C.rose)                                       // a little smile
       .set(2, 5, 0, C.white).set(2, 6, 0, C.white).set(3, 6, 0, C.white) // string
-      .set(3, 6, 1, C.red).set(3, 5, 1, C.red);                   // the tag
+      .set(4, 6, 0, C.red).set(4, 5, 0, C.red);                   // the tag
     return { ...g.entry({ id: 'cand-teabag-pal', name: 'Teabag Pal' }), fraction: 0.5, seed: 5 };
   })(),
 
@@ -138,7 +142,7 @@ export default [
     g.cylinder('y', [2, 2], 1.6, [0, 0], pot)
       .cylinder('y', [2, 2], 2.2, [1, 3], pot)
       .cylinder('y', [2, 2], 1.6, [3, 3], C.dbrown)
-      .set(1, 2, 4, C.ink).set(3, 2, 4, C.ink).set(2, 1, 4, C.pink)   // eyes and a blush
+      .set(1, 2, 3, C.ink).set(3, 2, 3, C.ink).set(2, 1, 4, C.pink)   // eyes on the pot's face, a blush
       .set(2, 4, 2, C.green).set(2, 5, 2, C.green).set(3, 5, 2, C.leaf);
     return { ...g.entry({ id: 'cand-potted-pal', name: 'Potted Pal' }), fraction: 0.2, seed: 1 };
   })(),
