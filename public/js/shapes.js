@@ -639,15 +639,18 @@ export const SHAPES = [
       ]),
     },
     {
-      id: 'arch', name: 'Arch', dims: [9, 7, 3], fraction: 0.9, seed: 6,
-      story: 'One stone holds all the others up, and never says so.',
-      cell(x, y) {
-        const dx = x - 4, dy = y;
-        const outer = dx * dx + dy * dy <= 4.4 * 4.4 || (Math.abs(dx) >= 3 && y <= 3);
-        const inner = dx * dx + dy * dy <= 2.4 * 2.4;
-        if (!outer || inner || Math.abs(dx) > 4) return 0;
-        return y === 4 && dx === 0 ? 0xffd58a : 0xc98fb4;
-      },
+      // from the object gallery (taiko drum)
+      id: 'taiko-drum', name: 'Taiko Drum', fraction: 0.9, seed: 2,
+      story: 'One beat for the dawn, one for dusk, and silence in between.',
+      ...voxels({ a: 0x6b4a3a, b: 0xf6efe4, c: 0xe9b949, d: 0xe0565b }, [
+        '....... .a...a. .a...a. .a...a. .......',
+        '..bbb.. ..ccc.. .addda. ..ccc.. ..bbb..',
+        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
+        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
+        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
+        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
+        '..bbb.. ..ccc.. ..ddd.. ..ccc.. ..bbb..',
+      ]),
     },
     {
       id: 'hourglass', name: 'Hourglass', dims: [5, 8, 5], fraction: 0.9, seed: 7,

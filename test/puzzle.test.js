@@ -43,7 +43,7 @@ test('level set is well-formed for the map', () => {
   const ids = new Set(SHAPES.map((s) => s.id));
   assert.equal(ids.size, SHAPES.length, 'duplicate ids');
   // players' saves are keyed by these
-  for (const id of ['heart', 'invader', 'mushroom', 'tree', 'mug', 'snowman', 'rocket', 'torus', 'arch'])
+  for (const id of ['heart', 'invader', 'mushroom', 'tree', 'mug', 'snowman', 'rocket', 'torus'])   // arch was replaced by the taiko drum at the user's request
     assert.ok(ids.has(id), `missing legacy id ${id}`);
   const paletteNames = new Set(PALETTES.map((p) => p.name));
   const order = SHAPES.map((s) => s.chapter).filter((c, i, a) => c !== a[i - 1]);
