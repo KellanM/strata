@@ -189,6 +189,17 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Fried Egg)
+      id: 'fried-egg', name: 'Fried Egg', from: 'cand-p4-fried-egg', fraction: 0.65, seed: 1,
+      story: 'Sunny side up, and the morning has barely begun.',
+      ...voxels({ a: 0x5d6670, b: 0xfbf8f2, c: 0x9a6a45, d: 0xf59bb2, e: 0xf6b93b, f: 0x3a3442 }, [
+        '..aaa.... .aaaaa... aaaaaaa.. aaaaaaa.. aaaaaaa.. .aaaaa... ..aaa....',
+        '..aaa.... .abbba... abbbbba.. abbbbbacc abbbbba.. .adbda... ..aaa....',
+        '......... ......... ..eee.... ..eee.... ..fef.... ......... .........',
+        '......... ......... ......... ...e..... ......... ......... .........',
+      ]),
+    },
+    {
       // from the object gallery (page 3: Kitten in a Box)
       id: 'kitten-box', name: 'Kitten in a Box', from: 'cand-p3-kitten-box', fraction: 0.35, seed: 22,
       story: 'The box was for the new kettle. The kettle never stood a chance.',
@@ -200,6 +211,22 @@ export const SHAPES = [
         '....... ...b... .bbbbb. .bbbbb. .debed. .......',
         '....... ....... ..bbb.. .bbbbb. ..bbb.. .......',
         '....... ....... .b...b. .b...b. ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Bunny in a Teacup)
+      id: 'bunny-teacup', name: 'Bunny in a Teacup', from: 'cand-p4-bunny-teacup', fraction: 0.65, seed: 1,
+      story: 'There was tea in it once. Now there is a bunny, which is better.',
+      ...voxels({ a: 0xfbf3e6, b: 0x9fcdea, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442, f: 0xf5b3c0 }, [
+        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
+        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. .......',
+        '....... ..bbb.. .b...b. .b...bb .b...b. ..bbb.. .......',
+        '....... ..bbb.. .b.c.b. .bcccbb .b.c.b. ..bbb.. .......',
+        '....... ....... ..ccc.. .dcccd. ..ece.. ....... .......',
+        '....... ....... ..ccc.. .ccccc. ..ccc.. ....... .......',
+        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
+        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
+        '....... ....... ....... ..c.c.. ....... ....... .......',
       ]),
     },
     {
@@ -354,6 +381,21 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Capybara & Yuzu)
+      id: 'capybara', name: 'Capybara & Yuzu', from: 'cand-p4-capybara', fraction: 0.65, seed: 1,
+      story: 'A warm bath, a yuzu balanced just so, and nowhere to be.',
+      ...voxels({ a: 0x7d5638, b: 0xb78358, c: 0xf59bb2, d: 0x3a3442, e: 0xf6b13a, f: 0x6fbf73 }, [
+        '....... ..a.a.. ....... ...b... ....... ..a.a.. ....... .......',
+        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. ....... .......',
+        '...b... ..bbb.. .bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb. ..bbb..',
+        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb. .cbabc.',
+        '....... ....... ....... ...b... .bbbbb. .bbbbb. .bbbbb. .dbbbd.',
+        '....... ....... ....... ....... ..bbb.. .bbbbb. .bbbbb. ..bbb..',
+        '....... ....... ....... ....... ...e... .aeeea. ...e... .......',
+        '....... ....... ....... ....... ....... ...ef.. ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (page 3: Corgi)
       id: 'corgi', name: 'Corgi', from: 'cand-p3-corgi', fraction: 0.65, seed: 1,
       story: 'Short legs, long walks, and every flowerbed inspected personally.',
@@ -445,6 +487,22 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (page 4: Sloth)
+      id: 'sloth', name: 'Sloth', from: 'cand-p4-sloth', fraction: 0.65, seed: 1,
+      story: 'It has been hanging there since spring. It is in no rush.',
+      ...voxels({ a: 0xb7a083, b: 0xf3e6cc, c: 0x6e4f3a, d: 0x3a3442, e: 0x6fbf73, f: 0x8a6646 }, [
+        '......... ......... ...a.a... ......... .........',
+        '......... ...aaa... ...aaa... ....a.... .........',
+        '......... ...aaa... ...aaa... ...aaa... .........',
+        '......... ....a.... ...aaa... ...bcb... .........',
+        '......... ...aaa... ..aaaaa.. ..cdbdc.. .........',
+        '......... ...aaa... ..aaaaa.. ..abbba.. .........',
+        '......... ......... ..aaaaa.. ...aaa... .........',
+        '......... e......ee ..a...aee ......... .........',
+        '......... fffffffff fffffffff ......... .........',
+      ]),
+    },
+    {
       // from the object gallery (pumpkin)
       id: 'pumpkin', from: 'cand-pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
       story: 'Grown fat on a whole summer, waiting for the first frost.',
@@ -472,6 +530,22 @@ export const SHAPES = [
         '....... .ddddd. cceeecc',
         '....... ..ddd.. .ccecc.',
         '....... ....... ..ccc..',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Koala)
+      id: 'koala', name: 'Koala', from: 'cand-p4-koala', fraction: 0.65, seed: 1,
+      story: 'It found the best tree in the orchard and is not letting go.',
+      ...voxels({ a: 0x9a7656, b: 0xaab0bf, c: 0x4d4250, d: 0xf4f2f5, e: 0x3a3442, f: 0x6fbf73 }, [
+        '..aaa.. ..aaa.. ....... ....... ....... ....... .......',
+        '..aaa.. ..aaa.. ....... ..bbb.. ..b.b.. ....... .......',
+        '..aaa.. ..aaa.. ..bbb.. .bbbbb. ..bbb.. ....... .......',
+        '..aaa.. ..aaa.. .bbbbb. .bbbbb. ..bbb.. ....... .......',
+        '..aaa.. ..aaa.. .b...b. ..bbb.. ..bcb.. ...c... .......',
+        '..aaa.. ..aaa.. ..bbb.. bbbbbbb debbbed ..bcb.. ...c...',
+        '..aaa.. ..aaa.. ...b... bbbbbbb dbbbbbd ..bbb.. .......',
+        '..aaa.f ..aaa.. ....... bb...bb dd...dd ....... .......',
+        '..aafff ..aafff ....... ....... ....... ....... .......',
       ]),
     },
     {
@@ -526,6 +600,32 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Manta Ray)
+      id: 'manta', name: 'Manta Ray', from: 'cand-p4-manta', fraction: 0.65, seed: 1,
+      story: 'A shadow that flies, slow and wide, over the lagoon floor.',
+      ...voxels({ a: 0x5f78bf, b: 0xf59bb2, c: 0xf4f7fb, d: 0x3a3442 }, [
+        '....a.... ....a.... ..aaaaa.. .aaaaaaa. aaaaaaaaa ..abcba.. ...a.a...',
+        '......... ......... ...aaa... ...aaa... a..aaa..a ...dad... .........',
+        '......... ......... ......... ......... ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Seahorse)
+      id: 'seahorse', name: 'Seahorse', from: 'cand-p4-seahorse', fraction: 0.65, seed: 1,
+      story: 'It holds the seagrass with its tail and watches the tide go by.',
+      ...voxels({ a: 0xf6a26b, b: 0xfbe0b8, c: 0xfbcf9a, d: 0xf59bb2, e: 0x3a3442 }, [
+        '....... .aaa... .......',
+        '...aa.. .a.aa.. ...aa..',
+        '..aabb. ..aabb. ..aabb.',
+        '.aaaab. caaaab. .aaaab.',
+        '.aaab.. caaab.. .aaab..',
+        '..aad.. ..aaa.. ..aad..',
+        '..aae.. ..aaaaa ..aae..',
+        '..aaa.. ..aaa.. ..aaa..',
+        '....... ..aaa.. .......',
+      ]),
+    },
+    {
       id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
       story: 'It swam into the stone and decided to stay.',
       cell(x, y, z) {
@@ -536,6 +636,20 @@ export const SHAPES = [
         if (x === 2 && y === 3 && z !== 1) return 0x2f2b3a;
         return y === 2 && z !== 1 ? 0xffd58a : 0xf28c3c;
       },
+    },
+    {
+      // from the object gallery (page 4: Baby Shark)
+      id: 'baby-shark', name: 'Baby Shark', from: 'cand-p4-baby-shark', fraction: 0.65, seed: 1,
+      story: 'All the teeth, none of the menace. Yet.',
+      ...voxels({ a: 0x86aed6, b: 0xf4f7fb, c: 0xf59bb2, d: 0x3a3442 }, [
+        '....... ....... ....... ....... ....... ....... ....... ....... .......',
+        '...a... ....... ..bbb.. ..bbb.. .bbbbb. .bbbbb. ..bbb.. ...b... .......',
+        '...a... ..aaa.. .aaaaa. .aaaaa. aaaaaaa aaaaaaa .cbbbc. ..bbb.. ...b...',
+        '...a... ..aaa.. .aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa. ..dad.. .......',
+        '...a... ....... ...a... ..aaa.. ..aaa.. ..aaa.. ..aaa.. ....... .......',
+        '....... ....... ....... ...a... ...a... ....... ....... ....... .......',
+        '....... ....... ....... ...a... ....... ....... ....... ....... .......',
+      ]),
     },
     {
       id: 'starfish', name: 'Starfish', dims: [7, 2, 7], fraction: 0.65, seed: 3,
@@ -600,6 +714,21 @@ export const SHAPES = [
         const jib = y <= 4 && x <= 2 && 2 - x <= 4 - y;
         return main || jib ? 0xfffaf0 : 0;
       },
+    },
+    {
+      // from the object gallery (page 4: Anglerfish)
+      id: 'anglerfish', name: 'Anglerfish', from: 'cand-p4-anglerfish', fraction: 0.65, seed: 1,
+      story: 'Down where the sun never reaches, it brought its own lamp.',
+      ...voxels({ a: 0x7a86cf, b: 0x8a3a5a, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442, f: 0x4d4a78, g: 0xffe36b }, [
+        '....... ....... ....... ....... ....... ....... ....... .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ...a... ....... .......',
+        '...a... ...a... .aaaaa. .aaaaa. .aaaaa. .bcbcb. ....... .......',
+        '...a... ..aaa.. .aaaaa. aaaaaaa .aaaaa. .daaad. ....... .......',
+        '...a... ....... aaaaaaa .aaaaa. .aaaaa. ..eae.. ....... .......',
+        '....... ....... ....... ..aaa.. ...a... ....... ....... .......',
+        '....... ....... ....... ...f... ....... ....... ...g... .......',
+        '....... ....... ....... ...f... ...f... ...f... ...f... .......',
+      ]),
     },
     {
       // from the object gallery (crab)
@@ -736,6 +865,23 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (page 4: Nara Fawn) - ears perked up and in, so the
+      // block is 5 wide, not 7, and stays under the phone's tap budget
+      id: 'nara-fawn', name: 'Nara Fawn', from: 'cand-p4-nara-deer', fraction: 0.65, seed: 1,
+      story: 'It bows for a rice cracker, and expects one every time.',
+      ...voxels({ a: 0xcf9258, b: 0xfbf3e6, c: 0xf6e3c8, d: 0x3a3442, e: 0xf3b6c4, f: 0xe9d2a8 }, [
+        '....... ....... ..a.a.. ....... ..a.a.. ....... ....... .......',
+        '....... ....... ..a.a.. ....... ..a.a.. ....... ....... .......',
+        '....... ...a... ..aaa.. ..aaa.. ..aaa.. ...a... ....... .......',
+        '...b... ..aba.. ..bab.. ..aba.. ..aaa.. ..aaa.. ....... .......',
+        '....... ....... ....... ....... ..aaa.. ..ccc.. ...d... .......',
+        '....... ....... ....... ....... .aaaaa. .aaaaa. ..dad.. .......',
+        '....... ....... ....... ....... ..aaa.. .aaaaa. ..aaa.. .......',
+        '....... ....... ....... ....... .a.a.a. .eaaae. ....... .......',
+        '....... ....... ....... ....... ....... ..f.f.. ....... .......',
+      ]),
+    },
+    {
       // Flat like the gate, but every rib is a decision.
       id: 'fan', name: 'Paper Fan', dims: [9, 6, 2], fraction: 1.0, seed: 1, view: 0.35,
       story: 'Folded open once a year, on the warmest evening.',
@@ -794,6 +940,21 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Temple Elephant)
+      id: 'temple-elephant', name: 'Temple Elephant', from: 'cand-p4-temple-elephant', fraction: 0.65, seed: 1,
+      story: 'Dressed for the procession, patient as the stone steps.',
+      ...voxels({ a: 0xb7b3c8, b: 0xf3b6c4, c: 0xf59bb2, d: 0x3a3442, e: 0xe0565b, f: 0xe9b949 }, [
+        '......... ...a.a... ......... ......... ...a.a... ......... .........',
+        '......... ...aaa... ..aaaaa.. ..aaaaa.. ...aaa... ......... ....a....',
+        '....a.... ...aaa... ..aaaaa.. ..aaaaa.. ...aaa... ......... ....a....',
+        '......... ....a.... ...aaa... aa.aaa.aa ...aaa... ....a.... ....a....',
+        '......... ......... ...aaa... aaaaaaaaa bbcaaacbb ...aaa... .........',
+        '......... ......... ...aaa... aaaaaaaaa bbaaaaabb ...dad... .........',
+        '......... ......... ....e.... aa.eee.aa ...efe... ......... .........',
+        '......... ......... ......... ......... ......... ......... .........',
+      ]),
+    },
+    {
       id: 'hourglass', name: 'Hourglass', dims: [5, 8, 5], fraction: 0.9, seed: 7,
       story: 'The sand still falls, though no one is counting anymore.',
       cell(x, y, z) {
@@ -836,6 +997,22 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Little Oni)
+      id: 'little-oni', name: 'Little Oni', from: 'cand-p4-oni', fraction: 0.65, seed: 1,
+      story: 'On bean-throwing night it hides behind its club, grinning.',
+      ...voxels({ a: 0xf28b82, b: 0xf6c94a, c: 0x5a3d2e, d: 0x8a8f9c, e: 0xfbf8f2, f: 0xfbd0d0, g: 0x4a3a5a, h: 0x3a3442, i: 0xf6e3a8 }, [
+        '....... ....... ....... ....... ..a.a.. .......',
+        '....... ...b... ..cbc.. ..cbc.d ..cbc.. .......',
+        '....... ..aaa.. .aaaaa. .aaaaad ..aaa.. .......',
+        '....... ....... ..aaa.. ..aaa.d ...a... ...e...',
+        '....... ...a... .aaaaa. .faaafd ..aaa.. .......',
+        '....... ..ggg.. .aaaaad .aaaaad .ahaha. .......',
+        '....... ....... .gggggd .gggggd ..ggg.. .......',
+        '....... ....... ....... ..i.i.. ....... .......',
+        '....... ....... ....... ..i.i.. ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (kokeshi)
       id: 'kokeshi', from: 'cand-kokeshi', name: 'Kokeshi', fraction: 1, seed: 5,
       story: 'Turned from cherry wood, smiling the same small smile for years.',
@@ -864,6 +1041,22 @@ export const SHAPES = [
         '...... .aaaa. .aaaaa .adad. ......',
         '...... .aaaa. .aaaaa .aaaae ......',
         '...... .e..e. .a..a. ...... ......',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Kappa)
+      id: 'kappa', name: 'Kappa', from: 'cand-p4-kappa', fraction: 0.65, seed: 1,
+      story: 'Bow to it politely, and the water on its head spills out.',
+      ...voxels({ a: 0x8fcf7a, b: 0xa8784a, c: 0x4f9e4a, d: 0xf59bb2, e: 0xf6c94a, f: 0x3a3442, g: 0x3f7a5a, h: 0xe9eef2, i: 0x8fd0e6 }, [
+        '....... ....... ....... ....... ..a.a.. ....... .......',
+        '....... ..bbb.. ..aaa.. ..aaa.. ..aaa.. ....... .......',
+        '...b... ..bbb.. ..aba.. .aaaaa. .aaaaa. ..ccc.. .......',
+        '....... ..bbb.. ..aaa.. ..aaa.. ...a... ....... .......',
+        '....... ...b... .aaaaa. .aaaaa. .daaad. ...e... .......',
+        '....... ...a... .aaaaa. .aaaaa. .afafa. ...a... .......',
+        '....... ....... ..aaa.. .gaaag. ..aaa.. ....... .......',
+        '....... ....... ..hhh.. ..hih.. ..hhh.. ....... .......',
+        '....... ....... ....... ....... ....... ....... .......',
       ]),
     },
     {
@@ -896,6 +1089,22 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 4: Tanuki)
+      id: 'tanuki', name: 'Tanuki', from: 'cand-p4-tanuki', fraction: 0.65, seed: 1,
+      story: 'A leaf on its head, and it could be anything at all.',
+      ...voxels({ a: 0x6b4e3a, b: 0xa98663, c: 0xf2dcc0, d: 0x3a3442, e: 0x6fbf73 }, [
+        '....... ....... ....... ....... ..a.a.. ....... .......',
+        '....b.. ...b... ..bbb.. .bbbbb. ..ccc.. ....... .......',
+        '....b.. ..bbb.. .bbbbb. .bbbbb. .ccccc. ....... .......',
+        '....a.. ....... ..bbb.. .bbbbb. ..bbb.. ....... .......',
+        '....... ....... .bbbbb. .bbbbb. .accca. ...d... .......',
+        '....... ...b... .bbbbb. .bbbbb. .adbda. ...c... .......',
+        '....... ....... .bbbbb. .bbbbb. .bbbbb. ....... .......',
+        '....... ....... .a...a. .a.b.a. ....... ....... .......',
+        '....... ....... ....e.. ..eee.. ....... ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (origami fox)
       id: 'origami-fox', from: 'cand-origami-fox', name: 'Origami Fox', fraction: 0.9, seed: 23,
       story: 'Folded from a single sheet, and quicker than it looks.',
@@ -925,6 +1134,22 @@ export const SHAPES = [
         if (z === 1 && ((x === 2 && y === 2) || (x === 1 && y === 1) || (x === 0 && y === 0))) return 0x9cc8e6;
         return 0;
       },
+    },
+    {
+      // from the object gallery (page 4: Baby Yeti)
+      id: 'baby-yeti', name: 'Baby Yeti', from: 'cand-p4-baby-yeti', fraction: 0.65, seed: 1,
+      story: 'Its footprints are small. The stories will make them bigger.',
+      ...voxels({ a: 0x7f97c0, b: 0xf6f7fb, c: 0x9fb6d8, d: 0xf5f0f5, e: 0xf59bb2, f: 0x3a3442, g: 0xf3e2b0 }, [
+        '....... ....... ....... ....... .aa.aa. .aa.aa. .......',
+        '....... ....... ..bbb.. .bbbbb. ..bbb.. ....... .......',
+        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. .......',
+        '....... ...b... .bbbbb. bbbbbbb .bcbcb. ...d... .......',
+        '....... ....... ..bbb.. bbbbbbb .ecfce. ....... .......',
+        '....... ....... .bbbbb. .bbbbb. .cbbbc. ..fcf.. .......',
+        '....... ....... .bbbbb. .bbbbb. .bbbbb. .bbbbb. ..bbb..',
+        '....... ....... ....... .gbbbg. ...b... ....... .......',
+        '....... ....... ....... .g...g. ....... ....... .......',
+      ]),
     },
     {
       id: 'bunny', name: 'Moon Rabbit', dims: [6, 7, 4], fraction: 0.65, seed: 5,
@@ -995,6 +1220,22 @@ export const SHAPES = [
         '..aaa.. ..aaa..',
         '...a... ...a...',
         '...a... ...a...',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Unicorn)
+      id: 'unicorn', name: 'Unicorn', from: 'cand-p4-unicorn', fraction: 0.65, seed: 1,
+      story: 'It only comes out when every star is lit.',
+      ...voxels({ a: 0xc9b6e4, b: 0x9fe0d0, c: 0xfbf8f2, d: 0xc9b6f4, e: 0xf4a3c8, f: 0x3a3442, g: 0xf6d365 }, [
+        '....... ....... ..a.a.. ....... ..a.a.. ....... ....... .......',
+        '...b... ....... ..c.c.. ....... ..c.c.. ....... ....... .......',
+        '...d... ...c... ..ccc.. ..ccc.. ..ccc.. ...c... ....... .......',
+        '...e... ..cbc.. ..ccc.. ..ccc.. ..ccc.. ..ccc.. ....... .......',
+        '....... ....... ...d... ....... ..ccc.. ..ccc.. ...c... .......',
+        '....... ....... ....... ..ddd.. .ccccc. .ccccc. ..fcf.. .......',
+        '....... ....... ....... ....... ..ccc.. ..ccc.. ...c... .......',
+        '....... ....... ....... ....... ..c.c.. ...g... ....... .......',
+        '....... ....... ....... ....... ....... ...g... ....... .......',
       ]),
     },
     {

@@ -8,7 +8,8 @@ import { readdirSync } from 'node:fs';
 
 const ids = process.argv.slice(2);
 const pool = [];
-for (const dir of ['themes', 'extra', 'page2', 'page3']) {
+const pages = readdirSync(new URL('../public/gallery/', import.meta.url)).filter((d) => /^page\d+$/.test(d));
+for (const dir of ['themes', 'extra', ...pages]) {
   for (const f of readdirSync(new URL(`../public/gallery/${dir}/`, import.meta.url))) {
     if (!f.endsWith('.js')) continue;
     const mod = await import(`../public/gallery/${dir}/${f}`);
