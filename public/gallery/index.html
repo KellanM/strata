@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Strata — Object Gallery</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="gallery.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "../vendor/three/build/three.module.min.js",
+        "three/addons/": "../vendor/three/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <h1>Strata</h1>
+    <p class="sub">object gallery · tap to turn · ♡ to pick</p>
+  </header>
+  <main id="themes"></main>
+
+  <div id="picks" aria-live="polite">
+    <span id="picks-text"></span>
+    <button id="picks-copy">copy</button>
+  </div>
+
+  <section id="viewer" aria-label="Object">
+    <button id="viewer-close" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <canvas></canvas>
+    <div class="caption">
+      <p class="num"></p>
+      <h2 class="name"></h2>
+      <p class="meta"></p>
+      <p class="hint">drag to turn · pinch to zoom</p>
+    </div>
+  </section>
+
+  <script type="module" src="gallery.js"></script>
+</body>
+</html>
