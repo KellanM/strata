@@ -63,3 +63,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 1; width: 46px; height: 46px; border-radius: 50%;
   border: 0; color: inherit; background: rgba(255, 250, 243, .55); display: grid; place-items: center; cursor: pointer;
 }
+
+/* back into the game (the gallery opens from its hidden developer panel) */
+.top { position: relative; }
+.back {
+  position: absolute; left: 14px; top: calc(14px + env(safe-area-inset-top, 0px));
+  padding: 8px 12px; border-radius: 999px; text-decoration: none; color: inherit;
+  font-size: 12px; letter-spacing: .24em; text-transform: uppercase; opacity: .75;
+  background: rgba(255, 255, 255, .45);
+}

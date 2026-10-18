@@ -17,6 +17,8 @@ const STEP = 116;          // vertical distance between nodes
 const REGION_GAP = 92;     // room for a chapter label
 const COL = 420;           // max width of the trail column
 const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
+// developer switch (hidden panel): every stone and shrine open
+const devUnlock = () => localStorage.getItem('strata.dev.unlock') === '1';
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 const hex = (h) => '#' + h.toString(16).padStart(6, '0');
@@ -115,7 +117,7 @@ export function progress(entries, solved) {
     if (solved[e.shape.id]) furthest = i;
     else if (first < 0) first = i;
   });
-  const open = entries.map((e, i) => !!solved[e.shape.id] || i === first || i <= furthest + 2);
+  const open = entries.map((e, i) => devUnlock() || !!solved[e.shape.id] || i === first || i <= furthest + 2);
   return { furthest, first, open };
 }
 
@@ -189,7 +191,7 @@ export function renderMap(root, opts) {
       r.shrine = {
         kind: 'bonus', x: x0 + colW * (leftSide ? 0.16 : 0.84), y: r.last.y + STEP * 0.5,
         palette: entry.palette, sky: r.items[0].palette, entry, region: r,
-        state: solved[b.id] ? 'solved' : r.stars >= SHRINE_STARS ? 'open' : 'locked',
+        state: solved[b.id] ? 'solved' : devUnlock() || r.stars >= SHRINE_STARS ? 'open' : 'locked',
       };
       nodes.push(r.shrine);
     }

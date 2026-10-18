@@ -1071,6 +1071,46 @@ $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); r
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
 renderSoundToggles();
 
+// ---------------------------------------------------------------- developer panel
+
+// Hidden on purpose: hold the version line in How to play (a quick tap still
+// checks for updates), or tap the map's STRATA title five times.
+const devPress = { timer: 0, opened: false };
+function openDev() {
+  devPress.opened = true;
+  $('#dev-unlock-state').textContent = localStorage.getItem('strata.dev.unlock') === '1' ? 'on' : 'off';
+  $('#dev .dev-version').textContent = $('#version').textContent;
+  show('#help', false);
+  show('#dev', true);
+  buzz(12);
+}
+$('#version').addEventListener('pointerdown', () => {
+  devPress.opened = false;
+  clearTimeout(devPress.timer);
+  devPress.timer = setTimeout(openDev, 550);
+});
+for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) $('#version').addEventListener(ev, () => clearTimeout(devPress.timer));
+$('#version').addEventListener('contextmenu', (e) => e.preventDefault());
+let titleTaps = [];
+$('.map-head h1').addEventListener('click', () => {
+  const t = performance.now();
+  titleTaps = titleTaps.filter((x) => t - x < 1500).concat(t);
+  if (titleTaps.length >= 5) { titleTaps = []; openDev(); }
+});
+$('#dev [data-close]').addEventListener('click', () => show('#dev', false));
+$('#dev-unlock').addEventListener('click', () => {
+  const on = localStorage.getItem('strata.dev.unlock') !== '1';
+  localStorage.setItem('strata.dev.unlock', on ? '1' : '0');
+  $('#dev-unlock-state').textContent = on ? 'on' : 'off';
+  if ($('#menu').classList.contains('show')) renderMenu(false);
+});
+$('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
+$('#dev-reset').addEventListener('click', () => {
+  if (!confirm('Reset all progress? Stars, scores and the journal will be cleared.')) return;
+  for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && k !== 'strata.sfx' && k !== 'strata.music') localStorage.removeItem(k);
+  location.reload();
+});
+
 // ---------------------------------------------------------------- add to home screen
 
 // Opened from the Home Screen (iOS sets navigator.standalone; elsewhere the
@@ -1134,6 +1174,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
     setInterval(check, 30 * 60 * 1000);
     $('#version').addEventListener('click', () => {
+      if (devPress.opened) { devPress.opened = false; return; }   // that was a hold, not a tap
       $('#version').textContent = 'checking…';
       updateReady = true;                       // the user asked: apply as soon as it lands
       reg.update().then(() => {

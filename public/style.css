@@ -584,3 +584,17 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .glyph-share svg { width: 17px; height: 17px; vertical-align: -3px; margin: 0 2px; }
 .install-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 #install.ios #install-go, #install:not(.ios) .install-how { display: none; }
+
+/* ---------- hidden developer panel (hold the version line) ---------- */
+#dev h2 { margin-bottom: 14px; }
+.dev-list { display: flex; flex-direction: column; gap: 6px; }
+.dev-row {
+  display: flex; justify-content: space-between; align-items: center; width: 100%;
+  padding: 13px 16px; border-radius: 14px; border: 0; text-decoration: none;
+  background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; letter-spacing: .04em; text-align: left;
+}
+.dev-row span { color: var(--ink-soft); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+.dev-row.danger { color: #c4485a; }
+#dev .primary { display: block; margin: 18px auto 0; }
+/* the install card steps aside while a panel is open (it would cover the version line) */
+body:has(#help.show, #dev.show, #journal.show, #win.show) #install { opacity: 0; pointer-events: none; }
