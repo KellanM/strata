@@ -15,7 +15,8 @@ import { makeOrbit, SHOW_SPIN } from './orbit.js';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const hex = (h) => '#' + h.toString(16).padStart(6, '0');
 // a faceted diamond: lit and shaded halves, like the gems on the win screen
-const GEM = '<svg viewBox="0 0 12 16" aria-hidden="true"><path class="l" d="M6 0 0 8l6 8z"/><path class="r" d="M6 0l6 8-6 8z"/></svg>';
+// (an unearned one shows only its outline, drawn as one path so no seam runs down the middle)
+const GEM = '<svg viewBox="0 0 12 16" aria-hidden="true"><path class="l" d="M6 0 0 8l6 8z"/><path class="r" d="M6 0l6 8-6 8z"/><path class="o" d="M6 .7 .9 8 6 15.3 11.1 8z"/></svg>';
 const gems = (n) => `<span class="jr-gems">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${GEM}</i>`).join('')}</span>`;
 // an uncut stone in the chapter's colours: the object is still inside
 const stone = (p) => `<svg class="jr-stone" viewBox="0 0 100 100" aria-hidden="true">

@@ -559,7 +559,11 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .jr-gems { display: inline-flex; gap: 4px; }
 .jr-gems i { display: block; width: 8px; height: 11px; }
 .jr-gems svg { width: 100%; height: 100%; display: block; }
-.jr-gems i:not(.on) path { fill: none; stroke: currentColor; stroke-width: 1; opacity: .4; }
+/* no icon stroke on gems: filled ones are pure gold, empty ones a single outline */
+.jr-gems svg, .jr-total svg { stroke: none; }
+.jr-gems .o, .jr-total .o { fill: none; stroke: none; }
+.jr-gems i:not(.on) .l, .jr-gems i:not(.on) .r { display: none; }
+.jr-gems i:not(.on) .o { stroke: currentColor; stroke-width: 1; opacity: .45; }
 #journal-view {
   position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center;
   background: linear-gradient(180deg, var(--sky-top, var(--sky)), var(--sky-bottom, var(--sky)));
