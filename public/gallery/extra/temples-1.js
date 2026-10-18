@@ -29,9 +29,9 @@ const dragon = grid(8, 7, 6)
   .set(2, 4, 5, C.dgreen).set(5, 4, 5, C.dgreen)
   .set(2, 2, 5, C.white).set(5, 2, 5, C.white)
   .set(2, 5, 3, C.ink).set(5, 5, 3, C.ink)
-  .box([1, 1], [6, 6], [1, 1], C.gold).box([6, 6], [6, 6], [1, 1], C.gold).set(6, 6, 0, C.gold)
+  .set(1, 6, 1, C.gold).set(1, 6, 0, C.gold).set(6, 6, 1, C.gold).set(6, 6, 0, C.gold)   // a matching pair of horns
   .box([0, 0], [3, 5], [1, 2], C.red).box([7, 7], [3, 5], [1, 2], C.red)
-  .set(6, 3, 5, C.gold).set(7, 3, 5, C.gold);
+  .set(0, 3, 5, C.gold).set(1, 3, 5, C.gold).set(6, 3, 5, C.gold).set(7, 3, 5, C.gold);   // whiskers on both sides
 
 // Moon gate: a cream wall with a round opening, a tiled cap, a blossom branch through it.
 const moongate = grid(9, 8, 3)
@@ -61,7 +61,7 @@ const lion = grid(6, 8, 6)
   .box([0, 5], [4, 7], [1, 2], C.dgrey)
   .box([1, 4], [5, 7], [2, 5], C.grey)
   .box([1, 1], [0, 2], [5, 5], C.grey).box([4, 4], [0, 2], [5, 5], C.grey)
-  .set(2, 6, 5, C.ink).set(4, 6, 5, C.ink).box([2, 3], [5, 5], [5, 5], C.red)
+  .set(1, 6, 5, C.ink).set(4, 6, 5, C.ink).box([2, 3], [5, 5], [5, 5], C.red)   // eyes centred on the face
   .box([5, 5], [0, 1], [4, 5], C.red);
 
 // Rice bowl: a wide blue bowl with a pale rim, a dome of white rice, slim dark chopsticks on top.
@@ -86,7 +86,8 @@ const koi = grid(10, 8, 4)
   .box([8, 8], [3, 5], [1, 2], C.red)
   .box([9, 9], [1, 3], [1, 2], C.red).box([9, 9], [5, 7], [1, 2], C.red)
   .box([1, 1], [3, 5], [1, 2], C.white).set(1, 4, 2, 0)
-  .set(2, 5, 3, C.white).set(3, 5, 3, C.ink);
+  .set(2, 5, 3, C.white).set(3, 5, 3, C.ink)
+  .set(2, 5, 0, C.white).set(3, 5, 0, C.ink);   // an eye on each side
 
 // Red bridge: an arched lacquered bridge with railings and gold post caps.
 const bridge = grid(9, 6, 4);
@@ -120,10 +121,17 @@ const sake = grid(7, 6, 5)
   .box([4, 5], [1, 1], [1, 2], C.white).box([5, 5], [1, 1], [3, 4], C.white);
 
 // Kokeshi: a wooden doll, red kimono with pink flowers, black hair, a red bow on one side.
-const kokeshi = grid(4, 8, 4)
-  .cylinder('y', [1.5, 1.5], 1.6, [0, 4], (x, y, z) => ((x + y + z) % 3 === 0 && y > 0 ? C.pink : C.red))
-  .ellipsoid([1.5, 6, 1.5], [1.6, 1.6, 1.6], (x, y, z) => (y >= 7 || z <= 0 ? C.ink : C.cream))
-  .set(1, 6, 3, C.ink).set(2, 6, 3, C.ink).set(3, 7, 1, C.red);
+// Drawn layer by layer, five wide so the face has room: hair over the back and
+// top, a cream face at the front with two eyes and two pink cheeks, mirrored,
+// and a red bow at one side (the one deliberate asymmetry).
+const kokeshi = grid(5, 9, 5)
+  .cylinder('y', [2, 2], 1.9, [0, 4], (x, y, z) => ((x + y + z) % 3 === 0 && y > 0 ? C.pink : C.red))
+  .layers(5, [
+    ['.kkk.', 'kkkkk', 'kccck', 'ccccc', '.pcp.'],   // cheeks
+    ['.kkk.', 'kkkkk', 'kccck', 'ccccc', '.ece.'],   // eyes
+    ['.kkk.', 'kkkkk', 'kccck', 'kccck', '.ccc.'],   // forehead, clear of the hair
+    ['.kkk.', 'kkkkk', 'kkkkr', 'kkkkk', '.kkk.'],
+  ], { k: C.ink, c: C.cream, p: C.pink, e: C.ink, r: C.red });
 
 // Wind chime (fūrin): a glass bell with a painted goldfish, a paper strip below.
 const furin = grid(5, 8, 5)
@@ -157,8 +165,8 @@ const sfrog = grid(6, 5, 6)
 const fox = grid(7, 6, 5)
   .box([1, 4], [0, 1], [1, 3], C.orange)
   .box([3, 6], [2, 3], [1, 3], C.orange)
-  .box([3, 3], [4, 5], [1, 1], C.orange).box([5, 5], [4, 5], [1, 1], C.orange)
-  .box([5, 6], [2, 2], [3, 3], C.white).set(6, 3, 3, C.ink).set(5, 3, 3, C.ink)
+  .box([3, 3], [4, 5], [1, 1], C.orange).box([6, 6], [4, 5], [1, 1], C.orange)   // a pair of ears
+  .box([4, 5], [2, 2], [3, 3], C.white).set(3, 3, 3, C.ink).set(6, 3, 3, C.ink)   // eyes either side of the muzzle
   .box([0, 0], [1, 3], [1, 2], C.orange).set(0, 4, 1, C.white).set(0, 3, 1, C.white);
 
 // Ema: a wooden votive plaque, a red cord at the top, a painted red sun.

@@ -57,6 +57,7 @@ const sub = grid(10, 6, 4)
   .box([3, 5], [3, 4], [1, 2], C.gold)
   .set(4, 5, 1, C.dgrey).set(5, 5, 1, C.dgrey).set(6, 5, 1, C.dgrey)
   .set(2, 2, 3, C.sky).set(4, 2, 3, C.sky).set(6, 2, 3, C.sky)
+  .set(2, 2, 0, C.sky).set(4, 2, 0, C.sky).set(6, 2, 0, C.sky)   // portholes on both sides
   .set(9, 2, 1, C.dgrey).set(9, 2, 2, C.dgrey).set(9, 3, 1, C.dgrey);
 
 // Branching coral on a sandy patch, with a little anemone and weed.
@@ -72,7 +73,7 @@ const gull = grid(8, 4, 5)
   .ellipsoid([3.5, 1.5, 2], [3, 1.3, 1.3], C.white)
   .box([2, 3], [2, 2], [0, 4], (x, y, z) => (z === 2 ? C.white : C.grey))   // wings spread
   .box([3, 3], [3, 3], [0, 0], C.grey).box([3, 3], [3, 3], [4, 4], C.grey)  // tips lifted
-  .box([5, 6], [1, 2], [2, 2], C.white).set(6, 2, 3, C.ink).set(7, 1, 2, C.orange)
+  .box([5, 6], [1, 2], [2, 2], C.white).set(6, 2, 3, C.ink).set(6, 2, 1, C.ink).set(7, 1, 2, C.orange)   // an eye each side
   .set(0, 1, 2, C.grey).set(0, 2, 2, C.grey);
 
 export default [

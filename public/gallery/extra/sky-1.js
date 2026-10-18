@@ -63,7 +63,7 @@ const helmet = grid(6, 7, 6)
 const raindrop = grid(4, 6, 4)
   .ellipsoid([1.5, 1.4, 1.5], [1.9, 1.6, 1.9], C.sky)
   .box([1, 2], [3, 3], [1, 2], C.sky).set(1, 4, 1, C.sky).set(1, 5, 1, C.white)
-  .set(1, 1, 3, C.ink).set(2, 1, 3, C.ink).set(3, 1, 2, C.pink);
+  .set(1, 1, 3, C.ink).set(2, 1, 3, C.ink).set(3, 1, 2, C.pink).set(0, 1, 2, C.pink);   // a cheek each side
 
 // Rain cloud: puffy cloud, a grey underside and drops of different lengths.
 const rainCloud = grid(8, 7, 5)
@@ -111,8 +111,8 @@ const fox = grid(8, 4, 6)
   .ellipsoid([3.5, 1.1, 2.6], [3.3, 1.4, 2.3], C.orange)
   .box([1, 5], [0, 1], [5, 5], C.orange).box([0, 1], [0, 1], [4, 5], C.white)   // tail round the front
   .ellipsoid([6, 1.4, 3.6], [1.3, 1.2, 1.3], C.orange)                         // head
-  .set(6, 3, 3, C.orange).set(7, 3, 4, C.orange)                               // ears
-  .set(7, 1, 4, C.ink).set(7, 2, 3, C.ink)                                     // nose, closed eye
+  .set(6, 3, 3, C.orange).set(6, 2, 2, C.orange).set(6, 3, 2, C.orange)        // a pair of ears (one stands on a raised cheek)
+  .set(7, 1, 4, C.ink).set(7, 2, 3, C.ink).set(7, 2, 5, C.ink)                 // nose, two closed eyes
   .set(6, 0, 4, C.white).set(7, 0, 4, C.white);                                // chin
 
 // Tent: an orange tent, a dark doorway, a pole with a flag.
@@ -165,7 +165,7 @@ const hummingbird = grid(8, 6, 5)
   .ellipsoid([5, 3, 2], [1.3, 1.2, 1.2], C.teal)
   .set(6, 3, 2, C.ink).set(7, 3, 2, C.ink)                     // beak
   .set(5, 2, 3, C.red).set(5, 2, 2, C.red)                     // throat
-  .set(5, 3, 3, C.ink)                                         // eye
+  .set(5, 3, 3, C.ink).set(5, 3, 1, C.ink)                     // an eye each side
   .box([2, 3], [4, 5], [1, 1], C.sky).set(3, 4, 2, C.sky)      // wing raised
   .set(1, 2, 2, C.dgreen).set(0, 2, 2, C.dgreen).set(0, 1, 2, C.dgreen);   // tail
 
@@ -183,7 +183,7 @@ moon.set(1, 4, 2, C.ink).set(2, 4, 2, C.ink)                    // closed eye
 // Airship: a long lilac envelope, red tail fins, a gondola with a window.
 const airship = grid(10, 6, 5)
   .ellipsoid([5, 3.6, 2], [4.6, 1.9, 2], C.lilac)
-  .box([3, 6], [0, 1], [2, 2], C.brown).set(5, 1, 3, C.yellow)
+  .box([3, 6], [0, 1], [2, 2], C.brown).set(5, 1, 3, C.yellow).set(5, 1, 1, C.yellow)   // a window each side
   .box([0, 0], [3, 5], [2, 2], C.red).set(1, 5, 2, C.red)           // tail fin
   .set(0, 3, 1, C.red).set(0, 3, 3, C.red);                          // side fins
 
