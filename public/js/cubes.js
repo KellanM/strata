@@ -56,6 +56,7 @@ const vertexShader = /* glsl */ `
   uniform vec2 uRipParam[${MAX_RIPPLES}];  // amplitude, speed
   uniform vec3 uHint;
   uniform float uWin;      // time the puzzle was solved (-99 while playing)
+  uniform float uIntro;    // time the level began: the block assembles itself (-99 = no intro)
 
   varying vec3 vN;
   varying vec3 vWN;
@@ -83,6 +84,22 @@ const vertexShader = /* glsl */ `
     vec3 center = aCell - (uDims - 1.0) * 0.5;
     float scale = 1.0;
     vec3 offset = vec3(0.0);
+
+    // the level begins: cubes drop into place layer by layer, from the base up
+    // and the centre out, each landing with a small settle
+    if (uIntro > -50.0) {
+      float hgt = aCell.y / max(uDims.y - 1.0, 1.0);
+      vec2 mid = (uDims.xz - 1.0) * 0.5;
+      float spread = length(aCell.xz - mid) / max(length(mid), 1.0);
+      float k = (uTime - uIntro - (hgt * 0.55 + spread * 0.22)) / 0.42;
+      if (k < 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+      if (k < 1.0) {
+        float fall = 1.0 - pow(1.0 - k, 3.0);
+        offset.y += (1.0 - fall) * 2.2;
+        float c1 = 1.7, c3 = c1 + 1.0;                       // ease out with a gentle overshoot
+        scale *= 0.55 + 0.45 * (1.0 + c3 * pow(k - 1.0, 3.0) + c1 * pow(k - 1.0, 2.0));
+      }
+    }
 
     // chiselled away: the cube is gone the instant it splits into pieces (fragments.js)
     if (aState.z >= 0.0 && uTime >= aState.z) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
@@ -287,6 +304,7 @@ export class Cubes {
       uMask: { value: 0 },
       uReveal: { value: 0 },
       uWin: { value: -99 },
+      uIntro: { value: -99 },
       uDims: { value: new THREE.Vector3(1, 1, 1) },
       uPeel: { value: new THREE.Vector3(1, 99, 1) },
       uHover: { value: new THREE.Vector3(-99, -99, -99) },

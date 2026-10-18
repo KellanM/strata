@@ -136,8 +136,13 @@ function startPuzzle(entry) {
   renderCoach();
   maybeChapterCard(entry);
 
-  // the block rises in with a wave from its base
-  cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], now(), 1.6, 6);
+  // the block assembles itself: cubes drop into place from the base up, then a
+  // soft wave runs through the finished stone; taps wait until it's whole
+  const t0 = now();
+  cubes.uniforms.uIntro.value = reduceMotion ? -99 : t0;
+  game.introEnd = reduceMotion ? 0 : t0 + INTRO_TIME;
+  sound.intro(Y, reduceMotion ? 0 : INTRO_TIME);
+  cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   rayBoost = 1;
 }
 
@@ -365,8 +370,11 @@ function buzz(pattern) {
   }
 }
 
+const INTRO_TIME = 1.2;   // the level-start assembly (shader: delays ≤ 0.77 s + 0.42 s fall)
+
 function act(i, which) {
   if (!game || game.solved || i < 0) return;
+  if (now() < (game.introEnd ?? 0)) return;          // the block is still assembling
   const t = now();
   const cell = game.puzzle.coords(i);
   const p = game.palette;
