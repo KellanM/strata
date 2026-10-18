@@ -419,15 +419,17 @@ class Sound {
     this.noise({ dest: this.sfxTonal, dur: 0.35, gain: 0.07, freq: 400, sweepTo: 3000, q: 2, attack: 0.12, pan: [-0.4, 0.4] });
   }
 
-  // the level begins: as the block assembles, a soft note for each layer
-  // landing, rising up the chord, and a low settle when it's whole
+  // the level begins: as the block assembles, each layer lands with the same
+  // airy sweep as the peel handles, climbing a little higher layer by layer and
+  // drifting across the stereo field, then a low settle when it's whole
   intro(layers, dur, delay = 0) {
     if (!this.ctx || !dur) return;
     const t = this.now + delay, n = Math.max(2, Math.min(layers, 8));
-    const tones = this.chordTones();
     for (let k = 0; k < n; k++) {
-      const midi = this.key.root + 24 + tones[k % tones.length] + 12 * Math.floor(k / tones.length);
-      this.fmBell(midi, { at: t + 0.3 + (k / (n - 1)) * 0.28, gain: 0.035, index: 1.4, indexEnd: 0.2, decay: 0.9 });
+      const land = t + 0.3 + (k / (n - 1)) * 0.28;          // as in the cubes' intro shader
+      const lift = Math.pow(1.12, k);
+      const side = k % 2 ? 1 : -1;
+      this.noise({ dest: this.sfxTonal, at: land - 0.12, dur: 0.35, gain: 0.05, freq: 400 * lift, sweepTo: 3000 * lift, q: 2, attack: 0.12, pan: [-0.4 * side, 0.4 * side] });
     }
     this.tone(this.key.root + 12, { at: t + dur - 0.1, type: 'sine', attack: 0.02, decay: 0.5, gain: 0.08, partial: 2, partialGain: 0.25 });
   }
