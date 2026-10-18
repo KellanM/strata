@@ -1326,6 +1326,22 @@ resize();
 // scroll off the top while the map comes up from below (the touch also lets the
 // sound start). The very first time, the swipe begins the first lesson instead.
 const titleScreen = $('#title');
+// Sound from the first moment it's allowed: phones only let a page make sound
+// after a touch (on iPhone, a finger lifting), except where autoplay is granted
+// (e.g. an Android Home Screen app) - so set the audio up now, and it plays
+// straight away where it may, or from the first touch on the title otherwise.
+sound.unlock();
+const soundLive = () => sound.ctx?.state === 'running';
+let welcomed = false;
+const welcome = () => {   // the first sound of a launch: a soft bell as the music comes up
+  if (welcomed || !soundLive()) return;
+  welcomed = true;
+  sound.stone(0);
+  mark('title: sound on');
+};
+for (const ev of ['touchend', 'click', 'keydown']) {
+  titleScreen.addEventListener(ev, () => { sound.unlock(); setTimeout(welcome, 30); }, { passive: true });
+}
 const LOGO = { id: 'logo', name: 'Strata', dims: [2, 2, 2], view: Math.PI / 4, handles: false, show: [0, 0, 0],
   cell: (x, y, z) => (x & y & z ? 0 : 0xffffff) };
 const LOGO_CORNER = 7;   // (1, 1, 1): the corner nearest the camera
@@ -1340,6 +1356,7 @@ function carveLogo() {
   refreshAO();
   cubes.ripple(game.puzzle.coords(i), t, 1, 7);
   fragments.burst(cellWorld(i), cellWorld(i).add(new THREE.Vector3(0.5, 0.5, 0.5)), t);
+  if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
 if (reduceMotion) carveLogo();
