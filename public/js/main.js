@@ -862,6 +862,7 @@ function renderMenu(scroll = true, celebrate = false) {
 }
 
 function openMenu() {
+  if (updateReady) { location.reload(); return; }
   show('#menu', true);
   renderMenu(true, true);
 }
@@ -1058,8 +1059,33 @@ if (localStorage.getItem('strata.tutorial')) {
 requestAnimationFrame(frame);
 
 // offline play: only over https (hosted build); the LAN dev server stays uncached
+// Updates. A home-screen app is often resumed rather than reloaded, so look
+// for a new version whenever it comes to the front, not just at launch. When a
+// new version has taken over, reload at a calm moment (the map or the result
+// screen), never in the middle of a puzzle. Tapping the version line in How to
+// play checks right away.
+let updateReady = false;
+function calmMoment() { return !game || game.solved || $('#menu').classList.contains('show'); }
+function applyUpdate() { if (updateReady && calmMoment()) location.reload(); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    const check = () => reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+    setInterval(check, 30 * 60 * 1000);
+    $('#version').addEventListener('click', () => {
+      $('#version').textContent = 'checking…';
+      updateReady = true;                       // the user asked: apply as soon as it lands
+      reg.update().then(() => {
+        if (!reg.installing && !reg.waiting) setTimeout(() => location.reload(), 300);
+      }).catch(() => location.reload());
+    });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;                 // first install, nothing to refresh
+    updateReady = true;
+    if ($('#version').textContent === 'checking…') location.reload(); else applyUpdate();
+  });
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')

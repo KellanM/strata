@@ -555,4 +555,4 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #journal-back { position: absolute; top: calc(12px + var(--safe-t)); left: 14px; }
 
 /* the build stamps this; it tells which version a phone is running */
-.version { margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
+.version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
