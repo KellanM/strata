@@ -353,14 +353,14 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 
 /* the companion */
 .companion {
-  position: absolute; left: -16px; top: -40px; width: 32px; height: 42px; pointer-events: none; z-index: 1;
+  position: absolute; left: -19px; top: -52px; width: 38px; height: 53px; pointer-events: none; z-index: 1;
   will-change: transform;
 }
-.companion svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.companion svg { width: 100%; height: 100%; display: block; overflow: visible; stroke: none; }
 .companion.flip svg { transform: scaleX(-1); }
 .companion .head { animation: comp-bob 2.8s ease-in-out infinite; }
 .companion.walking .head { animation: none; }
-.companion .eye { transform-origin: 15.5px 22.5px; animation: comp-blink 5s infinite; }
+.companion .eye { transform-box: fill-box; transform-origin: center; animation: comp-blink 5s infinite; }
 @keyframes comp-bob { 50% { transform: translateY(-1.6px); } }
 @keyframes comp-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 

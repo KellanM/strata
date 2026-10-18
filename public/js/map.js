@@ -65,19 +65,38 @@ function shrine(p, size = 44) {
   </svg>`;
 }
 
-// The companion: two stacked stones and a bright eye, a Totem for the trail.
+// The companion: a little Totem built like everything else in the world, two
+// isometric blocks in the same projection as the stones and the puzzle (a
+// smaller head on a deeper base), coloured from the chapter's stone, with one
+// eye carved flat into the head's lit face.
+const ISO_X = Math.cos(Math.PI / 6);
+function isoBlock(cx, topY, e, H, top, left, right) {
+  const hw = ISO_X * e / 2, hh = e / 4;                 // same proportions as cube()
+  const N = [cx, topY - hh], E = [cx + hw, topY], S = [cx, topY + hh], W = [cx - hw, topY];
+  const d = (pts) => 'M' + pts.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L') + 'Z';
+  const down = ([x, y]) => [x, y + H];
+  return {
+    svg: `<path d="${d([N, E, S, W])}" fill="${top}"/>`
+      + `<path d="${d([W, S, down(S), down(W)])}" fill="${left}"/>`
+      + `<path d="${d([E, S, down(S), down(E)])}" fill="${right}"/>`,
+    W, S, H,
+  };
+}
+
 function companion(p) {
-  return `<svg viewBox="0 0 40 52" aria-hidden="true">
-    <ellipse class="shadow" cx="20" cy="49" rx="10" ry="2.6" fill="#000" fill-opacity=".14"/>
-    <path d="M8 34L20 28L32 34L20 40Z" fill="${hex(p.top)}"/>
-    <path d="M8 34L20 40V48L8 42Z" fill="${hex(p.lit)}"/>
-    <path d="M32 34L20 40V48L32 42Z" fill="${hex(p.shade)}"/>
-    <g class="head">
-      <path d="M11 17L20 12.5L29 17L20 21.5Z" fill="${hex(p.top)}"/>
-      <path d="M11 17L20 21.5V30L11 25.5Z" fill="${hex(p.paintLit)}"/>
-      <path d="M29 17L20 21.5V30L29 25.5Z" fill="${hex(p.paintShade)}"/>
-      <ellipse class="eye" cx="15.5" cy="22.5" rx="1.5" ry="1.9" fill="${hex(p.under)}"/>
-    </g>
+  const base = isoBlock(20, 37, 22, 11, hex(p.lit), hex(p.shade), hex(p.under));
+  const head = isoBlock(20, 25, 15, 9.5, hex(p.top), hex(p.lit), hex(p.shade));
+  // the eye: a small parallelogram lying in the head's left (lit) face
+  const [wx, wy] = head.W, [sx, sy] = head.S;
+  const ux = (sx - wx), uy = (sy - wy);                 // along the face
+  const at = (a, b) => [wx + ux * a, wy + uy * a + head.H * b];
+  const eye = [at(0.36, 0.3), at(0.56, 0.3), at(0.56, 0.62), at(0.36, 0.62)]
+    .map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L');
+  const sw = ISO_X * 15, sh = 6.2;                       // shadow: a flat iso diamond on the ground
+  return `<svg viewBox="0 0 40 56" aria-hidden="true">
+    <path class="shadow" d="M20 ${49 - sh}L${20 + sw} 49L20 ${49 + sh}L${20 - sw} 49Z" fill="${hex(p.under)}" fill-opacity=".22"/>
+    ${base.svg}
+    <g class="head">${head.svg}<path class="eye" d="M${eye}Z" fill="${hex(p.under)}"/></g>
   </svg>`;
 }
 
