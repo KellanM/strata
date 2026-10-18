@@ -7,6 +7,7 @@ import { CHAPTERS } from './shapes.js';
 import { recordStars } from './score.js';
 import { renderThumb } from './thumbs.js';
 import { objectMesh, isoCamera } from './objectmesh.js';
+import { makeOrbit, SHOW_SPIN } from './orbit.js';
 
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg>';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -77,7 +78,10 @@ function openView(root, entry) {
   scene.add(pivot);
   const camera = isoCamera(mesh.userData.radius);
 
-  const state = { yaw: 0.5, pitch: 0, vel: 0.35, drag: null, last: performance.now(), raf: 0 };
+  // the same orbit as the puzzle and the win screen, over the same slow turntable spin
+  const controls = makeOrbit(camera, canvas);
+  controls.target.set(0, 0, 0);
+  const state = { last: performance.now(), raf: 0 };
   const size = () => {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     renderer.setSize(w, h, false);
@@ -88,43 +92,18 @@ function openView(root, entry) {
   const frame = (t) => {
     const dt = Math.min(0.05, (t - state.last) / 1000);
     state.last = t;
-    if (!state.drag) {
-      state.vel += (0.35 - state.vel) * Math.min(1, dt * 1.5);   // settle back to a slow turn
-      state.yaw += state.vel * dt;
-      state.pitch *= 1 - Math.min(1, dt * 2);
-    }
-    pivot.rotation.set(state.pitch, state.yaw, 0);
+    pivot.rotation.y += SHOW_SPIN * dt;
+    controls.update();
     renderer.render(scene, camera);
     state.raf = requestAnimationFrame(frame);
   };
-  const down = (e) => {
-    canvas.setPointerCapture(e.pointerId);
-    state.drag = { x: e.clientX, y: e.clientY, t: performance.now() };
-  };
-  const move = (e) => {
-    if (!state.drag) return;
-    const dx = e.clientX - state.drag.x, dy = e.clientY - state.drag.y;
-    const now = performance.now(), dt = Math.max(1, now - state.drag.t) / 1000;
-    state.yaw += dx * 0.012;
-    state.pitch = THREE.MathUtils.clamp(state.pitch + dy * 0.008, -0.6, 0.6);
-    state.vel = (dx * 0.012) / dt;
-    state.drag = { x: e.clientX, y: e.clientY, t: now };
-  };
-  const up = () => { state.drag = null; };
-  canvas.addEventListener('pointerdown', down);
-  canvas.addEventListener('pointermove', move);
-  canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('pointercancel', up);
   window.addEventListener('resize', size);
   size();
   state.raf = requestAnimationFrame(frame);
 
   view = () => {
     cancelAnimationFrame(state.raf);
-    canvas.removeEventListener('pointerdown', down);
-    canvas.removeEventListener('pointermove', move);
-    canvas.removeEventListener('pointerup', up);
-    canvas.removeEventListener('pointercancel', up);
+    controls.dispose();
     window.removeEventListener('resize', size);
     mesh.geometry.dispose();
     mesh.material.dispose();

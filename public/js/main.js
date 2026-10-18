@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { makeOrbit, SHOW_SPIN } from './orbit.js';
 import { Puzzle, hideClues } from './puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
@@ -24,19 +24,7 @@ renderer.autoClear = false;
 
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
-const controls = new OrbitControls(camera, canvas);
-controls.enablePan = false;
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.rotateSpeed = 0.75;
-controls.minZoom = 0.6;
-controls.maxZoom = 3.5;
-controls.autoRotateSpeed = 1.4;
-// spin freely around, but never far enough over the top to read clues upside down
-controls.minPolarAngle = 0.26;
-controls.maxPolarAngle = Math.PI - 0.5;
-controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: null };
-controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+const controls = makeOrbit(camera, canvas);
 
 const cubes = new Cubes();
 const background = new Background();
@@ -926,7 +914,7 @@ function stepCelebration(t) {
     const windup = Math.min(1, age / 0.34);
     const s = Math.max(0, age - 0.34);
     const whirl = w.lesson ? Math.PI * 2 : Math.PI * 4;
-    angle = -0.25 * Math.sin(windup * Math.PI / 2) + whirl * (1 - Math.exp(-s / 0.7)) + 0.42 * s;
+    angle = -0.25 * Math.sin(windup * Math.PI / 2) + whirl * (1 - Math.exp(-s / 0.7)) + SHOW_SPIN * s;
     const leap = Math.min(1, s / 0.66);
     lift = 0.5 * Math.sin(Math.PI * leap) * (leap < 1 ? 1 : 0)
       + 0.09 * Math.sin((s - 0.66) * 1.5) * THREE.MathUtils.smoothstep(s, 0.66, 2.2);
