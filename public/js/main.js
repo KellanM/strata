@@ -1133,14 +1133,22 @@ document.body.classList.toggle('standalone', installed);
 const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; maybeShowInstall(); });
+const isAndroid = /Android/i.test(navigator.userAgent);
+const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
+let installTimer = 0;
 function maybeShowInstall() {
   if (installed) return;
   const later = Number(localStorage.getItem('strata.install.later')) || 0;
   if (Date.now() - later < 3 * 24 * 3600 * 1000) return;     // asked again after three days
-  if (!isIOS && !installPrompt) return;                        // nothing useful to offer
+  if (!isIOS && !isAndroid && !installPrompt) return;          // desktop without an install offer
   const card = $('#install');
+  // steps for this browser; a real Install button whenever the browser offers one
   card.classList.toggle('ios', isIOS);
-  setTimeout(() => card.classList.add('show'), 1800);
+  card.classList.toggle('samsung', isSamsung);
+  card.classList.toggle('android', isAndroid && !isSamsung);
+  card.classList.toggle('can-install', !!installPrompt);
+  clearTimeout(installTimer);
+  installTimer = setTimeout(() => card.classList.add('show'), 1800);
 }
 $('#install-later').addEventListener('click', () => {
   localStorage.setItem('strata.install.later', String(Date.now()));
