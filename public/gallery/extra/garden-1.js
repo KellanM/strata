@@ -14,7 +14,7 @@ export default [
       .box([1, 5], [0, 0], [1, 3], belly)
       .box([2, 4], [1, 2], [5, 5], belly).set(3, 1, 5, belly).set(3, 2, 5, belly)
       .set(3, 1, 5, C.ink)                                       // nose
-      .set(2, 2, 5, C.ink)                                       // one eye (the other is round the turn)
+      .set(2, 2, 5, C.ink).set(4, 2, 5, C.ink)                   // two eyes either side of the nose
       .set(1, 4, 2, spine).set(3, 4, 1, spine).set(5, 4, 2, spine);   // spikes break the top line
     return g.entry({ id: 'cand-hedgehog', name: 'Hedgehog' });
   })(),
@@ -47,7 +47,7 @@ export default [
     const segs = [[1.2, 1.3], [3.2, 1.9], [5.2, 1.3], [7.2, 1.6]];
     segs.forEach(([x, y], k) => g.ellipsoid([x, y, 1], [1.4, 1.35, 1.2], k % 2 ? C.leaf : C.green));
     g.ellipsoid([8.6, 2.6, 1], [1.3, 1.5, 1.2], C.red)
-      .set(9, 3, 2, C.ink).set(9, 4, 1, C.ink);                  // eye and antenna on the face
+      .set(9, 3, 0, C.ink).set(9, 3, 2, C.ink).set(9, 4, 1, C.ink);   // two eyes and an antenna on the face
     for (const [x] of segs) g.set(Math.round(x), 0, 1, C.dgreen);   // little feet
     return g.entry({ id: 'cand-caterpillar', name: 'Caterpillar' });
   })(),
@@ -106,11 +106,11 @@ export default [
     const g = grid(6, 9, 5);
     g.ellipsoid([2.5, 2, 3], [1.6, 2, 1.4], C.crust)
       .ellipsoid([2.5, 4.8, 3.2], [1.4, 1.3, 1.3], C.crust)
-      .set(2, 5, 4, C.ink).set(3, 4, 4, C.cream)
+      .set(2, 5, 4, C.ink).set(3, 5, 4, C.ink).set(2, 4, 4, C.cream).set(3, 4, 4, C.cream)   // two eyes over a pale snout
       .set(2, 6, 3, C.crust).set(3, 6, 3, C.crust)
       .box([2, 3], [0, 8], [0, 1], (x, y, z) => (y >= 2 && y <= 8 && (y < 7 || z === 0) ? C.brown : null))   // the tail up the back
       .box([1, 4], [7, 8], [0, 0], C.brown)
-      .set(3, 2, 4, C.tan).set(3, 3, 4, C.dbrown);              // the acorn in its paws
+      .box([2, 3], [2, 2], [4, 4], C.tan).box([2, 3], [3, 3], [4, 4], C.dbrown);   // the acorn held in both paws
     return g.entry({ id: 'cand-squirrel', name: 'Squirrel' });
   })(),
 
@@ -130,7 +130,8 @@ export default [
     const g = grid(6, 7, 6);
     g.box([0, 1], [0, 5], [0, 1], C.yellow).box([0, 1], [0, 1], [2, 3], C.yellow).box([0, 1], [6, 6], [0, 1], sock)
       .box([3, 4], [0, 3], [2, 3], C.yellow).box([3, 4], [0, 1], [4, 5], C.yellow).box([3, 4], [4, 4], [1, 2], C.yellow)
-      .box([0, 4], [0, 0], [1, 1], C.dbrown);                    // a muddy step joining them
+      .box([0, 4], [0, 0], [1, 1], C.dbrown)                     // a muddy step joining them
+      .box([3, 4], [4, 4], [1, 1], sock);                        // a sock in the slumped one too
     return g.entry({ id: 'cand-wellies', name: 'Wellies' });
   })(),
 
@@ -148,7 +149,7 @@ export default [
     const g = grid(5, 8, 5);
     g.ellipsoid([2, 2, 2], [2.2, 2.2, 2.2], pear).ellipsoid([2, 4.5, 2], [1.4, 1.6, 1.4], pear)
       .box([2, 2], [6, 7], [2, 2], C.brown).set(3, 7, 2, C.brown).set(3, 6, 2, C.green).set(4, 6, 2, C.green)
-      .set(3, 2, 4, C.yellow);                                   // a blush where the light hits
+      .set(2, 2, 4, C.yellow);                                   // a blush, centred on the front
     return g.entry({ id: 'cand-pear', name: 'Pear' });
   })(),
 
@@ -180,7 +181,7 @@ export default [
       .ellipsoid([2, 3.4, 3.4], [1.3, 1.3, 1.3], C.yellow)
       .set(2, 3, 5, C.orange).set(2, 2, 5, C.orange)
       .set(3, 4, 4, C.ink).set(1, 4, 4, C.ink)
-      .set(4, 1, 2, butterYellow()).set(2, 2, 0, C.yellow);      // a wing and a tail flick
+      .set(4, 1, 2, butterYellow()).set(0, 1, 2, butterYellow()).set(2, 2, 0, C.yellow);   // a wing each side and a tail flick
     return g.entry({ id: 'cand-duckling', name: 'Duckling' });
   })(),
 
@@ -200,8 +201,8 @@ export default [
   // a dragonfly: long blue body, two pairs of clear wings
   (() => {
     const g = grid(9, 2, 7);
-    g.box([4, 4], [0, 0], [0, 6], C.blue).box([4, 4], [1, 1], [5, 6], C.teal).set(4, 1, 6, C.ink)
-      .box([1, 3], [1, 1], [4, 4], 0xd5ecf5).box([5, 8], [1, 1], [4, 4], 0xd5ecf5)
+    g.box([4, 4], [0, 0], [0, 6], C.blue).box([4, 4], [1, 1], [5, 6], C.teal).set(3, 1, 6, C.ink).set(5, 1, 6, C.ink)   // two big eyes
+      .box([1, 3], [1, 1], [4, 4], 0xd5ecf5).box([5, 7], [1, 1], [4, 4], 0xd5ecf5)
       .box([1, 3], [1, 1], [3, 3], 0xc3e2ef).box([5, 7], [1, 1], [3, 3], 0xc3e2ef)
       .box([4, 4], [1, 1], [3, 4], C.blue);
     return g.entry({ id: 'cand-dragonfly', name: 'Dragonfly' });
@@ -222,8 +223,10 @@ export default [
   (() => {
     const g = grid(7, 5, 7);
     g.ellipsoid([3, 0, 3], [3.4, 2.4, 3.4], (x, y, z) => (y === 0 ? C.dbrown : C.brown))
-      .ellipsoid([3.5, 3, 4], [1.2, 1.4, 1.2], C.ink)
-      .set(4, 3, 5, C.pink).set(3, 3, 5, 0x5d6670).set(5, 2, 4, C.pink);   // nose, eye shine, a paw
+      .ellipsoid([3, 3, 4], [1.2, 1.4, 1.2], C.ink)
+      .set(3, 3, 5, C.pink)                                      // the nose
+      .set(2, 3, 4, 0x5d6670).set(4, 3, 4, 0x5d6670)             // a glint of eye either side
+      .set(1, 2, 4, C.pink).set(5, 2, 4, C.pink);                // a paw on each side
     return g.entry({ id: 'cand-molehill', name: 'Molehill' });
   })(),
 
@@ -232,7 +235,7 @@ export default [
     const g = grid(5, 6, 6);
     g.ellipsoid([2, 3, 2.5], [1.8, 2, 2.2], 0xa86b4a)
       .box([1, 3], [2, 3], [4, 4], C.red).set(2, 4, 4, C.red)
-      .set(2, 4, 5, C.gold).set(1, 4, 4, C.ink)
+      .set(2, 4, 5, C.gold).set(1, 4, 4, C.ink).set(3, 4, 4, C.ink)   // beak between two eyes
       .box([2, 2], [0, 1], [3, 3], C.ink)
       .box([2, 2], [3, 4], [0, 0], 0x7a5038);                    // tail cocked up
     return g.entry({ id: 'cand-robin', name: 'Robin' });

@@ -118,12 +118,14 @@ export default [
     id: 'cand-radio', name: 'Radio', dims: [7, 6, 4],
     cell(x, y, z) {
       if (inBox(x, y, z, [0, 6], [0, 3], [0, 3])) {
-        if (z === 3 && x <= 2 && y >= 1 && y <= 2) return (x + y) % 2 ? C.dbrown : C.tan;
+        // speaker: a tan panel with a dark cone in its middle; tuning dial to the right
+        if (z === 3 && x >= 1 && x <= 3 && y >= 1 && y <= 2) return x === 2 ? C.dbrown : C.tan;
         if (z === 3 && x === 5 && y === 2) return C.gold;
         return y === 3 ? C.dred : C.coral;
       }
-      if (x === 5 && z === 1 && y >= 4) return C.silver;
-      if (y === 4 && z === 1 && (x === 1 || x === 2)) return C.dbrown;
+      // carry handle centred on top, antenna at the right end
+      if (z === 1 && ((y === 4 && (x === 2 || x === 4)) || (y === 5 && x >= 2 && x <= 4))) return C.dbrown;
+      if (x === 6 && z === 2 && y >= 4) return C.silver;
       return 0;
     },
   },

@@ -69,11 +69,15 @@ export default [
     id: 'cand-ladybug', name: 'Ladybug', dims: [6, 3, 7],
     cell(x, y, z) {
       const dx = x - 2.5, dz = z - 2.5;
-      if (z >= 5) return y <= 1 && Math.abs(dx) <= 1.5 && z === 5 ? C.ink : y === 0 && z === 6 && (x === 1 || x === 4) ? C.ink : 0;
+      // head forward (+z) with two white eyes; legs paired either side
+      if (z >= 5) {
+        if (z === 5 && y <= 1 && Math.abs(dx) <= 1.5) return y === 1 && (x === 1 || x === 4) ? C.white : C.ink;
+        return y === 0 && z === 6 && (x === 1 || x === 4) ? C.ink : 0;
+      }
       if (!ell(dx, y, dz, 3, 2.6, 2.9)) return 0;
-      const spots = [[1, 1], [4, 1], [1, 3], [4, 3], [2, 2], [3, 4]];
+      // a red dome with spots mirrored left and right
+      const spots = [[1, 1], [4, 1], [1, 3], [4, 3], [0, 2], [5, 2]];
       if (y >= 1 && spots.some(([a, b]) => a === x && b === z)) return C.ink;
-      if (y === 2 && (x === 2 || x === 3)) return C.ink;
       return C.red;
     },
   },
@@ -129,7 +133,8 @@ export default [
       if (y <= 4) {
         const r = [0.8, 1.6, 2.2, 2.4, 2.2][y];
         if (!disc(dx, dz, r)) return 0;
-        return (x + 2 * z + y) % 4 === 0 ? C.yellow : C.red;
+        // seeds in a pattern that is the same from every side
+        return y % 2 === 1 && (x + z) % 2 === 0 && (Math.abs(dx) === 2 || Math.abs(dz) === 2) ? C.yellow : C.red;
       }
       if (y === 5) return (Math.abs(dx) + Math.abs(dz) <= 2 && (dx === 0 || dz === 0)) ? C.green : 0;
       return !dx && !dz ? C.dgreen : 0;
@@ -140,8 +145,10 @@ export default [
     cell(x, y, z) {
       if (y <= 3 && ell(x - 2.5, y - 1.5, z - 2, 2.4, 2, 2)) return C.white;
       if (x === 0 && y === 1 && z === 2) return C.white;
-      if (y >= 3 && y <= 5 && ell(x - 4, y - 4, z - 2, 1.5, 1.4, 1.4)) return z === 3 && x === 5 && y === 4 ? C.ink : C.white;
-      if (z === 2 && (x === 3 || x === 4) && y >= 6) return x === 4 && z === 2 && y === 6 ? C.pink : C.white;
+      // head facing +x: an eye on each side
+      if (y >= 3 && y <= 5 && ell(x - 4, y - 4, z - 2, 1.5, 1.4, 1.4)) return x === 5 && y === 4 && (z === 1 || z === 3) ? C.ink : C.white;
+      // two ears side by side, each pink low down
+      if (x === 4 && (z === 1 || z === 3) && y >= 5) return y === 6 ? C.pink : C.white;
       return 0;
     },
   },
