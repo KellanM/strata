@@ -473,7 +473,7 @@ function win() {
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
   const bandTop = g.entry.lesson ? H * 0.2 : 54 + 104 + (g.shape.story ? 44 : 0);   // just under the title
-  const bandBottom = g.entry.lesson ? H - 90 : H - 196;   // above the gems and score
+  const bandBottom = g.entry.lesson ? H - 90 : H - 228;   // above the gems and score
   const band = Math.max(180, bandBottom - bandTop);
   const zoom = THREE.MathUtils.clamp((band / 2) / (sphere.radius * 0.92 * pxPerUnit), 0.5, 1.35);
   const shiftPx = H / 2 - (bandTop + bandBottom) / 2;
@@ -988,7 +988,7 @@ function frame() {
     if (game.win) {
       stepCelebration(t);
       const H = canvas.clientHeight;
-      finale.update(t, camera, H, H - 158, H - 108);   // gems, then score, just above the actions
+      finale.update(t, camera, H, H - 190, H - 140);   // gems, then score, above the actions
     }
 
     camDir.copy(camera.position).sub(controls.target).normalize();
