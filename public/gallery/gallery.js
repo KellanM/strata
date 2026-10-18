@@ -6,6 +6,10 @@
 // lists "<theme>-<k>.js" files in page<n>/; their cards are numbered P2·I-01.
 // The Live page (?page=live) shows every object in the game, by chapter in
 // play order, numbered by level as on the map (L-01 …); shrines are ✦.
+// A page can bring its own sections (new biomes) in page<n>/sections.json:
+// [{ key, numeral, name, chapter, palette, skyTop?, skyBottom? }] - its files are
+// then "<key>-<k>.js", and `palette` (an existing one) lights the thumbnails
+// while skyTop / skyBottom ("#rrggbb") tint the section.
 import * as THREE from 'three';
 import { PALETTES } from '../js/palettes.js';
 import { renderThumb } from '../js/thumbs.js';
@@ -38,10 +42,10 @@ const turned = (s) => {
 const PARAM = new URLSearchParams(location.search).get('page');
 const LIVE = PARAM === 'live';
 const PAGE = LIVE ? 0 : Math.max(1, Number(PARAM) || 1);
-const PAGES = 5;
+const PAGES = 8;
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 // sections: chapter themes on the idea pages, the game's chapters on Live
-const SECTIONS = LIVE
+let SECTIONS = LIVE
   ? CHAPTERS.map((c, i) => ({ key: c.name, numeral: ROMAN[i] ?? String(i + 1), name: c.name, chapter: c.blurb ?? '', palette: c.palette }))
   : THEMES;
 const numberOf = (t, k) => LIVE
@@ -56,6 +60,22 @@ async function load() {
   }
   const lists = {};
   const dir = PAGE > 1 ? `page${PAGE}` : 'extra';
+  if (PAGE > 1) {
+    try {
+      const own = await (await fetch(`${dir}/sections.json`, { cache: 'no-store' })).json();
+      if (Array.isArray(own) && own.length) SECTIONS = own;
+    } catch { /* this page uses the five themes */ }
+  }
+  if (SECTIONS !== THEMES) {
+    for (const t of SECTIONS) lists[t.key] = [];
+    const manifest = await (await fetch(`${dir}/manifest.json`, { cache: 'no-store' })).json();
+    for (const file of manifest) {
+      const key = file.replace(/-\d+\.js$/, '');
+      if (!lists[key]) continue;
+      try { lists[key].push(...(await import(`./${dir}/${file}`)).default); } catch (e) { console.warn('gallery: skipped', file, e); }
+    }
+    return lists;
+  }
   for (const t of THEMES) lists[t.key] = PAGE > 1 ? [] : [...(await import(`./themes/${t.key}.js`)).default];
   try {
     const manifest = await (await fetch(`${dir}/manifest.json`, { cache: 'no-store' })).json();
@@ -103,7 +123,9 @@ const lists = await load();
 const root = $('#themes');
 for (const t of SECTIONS) {
   if (!lists[t.key].length) continue;              // later pages show only themes with new ideas
-  const p = PALETTES.find((q) => q.name === t.palette);
+  const base = PALETTES.find((q) => q.name === t.palette) ?? PALETTES[0];
+  const num = (h) => (typeof h === 'string' ? parseInt(h.replace('#', ''), 16) : h);
+  const p = t.skyTop ? { ...base, skyTop: num(t.skyTop), skyBottom: num(t.skyBottom ?? t.skyTop) } : base;
   const { dark, ink } = inkFor(p);
   const sec = document.createElement('section');
   sec.className = 'theme';
