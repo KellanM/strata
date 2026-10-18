@@ -4,7 +4,7 @@ import { buildCells } from '../public/js/shapes.js';
 
 const themes = process.argv.slice(2).length ? process.argv.slice(2) : ['home', 'garden', 'sea', 'temples', 'sky'];
 for (const theme of themes) {
-  const list = (await import(`../public/gallery/themes/${theme}.js`)).default;
+  const list = (await import(theme.includes("/") ? `../public/gallery/${theme}.js` : `../public/gallery/themes/${theme}.js`)).default;
   for (const s of list) {
     const { solid } = buildCells(s);
     const [X, Y, Z] = s.dims;

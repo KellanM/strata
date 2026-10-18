@@ -5,7 +5,7 @@ import { stats } from '../public/gallery/stats.js';
 const themes = process.argv.slice(2).length ? process.argv.slice(2) : ['home', 'garden', 'sea', 'temples', 'sky'];
 let bad = 0;
 for (const t of themes) {
-  const list = (await import(`../public/gallery/themes/${t}.js`)).default;
+  const list = (await import(t.includes("/") ? `../public/gallery/${t}.js` : `../public/gallery/themes/${t}.js`)).default;
   console.log(`\n${t} (${list.length})`);
   for (const s of list) {
     const r = stats(s);
