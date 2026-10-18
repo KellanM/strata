@@ -59,6 +59,7 @@ let tool = 'break';
 const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
 let tutorial = null;          // { step, hint }
+let updateReady = false;      // a new version has taken over; reload at a calm moment
 let viewAnim = null;
 const clock0 = performance.now();
 const now = () => (performance.now() - clock0) / 1000;
@@ -1079,7 +1080,6 @@ requestAnimationFrame(frame);
 // new version has taken over, reload at a calm moment (the map or the result
 // screen), never in the middle of a puzzle. Tapping the version line in How to
 // play checks right away.
-let updateReady = false;
 function calmMoment() { return !game || game.solved || $('#menu').classList.contains('show'); }
 function applyUpdate() { if (updateReady && calmMoment()) location.reload(); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
