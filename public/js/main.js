@@ -12,7 +12,7 @@ import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
-import { rate as motionRate, after, mark, reveal, devFlags } from './motion.js';
+import { rate as motionRate, after, mark, reveal, devFlags, ease } from './motion.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -889,7 +889,7 @@ function updateStrikes() {
 const DRIFT_SIZES = [6, 8, 10];
 
 let stopReveal = () => {};
-function renderMenu(scroll = true, celebrate = false) {
+function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
   $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
@@ -911,7 +911,7 @@ function renderMenu(scroll = true, celebrate = false) {
   });
   // stones and region names fade and rise in as they come into view (not on a
   // quiet re-layout, which would make the whole map blink)
-  if (scroll) stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: $('#menu .map-scroll') });
+  if (animate) stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: $('#menu .map-scroll') });
 }
 
 // Level -> map: the map pulls back out of the stone you were playing, as if
@@ -1262,12 +1262,11 @@ maybeShowInstall();
 
 applyPalette(PALETTES[0]);
 resize();
-renderMenu();
 // The title: under the name, the logo makes itself - a 2x2x2 stone snaps
 // together, then its near top corner is chiselled away, as on the app icon.
-// Swipe down and the map comes down after your finger like a curtain while the
-// title sinks away (the touch also lets the sound start); the very first time,
-// the swipe begins the first lesson instead.
+// The title and the map are one tall page: swipe up and the title and logo
+// scroll off the top while the map comes up from below (the touch also lets the
+// sound start). The very first time, the swipe begins the first lesson instead.
 const titleScreen = $('#title');
 const LOGO = { id: 'logo', name: 'Strata', dims: [2, 2, 2], view: Math.PI / 4, handles: false, show: [0, 0, 0],
   cell: (x, y, z) => (x & y & z ? 0 : 0xffffff) };
@@ -1287,29 +1286,53 @@ function carveLogo() {
   mark('title: logo carved');
 }
 if (reduceMotion) carveLogo();
-else after(game.introEnd + 0.12 - now(), carveLogo);
+else after(game.introEnd + 0.25 - now(), carveLogo);
+// build the map only once the logo is done: building it (every stone's picture)
+// stalls the page, which froze the carve on phones
+let mapBuilt = false;
+const buildMap = () => { if (mapBuilt) return; mapBuilt = true; renderMenu(true, false, false); mark('title: map built'); };
+after(reduceMotion ? 0 : game.introEnd + 0.25 + 0.6 - now(), buildMap);
 
-// the pull: the map sheet follows the finger down from above the screen
-const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false };
+// the scroll: k px up. The title moves with it, the logo too (by shifting the
+// camera's view), and the map sheet follows from just below the screen.
+const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const toMap = () => !!localStorage.getItem('strata.tutorial');
 const mapSheet = () => $('#menu .map-scroll');
-function setPull(dy) {
-  const k = Math.max(0, dy), H = window.innerHeight;
-  titleScreen.style.translate = `0 ${k * 0.45}px`;
-  titleScreen.style.opacity = String(1 - Math.min(1, k / (H * 0.55)));
-  if (toMap()) mapSheet().style.transform = `translateY(${k - H}px)`;
+function setScroll(k) {
+  pull.k = k;
+  const H = window.innerHeight;
+  titleScreen.style.translate = `0 ${-k}px`;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
+  if (toMap()) mapSheet().style.transform = `translateY(${H - k}px)`;
+}
+// glide from the current scroll to `to` (px), then call done
+function scrollTo(to, seconds, curve, done) {
+  cancelAnimationFrame(pull.anim);
+  const from = pull.k, t0 = performance.now();
+  const step = () => {
+    const k = Math.min(1, ((performance.now() - t0) / 1000) * motionRate / seconds);
+    setScroll(from + (to - from) * curve(k));
+    if (k < 1) pull.anim = requestAnimationFrame(step); else done?.();
+  };
+  pull.anim = requestAnimationFrame(step);
 }
 function startPull() {
   pull.live = true;
+  cancelAnimationFrame(pull.anim);
   mark('title: pull');
   titleScreen.style.transition = 'none';
   if (!toMap() || $('#menu').classList.contains('show')) return;
+  buildMap();
   const menu = $('#menu');
   menu.style.transition = 'none';
-  show('#menu', true);
-  renderMenu(true, true);
   mapSheet().style.transition = 'none';
-  setPull(0);
+  setScroll(pull.k);
+  menu.classList.add('pulling');   // its corner buttons wait until the map has arrived
+  show('#menu', true);
+  // the stones cascade in as the map comes up
+  stopReveal();
+  stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: mapSheet() });
 }
 function finishPull() {
   if (!titleUp) return;
@@ -1317,48 +1340,43 @@ function finishPull() {
   pull.live = false;
   mark('title: to ' + (toMap() ? 'map' : 'lesson'));
   sound.peel();
-  titleScreen.style.transition = 'opacity .3s ease-in, translate .3s ease-in';
-  titleScreen.style.translate = `0 ${window.innerHeight * 0.4}px`;
-  titleScreen.style.opacity = '0';
-  after(0.32, () => { titleScreen.classList.remove('show'); titleScreen.style.cssText = ''; });
-  if (toMap()) {
-    const sheet = mapSheet();
-    sheet.style.transition = 'transform .55s var(--ease-glide)';
-    sheet.style.transform = 'translateY(0)';
-    after(0.6, () => { sheet.style.cssText = ''; $('#menu').style.transition = ''; });
-  } else {
-    after(0.2, () => startTutorial(0));
-  }
+  const H = window.innerHeight;
+  scrollTo(H, 0.5, ease.glide, () => {
+    titleScreen.classList.remove('show');
+    titleScreen.style.cssText = '';
+    camera.clearViewOffset();
+    if (toMap()) { mapSheet().style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); }
+  });
+  if (!toMap()) after(0.25, () => startTutorial(0));
 }
 function cancelPull() {
   pull.live = false;
-  titleScreen.style.transition = 'opacity .35s var(--ease-out), translate .35s var(--ease-out)';
-  titleScreen.style.translate = '0 0';
-  titleScreen.style.opacity = '1';
-  if (!toMap()) return;
-  const sheet = mapSheet();
-  sheet.style.transition = 'transform .35s var(--ease-in)';
-  sheet.style.transform = `translateY(${-window.innerHeight}px)`;
-  after(0.36, () => {
+  scrollTo(0, 0.35, ease.out, () => {
     if (pull.live || !titleUp) return;
-    show('#menu', false);
-    sheet.style.cssText = '';
-    $('#menu').style.transition = '';
+    titleScreen.style.cssText = '';
+    if (toMap()) {
+      $('#menu').style.transition = 'none';
+      show('#menu', false);
+      mapSheet().style.cssText = '';
+      $('#menu').style.transition = '';
+      $('#menu').classList.remove('pulling');
+    }
   });
 }
 titleScreen.addEventListener('pointerdown', (e) => {
   if (!titleUp || pull.id !== null) return;
   pull.id = e.pointerId; pull.y0 = pull.lastY = e.clientY; pull.lastT = performance.now(); pull.dy = pull.v = 0;
+  pull.y0 += pull.k;   // catch a scroll that is still springing back
   titleScreen.setPointerCapture?.(e.pointerId);
 });
 titleScreen.addEventListener('pointermove', (e) => {
   if (e.pointerId !== pull.id) return;
   const t = performance.now();
-  pull.dy = e.clientY - pull.y0;
-  pull.v = (e.clientY - pull.lastY) / Math.max(1, t - pull.lastT);   // px per ms, + is down
+  pull.dy = pull.y0 - e.clientY;                                          // + is up
+  pull.v = (pull.lastY - e.clientY) / Math.max(1, t - pull.lastT);         // px per ms, + is up
   pull.lastY = e.clientY; pull.lastT = t;
   if (!pull.live && pull.dy > 6) startPull();
-  if (pull.live) setPull(pull.dy);
+  if (pull.live) setScroll(Math.max(0, pull.dy));
 });
 const endPull = (e) => {
   if (e.pointerId !== pull.id) return;
@@ -1374,7 +1392,7 @@ const endPull = (e) => {
 titleScreen.addEventListener('pointerup', endPull);
 titleScreen.addEventListener('pointercancel', endPull);
 window.addEventListener('keydown', (e) => {
-  if (!titleUp || !['Enter', ' ', 'ArrowDown'].includes(e.key)) return;
+  if (!titleUp || !['Enter', ' ', 'ArrowUp'].includes(e.key)) return;
   startPull();
   finishPull();
 });

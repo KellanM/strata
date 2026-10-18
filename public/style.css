@@ -683,10 +683,11 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 #title .tap svg { width: 18px; height: 18px; margin-left: -.42em; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
   animation: title-nudge 1.6s ease-in-out 1.8s infinite; }
 #title .tap.nudge svg { animation: title-nudge .45s ease-in-out 2; }
-@keyframes title-nudge { 50% { translate: 0 6px; } }
+@keyframes title-nudge { 50% { translate: 0 -6px; } }
 @keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
 @keyframes title-fade { from { opacity: 0; } }
 @keyframes title-breathe { 50% { opacity: .45; } }
+#menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close { opacity: 0; transition: none; }
 /* behind the title the block is only a backdrop */
 body:has(#title.show) .hud { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
