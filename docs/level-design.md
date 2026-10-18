@@ -1,6 +1,6 @@
 # Level design
 
-The 26 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
+The 38 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
 
 ## What makes a 3D nonogram satisfying
 
@@ -107,3 +107,22 @@ Legacy ids are kept so saves survive: heart, invader, mushroom, tree, mug, snowm
 
 - The D weights are hand-set. A few real solves timed on a phone would show whether "rounds" or "opening" better predicts how hard a level feels.
 - At 200–330 chisels, the bigger levels would benefit from drag-to-chisel along a row. That belongs in `main.js`.
+
+## The ramp (2026-10-17)
+
+Players loved Bonsai: a cute, instantly readable living object that takes a little while to reach (D ≈ 10.7). The set was too thin around it, with First Light climbing fast and Moss Garden jumping straight to the cat. Twelve levels now fill the curve, each chapter with a theme:
+
+| Chapter | Theme | New levels (D) |
+|---|---|---|
+| I · First Light | home & morning | Cactus 5.6, Candle 6.0, Duck 6.5 (Steps and Heart stay first, by choice) |
+| II · Moss Garden | garden & small creatures | Ladybug 7.2, Apple 7.9, Tulip 9.3, Beehive 10.4 |
+| III · The Lagoon | sea & shore | Starfish 10.4, Penguin 10.1 (a breather after the boat) |
+| IV · Ember Steps | temples & lanterns | Paper Fan 11.1 |
+| V · Starfall | the sky at night | Kite 10.1, Moon Rabbit 10.6 |
+
+How the curve is shaped:
+- **Easy levels** (D < 8) show most of their clues (fraction 0.2–0.3). They're small and introduce one idea at a time: lines in 3D (Cactus), a round silhouette (Duck), a low dome (Ladybug).
+- **Cozy levels** (D ≈ 9–11) sit between the spikes, the way Bonsai does. A hard level is followed by a breather, for example Sailboat 11.1 → Penguin 10.1 → Lighthouse 11.9.
+- **Each chapter opens near its easiest level and peaks in its last third.** No step up between neighbours is more than 2.0 D.
+
+The test `each chapter ramps gently` enforces all three rules. Flat objects (Fan, Kite) face the viewer at the start (`view: 0.35`).
