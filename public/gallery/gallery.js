@@ -38,7 +38,7 @@ const turned = (s) => {
 const PARAM = new URLSearchParams(location.search).get('page');
 const LIVE = PARAM === 'live';
 const PAGE = LIVE ? 0 : Math.max(1, Number(PARAM) || 1);
-const PAGES = 3;
+const PAGES = 4;
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 // sections: chapter themes on the idea pages, the game's chapters on Live
 const SECTIONS = LIVE
