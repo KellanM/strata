@@ -18,9 +18,9 @@ const IN_GAME = new Set([...SHAPES, ...BONUS].map((s) => s.from).filter(Boolean)
 
 const THEMES = [
   { key: 'home', numeral: 'I', name: 'Home & Morning', chapter: 'First Light', palette: 'Dawn' },
-  { key: 'garden', numeral: 'II', name: 'Garden & Small Creatures', chapter: 'Moss Garden', palette: 'Mint' },
+  { key: 'garden', numeral: 'II', name: 'Garden & Small Creatures', chapter: 'Moss Garden · The Orchard', palette: 'Mint' },
   { key: 'sea', numeral: 'III', name: 'Sea & Shore', chapter: 'The Lagoon', palette: 'Lagoon' },
-  { key: 'temples', numeral: 'IV', name: 'Temples & Lanterns', chapter: 'Ember Steps', palette: 'Dusk' },
+  { key: 'temples', numeral: 'IV', name: 'Temples & Lanterns', chapter: 'Ember Steps · Lantern Festival', palette: 'Dusk' },
   { key: 'sky', numeral: 'V', name: 'Sky & Night', chapter: 'Starfall', palette: 'Night' },
 ];
 

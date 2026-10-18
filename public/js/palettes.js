@@ -31,6 +31,22 @@ export const PALETTES = [
     rays: 0xfffbea, motes: 0xffffff,
   },
   {
+    // late afternoon in the orchard: warm gold sky, apricot light, sage shadow
+    name: 'Orchard', rayGain: 0.75,
+    skyTop: 0xfbe3b6, skyBottom: 0xd9a77c, glow: 0xfff3d6,
+    top: 0xfdf1dc, lit: 0xf2c89a, shade: 0x9fae8a, under: 0x6f7f62,
+    paintTop: 0xf6a98c, paintLit: 0xe0785f, paintShade: 0xa4524f,
+    rays: 0xffe9bf, motes: 0xfff6dc,
+  },
+  {
+    // a festival night: deep plum sky, vermilion and lantern gold
+    name: 'Festival', rayGain: 1.1,
+    skyTop: 0x1c1433, skyBottom: 0x6b2346, glow: 0xffb36b,
+    top: 0xf7e3cf, lit: 0xe88a6a, shade: 0x5d3a6e, under: 0x2e1f47,
+    paintTop: 0xffd98a, paintLit: 0xf2a541, paintShade: 0xb0623a,
+    rays: 0xffc98f, motes: 0xffd7a3,
+  },
+  {
     name: 'Night', rayGain: 1.15,
     skyTop: 0x161b36, skyBottom: 0x4a5482, glow: 0xb9c8ff,
     top: 0xf2e9da, lit: 0xc7b6db, shade: 0x4f5a8f, under: 0x2a3262,

@@ -34,13 +34,17 @@ function voxels(key, layers) {
 export const CHAPTERS = [
   { name: 'First Light', numeral: 'I', palette: 'Dawn', blurb: 'home and morning',
     line: 'Morning finds what the stone was keeping.' },
-  { name: 'Moss Garden', numeral: 'II', palette: 'Mint', blurb: 'the garden and its small creatures',
+  { name: 'Moss Garden', numeral: 'II', palette: 'Mint', blurb: 'small creatures of the garden',
     line: 'Green things grow slowly inside the quiet rock.' },
-  { name: 'The Lagoon', numeral: 'III', palette: 'Lagoon', blurb: 'the sea and the shore',
+  { name: 'The Orchard', numeral: 'III', palette: 'Orchard', blurb: 'things that grow',
+    line: 'Every seed keeps a shape it has not shown.' },
+  { name: 'The Lagoon', numeral: 'IV', palette: 'Lagoon', blurb: 'the sea and the shore',
     line: 'The tide remembers everything it carried.' },
-  { name: 'Ember Steps', numeral: 'IV', palette: 'Dusk', blurb: 'temples and lanterns',
+  { name: 'Ember Steps', numeral: 'V', palette: 'Dusk', blurb: 'temples and stairways',
     line: 'Climb slowly. The evening is climbing too.' },
-  { name: 'Starfall', numeral: 'V', palette: 'Night', blurb: 'the sky at night',
+  { name: 'Lantern Festival', numeral: 'VI', palette: 'Festival', blurb: 'festival things, lit from within',
+    line: 'Tonight every paper lantern holds a wish.' },
+  { name: 'Starfall', numeral: 'VII', palette: 'Night', blurb: 'the sky at night',
     line: 'What the sky let fall, the stone held.' },
 ];
 
@@ -48,7 +52,7 @@ const chapter = (i, list) => list.map((s) => ({ ...s, chapter: CHAPTERS[i].name,
 
 export const SHAPES = [
   // ---------------------------------------------------------------- First Light
-  // Small blocks, many clues, plain groups: learn to read counts in 3D.
+  // Home and morning: small blocks, many clues, plain groups.
   ...chapter(0, [
     {
       id: 'steps', name: 'Steps', dims: [4, 4, 3], fraction: 0.5, seed: 8,
@@ -66,6 +70,20 @@ export const SHAPES = [
         '..RRR..',
         '...R...',
       ], 2, { R: 0xe0546b }),
+    },
+    {
+      // from the object gallery (teabag pal)
+      id: 'teabag-pal', name: 'Teabag Pal', from: 'cand-teabag-pal', fraction: 0.45, seed: 11,
+      story: 'Steeped once at dawn, and still smiling about it.',
+      ...voxels({ a: 0xc89c63, b: 0xe2728f, c: 0x3a3442, d: 0xfbf8f2, e: 0xe0565b }, [
+        'aaaaa aaaaa',
+        'aaaaa aabaa',
+        'aaaaa acaca',
+        'aaaaa aaaaa',
+        '.aaa. .aaa.',
+        '..d.e .....',
+        '..dde .....',
+      ]),
     },
     {
       // from the object gallery (candle)
@@ -170,22 +188,40 @@ export const SHAPES = [
         'aaaaaaa aaaaaaa aaaaaaa',
       ]),
     },
+    {
+      // A hollow pot: the empty belly is only reachable by peeling.
+      id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.3, seed: 13,
+      story: 'Still warm. Someone was here a moment ago.',
+      cell(x, y, z) {
+        const dx = x - 4, dz = z - 2, r = ring(dx, dz);
+        if (y <= 3) {
+          const [out, hole] = [[1.6, 0], [2.3, 1.5], [2.3, 1.5], [1.9, 1.0]][y];
+          if (r <= out && r >= hole) return y === 2 ? 0x5b8fd6 : 0xf6efe4;
+        }
+        if (y === 4) return r <= 1.5 ? 0x5b8fd6 : 0;
+        if (y === 5) return r === 0 ? 0x5b8fd6 : 0;
+        if (z !== 2) return 0;
+        const handle = (x === 1 && (y === 1 || y === 3)) || (x === 0 && y >= 1 && y <= 3);
+        const spout = (x === 7 && (y === 1 || y === 2)) || (x === 8 && y === 3);
+        return handle || spout ? 0xf6efe4 : 0;
+      },
+    },
   ]),
-
   // ---------------------------------------------------------------- Moss Garden
-  // Round, living forms: circled clues and the first hollow (the teapot).
+  // Small creatures and garden life: the first hollows and split rows.
   ...chapter(1, [
     {
-      // A gentle way into the garden: small and low, before the cat.
-      id: 'ladybug', name: 'Ladybug', dims: [5, 3, 6], fraction: 0.3, seed: 1,
-      story: 'She never sits still long enough to be counted.',
-      cell(x, y, z) {
-        if (z === 5) return y <= 1 && x >= 1 && x <= 3 ? 0x2d3142 : 0;
-        if (!ell(x - 2, y - 0.3, z - 2.4, 2.4, 2.4, 2.6)) return 0;
-        // four spots on a red back
-        const spot = y === 2 ? (x === 1 || x === 3) && (z === 2 || z === 3) && (x + z) % 2 === 1 : y === 1 && (x === 0 || x === 4) && z === 2;
-        return spot ? 0x2d3142 : 0xd9455a;
-      },
+      // from the object gallery (snail cottage)
+      id: 'snail-cottage', name: 'Snail Cottage', from: 'cand-snail-cottage', fraction: 0.35, seed: 16,
+      story: 'She carries her whole house, and the window is always lit.',
+      ...voxels({ a: 0xa9cf8f, b: 0xe8a87c, c: 0x6b4a3a, d: 0xfff0a8, e: 0x3a3442, f: 0xc8704b }, [
+        '....... aaaaaaa aaaaaaa .......',
+        '.bbbb.. .bbbbaa .bbbbaa .bcbb..',
+        '.bbbb.. .bbbdaa .bbbbae .bcbb..',
+        '.bbbb.. .bbbb.a .bbbb.a .bbbb..',
+        '.ffff.. .ffff.. .ffff.. .ffff..',
+        '..ff... ..ff... ..ff... ..ff...',
+      ]),
     },
     {
       // from the object gallery (snail)
@@ -201,27 +237,28 @@ export const SHAPES = [
       ]),
     },
     {
-      id: 'apple', name: 'Apple', dims: [5, 6, 5], fraction: 0.3, seed: 2,
-      story: 'The first one to fall, and the sweetest.',
-      cell(x, y, z) {
-        if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
-        return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
-      },
+      // from the object gallery (hatching chick)
+      id: 'hatching-chick', name: 'Hatching Chick', from: 'cand-p2-chick', fraction: 0.2, seed: 23,
+      story: 'First light through the shell, and a very small hello.',
+      ...voxels({ a: 0xf3ead8, b: 0xf6d365, c: 0x3a3442, d: 0xf2a03d }, [
+        '.aaa. aaaaa aaaaa aaaaa .aaa.',
+        '.aaa. a...a a...a a...a .aaa.',
+        '.a.a. abbba .bbb. abbba .a.a.',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .bbb. .bbb. .cbc. ..d..',
+        '..... ..b.. .bbb. ..... .....',
+      ]),
     },
     {
-      // from the object gallery (cactus)
-      id: 'cactus', from: 'cand-cactus', name: 'Cactus', fraction: 0.4, seed: 1,
-      story: 'It kept the sunniest corner and flowered when nobody was looking.',
-      ...voxels({ a: 0xc8704b, b: 0xb8434b, c: 0x5fae6e, d: 0xf4a3b5 }, [
-        '.aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa.',
-        '.bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb.',
-        '....... ...c... ..ccc.. ...c... .......',
-        '....... ...c... ..ccccc ...c... .......',
-        '....... ...c... .cccccc ...c... .......',
-        '....... ...c... ccccc.c ...c... .......',
-        '....... ...c... ccccc.. ...c... .......',
-        '....... ...c... ..ccc.. ...c... .......',
-        '....... ....... ...d... ....... .......',
+      // from the object gallery (moth)
+      id: 'moth', name: 'Moth', from: 'cand-p2-moth', fraction: 0.4, seed: 14,
+      story: 'Drawn to the porch lamp, it stayed to watch the garden sleep.',
+      ...voxels({ a: 0xc9b6e4, b: 0x6b4a3a, c: 0x3a3442 }, [
+        '..a.a.. .......',
+        '.aaaaa. ...b...',
+        'aaaaaaa ...b...',
+        'acaaaca ...b...',
+        'aa...aa ...b...',
       ]),
     },
     {
@@ -257,6 +294,79 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (gnome)
+      id: 'gnome', name: 'Garden Gnome', from: 'cand-gnome', fraction: 0.65, seed: 1,
+      story: 'He has guarded the strawberries for years and eaten only a few.',
+      ...voxels({ a: 0x6b4a3a, b: 0x5b8fd6, c: 0xfbf8f2, d: 0xf6c9b5, e: 0x3a3442, f: 0xe0565b }, [
+        '..... .aaa. .aaa. .aaa. .....',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .bbb. .bbb. .bbb. ..c..',
+        '..... .bbb. .bbb. .ccc. .ccc.',
+        '..... .ddd. .ddd. .ccc. .ccc.',
+        '..... .ddd. .ddd. .ccc. .ece.',
+        'fffff fffff fffff fffff fffff',
+        '..... .fff. .fff. .fff. .....',
+        '..... ..... ..f.. ..... .....',
+        '..... ..... ..ff. ..... .....',
+      ]),
+    },
+    {
+      // from the object gallery (garden-bench)
+      id: 'garden-bench', name: 'Garden Bench', from: 'cand-garden-bench', fraction: 0.65, seed: 1,
+      story: 'A place to sit still while the garden does the growing.',
+      ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
+        'a.......a ......... ......... a.......a',
+        'a.......a ......... ......... a.......a',
+        'a.......a bbbbbbbbb ccccccccc bbbbbbbbb',
+        'accccccca a.......a a.......a a.......a',
+        'abbbbbbba ......... ......... .........',
+        'ccccccccc ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (fox)
+      id: 'fox', from: 'cand-fox', name: 'Fox', fraction: 0.65, seed: 1,
+      story: 'It waited by the gate at dusk, tail wrapped round its paws.',
+      ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
+        '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
+        '....... ....... ..aaaaa ..aaaaa ..aaaaa ..bbbaa .....bb',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ....... ..aaa.. ...a... ..bbb.. ...b...',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. ...c...',
+        '....... ....... ...a... ..aaa.. ..cac.. ....... .......',
+        '....... ....... ....... .ca.ac. ....... ....... .......',
+      ]),
+    },
+  ]),
+  // ---------------------------------------------------------------- The Orchard
+  // Things that grow: rounder forms, overhangs, fewer clues.
+  ...chapter(2, [
+    {
+      id: 'apple', name: 'Apple', dims: [5, 6, 5], fraction: 0.3, seed: 2,
+      story: 'The first one to fall, and the sweetest.',
+      cell(x, y, z) {
+        if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
+        return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
+      },
+    },
+    {
+      // from the object gallery (cactus)
+      id: 'cactus', from: 'cand-cactus', name: 'Cactus', fraction: 0.4, seed: 1,
+      story: 'It kept the sunniest corner and flowered when nobody was looking.',
+      ...voxels({ a: 0xc8704b, b: 0xb8434b, c: 0x5fae6e, d: 0xf4a3b5 }, [
+        '.aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa.',
+        '.bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb.',
+        '....... ...c... ..ccc.. ...c... .......',
+        '....... ...c... ..ccccc ...c... .......',
+        '....... ...c... .cccccc ...c... .......',
+        '....... ...c... ccccc.c ...c... .......',
+        '....... ...c... ccccc.. ...c... .......',
+        '....... ...c... ..ccc.. ...c... .......',
+        '....... ....... ...d... ....... .......',
+      ]),
+    },
+    {
       id: 'tulip', name: 'Tulip', dims: [5, 8, 5], fraction: 0.65, seed: 4,
       story: 'Planted in autumn, nearly forgotten, and then this morning.',
       cell(x, y, z) {
@@ -288,36 +398,6 @@ export const SHAPES = [
           || (y === 3 && r2 === 9 && (dx === 0 || dz === 0));
         return spot ? 0xfff4e6 : 0xd9455a;
       },
-    },
-    {
-      // from the object gallery (gnome)
-      id: 'gnome', name: 'Garden Gnome', from: 'cand-gnome', fraction: 0.65, seed: 1,
-      story: 'He has guarded the strawberries for years and eaten only a few.',
-      ...voxels({ a: 0x6b4a3a, b: 0x5b8fd6, c: 0xfbf8f2, d: 0xf6c9b5, e: 0x3a3442, f: 0xe0565b }, [
-        '..... .aaa. .aaa. .aaa. .....',
-        '..... .bbb. .bbb. .bbb. .....',
-        '..... .bbb. .bbb. .bbb. ..c..',
-        '..... .bbb. .bbb. .ccc. .ccc.',
-        '..... .ddd. .ddd. .ccc. .ccc.',
-        '..... .ddd. .ddd. .ccc. .ece.',
-        'fffff fffff fffff fffff fffff',
-        '..... .fff. .fff. .fff. .....',
-        '..... ..... ..f.. ..... .....',
-        '..... ..... ..ff. ..... .....',
-      ]),
-    },
-    {
-      // from the object gallery (garden-bench)
-      id: 'garden-bench', name: 'Garden Bench', from: 'cand-garden-bench', fraction: 0.65, seed: 1,
-      story: 'A place to sit still while the garden does the growing.',
-      ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
-        'a.......a ......... ......... a.......a',
-        'a.......a ......... ......... a.......a',
-        'a.......a bbbbbbbbb ccccccccc bbbbbbbbb',
-        'accccccca a.......a a.......a a.......a',
-        'abbbbbbba ......... ......... .........',
-        'ccccccccc ......... ......... .........',
-      ]),
     },
     {
       id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
@@ -372,44 +452,10 @@ export const SHAPES = [
         return r2 <= tier * tier ? (y === 2 || y === 5 ? 0x2f7f58 : 0x3f9a6b) : 0;
       },
     },
-    {
-      // from the object gallery (fox)
-      id: 'fox', from: 'cand-fox', name: 'Fox', fraction: 0.65, seed: 1,
-      story: 'It waited by the gate at dusk, tail wrapped round its paws.',
-      ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
-        '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
-        '....... ....... ..aaaaa ..aaaaa ..aaaaa ..bbbaa .....bb',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
-        '....... ....... ....... ..aaa.. ...a... ..bbb.. ...b...',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. ...c...',
-        '....... ....... ...a... ..aaa.. ..cac.. ....... .......',
-        '....... ....... ....... .ca.ac. ....... ....... .......',
-      ]),
-    },
-    {
-      // A hollow pot: the empty belly is only reachable by peeling.
-      id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.65, seed: 4,
-      story: 'Still warm. Someone was here a moment ago.',
-      cell(x, y, z) {
-        const dx = x - 4, dz = z - 2, r = ring(dx, dz);
-        if (y <= 3) {
-          const [out, hole] = [[1.6, 0], [2.3, 1.5], [2.3, 1.5], [1.9, 1.0]][y];
-          if (r <= out && r >= hole) return y === 2 ? 0x5b8fd6 : 0xf6efe4;
-        }
-        if (y === 4) return r <= 1.5 ? 0x5b8fd6 : 0;
-        if (y === 5) return r === 0 ? 0x5b8fd6 : 0;
-        if (z !== 2) return 0;
-        const handle = (x === 1 && (y === 1 || y === 3)) || (x === 0 && y >= 1 && y <= 3);
-        const spout = (x === 7 && (y === 1 || y === 2)) || (x === 8 && y === 3);
-        return handle || spout ? 0xf6efe4 : 0;
-      },
-    },
   ]),
-
   // ---------------------------------------------------------------- The Lagoon
-  // Hulls, rings and a lamp hidden in a tower: give-away clues start to vanish.
-  ...chapter(2, [
+  // The sea and the shore: wide shapes, hidden insides.
+  ...chapter(3, [
     {
       // from the object gallery (flip-flops)
       id: 'flip-flops', from: 'cand-flip-flops', name: 'Flip-Flops', fraction: 0.65, seed: 1,
@@ -574,24 +620,9 @@ export const SHAPES = [
       },
     },
   ]),
-
   // ---------------------------------------------------------------- Ember Steps
-  // Architecture: overhangs, enclosed rooms and long chains of deduction.
-  ...chapter(3, [
-    {
-      // from the object gallery (dragon head)
-      id: 'dragon-head', from: 'cand-dragon-head', name: 'Dragon Head', fraction: 0.65, seed: 1,
-      story: 'It guards the temple steps, and has never once blinked.',
-      ...voxels({ a: 0x3f8a5b, b: 0x5fae6e, c: 0xfbf8f2, d: 0xe0565b, e: 0xe9b949, f: 0x3a3442 }, [
-        '........ ........ ........ ........ ........ ........',
-        '........ ........ ..aaaa.. ..aaaa.. ..aaaa.. ..aaaa..',
-        '.bbbbbb. .bbbbbb. .bbbbbb. .bbbbbb. ..bbbb.. ..cbbc..',
-        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. eebbbbee',
-        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..abba..',
-        '.bbbbbb. dbbbbbbd dbbbbbbd .bfbbfb. ........ ........',
-        '.e....e. .e....e. ........ ........ ........ ........',
-      ]),
-    },
+  // Temple architecture: long chains of deduction.
+  ...chapter(4, [
     {
       // from the object gallery (temple bell)
       id: 'temple-bell', from: 'cand-bell', name: 'Temple Bell', fraction: 0.65, seed: 1,
@@ -608,39 +639,8 @@ export const SHAPES = [
       ]),
     },
     {
-      // from the object gallery (kokeshi)
-      id: 'kokeshi', from: 'cand-kokeshi', name: 'Kokeshi', fraction: 1, seed: 5,
-      story: 'Turned from cherry wood, smiling the same small smile for years.',
-      ...voxels({ a: 0xe0565b, b: 0xf4a3b5, c: 0x3a3442, d: 0xf6efe4 }, [
-        '..... .aaa. .aaa. .aaa. .....',
-        '..... .baa. .aab. .aba. .....',
-        '..... .aab. .aba. .baa. .....',
-        '..... .aba. .baa. .aab. .....',
-        '..... .baa. .aab. .aba. .....',
-        '.ccc. ccccc cdddc ddddd .bdb.',
-        '.ccc. ccccc cdddc ddddd .cdc.',
-        '.ccc. ccccc cdddc cdddc .ddd.',
-        '.ccc. ccccc cccca ccccc .ccc.',
-      ]),
-    },
-    {
-      // from the object gallery (maneki-neko)
-      id: 'maneki-neko', from: 'cand-maneki-neko', name: 'Maneki-neko', fraction: 1, seed: 4,
-      story: 'One paw raised, calling luck in from the street.',
-      ...voxels({ a: 0xfbf8f2, b: 0xe9b949, c: 0xe0565b, d: 0x3a3442, e: 0xf4a3b5 }, [
-        '...... ...... ..aa.. ...... ......',
-        '...... .aaaa. .aaaa. .aaaa. ......',
-        '...... .aaaa. .aaaa. .aaaa. ..bb..',
-        '...... ..aa.. .aaaaa ..aa.. ..bb..',
-        '...... .aaaa. .aaaaa .cccc. ......',
-        '...... .aaaa. .aaaaa .adad. ......',
-        '...... .aaaa. .aaaaa .aaaae ......',
-        '...... .e..e. .a..a. ...... ......',
-      ]),
-    },
-    {
       // A torii: two beams with a gap between them make split rows.
-      id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
+      id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 0.95, seed: 22,
       story: 'Pass beneath it and leave the day behind.',
       cell(x, y) {
         if (y === 5) return 0x3d2e3a;
@@ -662,17 +662,17 @@ export const SHAPES = [
       },
     },
     {
-      // from the object gallery (daruma)
-      id: 'daruma', from: 'cand-daruma', name: 'Daruma', fraction: 0.95, seed: 4,
-      story: 'Knock it down and it rises again, every single time.',
-      ...voxels({ a: 0xe0565b, b: 0xe9b949, c: 0xf6efe4, d: 0x3a3442 }, [
-        '...... ...... ..aa.. ..aa.. ...... ......',
-        '...... ..aa.. .aaaa. .aaaa. ..aa.. .bbbb.',
-        '...... .aaaa. .aaaa. .aaaa. .aaaa. ......',
-        '..aa.. .aaaa. aaaaaa aaaaaa .aaaa. .cccc.',
-        '...... .aaaa. .aaaa. .aaaa. .aaaa. .dccd.',
-        '...... ..aa.. .aaaa. .aaaa. ..aa.. .acca.',
-        '...... ...... ..aa.. ..aa.. ...... ......',
+      // from the object gallery (taiko drum)
+      id: 'taiko-drum', from: 'cand-taiko', name: 'Taiko Drum', fraction: 0.8, seed: 18,
+      story: 'One beat for the dawn, one for dusk, and silence in between.',
+      ...voxels({ a: 0x6b4a3a, b: 0xf6efe4, c: 0xe9b949, d: 0xe0565b }, [
+        '....... .a...a. .a...a. .a...a. .......',
+        '..bbb.. ..ccc.. .addda. ..ccc.. ..bbb..',
+        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
+        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
+        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
+        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
+        '..bbb.. ..ccc.. ..ddd.. ..ccc.. ..bbb..',
       ]),
     },
     {
@@ -688,48 +688,6 @@ export const SHAPES = [
         'f.......f .fffffff. .fffffff. .fffffff. .fffffff. .fffffff. f.......f',
         '......... ......... ..fffff.. ..fffff.. ..fffff.. ......... .........',
         '......... ......... ......... ...fff... ......... ......... .........',
-      ]),
-    },
-    {
-      // from the object gallery (koinobori)
-      id: 'koinobori', from: 'cand-koinobori', name: 'Koinobori', fraction: 0.75, seed: 6,
-      story: 'A paper carp that swims the wind on festival mornings.',
-      ...voxels({ a: 0x6b4a3a, b: 0xe0565b, c: 0xfbf8f2, d: 0xe2728f, e: 0x3a3442, f: 0xe9b949 }, [
-        '.......... a......... .......... ..........',
-        '.......... a........b .........b ..........',
-        '.......... accccccc.b .ccccccc.b ..........',
-        '.......... acbdbbdbbb .cbdbbdbbb ..........',
-        '.......... acdbbdbbb. ..dbbdbbb. ..........',
-        '..ce...... acbbdbbdbb .cbbdbbdbb ..ce......',
-        '.......... abbdbbdb.b .bbdbbdb.b ..........',
-        '.......... f........b .........b ..........',
-      ]),
-    },
-    {
-      // from the object gallery (taiko drum)
-      id: 'taiko-drum', from: 'cand-taiko', name: 'Taiko Drum', fraction: 0.9, seed: 2,
-      story: 'One beat for the dawn, one for dusk, and silence in between.',
-      ...voxels({ a: 0x6b4a3a, b: 0xf6efe4, c: 0xe9b949, d: 0xe0565b }, [
-        '....... .a...a. .a...a. .a...a. .......',
-        '..bbb.. ..ccc.. .addda. ..ccc.. ..bbb..',
-        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
-        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
-        '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
-        '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
-        '..bbb.. ..ccc.. ..ddd.. ..ccc.. ..bbb..',
-      ]),
-    },
-    {
-      // from the object gallery (origami fox)
-      id: 'origami-fox', from: 'cand-origami-fox', name: 'Origami Fox', fraction: 0.85, seed: 14,
-      story: 'Folded from a single sheet, and quicker than it looks.',
-      ...voxels({ a: 0xf2a03d, b: 0xfbf8f2, c: 0x3a3442 }, [
-        '....... .aaaa.. .aaaa.. .aaaa.. .......',
-        '....... aaaaa.. aaaaa.. .aaaa.. .......',
-        '....... a..aaaa a..aaaa ...abba .......',
-        '....... b..aaaa a..aaaa ...caac .......',
-        '....... b..a..a ....... ....... .......',
-        '....... ...a..a ....... ....... .......',
       ]),
     },
     {
@@ -757,10 +715,100 @@ export const SHAPES = [
       },
     },
   ]),
-
+  // ---------------------------------------------------------------- Lantern Festival
+  // Festival things: faces and folds, peeled to find.
+  ...chapter(5, [
+    {
+      // from the object gallery (kokeshi)
+      id: 'kokeshi', from: 'cand-kokeshi', name: 'Kokeshi', fraction: 1, seed: 5,
+      story: 'Turned from cherry wood, smiling the same small smile for years.',
+      ...voxels({ a: 0xe0565b, b: 0xf4a3b5, c: 0x3a3442, d: 0xf6efe4 }, [
+        '..... .aaa. .aaa. .aaa. .....',
+        '..... .baa. .aab. .aba. .....',
+        '..... .aab. .aba. .baa. .....',
+        '..... .aba. .baa. .aab. .....',
+        '..... .baa. .aab. .aba. .....',
+        '.ccc. ccccc cdddc ddddd .bdb.',
+        '.ccc. ccccc cdddc ddddd .cdc.',
+        '.ccc. ccccc cdddc cdddc .ddd.',
+        '.ccc. ccccc cccca ccccc .ccc.',
+      ]),
+    },
+    {
+      // from the object gallery (dragon head)
+      id: 'dragon-head', from: 'cand-dragon-head', name: 'Dragon Head', fraction: 0.45, seed: 19,
+      story: 'It guards the temple steps, and has never once blinked.',
+      ...voxels({ a: 0x3f8a5b, b: 0x5fae6e, c: 0xfbf8f2, d: 0xe0565b, e: 0xe9b949, f: 0x3a3442 }, [
+        '........ ........ ........ ........ ........ ........',
+        '........ ........ ..aaaa.. ..aaaa.. ..aaaa.. ..aaaa..',
+        '.bbbbbb. .bbbbbb. .bbbbbb. .bbbbbb. ..bbbb.. ..cbbc..',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. eebbbbee',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..abba..',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bfbbfb. ........ ........',
+        '.e....e. .e....e. ........ ........ ........ ........',
+      ]),
+    },
+    {
+      // from the object gallery (maneki-neko)
+      id: 'maneki-neko', from: 'cand-maneki-neko', name: 'Maneki-neko', fraction: 0.75, seed: 3,
+      story: 'One paw raised, calling luck in from the street.',
+      ...voxels({ a: 0xfbf8f2, b: 0xe9b949, c: 0xe0565b, d: 0x3a3442, e: 0xf4a3b5 }, [
+        '...... ...... ..aa.. ...... ......',
+        '...... .aaaa. .aaaa. .aaaa. ......',
+        '...... .aaaa. .aaaa. .aaaa. ..bb..',
+        '...... ..aa.. .aaaaa ..aa.. ..bb..',
+        '...... .aaaa. .aaaaa .cccc. ......',
+        '...... .aaaa. .aaaaa .adad. ......',
+        '...... .aaaa. .aaaaa .aaaae ......',
+        '...... .e..e. .a..a. ...... ......',
+      ]),
+    },
+    {
+      // from the object gallery (daruma)
+      id: 'daruma', from: 'cand-daruma', name: 'Daruma', fraction: 0.85, seed: 14,
+      story: 'Knock it down and it rises again, every single time.',
+      ...voxels({ a: 0xe0565b, b: 0xe9b949, c: 0xf6efe4, d: 0x3a3442 }, [
+        '...... ...... ..aa.. ..aa.. ...... ......',
+        '...... ..aa.. .aaaa. .aaaa. ..aa.. .bbbb.',
+        '...... .aaaa. .aaaa. .aaaa. .aaaa. ......',
+        '..aa.. .aaaa. aaaaaa aaaaaa .aaaa. .cccc.',
+        '...... .aaaa. .aaaa. .aaaa. .aaaa. .dccd.',
+        '...... ..aa.. .aaaa. .aaaa. ..aa.. .acca.',
+        '...... ...... ..aa.. ..aa.. ...... ......',
+      ]),
+    },
+    {
+      // from the object gallery (koinobori)
+      id: 'koinobori', from: 'cand-koinobori', name: 'Koinobori', fraction: 0.8, seed: 17,
+      story: 'A paper carp that swims the wind on festival mornings.',
+      ...voxels({ a: 0x6b4a3a, b: 0xe0565b, c: 0xfbf8f2, d: 0xe2728f, e: 0x3a3442, f: 0xe9b949 }, [
+        '.......... a......... .......... ..........',
+        '.......... a........b .........b ..........',
+        '.......... accccccc.b .ccccccc.b ..........',
+        '.......... acbdbbdbbb .cbdbbdbbb ..........',
+        '.......... acdbbdbbb. ..dbbdbbb. ..........',
+        '..ce...... acbbdbbdbb .cbbdbbdbb ..ce......',
+        '.......... abbdbbdb.b .bbdbbdb.b ..........',
+        '.......... f........b .........b ..........',
+      ]),
+    },
+    {
+      // from the object gallery (origami fox)
+      id: 'origami-fox', from: 'cand-origami-fox', name: 'Origami Fox', fraction: 0.9, seed: 23,
+      story: 'Folded from a single sheet, and quicker than it looks.',
+      ...voxels({ a: 0xf2a03d, b: 0xfbf8f2, c: 0x3a3442 }, [
+        '....... .aaaa.. .aaaa.. .aaaa.. .......',
+        '....... aaaaa.. aaaaa.. .aaaa.. .......',
+        '....... a..aaaa a..aaaa ...abba .......',
+        '....... b..aaaa a..aaaa ...caac .......',
+        '....... b..a..a ....... ....... .......',
+        '....... ...a..a ....... ....... .......',
+      ]),
+    },
+  ]),
   // ---------------------------------------------------------------- Starfall
-  // Fewest clues, deepest interiors; the observatory is the finale.
-  ...chapter(4, [
+  // The sky at night: the longest climbs.
+  ...chapter(6, [
     {
       // Starfall opens softly before the long climb.
       id: 'kite', name: 'Kite', dims: [6, 8, 2], fraction: 0.65, seed: 6, view: 0.35,
@@ -945,7 +993,7 @@ const bonus = (i, s) => ({
 export const BONUS = [
   bonus(0, {
     // A pitched roof over a solid house, with a chimney off-centre.
-    name: 'Cottage', dims: [7, 7, 5], fraction: 0.65, seed: 8,
+    name: 'Cottage', dims: [7, 7, 5], fraction: 0.7, seed: 6,
     story: 'Smoke from the chimney means someone is home.',
     cell(x, y, z) {
       if (x === 5 && z === 1 && y >= 5) return 0xb4867a;                      // chimney
@@ -978,7 +1026,7 @@ export const BONUS = [
       return Math.abs(dx) === 1 && z === 4 ? 0xfaf5e4 : 0;                     // eyes
     },
   }),
-  bonus(2, {
+  bonus(3, {
     // A whale, tail flukes raised, with a spout of water.
     name: 'Whale', dims: [10, 5, 5], fraction: 0.9, seed: 7,
     story: 'The lagoon’s oldest swimmer, singing to no one in particular.',
@@ -994,7 +1042,7 @@ export const BONUS = [
       return 0;
     },
   }),
-  bonus(3, {
+  bonus(4, {
     // A paper lantern: a hollow shell with a candle burning inside.
     name: 'Paper Lantern', dims: [7, 9, 7], fraction: 0.9, seed: 1,
     story: 'One small flame inside, keeping the whole dusk company.',
@@ -1009,7 +1057,7 @@ export const BONUS = [
       return y === 2 || y === 6 ? 0xa53b52 : 0xe0546b;
     },
   }),
-  bonus(4, {
+  bonus(6, {
     // A crescent moon with a small star caught in its curve.
     name: 'Crescent Moon', dims: [9, 9, 4], fraction: 0.9, seed: 1,
     story: 'The moon came down to rest, and forgot to leave.',

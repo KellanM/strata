@@ -123,9 +123,12 @@ test('tutorial lessons are solvable with exactly the clues they show', async () 
   }
 });
 
-test('bonus stones: one per chapter, solvable, phone-sized, harder than their chapter', async () => {
+test('bonus stones: at most one per chapter, solvable, phone-sized, harder than their chapter', async () => {
   const { BONUS } = await import('../public/js/shapes.js');
-  assert.deepEqual(BONUS.map((b) => b.chapter), CHAPTERS.map((c) => c.name), 'one bonus per chapter, in order');
+  // a chapter may not have its shrine yet; those that exist follow chapter order, one each
+  const order = BONUS.map((b) => CHAPTERS.findIndex((c) => c.name === b.chapter));
+  assert.ok(order.every((i) => i >= 0), 'every bonus belongs to a chapter');
+  assert.ok(order.every((i, k) => k === 0 || i > order[k - 1]), 'at most one bonus per chapter, in chapter order');
   const ids = new Set([...SHAPES, ...BONUS].map((s) => s.id));
   assert.equal(ids.size, SHAPES.length + BONUS.length, 'bonus ids collide');
   for (const b of BONUS) {

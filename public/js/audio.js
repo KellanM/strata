@@ -20,6 +20,8 @@ const KEYS = {
   Lagoon: { root: 45, minor: false, timbre: 'water' },   // A
   Dusk:   { root: 52, minor: true, timbre: 'marimba' },  // E
   Night:  { root: 49, minor: true, timbre: 'bell' },     // C#
+  Orchard: { root: 55, minor: false, timbre: 'marimba' }, // G
+  Festival: { root: 47, minor: true, timbre: 'bell' },   // B
 };
 const MAJOR = { scale: [0, 2, 4, 7, 9], third: 4, chords: [[0, 4, 7, 14], [5, 9, 12, 19], [-3, 4, 7, 12], [7, 11, 14, 21], [0, 7, 11, 16], [-7, 2, 9, 12]] };
 const MINOR = { scale: [0, 3, 5, 7, 10], third: 3, chords: [[0, 3, 7, 14], [-4, 3, 7, 11], [5, 8, 12, 19], [-2, 5, 9, 14], [0, 7, 10, 15], [-5, 2, 7, 10]] };

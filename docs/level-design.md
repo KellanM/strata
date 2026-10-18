@@ -1,6 +1,6 @@
 # Level design
 
-The 53 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
+The 67 puzzles in `public/js/shapes.js` are grouped into seven chapters (`CHAPTERS`; see "Seven regions" below). Each chapter has its own palette. Array order is play order.
 
 ## What makes a 3D nonogram satisfying
 
@@ -147,3 +147,15 @@ The player picked these from the object gallery (`/gallery/`).
 - The pelican had one grey wing and one eye. It now has a grey wing and an eye on each side, fixed in the gallery's `extra/sea-1.js` too.
 - Palm Islet's lone left sand tip is trimmed in the level (7×8×7), so it needs 314 chisels, under the 330 phone limit. The gallery keeps the original.
 - The Lagoon is now 13 levels long. If it should be shorter, Mug is the natural one to move, since it's a home object in a sea chapter.
+
+## Seven regions
+
+The two longest chapters were split by theme so every region stays around 6–13 levels:
+
+- **Moss Garden** keeps the small creatures. Snail Cottage, Hatching Chick and Moth from gallery page 2 open it; Ladybug is gone.
+- **The Orchard** (new, "Orchard" palette) takes the things that grow.
+- **Ember Steps** keeps the temple architecture.
+- **Lantern Festival** (new, "Festival" palette) takes the festival objects.
+- Teabag Pal joins First Light, and Teapot moves there as its finale.
+
+Region means rise 7.4 → 8.9 → 10.0 → 11.3 → 12.0 → 12.1 → 12.7. The two new regions have no shrine yet; the map, journal and gallery handle that. `tools/chapter-means.mjs` prints the curve, and `tools/retune.mjs id=target` moves a level's clue settings onto a target difficulty.

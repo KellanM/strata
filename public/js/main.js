@@ -550,7 +550,7 @@ function win() {
 function startTutorial(step = 0) {
   tutorial = { step, hint: 0 };
   const lesson = TUTORIAL[step];
-  startPuzzle({ shape: lesson, palette: PALETTES[[0, 1, 3, 0, 4][step % 5]], number: null, lesson: step + 1 });
+  startPuzzle({ shape: lesson, palette: PALETTES.find((p) => p.name === ['Dawn', 'Lagoon', 'Mint', 'Dawn', 'Night'][step % 5]) ?? PALETTES[0], number: null, lesson: step + 1 });
 }
 
 function currentHint() {
