@@ -189,6 +189,20 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 3: Kitten in a Box)
+      id: 'kitten-box', name: 'Kitten in a Box', from: 'cand-p3-kitten-box', fraction: 0.35, seed: 22,
+      story: 'The box was for the new kettle. The kettle never stood a chance.',
+      ...voxels({ a: 0xcf9f6c, b: 0xc4bed0, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442 }, [
+        'aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa',
+        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
+        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
+        '....... a.....a a.bbb.a abbbbba a.bbb.a .c...c.',
+        '....... ...b... .bbbbb. .bbbbb. .debed. .......',
+        '....... ....... ..bbb.. .bbbbb. ..bbb.. .......',
+        '....... ....... .b...b. .b...b. ....... .......',
+      ]),
+    },
+    {
       // A hollow pot: the empty belly is only reachable by peeling.
       id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.3, seed: 13,
       story: 'Still warm. Someone was here a moment ago.',
@@ -339,6 +353,20 @@ export const SHAPES = [
         '....... ....... ....... .ca.ac. ....... ....... .......',
       ]),
     },
+    {
+      // from the object gallery (page 3: Corgi)
+      id: 'corgi', name: 'Corgi', from: 'cand-p3-corgi', fraction: 0.65, seed: 1,
+      story: 'Short legs, long walks, and every flowerbed inspected personally.',
+      ...voxels({ a: 0xeba25a, b: 0xfbf8f2, c: 0xf59bb2, d: 0x3a3442 }, [
+        '....... ..a.a.. ....... ...a... ....... ..b.b.. ....... .......',
+        '....... ..aaa.. .aaaaa. .aaaaa. .aaaaa. ..aaa.. ....... .......',
+        '....... ..aaa.. .aaaaa. .aaaaa. .aaaaa. ..aaa.. ..bbb.. .......',
+        '....... ....... ...a... ..aaa.. ..aaa.. .aaaaa. .cbabc. ...b...',
+        '....... ....... ....... ....... ..aaa.. .aaaaa. .adbda. .......',
+        '....... ....... ....... ....... .a...a. .aaaaa. ...b... .......',
+        '....... ....... ....... ....... ....... .a...a. ....... .......',
+      ]),
+    },
   ]),
   // ---------------------------------------------------------------- The Orchard
   // Things that grow: rounder forms, overhangs, fewer clues.
@@ -350,6 +378,22 @@ export const SHAPES = [
         if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
         return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
       },
+    },
+    {
+      // from the object gallery (page 3: Avocado)
+      id: 'avocado', name: 'Avocado', from: 'cand-p3-avocado', fraction: 0.65, seed: 1,
+      story: 'Not ready, not ready, not ready - perfect for about an hour.',
+      ...voxels({ a: 0x4f8a3c, b: 0xe2ee9c, c: 0x9b6a43, d: 0xf59bb2, e: 0x3a3442 }, [
+        '.aaaaa. .aaaaa. .......',
+        'aaaaaaa abcccba ...c...',
+        'aaaaaaa accccca ..ccc..',
+        'aaaaaaa abcccba ...c...',
+        'aaaaaaa adbbbda .......',
+        'aaaaaaa abebeba .......',
+        '.aaaaa. .abbba. .......',
+        '.aaaaa. .abbba. .......',
+        '..aaa.. ..aaa.. .......',
+      ]),
     },
     {
       // from the object gallery (cactus)
@@ -467,6 +511,21 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 3: Puffin)
+      id: 'puffin', name: 'Puffin', from: 'cand-p3-puffin', fraction: 0.65, seed: 1,
+      story: 'A sea-bird in a painted beak, home for the summer.',
+      ...voxels({ a: 0xf2913d, b: 0x35313e, c: 0xfbf8f2, d: 0xf6c64a, e: 0xf59bb2, f: 0xf06b3a, g: 0x3a3442 }, [
+        '..... ..... ..... .a.a. .a.a. .....',
+        '..... ..b.. .bbb. .ccc. ..c.. .....',
+        '..... .bbb. bbbbb .ccc. .ccc. .....',
+        '..... .bbb. bbbbb .ccc. .ccc. .....',
+        '..... ..b.. .bbb. .ccc. ..c.. ..d..',
+        '..... .bbb. .bbb. .ccc. .ece. ..f..',
+        '..... ..b.. .bbb. .ccc. .gcg. .....',
+        '..... ..... ..b.. ..b.. ..... .....',
+      ]),
+    },
+    {
       id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
       story: 'It swam into the stone and decided to stay.',
       cell(x, y, z) {
@@ -514,6 +573,18 @@ export const SHAPES = [
         '.ccc. ccccc ccccc ccccc .ccc.',
         '.bbb. bbbbb bbabb bbbbb .bbb.',
         '..... .bbb. .bdb. .bbb. .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 3: Axolotl)
+      id: 'axolotl', name: 'Axolotl', from: 'cand-p3-axolotl', fraction: 0.65, seed: 1,
+      story: 'It smiles at the bottom of the pool, and never says why.',
+      ...voxels({ a: 0xf7b8cc, b: 0xe46a8e, c: 0xf59bb2, d: 0xd0607e, e: 0x3a3442 }, [
+        '......... ...a.a... ......... ......... bba...abb ......... .........',
+        '....a.... ...aaa... ...aaa... ...aaa... .baaaaab. ..caaac.. ...ada...',
+        '....a.... ...aaa... ...aaa... ...aaa... bbaaaaabb ..aaaaa.. ..aeaea..',
+        '....a.... ......... ......... ....a.... .baaaaab. ..aaaaa.. ...aaa...',
+        '......... ......... ......... ......... bb.....bb ......... .........',
       ]),
     },
     {
@@ -677,6 +748,21 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (page 3: Snow Monkey)
+      id: 'snow-monkey', name: 'Snow Monkey', from: 'cand-p3-snow-monkey', fraction: 0.65, seed: 1,
+      story: 'Snow on its head, warm water to its chin, in no hurry at all.',
+      ...voxels({ a: 0x9a6a45, b: 0x9fd8f0, c: 0xa8988a, d: 0xf3a7a4, e: 0x3a3442, f: 0xfbf8f2 }, [
+        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
+        '..aaa.. .a...a. a.....a a.....a a.....a .a...a. ..aaa..',
+        '..aaa.. .abbba. abbcbba abcccba abbcbba .abbba. ..aaa..',
+        '....... ....... ..ccc.. ..ccc.. ..ddd.. ....... .......',
+        '....... ....... ..ccc.. dcccccd ..ede.. ....... .......',
+        '....... ....... ..ccc.. .ccccc. ..ddd.. ....... .......',
+        '....... ....... ...f... ..fff.. ...f... ....... .......',
+        '....... ....... ...f... ..ff... ....... ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (tea house); replaced the Pagoda
       id: 'tea-house', name: 'Tea House', from: 'cand-teahouse', fraction: 1.0, seed: 1,
       story: 'Two lanterns lit, the kettle on, and room for one more.',
@@ -689,6 +775,22 @@ export const SHAPES = [
         'f.......f .fffffff. .fffffff. .fffffff. .fffffff. .fffffff. f.......f',
         '......... ......... ..fffff.. ..fffff.. ..fffff.. ......... .........',
         '......... ......... ......... ...fff... ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 3: Shiba Pup)
+      id: 'shiba-pup', name: 'Shiba Pup', from: 'cand-p3-shiba', fraction: 0.65, seed: 1,
+      story: 'It guards the temple steps, mostly by napping on them.',
+      ...voxels({ a: 0xe9a05a, b: 0xf8ead2, c: 0xf59bb2, d: 0x3a3442 }, [
+        '....... ....... ...a... ...a... ..b.b.. .......',
+        '....... ..aaa.. ..aaa.. .aaaaa. ..bbb.. .......',
+        '....ab. ..aaa.. .aaaaa. .aaaaa. ..bbb.. .......',
+        '....aa. ....... ..aaa.. ..bbb.. ....... .......',
+        '....... ....... .aaaaa. .aaaaa. .cbbbc. ...d...',
+        '....... ..aaa.. .aaaaa. aaaaaaa .aaaaa. ..dad..',
+        '....... ....... .aaaaa. .aaaaa. .ababa. .......',
+        '....... ....... .a...a. .aaaaa. ....... .......',
+        '....... ....... ....... .a...a. ....... .......',
       ]),
     },
     {
@@ -835,6 +937,36 @@ export const SHAPES = [
         if (x === 0 && y === 1 && (z === 1 || z === 2)) return 0xffffff;
         return 0;
       },
+    },
+    {
+      // from the object gallery (page 3: Polar Bear Cub)
+      id: 'polar-cub', name: 'Polar Bear Cub', from: 'cand-p3-polar-cub', fraction: 0.65, seed: 1,
+      story: 'Wrapped up for the long night, watching the sky go green.',
+      ...voxels({ a: 0xf8f6f2, b: 0xe8576b, c: 0xece2d4, d: 0xf59bb2, e: 0x3a3442 }, [
+        '....... ....... ...a... ...a... ..a.a.. .......',
+        '....... ..aaa.. .aaaaa. .aaaaa. ..aaa.. ....b..',
+        '....... ..aaa.. .aaaaa. .aaaaa. ..aaa.. ....b..',
+        '....... ...b... ..bbb.. ..bbb.. ...b... ...c...',
+        '....... ..aaa.. .aaaaa. .aaaaa. .daaad. ..cec..',
+        '....... ..aaa.. .aaaaa. .aaaaa. .aeaea. .......',
+        '....... ...a... .aaaaa. .aaaaa. ..aaa.. .......',
+        '....... ....... .a...a. ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 3: Baby Dragon)
+      id: 'baby-dragon', name: 'Baby Dragon', from: 'cand-p3-baby-dragon', fraction: 0.65, seed: 1,
+      story: 'It has not breathed fire yet. It practises on the stars.',
+      ...voxels({ a: 0x8fd8b0, b: 0xfaf0c8, c: 0xf3a7c8, d: 0xf59bb2, e: 0x3a3442, f: 0xfbe7a8 }, [
+        '....... ....... ....... ...a... ....... ....... .......',
+        '....aaa ....a.. ..aaa.. .aaaaa. ..bbb.. ....... .......',
+        '......c c..a..c caaaaac .aaaaa. .bbbbb. ...b... .......',
+        '....... c.....c c.aaa.c ..aaa.. ..bbb.. ....... .......',
+        '....... ....... ..aaa.. .aaaaa. .daaad. ..aaa.. .......',
+        '....... ....... .aaaaa. .aaaaa. .aaaaa. .aeaea. .......',
+        '....... ....... ..aaa.. .aaaaa. .aaaaa. ..aaa.. .......',
+        '....... ....... ....... .f.a.f. ...a... ....... .......',
+      ]),
     },
     {
       // from the object gallery (rain cloud)

@@ -8,10 +8,11 @@ import { readdirSync } from 'node:fs';
 
 const ids = process.argv.slice(2);
 const pool = [];
-for (const dir of ['themes', 'extra', 'page2']) {
+for (const dir of ['themes', 'extra', 'page2', 'page3']) {
   for (const f of readdirSync(new URL(`../public/gallery/${dir}/`, import.meta.url))) {
     if (!f.endsWith('.js')) continue;
-    pool.push(...(await import(`../public/gallery/${dir}/${f}`)).default);
+    const mod = await import(`../public/gallery/${dir}/${f}`);
+    if (Array.isArray(mod.default)) pool.push(...mod.default);   // helpers (page3/kit.js) export no objects
   }
 }
 
