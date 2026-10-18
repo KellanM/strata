@@ -157,3 +157,18 @@ test('every object has a short story and every chapter a title line', async () =
     assert.ok(c.line.split(/\s+/).length <= 9, `${c.name} line too long`);
   }
 });
+
+test('levels within each chapter run from easiest to hardest', () => {
+  const byChapter = new Map();
+  for (const shape of SHAPES) {
+    const { p } = prepared(shape);
+    if (!byChapter.has(shape.chapter)) byChapter.set(shape.chapter, []);
+    byChapter.get(shape.chapter).push([shape.id, difficulty(solveStats(p), p)]);
+  }
+  for (const [name, levels] of byChapter) {
+    for (let k = 1; k < levels.length; k++) {
+      assert.ok(levels[k][1] >= levels[k - 1][1] - 1e-9,
+        `${name}: ${levels[k][0]} (${levels[k][1].toFixed(1)}) is easier than ${levels[k - 1][0]} (${levels[k - 1][1].toFixed(1)}) before it - run node tools/sort-levels.mjs`);
+    }
+  }
+});

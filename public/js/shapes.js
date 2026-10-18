@@ -188,14 +188,6 @@ export const SHAPES = [
       },
     },
     {
-      id: 'apple', name: 'Apple', dims: [5, 6, 5], fraction: 0.3, seed: 2,
-      story: 'The first one to fall, and the sweetest.',
-      cell(x, y, z) {
-        if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
-        return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
-      },
-    },
-    {
       // from the object gallery (snail)
       id: 'snail', name: 'Snail', fraction: 0.4, seed: 1,
       story: 'It carried its whole house across the garden before lunch.',
@@ -207,6 +199,14 @@ export const SHAPES = [
         '........ ...bccb. ...bccb. ........',
         '........ ....bb.. ....bb.. ........',
       ]),
+    },
+    {
+      id: 'apple', name: 'Apple', dims: [5, 6, 5], fraction: 0.3, seed: 2,
+      story: 'The first one to fall, and the sweetest.',
+      cell(x, y, z) {
+        if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
+        return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
+      },
     },
     {
       // from the object gallery (cactus)
@@ -245,6 +245,18 @@ export const SHAPES = [
       },
     },
     {
+      // A banded skep with a door you can only see once it's open, and one bee.
+      id: 'beehive', name: 'Beehive', dims: [5, 6, 5], fraction: 0.65, seed: 3,
+      story: 'A whole summer of sunlight, stored away in wax.',
+      cell(x, y, z) {
+        const r = ring(x - 2, z - 2);
+        if (y === 1 && x === 2 && z === 4) return 0;
+        if (y === 5) return r === 0 ? 0xd99a2b : 0;
+        if (x === 4 && y === 3 && z === 3) return 0x2d3142;   // a bee, clinging to the hive's side
+        return r <= [2.2, 2.3, 2.1, 1.7, 1.0][y] ? (y % 2 ? 0xe9b949 : 0xd99a2b) : 0;
+      },
+    },
+    {
       id: 'tulip', name: 'Tulip', dims: [5, 8, 5], fraction: 0.65, seed: 4,
       story: 'Planted in autumn, nearly forgotten, and then this morning.',
       cell(x, y, z) {
@@ -262,23 +274,6 @@ export const SHAPES = [
       },
     },
     {
-      // from the object gallery (sunflower)
-      id: 'sunflower', name: 'Sunflower', fraction: 0.65, seed: 1,
-      story: 'It turned all day long to keep the sun in view.',
-      ...voxels({ a: 0x5fae6e, b: 0x86c77f, c: 0xf6d365, d: 0x3f8a5b, e: 0x6b4a3a }, [
-        '....... ...a... .......',
-        '....... .bba... .......',
-        '....... ...abb. .......',
-        '....... ...a... .......',
-        '....... ...a... ..ccc..',
-        '....... ..dad.. .ccecc.',
-        '....... .ddddd. cceeecc',
-        '....... .ddddd. cceeecc',
-        '....... ..ddd.. .ccecc.',
-        '....... ....... ..ccc..',
-      ]),
-    },
-    {
       id: 'mushroom', name: 'Mushroom', dims: [7, 6, 7], fraction: 0.65, seed: 2,
       story: 'After the rain, a whole village of them, overnight.',
       cell(x, y, z) {
@@ -289,70 +284,6 @@ export const SHAPES = [
         const spot = y === 5 ? (dx + dz) % 2 === 0 && r2 > 0 : y === 4 && r2 >= 6 && (x + 2 * z) % 4 === 0;
         return spot ? 0xfff4e6 : 0xd9455a;
       },
-    },
-    {
-      // from the object gallery (garden-bench)
-      id: 'garden-bench', name: 'Garden Bench', fraction: 0.65, seed: 1,
-      story: 'A place to sit still while the garden does the growing.',
-      ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
-        'a.......a ......... ......... a.......a',
-        'a.......a ......... ......... a.......a',
-        'a.......a bbbbbbbbb ccccccccc bbbbbbbbb',
-        'accccccca a.......a a.......a a.......a',
-        'abbbbbbba ......... ......... .........',
-        'ccccccccc ......... ......... .........',
-      ]),
-    },
-    {
-      // A banded skep with a door you can only see once it's open, and one bee.
-      id: 'beehive', name: 'Beehive', dims: [5, 6, 5], fraction: 0.65, seed: 3,
-      story: 'A whole summer of sunlight, stored away in wax.',
-      cell(x, y, z) {
-        const r = ring(x - 2, z - 2);
-        if (y === 1 && x === 2 && z === 4) return 0;
-        if (y === 5) return x === 4 && z === 4 ? 0x2d3142 : r === 0 ? 0xd99a2b : 0;
-        return r <= [2.2, 2.3, 2.1, 1.7, 1.0][y] ? (y % 2 ? 0xe9b949 : 0xd99a2b) : 0;
-      },
-    },
-    {
-      // from the object gallery (pumpkin)
-      id: 'pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
-      story: 'Grown fat on a whole summer, waiting for the first frost.',
-      ...voxels({ a: 0xe78a2e, b: 0xf2a03d, c: 0x6b4a3a, d: 0x5fae6e }, [
-        '....... ....... ....... ...a... ....... ....... .......',
-        '....... ..abb.. .abbab. .bbaaa. .abbab. ..abb.. .......',
-        '..aba.. .babba. aabbabb bbbaaaa aabbabb .babba. ..aba..',
-        '...b... .babba. .abbab. bbbaaaa .abbab. .babba. ...b...',
-        '....... ....... ..bba.. ..baa.. ..bba.. ....... .......',
-        '....... ....... ....... ...cc.. ....dd. ....... .......',
-      ]),
-    },
-    {
-      id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
-      story: 'Three hundred years of careful pruning, and one stubborn branch.',
-      cell(x, y, z) {
-        if (y <= 1) return x >= 1 && x <= 5 && z >= 1 && z <= 3 ? (y === 1 && x >= 2 && x <= 4 && z === 2 ? 0x6b4a3a : 0x4f7fb8) : 0;
-        const trunk = [[3, 2], [3, 3], [2, 4], [4, 4], [5, 5]];
-        if (z === 2 && trunk.some(([tx, ty]) => tx === x && ty === y)) return 0x8a5a3c;
-        if (ell(x - 1.5, y - 5.2, z - 2, 1.7, 0.9, 1.6)) return 0x5fae6e;
-        if (ell(x - 4.8, y - 6, z - 2, 1.6, 0.7, 1.4)) return 0x3f9a6b;
-        return 0;
-      },
-    },
-    {
-      // from the object gallery (fox)
-      id: 'fox', name: 'Fox', fraction: 0.65, seed: 1,
-      story: 'It waited by the gate at dusk, tail wrapped round its paws.',
-      ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
-        '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
-        '....... ....... ..aaaaa ..aaaaa ..aaaaa ..bbbaa .....bb',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
-        '....... ....... ....... ..aaa.. ...a... ..bbb.. ...b...',
-        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. ...c...',
-        '....... ....... ...a... ..aaa.. ..cac.. ....... .......',
-        '....... ....... ....... .ca.ac. ....... ....... .......',
-      ]),
     },
     {
       // from the object gallery (gnome)
@@ -372,6 +303,61 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (garden-bench)
+      id: 'garden-bench', name: 'Garden Bench', fraction: 0.65, seed: 1,
+      story: 'A place to sit still while the garden does the growing.',
+      ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
+        'a.......a ......... ......... a.......a',
+        'a.......a ......... ......... a.......a',
+        'a.......a bbbbbbbbb ccccccccc bbbbbbbbb',
+        'accccccca a.......a a.......a a.......a',
+        'abbbbbbba ......... ......... .........',
+        'ccccccccc ......... ......... .........',
+      ]),
+    },
+    {
+      id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
+      story: 'Three hundred years of careful pruning, and one stubborn branch.',
+      cell(x, y, z) {
+        if (y <= 1) return x >= 1 && x <= 5 && z >= 1 && z <= 3 ? (y === 1 && x >= 2 && x <= 4 && z === 2 ? 0x6b4a3a : 0x4f7fb8) : 0;
+        const trunk = [[3, 2], [3, 3], [2, 4], [4, 4], [5, 5]];
+        if (z === 2 && trunk.some(([tx, ty]) => tx === x && ty === y)) return 0x8a5a3c;
+        if (ell(x - 1.5, y - 5.2, z - 2, 1.7, 0.9, 1.6)) return 0x5fae6e;
+        if (ell(x - 4.8, y - 6, z - 2, 1.6, 0.7, 1.4)) return 0x3f9a6b;
+        return 0;
+      },
+    },
+    {
+      // from the object gallery (pumpkin)
+      id: 'pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
+      story: 'Grown fat on a whole summer, waiting for the first frost.',
+      ...voxels({ a: 0xe78a2e, b: 0xf2a03d, c: 0x6b4a3a, d: 0x5fae6e }, [
+        '....... ....... ....... ...a... ....... ....... .......',
+        '....... ..abb.. .abbab. .bbaaa. .abbab. ..abb.. .......',
+        '..aba.. .babba. aabbabb bbbaaaa aabbabb .babba. ..aba..',
+        '...b... .babba. .abbab. bbbaaaa .abbab. .babba. ...b...',
+        '....... ....... ..bba.. ..baa.. ..bba.. ....... .......',
+        '....... ....... ....... ...cc.. ....dd. ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (sunflower)
+      id: 'sunflower', name: 'Sunflower', fraction: 0.65, seed: 1,
+      story: 'It turned all day long to keep the sun in view.',
+      ...voxels({ a: 0x5fae6e, b: 0x86c77f, c: 0xf6d365, d: 0x3f8a5b, e: 0x6b4a3a }, [
+        '....... ...a... .......',
+        '....... .bba... .......',
+        '....... ...abb. .......',
+        '....... ...a... .......',
+        '....... ...a... ..ccc..',
+        '....... ..dad.. .ccecc.',
+        '....... .ddddd. cceeecc',
+        '....... .ddddd. cceeecc',
+        '....... ..ddd.. .ccecc.',
+        '....... ....... ..ccc..',
+      ]),
+    },
+    {
       id: 'tree', name: 'Pine', dims: [5, 9, 5], fraction: 0.65, seed: 3,
       story: 'The tallest thing in the garden, keeping a star for later.',
       cell(x, y, z) {
@@ -381,6 +367,21 @@ export const SHAPES = [
         const tier = [2.3, 1.5, 1.0, 1.8, 1.0, 0.5][y - 2];
         return r2 <= tier * tier ? (y === 2 || y === 5 ? 0x2f7f58 : 0x3f9a6b) : 0;
       },
+    },
+    {
+      // from the object gallery (fox)
+      id: 'fox', name: 'Fox', fraction: 0.65, seed: 1,
+      story: 'It waited by the gate at dusk, tail wrapped round its paws.',
+      ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
+        '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
+        '....... ....... ..aaaaa ..aaaaa ..aaaaa ..bbbaa .....bb',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ....... ..aaa.. ...a... ..bbb.. ...b...',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. ...c...',
+        '....... ....... ...a... ..aaa.. ..cac.. ....... .......',
+        '....... ....... ....... .ca.ac. ....... ....... .......',
+      ]),
     },
     {
       // A hollow pot: the empty belly is only reachable by peeling.
@@ -413,6 +414,17 @@ export const SHAPES = [
         'aaa.... aaabbb. aaabbb. aaabbb. aaabbb. aaabbb. ...bbb.',
         '....... .c..... c.c.c.. ...c.c. ....... ....... .......',
       ]),
+    },
+    {
+      // A breather between the boat and the tower.
+      id: 'penguin', name: 'Penguin', dims: [5, 7, 4], fraction: 0.9, seed: 1,
+      story: 'A long way from home, and perfectly calm about it.',
+      cell(x, y, z) {
+        if (y === 0) return (x === 1 || x === 3) && z >= 2 ? 0xf08a3c : 0;
+        if (y === 4 && x === 2 && z === 3) return 0xf08a3c;
+        if (!ell(x - 2, y - 3, z - 1.5, 2.0, 3.0, 1.6)) return 0;
+        return z >= 2 && Math.abs(x - 2) <= 1 && y <= 3 ? 0xf6f2ea : 0x2d3142;
+      },
     },
     {
       id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
@@ -454,6 +466,18 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (crab)
+      id: 'crab', name: 'Crab', fraction: 0.8, seed: 2,
+      story: 'Sideways is still forward, if you are a crab.',
+      ...voxels({ a: 0xb8434b, b: 0xe0565b, c: 0x3a3442 }, [
+        '......... .a.aaa.a. ...aaa... .a.aaa.a. ...aaa... .........',
+        '......... .aabbbaa. ..bbbbb.. .aabbbaa. .bbbbbbb. .........',
+        '......... ....b.... ..bbbbb.. ..bbbbb.. bb..b..bb bb.....bb',
+        '......... ......... ......... ...c.c... .b.....b. bb.....bb',
+        '......... ......... ......... ......... ......... .........',
+      ]),
+    },
+    {
       id: 'boat', name: 'Sailboat', dims: [8, 8, 3], fraction: 0.65, seed: 3,
       story: 'Small sails, long water, and the far shore always moving.',
       cell(x, y, z) {
@@ -466,29 +490,6 @@ export const SHAPES = [
         const jib = y <= 4 && x <= 2 && 2 - x <= 4 - y;
         return main || jib ? 0xfffaf0 : 0;
       },
-    },
-    {
-      // A breather between the boat and the tower.
-      id: 'penguin', name: 'Penguin', dims: [5, 7, 4], fraction: 0.9, seed: 1,
-      story: 'A long way from home, and perfectly calm about it.',
-      cell(x, y, z) {
-        if (y === 0) return (x === 1 || x === 3) && z >= 2 ? 0xf08a3c : 0;
-        if (y === 4 && x === 2 && z === 3) return 0xf08a3c;
-        if (!ell(x - 2, y - 3, z - 1.5, 2.0, 3.0, 1.6)) return 0;
-        return z >= 2 && Math.abs(x - 2) <= 1 && y <= 3 ? 0xf6f2ea : 0x2d3142;
-      },
-    },
-    {
-      // from the object gallery (crab)
-      id: 'crab', name: 'Crab', fraction: 0.8, seed: 2,
-      story: 'Sideways is still forward, if you are a crab.',
-      ...voxels({ a: 0xb8434b, b: 0xe0565b, c: 0x3a3442 }, [
-        '......... .a.aaa.a. ...aaa... .a.aaa.a. ...aaa... .........',
-        '......... .aabbbaa. ..bbbbb.. .aabbbaa. .bbbbbbb. .........',
-        '......... ....b.... ..bbbbb.. ..bbbbb.. bb..b..bb bb.....bb',
-        '......... ......... ......... ...c.c... .b.....b. bb.....bb',
-        '......... ......... ......... ......... ......... .........',
-      ]),
     },
     {
       // from the object gallery (pelican)
@@ -588,17 +589,6 @@ export const SHAPES = [
       ]),
     },
     {
-      // A torii: two beams with a gap between them make split rows.
-      id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
-      story: 'Pass beneath it and leave the day behind.',
-      cell(x, y) {
-        if (y === 5) return 0x3d2e3a;
-        if (y === 3) return x >= 1 && x <= 7 ? 0xe2553f : 0;
-        if (y === 4 && x === 4) return 0xe2553f;
-        return x === 2 || x === 6 ? (y === 0 ? 0x3d2e3a : 0xe2553f) : 0;
-      },
-    },
-    {
       // from the object gallery (temple bell)
       id: 'temple-bell', name: 'Temple Bell', fraction: 0.65, seed: 1,
       story: 'Struck once at dusk, it keeps ringing long after you leave.',
@@ -612,6 +602,17 @@ export const SHAPES = [
         '....... ....... a..e..a ....... .......',
         '....... ....... bbbbbbb ....... .......',
       ]),
+    },
+    {
+      // A torii: two beams with a gap between them make split rows.
+      id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
+      story: 'Pass beneath it and leave the day behind.',
+      cell(x, y) {
+        if (y === 5) return 0x3d2e3a;
+        if (y === 3) return x >= 1 && x <= 7 ? 0xe2553f : 0;
+        if (y === 4 && x === 4) return 0xe2553f;
+        return x === 2 || x === 6 ? (y === 0 ? 0x3d2e3a : 0xe2553f) : 0;
+      },
     },
     {
       // Flat like the gate, but every rib is a decision.
@@ -710,6 +711,19 @@ export const SHAPES = [
       },
     },
     {
+      id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
+      story: 'Built on the coldest night, and smiling about it.',
+      cell(x, y, z) {
+        const dx = x - 2, dz = z - 2;
+        const ball = (cy, r) => dx * dx + dz * dz + (y - cy) ** 2 <= r * r;
+        if (y === 8) return dx === 0 && dz === 0 ? 0x2f2b3a : 0;
+        if (y === 6 && dx === 0 && dz === 2) return 0xf08a3c;
+        if (y === 5 && ball(4.4, 1.6)) return 0xe0546b;
+        if (ball(1.5, 2.3) || ball(4.4, 1.6) || ball(6.6, 1.2)) return 0xf7f4ef;
+        return 0;
+      },
+    },
+    {
       id: 'invader', name: 'Visitor', fraction: 0.65, seed: 1,
       story: 'It came a very long way, and seems glad to be found.',
       ...extrude([
@@ -722,19 +736,6 @@ export const SHAPES = [
         'G.G.....G.G',
         '...GG.GG...',
       ], 2, { G: 0x6cc28f }),
-    },
-    {
-      id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
-      story: 'Built on the coldest night, and smiling about it.',
-      cell(x, y, z) {
-        const dx = x - 2, dz = z - 2;
-        const ball = (cy, r) => dx * dx + dz * dz + (y - cy) ** 2 <= r * r;
-        if (y === 8) return dx === 0 && dz === 0 ? 0x2f2b3a : 0;
-        if (y === 6 && dx === 0 && dz === 2) return 0xf08a3c;
-        if (y === 5 && ball(4.4, 1.6)) return 0xe0546b;
-        if (ball(1.5, 2.3) || ball(4.4, 1.6) || ball(6.6, 1.2)) return 0xf7f4ef;
-        return 0;
-      },
     },
     {
       id: 'owl', name: 'Owl', dims: [6, 7, 4], fraction: 1.0, seed: 1,
