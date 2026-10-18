@@ -572,6 +572,20 @@ export const SHAPES = [
   // Architecture: overhangs, enclosed rooms and long chains of deduction.
   ...chapter(3, [
     {
+      // from the object gallery (dragon head)
+      id: 'dragon-head', name: 'Dragon Head', fraction: 0.65, seed: 1,
+      story: 'It guards the temple steps, and has never once blinked.',
+      ...voxels({ a: 0x3f8a5b, b: 0x5fae6e, c: 0xfbf8f2, d: 0xe0565b, e: 0xe9b949, f: 0x3a3442 }, [
+        '........ ........ ........ ........ ........ ........',
+        '........ ........ ..aaaa.. ..aaaa.. ..aaaa.. ..aaaa..',
+        '.bbbbbb. .bbbbbb. .bbbbbb. .bbbbbb. ..bbbb.. ..cbbc..',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..bbbbee',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..abba..',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bfbbfb. ........ ........',
+        '......e. .e....e. ........ ........ ........ ........',
+      ]),
+    },
+    {
       // A torii: two beams with a gap between them make split rows.
       id: 'gate', name: 'Gate', dims: [9, 6, 2], fraction: 1.0, seed: 1,
       story: 'Pass beneath it and leave the day behind.',
@@ -581,6 +595,21 @@ export const SHAPES = [
         if (y === 4 && x === 4) return 0xe2553f;
         return x === 2 || x === 6 ? (y === 0 ? 0x3d2e3a : 0xe2553f) : 0;
       },
+    },
+    {
+      // from the object gallery (temple bell)
+      id: 'temple-bell', name: 'Temple Bell', fraction: 0.65, seed: 1,
+      story: 'Struck once at dusk, it keeps ringing long after you leave.',
+      ...voxels({ a: 0x8a5a3c, b: 0x6b4a3a, c: 0xe9b949, d: 0xb07a3a, e: 0xd9b48f }, [
+        '....... ....... a..b..a ....... .......',
+        '...c... ..ccc.. accccca ..ccc.. ...c...',
+        '....... ..ddd.. a.ddd.a ..ddd.. .......',
+        '....... ..ddd.. a.ddd.a ..ddd.. .......',
+        '....... ...d... a.ddd.a ...d... .......',
+        '....... ...d... a.ddd.a ...d... .......',
+        '....... ....... a..e..a ....... .......',
+        '....... ....... bbbbbbb ....... .......',
+      ]),
     },
     {
       // Flat like the gate, but every rib is a decision.
