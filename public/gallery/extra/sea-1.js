@@ -82,11 +82,11 @@ const clam = grid(7, 5, 6)
 
 // Pelican: white bird with an outsized orange beak and gold pouch, grey wing.
 const pelican = grid(6, 7, 7)
-  .ellipsoid([2.5, 3, 2.5], [2.2, 1.8, 2.2], (x) => (x >= 4 ? C.grey : C.white))
+  .ellipsoid([2.5, 3, 2.5], [2.2, 1.8, 2.2], (x) => (x >= 4 || x <= 1 ? C.grey : C.white))   // a grey wing each side
   .box([2, 3], [5, 6], [2, 3], C.white)
   .box([2, 3], [6, 6], [4, 6], C.orange)
   .box([2, 3], [5, 5], [4, 5], C.gold)
-  .set(3, 6, 2, C.ink)
+  .set(3, 6, 2, C.ink).set(2, 6, 2, C.ink)   // an eye each side
   .box([2, 2], [0, 1], [2, 2], C.orange).box([3, 3], [0, 1], [3, 3], C.orange);
 
 // Rowing boat: blue sides, a white gunwale, a wooden floor and seat, one oar out to the side.
