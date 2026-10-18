@@ -652,7 +652,7 @@ body.standalone .home-tip { display: none; }
 .dev-row.danger { color: #c4485a; }
 #dev .primary { display: block; margin: 18px auto 0; }
 /* the install card steps aside while a panel is open (it would cover the version line) */
-body:has(#help.show, #dev.show, #journal.show, #win.show) #install, body.solved #install { opacity: 0; pointer-events: none; }
+body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install, body.solved #install { opacity: 0; pointer-events: none; }
 
 #journal-view .jv-gems .jr-gems { gap: 7px; margin: 0 0 12px; }
 #journal-view .jv-gems .jr-gems i { width: 12px; height: 16px; }
@@ -667,3 +667,25 @@ body:has(#help.show, #dev.show, #journal.show, #win.show) #install, body.solved 
   list-style: none; pointer-events: none; background: rgba(20, 16, 40, .72); color: #e9e6ff; border-radius: 6px;
   font: 10px/1.45 ui-monospace, Menlo, monospace; max-width: 70vw; }
 #motion-log li:first-child { color: #ffe08a; }
+
+/* ---------- title: the first screen of a launch (literal curves: it shows before motion.js loads) ---------- */
+#title { position: fixed; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center;
+  padding: calc(17vh + var(--safe-t)) 20px calc(9vh + var(--safe-b)); color: var(--ink); cursor: pointer;
+  opacity: 0; pointer-events: none; -webkit-tap-highlight-color: transparent;
+  transition: opacity .42s cubic-bezier(.55,0,.75,.2), translate .42s cubic-bezier(.55,0,.75,.2); }
+#title.show { opacity: 1; pointer-events: auto; }
+#title.leaving { opacity: 0; translate: 0 -28px; pointer-events: none; }
+#title h1 { animation: title-in 1.6s cubic-bezier(.2,.8,.2,1) .15s both; }
+#title .sub { margin: 14px 0 0; animation: title-fade 1.2s ease-out .7s both; }
+#title .tap { margin-top: auto; font-size: 10px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase;
+  animation: title-fade 1s ease-out 1.6s both, title-breathe 2.6s ease-in-out 2.6s infinite; }
+@keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
+@keyframes title-fade { from { opacity: 0; } }
+@keyframes title-breathe { 50% { opacity: .45; } }
+/* behind the title the block is only a backdrop */
+body:has(#title.show) .hud { opacity: 0; pointer-events: none; }
+/* the map rises in from below after the title */
+#menu.arriving.from-below .map-scroll { transform: translateY(80px); transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  #title h1, #title .sub, #title .tap { animation: none; }
+}

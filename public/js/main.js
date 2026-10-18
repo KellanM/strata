@@ -62,6 +62,7 @@ let rayBoost = 0;
 let tutorial = null;          // { step, hint }
 let updateReady = false;      // a new version has taken over; reload at a calm moment
 let lastTouch = null;         // { i, point }: where the last pick met its cube
+let titleUp = true;           // the launch title is showing: the block is a backdrop, no HUD or handles
 let introDelay = 0;           // set by the map dive so the block assembles once the veil has lifted
 let viewAnim = null;
 const clock0 = performance.now();
@@ -83,8 +84,9 @@ function puzzleList() {
   });
 }
 
-// quiet: the block behind the map at launch - already whole, no sound
-function startPuzzle(entry, { quiet = false } = {}) {
+// quiet: a backdrop (behind the title or map at launch) - no sound, already
+// whole unless `assemble` asks for the silent build
+function startPuzzle(entry, { quiet = false, assemble = false } = {}) {
   const { shape, palette } = entry;
   const { solid, colors } = buildCells(shape);
   const puzzle = new Puzzle(shape.dims, solid, colors);
@@ -144,7 +146,7 @@ function startPuzzle(entry, { quiet = false } = {}) {
   // the block assembles itself: cubes drop into place from the base up, then a
   // soft wave runs through the finished stone; taps wait until it's whole
   // (after a map dive, it waits for the veil to lift so the whole drop is seen)
-  const still = reduceMotion || quiet;
+  const still = reduceMotion || (quiet && !assemble);
   const t0 = now() + introDelay;
   cubes.uniforms.uIntro.value = still ? -99 : t0;
   game.introEnd = still ? 0 : t0 + INTRO_TIME;
@@ -152,7 +154,7 @@ function startPuzzle(entry, { quiet = false } = {}) {
     sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   }
-  if (quiet) handles.setShown(true, -99);   // already in place, no pop
+  if (quiet && !assemble) handles.setShown(true, -99);   // already in place, no pop
   mark(`level: ${shape.id}${quiet ? ' (quiet)' : ''}`);
   rayBoost = 1;
   draw();
@@ -165,9 +167,9 @@ let chapterCardTimer = 0;
 function maybeChapterCard(entry) {
   const ch = !entry.lesson && CHAPTERS.find((c) => c.name === entry.shape.chapter);
   if (!ch) return;
-  // wait a beat: boot starts a puzzle quietly behind the map, which isn't entering it
+  // wait a beat: boot starts a puzzle quietly behind the title, which isn't entering it
   setTimeout(() => {
-    if (game?.entry !== entry || $('#menu').classList.contains('show')) return;
+    if (game?.entry !== entry || $('#menu').classList.contains('show') || $('#title').classList.contains('show')) return;
     const seen = JSON.parse(localStorage.getItem('strata.chapters') || '[]');
     if (seen.includes(ch.name)) return;
     seen.push(ch.name);
@@ -890,7 +892,7 @@ function renderMenu(scroll = true, celebrate = false) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
   $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
-  $('#menu').classList.toggle('has-game', !!game);
+  $('#menu').classList.toggle('has-game', !!game && game.shape.id !== 'logo');
   stopReveal();
   renderMap($('#map'), {
     entries,
@@ -914,7 +916,7 @@ function renderMenu(scroll = true, celebrate = false) {
 // Level -> map: the map pulls back out of the stone you were playing, as if
 // the camera were rising off it (the reverse of the dive in)
 let menuMotion = 0;
-function openMenu({ instant = false } = {}) {
+function openMenu({ instant = false, fromBelow = false } = {}) {
   if (updateReady) { location.reload(); return; }
   const menu = $('#menu');
   const wasOpen = menu.classList.contains('show');
@@ -937,6 +939,7 @@ function openMenu({ instant = false } = {}) {
   menu.style.setProperty('--dive-y', r ? `${r.top + r.height / 2}px` : '50%');
   clearTimeout(menuMotion);
   menu.classList.remove('leaving', 'settling');
+  menu.classList.toggle('from-below', fromBelow);
   menu.classList.add('arriving');
   // start moving only once the freshly built map has painted (its thumbnails
   // decode on that first frame), so none of the motion is lost to the stall
@@ -944,12 +947,13 @@ function openMenu({ instant = false } = {}) {
     if (!menu.classList.contains('arriving')) return;
     menu.classList.replace('arriving', 'settling');
     mark('map: pull back');
-    menuMotion = after(0.76, () => menu.classList.remove('settling'));
+    menuMotion = after(0.76, () => menu.classList.remove('settling', 'from-below'));
   }));
 }
 
 // Map -> the level you were on: the map swells a touch and dissolves
 function closeMenu() {
+  if (game?.shape.id === 'logo') return;   // the title's logo isn't a level to go back to
   const menu = $('#menu');
   mark('map: close');
   show('#menu', false);
@@ -1096,7 +1100,7 @@ function draw() {
 
     camDir.copy(camera.position).sub(controls.target).normalize();
     handles.group.visible = game.shape.handles !== false;
-    handles.setShown(!game.solved && t >= (game.introEnd ?? 0), reduceMotion ? -99 : t);   // they pop in once the block is whole
+    handles.setShown(!game.solved && !titleUp && t >= (game.introEnd ?? 0), reduceMotion ? -99 : t);   // they pop in once the block is whole
     handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, !!currentHint()?.pulseHandle);
   }
   rayBoost *= Math.exp(-dt * 1.6);
@@ -1259,13 +1263,43 @@ maybeShowInstall();
 applyPalette(PALETTES[0]);
 resize();
 renderMenu();
-if (localStorage.getItem('strata.tutorial')) {
-  // a quiet block behind the menu so the first screen already breathes
-  startPuzzle(puzzleList()[0], { quiet: true });
-  openMenu({ instant: true });   // the map is the first thing you see, not a fade over the block
-} else {
-  startTutorial(0);
+// The title: under the name, the logo makes itself - a 2x2x2 stone builds,
+// then its near top corner is chiselled away, as on the app icon. One tap
+// (which also lets the sound start) lifts the title away and the map rises in
+// from below - or, the very first time, the first lesson begins.
+const titleScreen = $('#title');
+const LOGO = { id: 'logo', name: 'Strata', dims: [2, 2, 2], view: Math.PI / 4, handles: false, show: [0, 0, 0],
+  cell: (x, y, z) => (x & y & z ? 0 : 0xffffff) };
+const LOGO_CORNER = 7;   // (1, 1, 1): the corner nearest the camera
+introDelay = 0.6;
+startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true, assemble: true });
+introDelay = 0;
+mark('title');
+function carveLogo() {
+  if (game?.shape !== LOGO || game.broken[LOGO_CORNER]) return;
+  const i = LOGO_CORNER, t = now();
+  game.broken[i] = 1;
+  cubes.setState(i, undefined, undefined, t);
+  refreshAO();
+  cubes.ripple(game.puzzle.coords(i), t, 1, 7);
+  fragments.burst(cellWorld(i), cellWorld(i).add(new THREE.Vector3(0.5, 0.5, 0.5)), t);
+  mark('title: logo carved');
 }
+if (reduceMotion) carveLogo();
+else after(game.introEnd + 0.3 - now(), carveLogo);
+titleScreen.addEventListener('click', () => {
+  if (!titleScreen.classList.contains('show') || titleScreen.classList.contains('leaving')) return;
+  mark('title: tap');
+  sound.peel();
+  titleScreen.classList.add('leaving');
+  titleUp = false;
+  after(0.45, () => titleScreen.classList.remove('show', 'leaving'));
+  if (localStorage.getItem('strata.tutorial')) {
+    after(0.12, () => openMenu({ fromBelow: true }));
+  } else {
+    after(0.2, () => startTutorial(0));
+  }
+});
 requestAnimationFrame(frame);
 
 // offline play: only over https (hosted build); the LAN dev server stays uncached
