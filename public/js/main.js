@@ -12,6 +12,7 @@ import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
+import { rate as motionRate, after, mark, reveal, devFlags } from './motion.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -64,7 +65,8 @@ let lastTouch = null;         // { i, point }: where the last pick met its cube
 let introDelay = 0;           // set by the map dive so the block assembles once the veil has lifted
 let viewAnim = null;
 const clock0 = performance.now();
-const now = () => (performance.now() - clock0) / 1000;
+// the scene clock (seconds); runs at a quarter speed in slow motion (developer panel)
+const now = () => ((performance.now() - clock0) / 1000) * motionRate;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
@@ -151,6 +153,7 @@ function startPuzzle(entry, { quiet = false } = {}) {
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   }
   if (quiet) handles.setShown(true, -99);   // already in place, no pop
+  mark(`level: ${shape.id}${quiet ? ' (quiet)' : ''}`);
   rayBoost = 1;
   draw();
 }
@@ -464,6 +467,7 @@ function undo() {
 function win() {
   const g = game;
   const t = now();
+  mark('win');
   g.solved = true;
   g.elapsed = t - g.start;
   g.revealStart = t + 0.3;
@@ -881,11 +885,13 @@ function updateStrikes() {
 
 const DRIFT_SIZES = [6, 8, 10];
 
+let stopReveal = () => {};
 function renderMenu(scroll = true, celebrate = false) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
   $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
   $('#menu').classList.toggle('has-game', !!game);
+  stopReveal();
   renderMap($('#map'), {
     entries,
     solved: solvedStore,
@@ -900,6 +906,9 @@ function renderMenu(scroll = true, celebrate = false) {
     onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
     onPlay: (entry, el) => diveInto(el, entry.palette, () => startPuzzle(entry)),
   });
+  // stones and region names fade and rise in as they come into view (not on a
+  // quiet re-layout, which would make the whole map blink)
+  if (scroll) stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: $('#menu .map-scroll') });
 }
 
 // Level -> map: the map pulls back out of the stone you were playing, as if
@@ -909,6 +918,7 @@ function openMenu({ instant = false } = {}) {
   if (updateReady) { location.reload(); return; }
   const menu = $('#menu');
   const wasOpen = menu.classList.contains('show');
+  mark(instant ? 'map: show (instant)' : 'map: open');
   if (instant) {
     menu.style.transition = 'none';
     show('#menu', true);
@@ -933,19 +943,21 @@ function openMenu({ instant = false } = {}) {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!menu.classList.contains('arriving')) return;
     menu.classList.replace('arriving', 'settling');
-    menuMotion = setTimeout(() => menu.classList.remove('settling'), 760);
+    mark('map: pull back');
+    menuMotion = after(0.76, () => menu.classList.remove('settling'));
   }));
 }
 
 // Map -> the level you were on: the map swells a touch and dissolves
 function closeMenu() {
   const menu = $('#menu');
+  mark('map: close');
   show('#menu', false);
   if (reduceMotion) return;
   clearTimeout(menuMotion);
   menu.classList.remove('arriving', 'settling');
   menu.classList.add('leaving');
-  menuMotion = setTimeout(() => menu.classList.remove('leaving'), 500);
+  menuMotion = after(0.5, () => menu.classList.remove('leaving'));
 }
 
 // Map -> level: the map swells toward the tapped stone while the level's own
@@ -964,6 +976,7 @@ function diveInto(el, palette, start) {
     return;
   }
   diving = true;
+  el.classList.add('tapped');
   const r = el.getBoundingClientRect(), menu = $('#menu');
   menu.style.setProperty('--dive-x', `${r.left + r.width / 2}px`);
   menu.style.setProperty('--dive-y', `${r.top + r.height / 2}px`);
@@ -974,18 +987,21 @@ function diveInto(el, palette, start) {
   veil.style.setProperty('--vy', `${r.top + r.height / 2}px`);
   menu.classList.remove('arriving', 'settling', 'leaving');
   veil.classList.add('open', 'in');
-  setTimeout(() => {
+  mark('dive: portal opens');
+  after(0.46, () => {
     introDelay = 0.35;                 // the veil takes ~0.45 s to lift
     start();
     introDelay = 0;
+    mark('dive: level built');
     requestAnimationFrame(() => requestAnimationFrame(() => {
       veil.classList.remove('in');
-      setTimeout(() => veil.classList.remove('open'), 500);   // close the portal once it has faded
+      mark('dive: veil lifts');
+      after(0.5, () => veil.classList.remove('open'));   // close the portal once it has faded
       // reset the (hidden) map only after the block has assembled: restyling the
       // whole map mid-animation dropped a frame on phones
-      setTimeout(() => { menu.classList.remove('diving'); diving = false; }, (0.35 + INTRO_TIME) * 1000 + 250);
+      after(0.35 + INTRO_TIME + 0.25, () => { menu.classList.remove('diving'); diving = false; });
     }));
-  }, 460);
+  });
 }
 
 // iOS fires resize mid-rotation with the old size, so lay the map out again
@@ -1180,6 +1196,10 @@ $('.map-head h1').addEventListener('click', () => {
   if (titleTaps.length >= 5) { titleTaps = []; openDev(); }
 });
 $('#dev [data-close]').addEventListener('click', () => show('#dev', false));
+$('#dev-slowmo-state').textContent = devFlags.slow ? 'on' : 'off';
+$('#dev-motionlog-state').textContent = devFlags.log ? 'on' : 'off';
+$('#dev-slowmo').addEventListener('click', () => devFlags.toggle('slow'));
+$('#dev-motionlog').addEventListener('click', () => devFlags.toggle('log'));
 $('#dev-unlock').addEventListener('click', () => {
   const on = localStorage.getItem('strata.dev.unlock') !== '1';
   localStorage.setItem('strata.dev.unlock', on ? '1' : '0');

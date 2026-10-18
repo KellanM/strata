@@ -86,7 +86,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   content: ""; position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px);
   border-radius: 999px; background: var(--panel-strong);
   box-shadow: 0 2px 10px rgba(40, 20, 60, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+  transition: transform .45s var(--ease-out);
 }
 .segmented[data-tool="paint"]::before { transform: translateX(100%); }
 body.dark .segmented::before { background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); }
@@ -120,7 +120,7 @@ body.dark .segmented::before { background: rgba(255, 255, 255, 0.14); box-shadow
   padding: 34px 26px 26px; border-radius: 28px;
   background: var(--panel-strong);
   box-shadow: 0 30px 80px rgba(40, 20, 60, 0.18);
-  transform: translateY(14px); transition: transform .6s cubic-bezier(.2,.8,.2,1);
+  transform: translateY(14px); transition: transform .6s var(--ease-out);
 }
 .overlay.show .panel { transform: none; }
 .panel { scrollbar-width: none; }
@@ -168,7 +168,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   padding: 14px 18px 12px; border-radius: 20px; text-align: center;
   background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 10px 30px rgba(40, 20, 60, 0.08);
-  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s var(--ease-out);
 }
 #coach.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 #coach-text { margin: 6px 0 4px; font-size: 15px; line-height: 1.45; }
@@ -227,7 +227,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 }
 .map-node.on-dark { color: #eef0ff; }
 .map-node:active { transform: scale(.92); }
-.map-node .cube { stroke: none; position: relative; filter: drop-shadow(0 6px 10px rgba(40, 20, 60, .16)); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.map-node .cube { stroke: none; position: relative; filter: drop-shadow(0 6px 10px rgba(40, 20, 60, .16)); transition: transform .5s var(--ease-out); }
 .map-node:hover .cube { transform: translateY(-3px); }
 .map-node .halo {
   position: absolute; inset: -14px; border-radius: 50%; pointer-events: none;
@@ -299,7 +299,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .map-node .obj {
   width: 64px; height: 64px; position: relative; pointer-events: none;
   filter: drop-shadow(0 6px 9px rgba(40, 20, 60, .2));
-  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+  transition: transform .5s var(--ease-out);
 }
 .map-node:hover .obj { transform: translateY(-3px); }
 .map-node.fresh .cube { position: absolute; left: 50%; top: 50%; margin: -23px 0 0 -23px; animation: stone-away .55s .45s cubic-bezier(.5,0,.7,.3) both; }
@@ -366,21 +366,24 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 @keyframes comp-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 
 /* map -> level */
-#menu .map-scroll { transition: transform .46s cubic-bezier(.55,0,.75,.2), opacity .46s ease-in; }
+#menu .map-scroll { transition: transform .46s var(--ease-in), opacity .46s ease-in; }
 /* the map only fades once the veil is opaque: until then it hides the old level behind it */
 #menu.diving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.6); opacity: 0;
-  transition: transform .46s cubic-bezier(.55,0,.75,.2), opacity .1s linear .36s; }
+  transition: transform .46s var(--ease-inOut), opacity .1s linear .36s; }
+/* the tapped stone answers at once */
+.map-node.tapped .cube, .map-node.tapped .obj { animation: tap-pop .32s var(--ease-pop) both; }
+@keyframes tap-pop { 0% { scale: .9; } 55% { scale: 1.16; } 100% { scale: 1.1; } }
 #menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal { opacity: 0; transition: opacity .2s; }
 /* the level's sky opens out of the tapped stone as a growing circle, then fades as the block assembles */
 #veil { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
   clip-path: circle(0px at var(--vx, 50%) var(--vy, 50%)); }
 #veil.open { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 50%)); }
-#veil.in { opacity: 1; transition: clip-path .42s cubic-bezier(.6,0,.3,1); }
+#veil.in { opacity: 1; transition: clip-path .42s var(--ease-inOut); }
 
 /* level -> map: it pulls back out of the stone you were on */
 #menu.arriving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.35); opacity: 0; transition: none; }
 #menu.settling .map-scroll { transform-origin: var(--dive-x) var(--dive-y);
-  transition: transform .7s cubic-bezier(.25,1,.5,1), opacity .28s ease-out; }
+  transition: transform var(--dur-scene) var(--ease-glide), opacity .28s ease-out; }
 #menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal { opacity: 0; transition: none; }
 #menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal { transition: opacity .4s ease-out .2s; }
 /* map -> back to the level: a slight swell as it dissolves */
@@ -485,7 +488,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
   position: fixed; left: 0; right: 0; bottom: calc(26px + var(--safe-b)); z-index: 3;
   display: flex; justify-content: center; align-items: center; gap: 6px;
   opacity: 0; transform: translateY(8px); pointer-events: none;
-  transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+  transition: opacity .6s ease, transform .6s var(--ease-out);
 }
 #actions.show { opacity: 1; transform: none; pointer-events: auto; }
 #actions button {
@@ -605,7 +608,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
   padding: 16px 18px 14px; border-radius: 22px; color: var(--ink);
   background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 14px 40px rgba(40, 20, 60, 0.16);
-  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s var(--ease-out);
 }
 #install.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 /* on iPhone Safari the share button sits in the bar below: point at it */
@@ -653,3 +656,14 @@ body:has(#help.show, #dev.show, #journal.show, #win.show) #install, body.solved 
 
 #journal-view .jv-gems .jr-gems { gap: 7px; margin: 0 0 12px; }
 #journal-view .jv-gems .jr-gems i { width: 12px; height: 16px; }
+
+/* ---------- motion (tokens and helpers in js/motion.js; rules in docs/motion.md) ---------- */
+/* scroll reveal: in from a little below, a touch small, settling with a soft pop */
+.rv { opacity: 0; translate: 0 16px; scale: .9;
+  transition: opacity var(--dur-slow) var(--ease-out), translate var(--dur-slow) var(--ease-out), scale var(--dur-slow) var(--ease-pop); }
+.rv.rv-in { opacity: 1; translate: 0 0; scale: 1; }
+/* the motion log (developer panel): named steps with their times, readable on a phone */
+#motion-log { position: fixed; left: 8px; bottom: calc(8px + var(--safe-b, 0px)); z-index: 50; margin: 0; padding: 6px 8px;
+  list-style: none; pointer-events: none; background: rgba(20, 16, 40, .72); color: #e9e6ff; border-radius: 6px;
+  font: 10px/1.45 ui-monospace, Menlo, monospace; max-width: 70vw; }
+#motion-log li:first-child { color: #ffe08a; }
