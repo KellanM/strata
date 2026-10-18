@@ -128,6 +128,24 @@ $('#picks-copy').addEventListener('click', async () => {
   setTimeout(() => { $('#picks-copy').textContent = 'copy'; }, 1500);
 });
 
+// clear every pick (both pages) - a second tap confirms, so a stray tap can't wipe them
+let clearArmed = 0;
+$('#picks-clear').addEventListener('click', () => {
+  const btn = $('#picks-clear');
+  if (!clearArmed) {
+    btn.textContent = 'sure?';
+    clearArmed = setTimeout(() => { clearArmed = 0; btn.textContent = 'clear'; }, 2500);
+    return;
+  }
+  clearTimeout(clearArmed);
+  clearArmed = 0;
+  picks.clear();
+  localStorage.setItem(PICKS, '[]');
+  document.querySelectorAll('.card.picked').forEach((c) => c.classList.remove('picked'));
+  btn.textContent = 'clear';
+  renderPicks();
+});
+
 // ---- the turntable, as in the journal
 let closeViewer = null;
 function openViewer(shape, palette, num, st, ink) {
