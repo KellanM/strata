@@ -57,6 +57,7 @@ const vertexShader = /* glsl */ `
   uniform vec3 uHint;
   uniform float uWin;      // time the puzzle was solved (-99 while playing)
   uniform float uIntro;    // time the level began: the block assembles itself (-99 = no intro)
+  uniform float uIntroSpeed;   // 1 in levels; faster for the title's logo
 
   varying vec3 vN;
   varying vec3 vWN;
@@ -91,7 +92,7 @@ const vertexShader = /* glsl */ `
       float hgt = aCell.y / max(uDims.y - 1.0, 1.0);
       vec2 mid = (uDims.xz - 1.0) * 0.5;
       float spread = length(aCell.xz - mid) / max(length(mid), 1.0);
-      float k = (uTime - uIntro - (hgt * 0.28 + spread * 0.1)) / 0.3;   // layers overlap: the next falls before the last has settled
+      float k = ((uTime - uIntro) * uIntroSpeed - (hgt * 0.28 + spread * 0.1)) / 0.3;   // layers overlap: the next falls before the last has settled
       if (k < 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
       if (k < 1.0) {
         float fall = 1.0 - pow(1.0 - k, 3.0);
@@ -304,7 +305,7 @@ export class Cubes {
       uMask: { value: 0 },
       uReveal: { value: 0 },
       uWin: { value: -99 },
-      uIntro: { value: -99 },
+      uIntro: { value: -99 }, uIntroSpeed: { value: 1 },
       uDims: { value: new THREE.Vector3(1, 1, 1) },
       uPeel: { value: new THREE.Vector3(1, 99, 1) },
       uHover: { value: new THREE.Vector3(-99, -99, -99) },

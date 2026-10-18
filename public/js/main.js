@@ -86,7 +86,7 @@ function puzzleList() {
 
 // quiet: a backdrop (behind the title or map at launch) - no sound, already
 // whole unless `assemble` asks for the silent build
-function startPuzzle(entry, { quiet = false, assemble = false } = {}) {
+function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } = {}) {
   const { shape, palette } = entry;
   const { solid, colors } = buildCells(shape);
   const puzzle = new Puzzle(shape.dims, solid, colors);
@@ -149,7 +149,8 @@ function startPuzzle(entry, { quiet = false, assemble = false } = {}) {
   const still = reduceMotion || (quiet && !assemble);
   const t0 = now() + introDelay;
   cubes.uniforms.uIntro.value = still ? -99 : t0;
-  game.introEnd = still ? 0 : t0 + INTRO_TIME;
+  cubes.uniforms.uIntroSpeed.value = introSpeed;
+  game.introEnd = still ? 0 : t0 + INTRO_TIME / introSpeed;
   if (!quiet) {
     sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
@@ -916,7 +917,7 @@ function renderMenu(scroll = true, celebrate = false) {
 // Level -> map: the map pulls back out of the stone you were playing, as if
 // the camera were rising off it (the reverse of the dive in)
 let menuMotion = 0;
-function openMenu({ instant = false, fromBelow = false } = {}) {
+function openMenu({ instant = false } = {}) {
   if (updateReady) { location.reload(); return; }
   const menu = $('#menu');
   const wasOpen = menu.classList.contains('show');
@@ -939,7 +940,6 @@ function openMenu({ instant = false, fromBelow = false } = {}) {
   menu.style.setProperty('--dive-y', r ? `${r.top + r.height / 2}px` : '50%');
   clearTimeout(menuMotion);
   menu.classList.remove('leaving', 'settling');
-  menu.classList.toggle('from-below', fromBelow);
   menu.classList.add('arriving');
   // start moving only once the freshly built map has painted (its thumbnails
   // decode on that first frame), so none of the motion is lost to the stall
@@ -947,7 +947,7 @@ function openMenu({ instant = false, fromBelow = false } = {}) {
     if (!menu.classList.contains('arriving')) return;
     menu.classList.replace('arriving', 'settling');
     mark('map: pull back');
-    menuMotion = after(0.76, () => menu.classList.remove('settling', 'from-below'));
+    menuMotion = after(0.76, () => menu.classList.remove('settling'));
   }));
 }
 
@@ -1263,16 +1263,17 @@ maybeShowInstall();
 applyPalette(PALETTES[0]);
 resize();
 renderMenu();
-// The title: under the name, the logo makes itself - a 2x2x2 stone builds,
-// then its near top corner is chiselled away, as on the app icon. One tap
-// (which also lets the sound start) lifts the title away and the map rises in
-// from below - or, the very first time, the first lesson begins.
+// The title: under the name, the logo makes itself - a 2x2x2 stone snaps
+// together, then its near top corner is chiselled away, as on the app icon.
+// Swipe down and the map comes down after your finger like a curtain while the
+// title sinks away (the touch also lets the sound start); the very first time,
+// the swipe begins the first lesson instead.
 const titleScreen = $('#title');
 const LOGO = { id: 'logo', name: 'Strata', dims: [2, 2, 2], view: Math.PI / 4, handles: false, show: [0, 0, 0],
   cell: (x, y, z) => (x & y & z ? 0 : 0xffffff) };
 const LOGO_CORNER = 7;   // (1, 1, 1): the corner nearest the camera
-introDelay = 0.6;
-startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true, assemble: true });
+introDelay = 0.15;
+startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true, assemble: true, introSpeed: 2.2 });
 introDelay = 0;
 mark('title');
 function carveLogo() {
@@ -1286,19 +1287,96 @@ function carveLogo() {
   mark('title: logo carved');
 }
 if (reduceMotion) carveLogo();
-else after(game.introEnd + 0.3 - now(), carveLogo);
-titleScreen.addEventListener('click', () => {
-  if (!titleScreen.classList.contains('show') || titleScreen.classList.contains('leaving')) return;
-  mark('title: tap');
-  sound.peel();
-  titleScreen.classList.add('leaving');
+else after(game.introEnd + 0.12 - now(), carveLogo);
+
+// the pull: the map sheet follows the finger down from above the screen
+const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false };
+const toMap = () => !!localStorage.getItem('strata.tutorial');
+const mapSheet = () => $('#menu .map-scroll');
+function setPull(dy) {
+  const k = Math.max(0, dy), H = window.innerHeight;
+  titleScreen.style.translate = `0 ${k * 0.45}px`;
+  titleScreen.style.opacity = String(1 - Math.min(1, k / (H * 0.55)));
+  if (toMap()) mapSheet().style.transform = `translateY(${k - H}px)`;
+}
+function startPull() {
+  pull.live = true;
+  mark('title: pull');
+  titleScreen.style.transition = 'none';
+  if (!toMap() || $('#menu').classList.contains('show')) return;
+  const menu = $('#menu');
+  menu.style.transition = 'none';
+  show('#menu', true);
+  renderMenu(true, true);
+  mapSheet().style.transition = 'none';
+  setPull(0);
+}
+function finishPull() {
+  if (!titleUp) return;
   titleUp = false;
-  after(0.45, () => titleScreen.classList.remove('show', 'leaving'));
-  if (localStorage.getItem('strata.tutorial')) {
-    after(0.12, () => openMenu({ fromBelow: true }));
+  pull.live = false;
+  mark('title: to ' + (toMap() ? 'map' : 'lesson'));
+  sound.peel();
+  titleScreen.style.transition = 'opacity .3s ease-in, translate .3s ease-in';
+  titleScreen.style.translate = `0 ${window.innerHeight * 0.4}px`;
+  titleScreen.style.opacity = '0';
+  after(0.32, () => { titleScreen.classList.remove('show'); titleScreen.style.cssText = ''; });
+  if (toMap()) {
+    const sheet = mapSheet();
+    sheet.style.transition = 'transform .55s var(--ease-glide)';
+    sheet.style.transform = 'translateY(0)';
+    after(0.6, () => { sheet.style.cssText = ''; $('#menu').style.transition = ''; });
   } else {
     after(0.2, () => startTutorial(0));
   }
+}
+function cancelPull() {
+  pull.live = false;
+  titleScreen.style.transition = 'opacity .35s var(--ease-out), translate .35s var(--ease-out)';
+  titleScreen.style.translate = '0 0';
+  titleScreen.style.opacity = '1';
+  if (!toMap()) return;
+  const sheet = mapSheet();
+  sheet.style.transition = 'transform .35s var(--ease-in)';
+  sheet.style.transform = `translateY(${-window.innerHeight}px)`;
+  after(0.36, () => {
+    if (pull.live || !titleUp) return;
+    show('#menu', false);
+    sheet.style.cssText = '';
+    $('#menu').style.transition = '';
+  });
+}
+titleScreen.addEventListener('pointerdown', (e) => {
+  if (!titleUp || pull.id !== null) return;
+  pull.id = e.pointerId; pull.y0 = pull.lastY = e.clientY; pull.lastT = performance.now(); pull.dy = pull.v = 0;
+  titleScreen.setPointerCapture?.(e.pointerId);
+});
+titleScreen.addEventListener('pointermove', (e) => {
+  if (e.pointerId !== pull.id) return;
+  const t = performance.now();
+  pull.dy = e.clientY - pull.y0;
+  pull.v = (e.clientY - pull.lastY) / Math.max(1, t - pull.lastT);   // px per ms, + is down
+  pull.lastY = e.clientY; pull.lastT = t;
+  if (!pull.live && pull.dy > 6) startPull();
+  if (pull.live) setPull(pull.dy);
+});
+const endPull = (e) => {
+  if (e.pointerId !== pull.id) return;
+  pull.id = null;
+  if (!pull.live) {   // a tap: show which way to go
+    const hint = titleScreen.querySelector('.tap');
+    hint.classList.remove('nudge'); void hint.offsetWidth; hint.classList.add('nudge');
+    return;
+  }
+  if (e.type !== 'pointercancel' && (pull.dy > window.innerHeight * 0.18 || pull.v > 0.5)) finishPull();
+  else cancelPull();
+};
+titleScreen.addEventListener('pointerup', endPull);
+titleScreen.addEventListener('pointercancel', endPull);
+window.addEventListener('keydown', (e) => {
+  if (!titleUp || !['Enter', ' ', 'ArrowDown'].includes(e.key)) return;
+  startPull();
+  finishPull();
 });
 requestAnimationFrame(frame);
 

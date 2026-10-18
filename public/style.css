@@ -670,22 +670,25 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 
 /* ---------- title: the first screen of a launch (literal curves: it shows before motion.js loads) ---------- */
 #title { position: fixed; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center;
-  padding: calc(17vh + var(--safe-t)) 20px calc(9vh + var(--safe-b)); color: var(--ink); cursor: pointer;
+  padding: calc(17vh + var(--safe-t)) 20px calc(9vh + var(--safe-b)); color: var(--ink); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   opacity: 0; pointer-events: none; -webkit-tap-highlight-color: transparent;
   transition: opacity .42s cubic-bezier(.55,0,.75,.2), translate .42s cubic-bezier(.55,0,.75,.2); }
 #title.show { opacity: 1; pointer-events: auto; }
 #title.leaving { opacity: 0; translate: 0 -28px; pointer-events: none; }
-#title h1 { animation: title-in 1.6s cubic-bezier(.2,.8,.2,1) .15s both; }
-#title .sub { margin: 14px 0 0; animation: title-fade 1.2s ease-out .7s both; }
-#title .tap { margin-top: auto; font-size: 10px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase;
-  animation: title-fade 1s ease-out 1.6s both, title-breathe 2.6s ease-in-out 2.6s infinite; }
+#title h1 { animation: title-in 1.2s cubic-bezier(.2,.8,.2,1) .05s both; }
+#title .sub { margin: 14px 0 0; animation: title-fade 1s ease-out .45s both; }
+#title .tap { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 10px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase;
+  animation: title-fade .8s ease-out 1s both, title-breathe 2.6s ease-in-out 1.8s infinite; }
+#title .tap svg { width: 18px; height: 18px; margin-left: -.42em; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  animation: title-nudge 1.6s ease-in-out 1.8s infinite; }
+#title .tap.nudge svg { animation: title-nudge .45s ease-in-out 2; }
+@keyframes title-nudge { 50% { translate: 0 6px; } }
 @keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
 @keyframes title-fade { from { opacity: 0; } }
 @keyframes title-breathe { 50% { opacity: .45; } }
 /* behind the title the block is only a backdrop */
 body:has(#title.show) .hud { opacity: 0; pointer-events: none; }
-/* the map rises in from below after the title */
-#menu.arriving.from-below .map-scroll { transform: translateY(80px); transform-origin: 50% 50%; }
 @media (prefers-reduced-motion: reduce) {
-  #title h1, #title .sub, #title .tap { animation: none; }
+  #title h1, #title .sub, #title .tap, #title .tap svg { animation: none; }
 }
