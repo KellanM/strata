@@ -427,7 +427,7 @@ class Sound {
     const tones = this.chordTones();
     for (let k = 0; k < n; k++) {
       const midi = this.key.root + 24 + tones[k % tones.length] + 12 * Math.floor(k / tones.length);
-      this.fmBell(midi, { at: t + 0.42 + (k / (n - 1)) * 0.55, gain: 0.035, index: 1.4, indexEnd: 0.2, decay: 0.9 });
+      this.fmBell(midi, { at: t + 0.3 + (k / (n - 1)) * 0.28, gain: 0.035, index: 1.4, indexEnd: 0.2, decay: 0.9 });
     }
     this.tone(this.key.root + 12, { at: t + dur - 0.1, type: 'sine', attack: 0.02, decay: 0.5, gain: 0.08, partial: 2, partialGain: 0.25 });
   }

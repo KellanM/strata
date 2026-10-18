@@ -91,11 +91,11 @@ const vertexShader = /* glsl */ `
       float hgt = aCell.y / max(uDims.y - 1.0, 1.0);
       vec2 mid = (uDims.xz - 1.0) * 0.5;
       float spread = length(aCell.xz - mid) / max(length(mid), 1.0);
-      float k = (uTime - uIntro - (hgt * 0.55 + spread * 0.22)) / 0.42;
+      float k = (uTime - uIntro - (hgt * 0.28 + spread * 0.1)) / 0.3;   // layers overlap: the next falls before the last has settled
       if (k < 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
       if (k < 1.0) {
         float fall = 1.0 - pow(1.0 - k, 3.0);
-        offset.y += (1.0 - fall) * 2.2;
+        offset.y += (1.0 - fall) * 1.6;
         float c1 = 1.7, c3 = c1 + 1.0;                       // ease out with a gentle overshoot
         scale *= 0.55 + 0.45 * (1.0 + c3 * pow(k - 1.0, 3.0) + c1 * pow(k - 1.0, 2.0));
       }

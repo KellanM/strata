@@ -372,7 +372,7 @@ function buzz(pattern) {
   }
 }
 
-const INTRO_TIME = 1.2;   // the level-start assembly (shader: delays ≤ 0.77 s + 0.42 s fall)
+const INTRO_TIME = 0.7;   // the level-start assembly (shader: delays ≤ 0.38 s + 0.3 s fall)
 
 function act(i, which) {
   if (!game || game.solved || i < 0) return;
