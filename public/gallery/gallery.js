@@ -4,12 +4,15 @@
 // merged into their theme with numbering continuing (I-01 … I-NN).
 // Further pages (?page=2 …) hold fresh rounds of ideas: page<n>/manifest.json
 // lists "<theme>-<k>.js" files in page<n>/; their cards are numbered P2·I-01.
+// The Live page (?page=live) shows every object in the game, by chapter in
+// play order, numbered by level as on the map (L-01 …); shrines are ✦.
 import * as THREE from 'three';
 import { PALETTES } from '../js/palettes.js';
 import { renderThumb } from '../js/thumbs.js';
 import { objectMesh, isoCamera } from '../js/objectmesh.js';
 import { makeOrbit, SHOW_SPIN } from '../js/orbit.js';
 import { stats } from './stats.js';
+import { SHAPES, CHAPTERS, BONUS } from '../js/shapes.js';
 
 const THEMES = [
   { key: 'home', numeral: 'I', name: 'Home & Morning', chapter: 'First Light', palette: 'Dawn' },
@@ -30,11 +33,25 @@ const turned = (s) => {
   return { ...s, id: s.id + ':back', cell: (x, y, z) => s.cell(X - 1 - x, y, Z - 1 - z) };
 };
 
-const PAGE = Math.max(1, Number(new URLSearchParams(location.search).get('page')) || 1);
+const PARAM = new URLSearchParams(location.search).get('page');
+const LIVE = PARAM === 'live';
+const PAGE = LIVE ? 0 : Math.max(1, Number(PARAM) || 1);
 const PAGES = 2;
-const numberOf = (t, k) => `${PAGE > 1 ? `P${PAGE}·` : ''}${t.numeral}-${String(k + 1).padStart(2, '0')}`;
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+// sections: chapter themes on the idea pages, the game's chapters on Live
+const SECTIONS = LIVE
+  ? CHAPTERS.map((c, i) => ({ key: c.name, numeral: ROMAN[i] ?? String(i + 1), name: c.name, chapter: c.blurb ?? '', palette: c.palette }))
+  : THEMES;
+const numberOf = (t, k) => LIVE
+  ? (lists[t.key][k].bonus ? `✦ ${t.numeral}` : `L-${String(SHAPES.indexOf(lists[t.key][k]) + 1).padStart(2, '0')}`)
+  : `${PAGE > 1 ? `P${PAGE}·` : ''}${t.numeral}-${String(k + 1).padStart(2, '0')}`;
 
 async function load() {
+  if (LIVE) {
+    const lists = {};
+    for (const c of CHAPTERS) lists[c.name] = [...SHAPES.filter((s) => s.chapter === c.name), ...BONUS.filter((b) => b.chapter === c.name)];
+    return lists;
+  }
   const lists = {};
   const dir = PAGE > 1 ? `page${PAGE}` : 'extra';
   for (const t of THEMES) lists[t.key] = PAGE > 1 ? [] : [...(await import(`./themes/${t.key}.js`)).default];
@@ -53,6 +70,11 @@ async function load() {
 {
   const nav = document.createElement('nav');
   nav.className = 'pages';
+  const live = document.createElement('a');
+  live.href = 'index.html?page=live';
+  live.textContent = 'Live';
+  if (LIVE) live.className = 'on';
+  nav.appendChild(live);
   for (let n = 1; n <= PAGES; n++) {
     const a = document.createElement('a');
     a.href = n === 1 ? 'index.html' : `index.html?page=${n}`;
@@ -77,7 +99,7 @@ function renderPicks() {
 
 const lists = await load();
 const root = $('#themes');
-for (const t of THEMES) {
+for (const t of SECTIONS) {
   if (!lists[t.key].length) continue;              // later pages show only themes with new ideas
   const p = PALETTES.find((q) => q.name === t.palette);
   const { dark, ink } = inkFor(p);
@@ -118,7 +140,7 @@ for (const t of THEMES) {
 renderPicks();
 $('#picks-copy').addEventListener('click', async () => {
   const text = [...picks].map((n) => {
-    for (const t of THEMES) {
+    for (const t of SECTIONS) {
       const k = lists[t.key].findIndex((_, i) => numberOf(t, i) === n);
       if (k >= 0) return `${n} ${lists[t.key][k].name}`;
     }
