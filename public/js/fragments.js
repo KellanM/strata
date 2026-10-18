@@ -1,6 +1,6 @@
 // A chiselled cube comes apart: it becomes 8 small cubes (2×2×2) that exactly
-// rebuild it, and each shrinks away where it sits, the pieces nearest an open
-// side going first, so the cube crumbles in from its exposed faces. One
+// rebuild it, and each shrinks away where it sits, the pieces nearest the
+// point you touched going first, so the cube crumbles away from your finger. One
 // instanced draw for every piece of every recent break; all motion runs in the
 // shader. The whole break takes the same 0.42 s the single-cube animation did.
 import * as THREE from 'three';
@@ -89,24 +89,29 @@ export class Fragments {
 
   // center: the cube's world centre. open: unit vector out through its free
   // sides (the sum of the free faces' normals).
-  burst(center, open, time) {
-    const o = new THREE.Vector3(), dir = new THREE.Vector3(), axis = new THREE.Vector3();
+  // center: the cube's world centre. from: the world point the shrink spreads
+  // from (where the tap landed on the cube's face).
+  burst(center, from, time) {
+    const piece = new THREE.Vector3(), dir = new THREE.Vector3(), axis = new THREE.Vector3();
+    const near = [], spots = [];
     for (const x of [-0.5, 0.5]) for (const y of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) {
+      piece.set(center.x + x * PIECE, center.y + y * PIECE, center.z + z * PIECE);
+      spots.push([x, y, z]);
+      near.push(piece.distanceTo(from));
+    }
+    const lo = Math.min(...near), hi = Math.max(...near);
+    spots.forEach(([x, y, z], n) => {
       const i = this.next++ % this.capacity;
-      o.set(x, y, z);
-      // pieces facing an open side leave first; the far ones follow
-      const facing = o.lengthSq() ? o.clone().normalize().dot(open) : 0;
-      const delay = MAX_DELAY * (1 - (facing + 1) / 2) + Math.random() * 0.012;
-      // out through the open sides, fanning a little from where each piece sits
-      dir.copy(open).multiplyScalar(0.55).addScaledVector(o, 0.22)
-        .add(new THREE.Vector3((Math.random() - 0.5) * 0.12, Math.random() * 0.1, (Math.random() - 0.5) * 0.12));
-      axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+      // nearest the touch goes first, the far side last
+      const delay = MAX_DELAY * (hi > lo ? (near[n] - lo) / (hi - lo) : 0);
+      dir.set(0, 0, 0);
+      axis.set(0, 1, 0);
       this.aOrigin.setXYZ(i, center.x + x * PIECE, center.y + y * PIECE, center.z + z * PIECE);
       this.aDir.setXYZ(i, dir.x, dir.y, dir.z);
       this.aSpin.setXYZW(i, axis.x, axis.y, axis.z, (Math.random() * 1.2 + 0.4) * (Math.random() < 0.5 ? -1 : 1));
       this.aStart.setX(i, time + MAX_DELAY + delay - MAX_DELAY);
       this.aEnd.setX(i, time + BREAK_TIME);
-    }
+    });
     for (const a of [this.aOrigin, this.aDir, this.aSpin, this.aStart, this.aEnd]) a.needsUpdate = true;
   }
 

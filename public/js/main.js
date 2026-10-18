@@ -60,6 +60,7 @@ const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
 let tutorial = null;          // { step, hint }
 let updateReady = false;      // a new version has taken over; reload at a calm moment
+let lastTouch = null;         // { i, point }: where the last pick met its cube
 let viewAnim = null;
 const clock0 = performance.now();
 const now = () => (performance.now() - clock0) / 1000;
@@ -286,7 +287,13 @@ function pick(clientX, clientY) {
   const tDelta = d.map((v) => (Math.abs(v) < 1e-9 ? Infinity : Math.abs(1 / v)));
   for (let guard = 0; guard < 200; guard++) {
     const i = game.puzzle.idx(cell[0], cell[1], cell[2]);
-    if (present(i)) return i;
+    if (present(i)) {
+      // remember where the ray met this cube, so its break can spread from the touch
+      const c = cellWorld(i);
+      const box = new THREE.Box3(c.clone().subScalar(0.5), c.clone().addScalar(0.5));
+      lastTouch = { i, point: raycaster.ray.intersectBox(box, new THREE.Vector3()) ?? c };
+      return i;
+    }
     const a = tMax[0] < tMax[1] ? (tMax[0] < tMax[2] ? 0 : 2) : (tMax[1] < tMax[2] ? 1 : 2);
     cell[a] += step[a];
     if (cell[a] < 0 || cell[a] >= dims[a]) return -1;
@@ -400,8 +407,9 @@ function act(i, which) {
   game.undo.push({ kind: 'break', i });
   cubes.ripple(cell, t, 1, 7);
   const c = (h) => new THREE.Color(h);
-  // it comes apart into 8 pieces that shrink away, open sides first
-  fragments.burst(cellWorld(i), openSides(i), t);
+  // it comes apart into 8 pieces that shrink away, starting where it was touched
+  const from = lastTouch?.i === i ? lastTouch.point : cellWorld(i).addScaledVector(openSides(i), 0.5);
+  fragments.burst(cellWorld(i), from, t);
   shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
     { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
   rayBoost = Math.max(rayBoost, 0.35);
