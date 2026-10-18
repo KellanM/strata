@@ -13,6 +13,7 @@ for (const arg of process.argv.slice(2)) {
   const target = Number(t);
   const shape = SHAPES.find((s) => s.id === id);
   if (!shape) { console.log(`?? ${id}`); continue; }
+  if (shape.clues) { console.log(`${id} has a curated clue set (clues:) - re-curate it with tools/aha-search.mjs instead`); continue; }
   const { solid, colors } = buildCells(shape);
   let best = null;
   for (let f = 0; f <= 1.0001; f += 0.05) for (let seed = 1; seed <= 24; seed++) {

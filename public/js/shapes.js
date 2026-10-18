@@ -176,6 +176,8 @@ export const SHAPES = [
     {
       // from the object gallery (bookshelf)
       id: 'bookshelf', from: 'cand-bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '########..##..#..###.##.|.#################.##|.......#.#.....#......#.#...........#####.#...###.......',
       story: 'A book for every colour, and one lying down to rest.',
       ...voxels({ a: 0xa86f45, b: 0xe0565b, c: 0x5b8fd6, d: 0x5fae6e, e: 0xf4a3b5, f: 0xe9b949, g: 0x4fb3a9, h: 0xf08a6c, i: 0x9b7fd1, j: 0xf6d365 }, [
         'aaaaaaa aaaaaaa aaaaaaa',
@@ -191,6 +193,8 @@ export const SHAPES = [
     {
       // from the object gallery (page 4: Fried Egg)
       id: 'fried-egg', name: 'Fried Egg', from: 'cand-p4-fried-egg', fraction: 0.65, seed: 1,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '#...#.#.#.#.#.#.#.#.#...#.#.|..###..######.#####################.#####.#.####....#...#..#.#.|#....##..##...#####.####.#.##.#.####',
       story: 'Sunny side up, and the morning has barely begun.',
       ...voxels({ a: 0x5d6670, b: 0xfbf8f2, c: 0x9a6a45, d: 0xf59bb2, e: 0xf6b93b, f: 0x3a3442 }, [
         '..aaa.... .aaaaa... aaaaaaa.. aaaaaaa.. aaaaaaa.. .aaaaa... ..aaa....',
@@ -202,6 +206,8 @@ export const SHAPES = [
     {
       // from the object gallery (page 3: Kitten in a Box)
       id: 'kitten-box', name: 'Kitten in a Box', from: 'cand-p3-kitten-box', fraction: 0.35, seed: 22,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '#......#####...##..##.###..#######....##..|##########################################|#.......#####..#####.######..######.#####..#...#.',
       story: 'The box was for the new kettle. The kettle never stood a chance.',
       ...voxels({ a: 0xcf9f6c, b: 0xc4bed0, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442 }, [
         'aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa',
@@ -216,6 +222,8 @@ export const SHAPES = [
     {
       // from the object gallery (page 4: Bunny in a Teacup)
       id: 'bunny-teacup', name: 'Bunny in a Teacup', from: 'cand-p4-bunny-teacup', fraction: 0.65, seed: 1,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '#.#......####.....######....###..###..##.##..####.#.###.#..#.##|.####...###.#.###########################.#####..|###..#####.###.##.#############.#########.##########.#..#####..',
       story: 'There was tea in it once. Now there is a bunny, which is better.',
       ...voxels({ a: 0xfbf3e6, b: 0x9fcdea, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442, f: 0xf5b3c0 }, [
         '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
@@ -232,6 +240,8 @@ export const SHAPES = [
     {
       // A hollow pot: the empty belly is only reachable by peeling.
       id: 'teapot', name: 'Teapot', dims: [9, 6, 5], fraction: 0.3, seed: 13,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '########################.##...|..#.#..#.#.#.#######.#########.####..#.#.####|.........######.#.#.####.#.##..##..#............##....',
       story: 'Still warm. Someone was here a moment ago.',
       cell(x, y, z) {
         const dx = x - 4, dz = z - 2, r = ring(dx, dz);
@@ -1368,6 +1378,8 @@ export const BONUS = [
   bonus(0, {
     // A pitched roof over a solid house, with a chimney off-centre.
     name: 'Cottage', dims: [7, 7, 5], fraction: 0.7, seed: 6,
+    // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+    clues: '..#...##..##.#########..####..#..##|################.#.###.###...######|..........#.#....#.#.##...##..........#.#......#.',
     story: 'Smoke from the chimney means someone is home.',
     cell(x, y, z) {
       if (x === 5 && z === 1 && y >= 5) return 0xb4867a;                      // chimney

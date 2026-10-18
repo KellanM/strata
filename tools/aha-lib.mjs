@@ -7,7 +7,7 @@
 // geometry and for hideClues (so the clue set is exactly the one the game
 // shows). Candidate tables, propagation and search are re-implemented here so
 // they can cross-check it.
-import { Puzzle, hideClues, solveStats, lineSolve } from '../public/js/puzzle.js';
+import { Puzzle, hideClues, setClues, solveStats, lineSolve } from '../public/js/puzzle.js';
 import { buildCells } from '../public/js/shapes.js';
 import { difficulty } from '../test/difficulty.js';
 
@@ -46,8 +46,7 @@ export function candidates(n, count, style, mode = 'full') {
 export function prepare(shape) {
   const { solid, colors } = buildCells(shape);
   const p = new Puzzle(shape.dims, solid, colors);
-  if (shape.show) for (const line of p.lines) line.hidden = !shape.show[line.axis];
-  else hideClues(p, shape.fraction ?? 0.85, shape.seed ?? 7);
+  setClues(p, shape);
   return p;
 }
 

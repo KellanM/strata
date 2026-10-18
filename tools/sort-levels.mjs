@@ -7,7 +7,7 @@
 //   node tools/sort-levels.mjs          rewrite in place
 //   node tools/sort-levels.mjs --dry    print the new order only
 import { readFileSync, writeFileSync } from 'node:fs';
-import { Puzzle, hideClues, solveStats } from '../public/js/puzzle.js';
+import { Puzzle, setClues, solveStats } from '../public/js/puzzle.js';
 import { SHAPES, buildCells } from '../public/js/shapes.js';
 import { difficulty } from '../test/difficulty.js';
 
@@ -18,7 +18,7 @@ const D = new Map();
 for (const s of SHAPES) {
   const { solid, colors } = buildCells(s);
   const p = new Puzzle(s.dims, solid, colors);
-  hideClues(p, s.fraction ?? 0.85, s.seed ?? 7);
+  setClues(p, s);
   D.set(s.id, difficulty(solveStats(p), p));
 }
 

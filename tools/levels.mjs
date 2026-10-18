@@ -2,7 +2,7 @@
 // ASCII slices of one shape (top layer first, z rows back to front).
 //   node tools/levels.mjs            table of all levels
 //   node tools/levels.mjs teapot     slices of one shape
-import { Puzzle, lineSolve, hideClues, solveStats } from '../public/js/puzzle.js';
+import { Puzzle, lineSolve, setClues, solveStats } from '../public/js/puzzle.js';
 import { SHAPES, buildCells } from '../public/js/shapes.js';
 import { difficulty } from '../test/difficulty.js';
 
@@ -40,7 +40,7 @@ for (const shape of SHAPES) {
   if (shape.chapter !== chapter) { chapter = shape.chapter; console.log(`\n${chapter} (${shape.palette})`); }
   const p = make(shape);
   const full = lineSolve(p);
-  hideClues(p, shape.fraction, shape.seed);
+  setClues(p, shape);
   const s = solveStats(p);
   const solids = p.solid.reduce((a, b) => a + b, 0);
   const styles = [0, 0, 0];

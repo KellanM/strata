@@ -223,6 +223,33 @@ function giveaway(line) {
   return known / n;
 }
 
+// The clues a level shows, the one place every caller decides them (the game,
+// the tests and the tools must agree):
+//  - `show`: per axis, all or nothing (the tutorial)
+//  - `clues`: a hand-curated set, one string per axis 'x|y|z', a character per
+//    line in Puzzle order ('#' shown, '.' hidden) - designed for its solve path
+//    (docs/aha-study.md). A shape edit changes the lines, so a stale mask throws.
+//  - otherwise hideClues with the level's fraction / seed
+// Returns whether the puzzle is line-solvable with the clues it ends up showing.
+export function setClues(p, shape, defaults = { fraction: 0.85, seed: 7 }) {
+  if (shape.show) {
+    for (const line of p.lines) line.hidden = !shape.show[line.axis];
+    return lineSolve(p);
+  }
+  if (shape.clues) {
+    const masks = shape.clues.split('|');
+    for (let ax = 0; ax < 3; ax++) {
+      const lines = p.lines.filter((l) => l.axis === ax);
+      if (!masks[ax] || masks[ax].length !== lines.length) {
+        throw new Error(`${shape.id}: clue mask for axis ${ax} has ${masks[ax]?.length ?? 0} lines, the shape has ${lines.length} (was the shape edited?)`);
+      }
+      lines.forEach((l, k) => { l.hidden = masks[ax][k] !== '#'; });
+    }
+    return lineSolve(p);
+  }
+  return hideClues(p, shape.fraction ?? defaults.fraction, shape.seed ?? defaults.seed);
+}
+
 // Hides as many clues as possible (up to `fraction` of all lines) while the
 // puzzle stays line-solvable. Uses a seeded shuffle so a puzzle is stable.
 // Above fraction 0.6 the shuffle is tilted so give-away clues (0s, full rows)

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
-import { Puzzle, hideClues } from './puzzle.js';
+import { Puzzle, setClues } from './puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
@@ -90,8 +90,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   const { shape, palette } = entry;
   const { solid, colors } = buildCells(shape);
   const puzzle = new Puzzle(shape.dims, solid, colors);
-  if (shape.show) for (const line of puzzle.lines) line.hidden = !shape.show[line.axis];
-  else hideClues(puzzle, shape.fraction ?? 0.85, shape.seed ?? 7);
+  setClues(puzzle, shape);   // a curated clue set where a level has one (docs/aha-study.md)
 
   game = {
     entry, shape, puzzle, palette,

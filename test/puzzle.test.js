@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Puzzle, lineSolve, hideClues, solveStats, STYLE_CIRCLE, STYLE_SQUARE } from '../public/js/puzzle.js';
+import { Puzzle, lineSolve, hideClues, setClues, solveStats, STYLE_CIRCLE, STYLE_SQUARE } from '../public/js/puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, randomShape, buildCells } from '../public/js/shapes.js';
 import { PALETTES } from '../public/js/palettes.js';
 import { difficulty } from './difficulty.js';
@@ -20,10 +20,10 @@ test('clue styles count groups', () => {
   assert.equal(q.lineOf(0, 0).style, STYLE_CIRCLE);
 });
 
-// Same clue set the game builds (main.js: hideClues(puzzle, fraction ?? 0.85, seed ?? 7)).
+// Same clue set the game builds (main.js: setClues - a curated mask, else hideClues).
 function prepared(shape) {
   const p = make(shape);
-  const ok = hideClues(p, shape.fraction ?? 0.85, shape.seed ?? 7);
+  const ok = setClues(p, shape);
   return { p, ok };
 }
 
