@@ -81,7 +81,8 @@ function puzzleList() {
   });
 }
 
-function startPuzzle(entry) {
+// quiet: the block behind the map at launch - already whole, no sound
+function startPuzzle(entry, { quiet = false } = {}) {
   const { shape, palette } = entry;
   const { solid, colors } = buildCells(shape);
   const puzzle = new Puzzle(shape.dims, solid, colors);
@@ -141,11 +142,15 @@ function startPuzzle(entry) {
   // the block assembles itself: cubes drop into place from the base up, then a
   // soft wave runs through the finished stone; taps wait until it's whole
   // (after a map dive, it waits for the veil to lift so the whole drop is seen)
+  const still = reduceMotion || quiet;
   const t0 = now() + introDelay;
-  cubes.uniforms.uIntro.value = reduceMotion ? -99 : t0;
-  game.introEnd = reduceMotion ? 0 : t0 + INTRO_TIME;
-  sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
-  cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
+  cubes.uniforms.uIntro.value = still ? -99 : t0;
+  game.introEnd = still ? 0 : t0 + INTRO_TIME;
+  if (!quiet) {
+    sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
+    cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
+  }
+  if (quiet) handles.setShown(true, -99);   // already in place, no pop
   rayBoost = 1;
   draw();
 }
@@ -900,10 +905,18 @@ function renderMenu(scroll = true, celebrate = false) {
 // Level -> map: the map pulls back out of the stone you were playing, as if
 // the camera were rising off it (the reverse of the dive in)
 let menuMotion = 0;
-function openMenu() {
+function openMenu({ instant = false } = {}) {
   if (updateReady) { location.reload(); return; }
   const menu = $('#menu');
   const wasOpen = menu.classList.contains('show');
+  if (instant) {
+    menu.style.transition = 'none';
+    show('#menu', true);
+    renderMenu(true, true);
+    void menu.offsetWidth;
+    menu.style.transition = '';
+    return;
+  }
   show('#menu', true);
   renderMenu(true, true);
   if (reduceMotion || wasOpen) return;
@@ -1228,8 +1241,8 @@ resize();
 renderMenu();
 if (localStorage.getItem('strata.tutorial')) {
   // a quiet block behind the menu so the first screen already breathes
-  startPuzzle(puzzleList()[0]);
-  openMenu();
+  startPuzzle(puzzleList()[0], { quiet: true });
+  openMenu({ instant: true });   // the map is the first thing you see, not a fade over the block
 } else {
   startTutorial(0);
 }
