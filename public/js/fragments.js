@@ -1,8 +1,8 @@
 // A chiselled cube comes apart: it becomes 27 small cubes (3×3×3) that exactly
-// rebuild it, and they slip out through whichever sides are open, the pieces
-// nearest an open side leaving first. One instanced draw for every piece of
-// every recent break; all motion runs in the shader. The whole break takes the
-// same 0.42 s the single-cube animation did.
+// rebuild it, and each shrinks away where it sits, the pieces nearest an open
+// side going first, so the cube crumbles in from its exposed faces. One
+// instanced draw for every piece of every recent break; all motion runs in the
+// shader. The whole break takes the same 0.42 s the single-cube animation did.
 import * as THREE from 'three';
 
 export const BREAK_TIME = 0.42;
@@ -29,16 +29,12 @@ const vertexShader = /* glsl */ `
   void main() {
     if (uTime < aStart - ${MAX_DELAY.toFixed(3)} || uTime > aEnd) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
     float k = clamp((uTime - aStart) / ${TRAVEL.toFixed(3)}, 0.0, 1.0);
-    float e = 1.0 - pow(1.0 - k, 3.0);              // ease out: a quick slip, then drift
-    float size = ${(PIECE * 0.94).toFixed(4)} * (1.0 - k * k);
+    float e = k * k * (3.0 - 2.0 * k);              // ease in-out
+    float size = ${(PIECE * 0.94).toFixed(4)} * (1.0 - e);
     if (size <= 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-    vec3 axis = normalize(aSpin.xyz);
-    float ang = aSpin.w * e;
-    vec3 p = rot(position * size, axis, ang);
-    vec3 world = aOrigin + aDir * e - vec3(0.0, 0.35, 0.0) * k * k;
-    vN = rot(normal, axis, ang);
-    vHeight = world.y;
-    gl_Position = projectionMatrix * viewMatrix * vec4(world + p, 1.0);
+    vN = normal;
+    vHeight = aOrigin.y;
+    gl_Position = projectionMatrix * viewMatrix * vec4(aOrigin + position * size, 1.0);
   }
 `;
 
