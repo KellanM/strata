@@ -2,3 +2,7 @@ node_modules/
 shots/
 .playwright-mcp/
 dist/
+trailer/*.mp4
+trailer/*.webm
+trailer/*.wav
+trailer/frames/
