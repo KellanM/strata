@@ -402,6 +402,15 @@ export const SHAPES = [
   // Hulls, rings and a lamp hidden in a tower: give-away clues start to vanish.
   ...chapter(2, [
     {
+      // from the object gallery (flip-flops)
+      id: 'flip-flops', name: 'Flip-Flops', fraction: 0.65, seed: 1,
+      story: 'Kicked off at the water\'s edge, one a little ahead of the other.',
+      ...voxels({ a: 0x5b8fd6, b: 0x8cc8e8, c: 0xf4a3b5 }, [
+        'aaa.... aaabbb. aaabbb. aaabbb. aaabbb. aaabbb. ...bbb.',
+        '....... .c..... c.c.c.. ...c.c. ....... ....... .......',
+      ]),
+    },
+    {
       id: 'fish', name: 'Fish', dims: [8, 5, 3], fraction: 0.8, seed: 1,
       story: 'It swam into the stone and decided to stay.',
       cell(x, y, z) {
@@ -424,6 +433,21 @@ export const SHAPES = [
         if (y === 1) return d <= 1.2 ? 0xf6c38a : 0;
         return 0xe8704a;
       },
+    },
+    {
+      // from the object gallery (jellyfish)
+      id: 'jellyfish', name: 'Jellyfish', fraction: 0.8, seed: 2,
+      story: 'It drifts wherever the tide is going, and never minds the way.',
+      ...voxels({ a: 0xc9b6e4, b: 0xf4a3b5, c: 0xe2728f, d: 0xfbf8f2 }, [
+        '..... ..... ..... ...a. .....',
+        '..... .b... ..... ...b. .....',
+        '..... .a.a. ..... .a.a. .....',
+        '..... .b.b. ..b.. .b.b. .....',
+        '..... .a.a. ..a.. .a.a. .....',
+        '.ccc. ccccc ccccc ccccc .ccc.',
+        '.bbb. bbbbb bbabb bbbbb .bbb.',
+        '..... .bbb. .bdb. .bbb. .....',
+      ]),
     },
     {
       id: 'boat', name: 'Sailboat', dims: [8, 8, 3], fraction: 0.65, seed: 3,
@@ -451,6 +475,32 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (crab)
+      id: 'crab', name: 'Crab', fraction: 0.8, seed: 2,
+      story: 'Sideways is still forward, if you are a crab.',
+      ...voxels({ a: 0xb8434b, b: 0xe0565b, c: 0x3a3442 }, [
+        '......... .a.aaa.a. ...aaa... .a.aaa.a. ...aaa... .........',
+        '......... .aabbbaa. ..bbbbb.. .aabbbaa. .bbbbbbb. .........',
+        '......... ....b.... ..bbbbb.. ..bbbbb.. bb..b..bb bb.....bb',
+        '......... ......... ......... ...c.c... .b.....b. bb.....bb',
+        '......... ......... ......... ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (pelican)
+      id: 'pelican', name: 'Pelican', fraction: 0.8, seed: 4,
+      story: 'It keeps the whole morning\'s catch in its beak, and shares none.',
+      ...voxels({ a: 0xf2a03d, b: 0xfbf8f2, c: 0x9aa3ad, d: 0xe9b949, e: 0x3a3442 }, [
+        '...... ...... ..a... ...a.. ...... ...... ......',
+        '...... ...... ..a... ...a.. ...... ...... ......',
+        '...... ..bb.. .cbbc. .cbbc. ..bb.. ...... ......',
+        '...... .cbbc. .cbbc. .cbbc. .cbbc. ...... ......',
+        '...... ..bb.. .cbbc. .cbbc. ..bb.. ...... ......',
+        '...... ...... ..bb.. ..bb.. ..dd.. ..dd.. ......',
+        '...... ...... ..ee.. ..bb.. ..aa.. ..aa.. ..aa..',
+      ]),
+    },
+    {
       id: 'lighthouse', name: 'Lighthouse', dims: [5, 10, 5], fraction: 1.0, seed: 5,
       story: 'The keeper left the lamp lit, just in case.',
       cell(x, y, z) {
@@ -463,6 +513,21 @@ export const SHAPES = [
         if (y === 8) return adx <= 1 && adz <= 1 ? 0xe0546b : 0;
         return adx === 0 && adz === 0 ? 0x3d3a52 : 0;
       },
+    },
+    {
+      // from the object gallery (palm-islet), its lone left sand tip trimmed to fit a phone
+      id: 'palm-islet', name: 'Palm Islet', fraction: 0.65, seed: 2,
+      story: 'An island just big enough for one tree and one long nap.',
+      ...voxels({ a: 0xe8d3a3, b: 0xd9b48f, c: 0x5fae6e, d: 0x6b4a3a, e: 0x86c77f }, [
+        '....... aaaaaa. aaaaaa. aaaaaaa aaaaaa. aaaaaa. .......',
+        '....... ..aa... aaaaaa. aabaaa. aaaaaa. ..aa... .......',
+        '....... ....... ....... ..b.... ....... ....... .......',
+        '....... ....... ....... ..b.... ....... ....... .......',
+        '....... ....... ....... ..bb... ....... ....... .......',
+        '...c... ....... ....... c.dbd.c ....... ....... ...c...',
+        '...c... ...c... ...c... ccccccc ...c... ...c... ...c...',
+        '....... ....... ....... ...e... ....... ....... .......',
+      ]),
     },
     {
       id: 'turtle', name: 'Turtle', dims: [7, 4, 8], fraction: 0.9, seed: 5,

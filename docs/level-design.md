@@ -1,6 +1,6 @@
 # Level design
 
-The 48 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
+The 53 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
 
 ## What makes a 3D nonogram satisfying
 
@@ -140,3 +140,10 @@ The player picked these from the object gallery (`/gallery/`).
 - The new levels sit around Bonsai's sweet spot, about 8–12 D.
 
 **Fixes made in both the gallery and the levels:** the gnome got his missing left eye, and the snail got a second eye stalk.
+
+## Gallery picks (chapter III)
+
+**The Lagoon** gains Flip-Flops, Jellyfish, Crab, Pelican and Palm Islet. The order is now Flip-Flops (9.7, the new opener), Fish, Starfish, Jellyfish (10.5), Sailboat, Penguin, Crab (10.9), Pelican (11.3), Lighthouse, Palm Islet (12.1), Turtle, Life Ring and Mug. The chapter mean is 11.3, still between Moss Garden and Ember Steps, and Mug stays the late peak.
+- The pelican had one grey wing and one eye. It now has a grey wing and an eye on each side, fixed in the gallery's `extra/sea-1.js` too.
+- Palm Islet's lone left sand tip is trimmed in the level (7×8×7), so it needs 314 chisels, under the 330 phone limit. The gallery keeps the original.
+- The Lagoon is now 13 levels long. If it should be shorter, Mug is the natural one to move, since it's a home object in a sea chapter.
