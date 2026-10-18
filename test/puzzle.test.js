@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Puzzle, lineSolve, hideClues, solveStats, STYLE_CIRCLE, STYLE_SQUARE } from '../public/js/puzzle.js';
-import { SHAPES, CHAPTERS, randomShape, buildCells } from '../public/js/shapes.js';
+import { SHAPES, BONUS, CHAPTERS, randomShape, buildCells } from '../public/js/shapes.js';
 import { PALETTES } from '../public/js/palettes.js';
 import { difficulty } from './difficulty.js';
 
@@ -172,6 +172,18 @@ test('levels within each chapter run from easiest to hardest', () => {
     for (let k = 1; k < levels.length; k++) {
       assert.ok(levels[k][1] >= levels[k - 1][1] - 1e-9,
         `${name}: ${levels[k][0]} (${levels[k][1].toFixed(1)}) is easier than ${levels[k - 1][0]} (${levels[k - 1][1].toFixed(1)}) before it - run node tools/sort-levels.mjs`);
+    }
+  }
+});
+
+test('no level starts with an empty slab on any edge of its block', () => {
+  for (const shape of [...SHAPES, ...BONUS]) {
+    const { solid } = buildCells(shape);
+    const [X, Y, Z] = shape.dims;
+    const any = (fn) => { for (let z = 0; z < Z; z++) for (let y = 0; y < Y; y++) for (let x = 0; x < X; x++) if (solid[x + X * (y + Y * z)] && fn(x, y, z)) return true; return false; };
+    for (const [a, n] of [[0, X], [1, Y], [2, Z]]) {
+      assert.ok(any((...v) => v[a] === 0), `${shape.id}: the low ${'xyz'[a]} edge of its block is empty`);
+      assert.ok(any((...v) => v[a] === n - 1), `${shape.id}: the high ${'xyz'[a]} edge of its block is empty`);
     }
   }
 });
