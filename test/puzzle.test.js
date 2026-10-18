@@ -75,6 +75,29 @@ test('difficulty rises across chapters', () => {
   }
 });
 
+// The shape of the ramp inside each chapter (docs/level-design.md, "The ramp"):
+// open gently, climb in small steps with breathers allowed, peak late.
+test('each chapter ramps gently', () => {
+  const MAX_STEP = 2.0;
+  const byChapter = new Map();
+  for (const shape of SHAPES) {
+    const { p } = prepared(shape);
+    if (!byChapter.has(shape.chapter)) byChapter.set(shape.chapter, []);
+    byChapter.get(shape.chapter).push({ id: shape.id, d: difficulty(solveStats(p), p) });
+  }
+  for (const [name, levels] of byChapter) {
+    const ds = levels.map((l) => l.d);
+    const min = Math.min(...ds), max = Math.max(...ds);
+    assert.ok(ds[0] <= min + 0.5, `${name} should open on (nearly) its easiest level, not ${levels[0].id}`);
+    const peak = ds.indexOf(max);
+    assert.ok(peak >= Math.floor(ds.length * 2 / 3), `${name}'s hardest (${levels[peak].id}) should sit in its last third`);
+    for (let i = 1; i < ds.length; i++) {
+      assert.ok(ds[i] - ds[i - 1] <= MAX_STEP + 1e-9,
+        `${levels[i - 1].id} -> ${levels[i].id} jumps ${(ds[i] - ds[i - 1]).toFixed(1)} (max ${MAX_STEP})`);
+    }
+  }
+});
+
 test('random 8^3 puzzles generate quickly', () => {
   for (const seed of [1, 2, 3]) {
     const p = make(randomShape(8, seed));
