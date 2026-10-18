@@ -327,6 +327,7 @@ export function renderMap(root, opts) {
     const b = document.createElement('button');
     const side = n.kind === 'drift' ? '' : n.x > x0 + colW / 2 ? ' lbl-left' : ' lbl-right';
     b.className = `map-node ${n.kind} ${n.state}${side}` + (lum(n.sky.skyTop) < 0.45 ? ' on-dark' : '');
+    if (n.entry) b.dataset.id = n.entry.shape.id;
     b.style.left = `${n.x}px`;
     b.style.top = `${n.y}px`;
     b.style.setProperty('--glow', hex(p.glow));

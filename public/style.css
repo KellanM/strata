@@ -369,10 +369,22 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu .map-scroll { transition: transform .46s cubic-bezier(.55,0,.75,.2), opacity .46s ease-in; }
 /* the map only fades once the veil is opaque: until then it hides the old level behind it */
 #menu.diving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.6); opacity: 0;
-  transition: transform .46s cubic-bezier(.55,0,.75,.2), opacity .16s ease-in .28s; }
-#menu.diving #map-close, #menu.diving #map-help { opacity: 0; }
-#veil { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out; }
-#veil.in { opacity: 1; transition: opacity .24s ease-out; }
+  transition: transform .46s cubic-bezier(.55,0,.75,.2), opacity .1s linear .36s; }
+#menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal { opacity: 0; transition: opacity .2s; }
+/* the level's sky opens out of the tapped stone as a growing circle, then fades as the block assembles */
+#veil { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
+  clip-path: circle(0px at var(--vx, 50%) var(--vy, 50%)); }
+#veil.open { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 50%)); }
+#veil.in { opacity: 1; transition: clip-path .42s cubic-bezier(.6,0,.3,1); }
+
+/* level -> map: it pulls back out of the stone you were on */
+#menu.arriving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.35); opacity: 0; transition: none; }
+#menu.settling .map-scroll { transform-origin: var(--dive-x) var(--dive-y);
+  transition: transform .7s cubic-bezier(.25,1,.5,1), opacity .28s ease-out; }
+#menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal { opacity: 0; transition: none; }
+#menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal { transition: opacity .4s ease-out .2s; }
+/* map -> back to the level: a slight swell as it dissolves */
+#menu.leaving .map-scroll { transform: scale(1.08); opacity: 0; transition: transform .4s cubic-bezier(.4,0,.6,1), opacity .3s ease-in; }
 
 @media (prefers-reduced-motion: reduce) {
   .companion .head, .companion .eye, .map-air .wisp, .map-air .mote, .map-node.bonus .shrine-gem .gem { animation: none; }

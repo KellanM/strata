@@ -778,9 +778,9 @@ $('#act-map').addEventListener('click', () => { clearResult(); $('#actions').cla
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
 $('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });
-$('#map-close').addEventListener('click', () => { if (game) show('#menu', false); });
+$('#map-close').addEventListener('click', () => { if (game) closeMenu(); });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && game && $('#menu').classList.contains('show')) show('#menu', false);
+  if (e.key === 'Escape' && game && $('#menu').classList.contains('show')) closeMenu();
 });
 
 window.addEventListener('keydown', (e) => {
@@ -896,10 +896,42 @@ function renderMenu(scroll = true, celebrate = false) {
   });
 }
 
+// Level -> map: the map pulls back out of the stone you were playing, as if
+// the camera were rising off it (the reverse of the dive in)
+let menuMotion = 0;
 function openMenu() {
   if (updateReady) { location.reload(); return; }
+  const menu = $('#menu');
+  const wasOpen = menu.classList.contains('show');
   show('#menu', true);
   renderMenu(true, true);
+  if (reduceMotion || wasOpen) return;
+  const vh = window.innerHeight;
+  const onScreen = (el) => { const r = el?.getBoundingClientRect(); return r && r.bottom > 0 && r.top < vh ? r : null; };
+  const r = onScreen(game && menu.querySelector(`.map-node[data-id="${game.shape.id}"]`)) ?? onScreen(menu.querySelector('.map-node.current'));
+  menu.style.setProperty('--dive-x', r ? `${r.left + r.width / 2}px` : '50%');
+  menu.style.setProperty('--dive-y', r ? `${r.top + r.height / 2}px` : '50%');
+  clearTimeout(menuMotion);
+  menu.classList.remove('leaving', 'settling');
+  menu.classList.add('arriving');
+  // start moving only once the freshly built map has painted (its thumbnails
+  // decode on that first frame), so none of the motion is lost to the stall
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!menu.classList.contains('arriving')) return;
+    menu.classList.replace('arriving', 'settling');
+    menuMotion = setTimeout(() => menu.classList.remove('settling'), 760);
+  }));
+}
+
+// Map -> the level you were on: the map swells a touch and dissolves
+function closeMenu() {
+  const menu = $('#menu');
+  show('#menu', false);
+  if (reduceMotion) return;
+  clearTimeout(menuMotion);
+  menu.classList.remove('arriving', 'settling');
+  menu.classList.add('leaving');
+  menuMotion = setTimeout(() => menu.classList.remove('leaving'), 500);
 }
 
 // Map -> level: the map swells toward the tapped stone while the level's own
@@ -923,13 +955,18 @@ function diveInto(el, palette, start) {
   menu.style.setProperty('--dive-y', `${r.top + r.height / 2}px`);
   menu.classList.add('diving');
   veil.style.background = `radial-gradient(circle at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, ${hexOf(palette.glow)}, ${hexOf(palette.skyTop)} 45%, ${hexOf(palette.skyBottom)})`;
-  veil.classList.add('in');
+  // the level's sky opens out of the stone like a portal
+  veil.style.setProperty('--vx', `${r.left + r.width / 2}px`);
+  veil.style.setProperty('--vy', `${r.top + r.height / 2}px`);
+  menu.classList.remove('arriving', 'settling', 'leaving');
+  veil.classList.add('open', 'in');
   setTimeout(() => {
     introDelay = 0.35;                 // the veil takes ~0.45 s to lift
     start();
     introDelay = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       veil.classList.remove('in');
+      setTimeout(() => veil.classList.remove('open'), 500);   // close the portal once it has faded
       // reset the (hidden) map only after the block has assembled: restyling the
       // whole map mid-animation dropped a frame on phones
       setTimeout(() => { menu.classList.remove('diving'); diving = false; }, (0.35 + INTRO_TIME) * 1000 + 250);
