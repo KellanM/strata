@@ -191,7 +191,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   background: color-mix(in srgb, var(--sky) 55%, transparent);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
-.map-head { text-align: center; padding: calc(56px + var(--safe-t)) 20px 6px; }
+.map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; }   /* clear of the corner buttons */
 .map-head .sub { margin: 10px 0 0; }
 #map-progress { margin-top: 4px; letter-spacing: .26em; }
 
@@ -556,3 +556,31 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* the build stamps this; it tells which version a phone is running */
 .version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
+
+/* ---------- add to home screen ---------- */
+#install {
+  position: fixed; z-index: 7; left: 50%; bottom: calc(18px + var(--safe-b));
+  width: min(420px, calc(100% - 24px)); transform: translate(-50%, 24px);
+  display: grid; grid-template-columns: 40px 1fr; gap: 6px 14px; align-items: center;
+  padding: 16px 18px 14px; border-radius: 22px; color: var(--ink);
+  background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 14px 40px rgba(40, 20, 60, 0.16);
+  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+}
+#install.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+/* on iPhone Safari the share button sits in the bar below: point at it */
+#install.ios::after {
+  content: ""; position: absolute; left: 50%; bottom: -8px; width: 16px; height: 16px; margin-left: -8px;
+  background: var(--panel-strong); transform: rotate(45deg); border-radius: 3px;
+}
+.install-cube { width: 36px; height: 36px; stroke: none; }
+.install-cube path:nth-child(1) { fill: #fcf0de; }
+.install-cube path:nth-child(2) { fill: #f1c4a6; }
+.install-cube path:nth-child(3) { fill: #a98cb6; }
+.install-text p { margin: 0; }
+.install-title { font-size: 14px; letter-spacing: .06em; }
+.install-why { margin-top: 3px !important; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+.install-how { margin-top: 8px !important; font-size: 13px; line-height: 1.5; }
+.glyph-share svg { width: 17px; height: 17px; vertical-align: -3px; margin: 0 2px; }
+.install-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+#install.ios #install-go, #install:not(.ios) .install-how { display: none; }

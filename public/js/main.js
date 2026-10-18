@@ -1052,8 +1052,11 @@ function frame() {
 
 // ---------------------------------------------------------------- sound
 
-document.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
-document.addEventListener('keydown', () => sound.unlock(), { capture: true });
+// Safari only lets audio start inside a gesture it trusts (touchend / click),
+// so try on each of these; unlock() is a no-op once running
+for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) {
+  document.addEventListener(ev, () => sound.unlock(), { capture: true, passive: true });
+}
 // every control answers: map stones pluck a string, buttons tick
 document.addEventListener('click', (e) => {
   const stone = e.target.closest('.map-node');
@@ -1067,6 +1070,39 @@ function renderSoundToggles() {
 $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); renderSoundToggles(); });
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
 renderSoundToggles();
+
+// ---------------------------------------------------------------- add to home screen
+
+// Opened from the Home Screen (iOS sets navigator.standalone; elsewhere the
+// display mode says so). In a browser tab, a gentle card says why the app is
+// better there and how to add it. iOS has no install API, so it points at
+// Share; Chrome on Android offers a real one-tap install.
+const installed = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+document.body.classList.toggle('standalone', installed);
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; maybeShowInstall(); });
+function maybeShowInstall() {
+  if (installed) return;
+  const later = Number(localStorage.getItem('strata.install.later')) || 0;
+  if (Date.now() - later < 3 * 24 * 3600 * 1000) return;     // asked again after three days
+  if (!isIOS && !installPrompt) return;                        // nothing useful to offer
+  const card = $('#install');
+  card.classList.toggle('ios', isIOS);
+  setTimeout(() => card.classList.add('show'), 1800);
+}
+$('#install-later').addEventListener('click', () => {
+  localStorage.setItem('strata.install.later', String(Date.now()));
+  $('#install').classList.remove('show');
+});
+$('#install-go').addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => {});
+  installPrompt = null;
+  $('#install').classList.remove('show');
+});
+maybeShowInstall();
 
 // ---------------------------------------------------------------- boot
 
