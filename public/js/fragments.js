@@ -29,7 +29,7 @@ const vertexShader = /* glsl */ `
   void main() {
     if (uTime < aStart - ${MAX_DELAY.toFixed(3)} || uTime > aEnd) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
     float k = clamp((uTime - aStart) / ${TRAVEL.toFixed(3)}, 0.0, 1.0);
-    float e = k * k * (3.0 - 2.0 * k);              // ease in-out
+    float e = 1.0 - pow(1.0 - k, 3.0);              // ease out: shrinks fast, then gently vanishes
     float size = ${(PIECE * 0.94).toFixed(4)} * (1.0 - e);
     if (size <= 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
     vN = normal;
