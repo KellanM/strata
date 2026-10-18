@@ -310,37 +310,16 @@ class Sound {
     if (c.step === 0) {
       const tones = this.chordTones();
       midi = this.key.root + 24 + tones[Math.floor(Math.random() * tones.length)];
-      c.phrase = 0;
     } else {
-      midi = this.runNote(c.step);
+      midi = this.degree(this.startDegree() + Math.min(c.step, 9), this.key.root + 24);
     }
-    // long runs settle: softer and a touch mellower after two dozen in a row
-    const settle = Math.max(0.55, 1 - Math.max(0, c.step - 24) * 0.015);
     this.noise({ dur: 0.01, gain: 0.32, freq: 3500 * rand(0.85, 1.15), q: 1.5 });
-    this.body(midi, 0.16 * settle);
-    this.fmBell(midi + 12, { gain: 0.016 * settle * settle, index: 2, indexEnd: 0.05, indexTime: 0.05, decay: 0.22 });
+    this.body(midi, 0.16);
+    this.fmBell(midi + 12, { gain: 0.016, index: 2, indexEnd: 0.05, indexTime: 0.05, decay: 0.22 });
     if (c.step === 7) {
       this.fmBell(midi + 12, { at: this.nextSixteenth(), gain: 0.07, decay: 1.2 });
       this.nudge(900, 1.6);
     }
-  }
-
-  // A fast run is a melody, not a ladder: each pass climbs the scale about an
-  // octave and a half, then cascades back down through the chord's notes, and
-  // every new pass starts from a different degree of the chord sounding now,
-  // so a long clear keeps rising and falling and follows the bed's harmony.
-  runNote(step) {
-    const UP = 7, PASS = UP + 5;                     // 7 steps up, 5 chord-tone steps down
-    const pass = Math.floor((step - 1) / PASS), k = (step - 1) % PASS;
-    const base = this.startDegree() + [0, 2, -1, 1, -2][pass % 5];   // wanders round the middle, never climbing away
-    const reg = this.key.root + 24;
-    if (k < UP) return this.degree(base + k + 1, reg);
-    // the way down: chord tones, stepping from the top of the climb toward the base
-    const top = this.degree(base + UP, reg);
-    const tones = [];
-    for (let o = 2; o >= -1; o--) for (const t of [...this.chordTones()].reverse()) tones.push(this.key.root + 24 + o * 12 + t);
-    const below = tones.filter((m) => m < top);
-    return below[Math.min(k - UP, below.length - 1)] ?? top;
   }
 
   startDegree() {
