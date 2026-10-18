@@ -1084,7 +1084,8 @@ function calmMoment() { return !game || game.solved || $('#menu').classList.cont
 function applyUpdate() { if (updateReady && calmMoment()) location.reload(); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const hadController = !!navigator.serviceWorker.controller;
-  navigator.serviceWorker.register('sw.js').then((reg) => {
+  // updateViaCache 'none': always fetch sw.js fresh; GitHub Pages lets browsers reuse it for 10 min
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
     const check = () => reg.update().catch(() => {});
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
     setInterval(check, 30 * 60 * 1000);
