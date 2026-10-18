@@ -13,6 +13,8 @@ import { objectMesh, isoCamera } from '../js/objectmesh.js';
 import { makeOrbit, SHOW_SPIN } from '../js/orbit.js';
 import { stats } from './stats.js';
 import { SHAPES, CHAPTERS, BONUS } from '../js/shapes.js';
+// gallery objects that are levels in the game now (levels made from them carry `from`)
+const IN_GAME = new Set([...SHAPES, ...BONUS].map((s) => s.from).filter(Boolean));
 
 const THEMES = [
   { key: 'home', numeral: 'I', name: 'Home & Morning', chapter: 'First Light', palette: 'Dawn' },
@@ -116,10 +118,12 @@ for (const t of SECTIONS) {
     const num = numberOf(t, k);
     const st = stats(shape);
     const card = document.createElement('button');
-    card.className = 'card' + (picks.has(num) ? ' picked' : '') + (shape.qa === 'drop' ? ' dropped' : '');
+    const inGame = !LIVE && IN_GAME.has(shape.id);
+    card.className = 'card' + (picks.has(num) ? ' picked' : '') + (shape.qa === 'drop' ? ' dropped' : '') + (inGame ? ' in-game' : '');
     if (shape.qa === 'drop') card.title = shape.qaWhy ?? 'flagged to drop in QA';
     card.innerHTML = `<span class="num">${num}</span>
       <span class="heart" role="button" aria-label="Pick">♥</span>
+      ${inGame ? '<span class="live-mark" title="In the game">✓ live</span>' : ''}
       <span class="pics"><img alt=""><img class="alt" alt=""></span>
       <span class="name">${shape.name}</span>
       <span class="meta${st.solvable ? '' : ' bad'}">${shape.dims.join('×')} · ${st.cubes} cubes · ${st.solvable ? 'D ' + st.D.toFixed(1) : 'unsolvable'}</span>

@@ -69,7 +69,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (candle)
-      id: 'candle', name: 'Candle', fraction: 0.1, seed: 3,
+      id: 'candle', from: 'cand-candle', name: 'Candle', fraction: 0.1, seed: 3,
       story: 'Lit before dawn, so the first visitor would find the way.',
       ...voxels({ a: 0xe9b949, b: 0xf6efe4, c: 0x3a3442, d: 0xf2a03d }, [
         '.aaa. aaaaa aaaaa aaaaa .aaa.',
@@ -83,7 +83,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (toaster)
-      id: 'toaster', name: 'Toaster', fraction: 0.3, seed: 1,
+      id: 'toaster', from: 'cand-toaster', name: 'Toaster', fraction: 0.3, seed: 1,
       story: 'Two slices waiting, warm, for whoever wakes up first.',
       ...voxels({ a: 0x5d6670, b: 0xc9d1d9, c: 0x3a3442, d: 0xd9b48f, e: 0xb9773f }, [
         'aaaaaa. aaaaaa. aaaaaa. aaaaaa.',
@@ -108,7 +108,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (bed)
-      id: 'bed', name: 'Bed', fraction: 0.3, seed: 1,
+      id: 'bed', from: 'cand-bed', name: 'Bed', fraction: 0.3, seed: 1,
       story: 'Made up neatly, the quilt turned down for someone coming home.',
       ...voxels({ a: 0x7a4c2f, b: 0xa86f45, c: 0xf6efe4, d: 0xfbf8f2, e: 0x8cc8e8, f: 0x5b8fd6 }, [
         'a...a ..... ..... ..... ..... ..... ..... ..... a...a',
@@ -131,7 +131,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (record-player)
-      id: 'record-player', name: 'Record Player', fraction: 0.3, seed: 1,
+      id: 'record-player', name: 'Record Player', from: 'cand-record-player', fraction: 0.3, seed: 1,
       story: 'The record still turns. The last song never quite finished.',
       ...voxels({ a: 0xa86f45, b: 0x7d8794, c: 0x3a3442, d: 0xe0565b, e: 0xe9b949 }, [
         'aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa',
@@ -141,7 +141,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (clock)
-      id: 'alarm-clock', name: 'Alarm Clock', fraction: 0.5, seed: 1,
+      id: 'alarm-clock', name: 'Alarm Clock', from: 'cand-clock', fraction: 0.5, seed: 1,
       story: 'It rang once at dawn, then let everyone sleep a little longer.',
       ...voxels({ a: 0x3a3442, b: 0xe0565b, c: 0xfbf8f2, d: 0xe9b949 }, [
         '.a...a. .a...a. .a...a.',
@@ -157,7 +157,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (bookshelf)
-      id: 'bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
+      id: 'bookshelf', from: 'cand-bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
       story: 'A book for every colour, and one lying down to rest.',
       ...voxels({ a: 0xa86f45, b: 0xe0565b, c: 0x5b8fd6, d: 0x5fae6e, e: 0xf4a3b5, f: 0xe9b949, g: 0x4fb3a9, h: 0xf08a6c, i: 0x9b7fd1, j: 0xf6d365 }, [
         'aaaaaaa aaaaaaa aaaaaaa',
@@ -189,7 +189,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (snail)
-      id: 'snail', name: 'Snail', fraction: 0.4, seed: 1,
+      id: 'snail', from: 'cand-snail', name: 'Snail', fraction: 0.4, seed: 1,
       story: 'It carried its whole house across the garden before lunch.',
       ...voxels({ a: 0xe8d3a3, b: 0xb9773f, c: 0xf2a03d, d: 0x6b4a3a, e: 0x3a3442 }, [
         '........ aaaaaaaa aaaaaaaa ........',
@@ -210,7 +210,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (cactus)
-      id: 'cactus', name: 'Cactus', fraction: 0.4, seed: 1,
+      id: 'cactus', from: 'cand-cactus', name: 'Cactus', fraction: 0.4, seed: 1,
       story: 'It kept the sunniest corner and flowered when nobody was looking.',
       ...voxels({ a: 0xc8704b, b: 0xb8434b, c: 0x5fae6e, d: 0xf4a3b5 }, [
         '.aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa.',
@@ -291,7 +291,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (gnome)
-      id: 'gnome', name: 'Garden Gnome', fraction: 0.65, seed: 1,
+      id: 'gnome', name: 'Garden Gnome', from: 'cand-gnome', fraction: 0.65, seed: 1,
       story: 'He has guarded the strawberries for years and eaten only a few.',
       ...voxels({ a: 0x6b4a3a, b: 0x5b8fd6, c: 0xfbf8f2, d: 0xf6c9b5, e: 0x3a3442, f: 0xe0565b }, [
         '..... .aaa. .aaa. .aaa. .....',
@@ -308,7 +308,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (garden-bench)
-      id: 'garden-bench', name: 'Garden Bench', fraction: 0.65, seed: 1,
+      id: 'garden-bench', name: 'Garden Bench', from: 'cand-garden-bench', fraction: 0.65, seed: 1,
       story: 'A place to sit still while the garden does the growing.',
       ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
         'a.......a ......... ......... a.......a',
@@ -333,7 +333,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (pumpkin)
-      id: 'pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
+      id: 'pumpkin', from: 'cand-pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
       story: 'Grown fat on a whole summer, waiting for the first frost.',
       ...voxels({ a: 0xe78a2e, b: 0xf2a03d, c: 0x6b4a3a, d: 0x5fae6e }, [
         '....... ....... ....... ...a... ....... ....... .......',
@@ -346,7 +346,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (sunflower)
-      id: 'sunflower', name: 'Sunflower', fraction: 0.65, seed: 1,
+      id: 'sunflower', from: 'cand-sunflower', name: 'Sunflower', fraction: 0.65, seed: 1,
       story: 'It turned all day long to keep the sun in view.',
       ...voxels({ a: 0x5fae6e, b: 0x86c77f, c: 0xf6d365, d: 0x3f8a5b, e: 0x6b4a3a }, [
         '....... ...a... .......',
@@ -374,7 +374,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (fox)
-      id: 'fox', name: 'Fox', fraction: 0.65, seed: 1,
+      id: 'fox', from: 'cand-fox', name: 'Fox', fraction: 0.65, seed: 1,
       story: 'It waited by the gate at dusk, tail wrapped round its paws.',
       ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
         '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
@@ -412,7 +412,7 @@ export const SHAPES = [
   ...chapter(2, [
     {
       // from the object gallery (flip-flops)
-      id: 'flip-flops', name: 'Flip-Flops', fraction: 0.65, seed: 1,
+      id: 'flip-flops', from: 'cand-flip-flops', name: 'Flip-Flops', fraction: 0.65, seed: 1,
       story: 'Kicked off at the water\'s edge, one a little ahead of the other.',
       ...voxels({ a: 0x5b8fd6, b: 0x8cc8e8, c: 0xf4a3b5 }, [
         'aaa.... aaabbb. aaabbb. aaabbb. aaabbb. aaabbb. ...bbb.',
@@ -456,7 +456,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (jellyfish)
-      id: 'jellyfish', name: 'Jellyfish', fraction: 0.8, seed: 2,
+      id: 'jellyfish', from: 'cand-jellyfish', name: 'Jellyfish', fraction: 0.8, seed: 2,
       story: 'It drifts wherever the tide is going, and never minds the way.',
       ...voxels({ a: 0xc9b6e4, b: 0xf4a3b5, c: 0xe2728f, d: 0xfbf8f2 }, [
         '..... ..... ..... ...a. .....',
@@ -471,7 +471,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (crab)
-      id: 'crab', name: 'Crab', fraction: 0.8, seed: 2,
+      id: 'crab', from: 'cand-crab', name: 'Crab', fraction: 0.8, seed: 2,
       story: 'Sideways is still forward, if you are a crab.',
       ...voxels({ a: 0xb8434b, b: 0xe0565b, c: 0x3a3442 }, [
         '......... .a.aaa.a. ...aaa... .a.aaa.a. ...aaa... .........',
@@ -497,7 +497,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (pelican)
-      id: 'pelican', name: 'Pelican', fraction: 0.8, seed: 4,
+      id: 'pelican', from: 'cand-pelican', name: 'Pelican', fraction: 0.8, seed: 4,
       story: 'It keeps the whole morning\'s catch in its beak, and shares none.',
       ...voxels({ a: 0xf2a03d, b: 0xfbf8f2, c: 0x9aa3ad, d: 0xe9b949, e: 0x3a3442 }, [
         '...... ...... ..a... ...a.. ...... ...... ......',
@@ -525,7 +525,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (palm-islet), its lone left sand tip trimmed to fit a phone
-      id: 'palm-islet', name: 'Palm Islet', fraction: 0.65, seed: 2,
+      id: 'palm-islet', name: 'Palm Islet', from: 'cand-palm-islet', fraction: 0.65, seed: 2,
       story: 'An island just big enough for one tree and one long nap.',
       ...voxels({ a: 0xe8d3a3, b: 0xd9b48f, c: 0x5fae6e, d: 0x6b4a3a, e: 0x86c77f }, [
         '....... aaaaaa. aaaaaa. aaaaaaa aaaaaa. aaaaaa. .......',
@@ -580,7 +580,7 @@ export const SHAPES = [
   ...chapter(3, [
     {
       // from the object gallery (dragon head)
-      id: 'dragon-head', name: 'Dragon Head', fraction: 0.65, seed: 1,
+      id: 'dragon-head', from: 'cand-dragon-head', name: 'Dragon Head', fraction: 0.65, seed: 1,
       story: 'It guards the temple steps, and has never once blinked.',
       ...voxels({ a: 0x3f8a5b, b: 0x5fae6e, c: 0xfbf8f2, d: 0xe0565b, e: 0xe9b949, f: 0x3a3442 }, [
         '........ ........ ........ ........ ........ ........',
@@ -594,7 +594,7 @@ export const SHAPES = [
     },
     {
       // from the object gallery (temple bell)
-      id: 'temple-bell', name: 'Temple Bell', fraction: 0.65, seed: 1,
+      id: 'temple-bell', from: 'cand-bell', name: 'Temple Bell', fraction: 0.65, seed: 1,
       story: 'Struck once at dusk, it keeps ringing long after you leave.',
       ...voxels({ a: 0x8a5a3c, b: 0x6b4a3a, c: 0xe9b949, d: 0xb07a3a, e: 0xd9b48f }, [
         '....... ....... a..b..a ....... .......',
@@ -605,6 +605,37 @@ export const SHAPES = [
         '....... ...d... a.ddd.a ...d... .......',
         '....... ....... a..e..a ....... .......',
         '....... ....... bbbbbbb ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (kokeshi)
+      id: 'kokeshi', from: 'cand-kokeshi', name: 'Kokeshi', fraction: 1, seed: 5,
+      story: 'Turned from cherry wood, smiling the same small smile for years.',
+      ...voxels({ a: 0xe0565b, b: 0xf4a3b5, c: 0x3a3442, d: 0xf6efe4 }, [
+        '..... .aaa. .aaa. .aaa. .....',
+        '..... .baa. .aab. .aba. .....',
+        '..... .aab. .aba. .baa. .....',
+        '..... .aba. .baa. .aab. .....',
+        '..... .baa. .aab. .aba. .....',
+        '.ccc. ccccc cdddc ddddd .bdb.',
+        '.ccc. ccccc cdddc ddddd .cdc.',
+        '.ccc. ccccc cdddc cdddc .ddd.',
+        '.ccc. ccccc cccca ccccc .ccc.',
+      ]),
+    },
+    {
+      // from the object gallery (maneki-neko)
+      id: 'maneki-neko', from: 'cand-maneki-neko', name: 'Maneki-neko', fraction: 1, seed: 4,
+      story: 'One paw raised, calling luck in from the street.',
+      ...voxels({ a: 0xfbf8f2, b: 0xe9b949, c: 0xe0565b, d: 0x3a3442, e: 0xf4a3b5 }, [
+        '...... ...... ..aa.. ...... ......',
+        '...... .aaaa. .aaaa. .aaaa. ......',
+        '...... .aaaa. .aaaa. .aaaa. ..bb..',
+        '...... ..aa.. .aaaaa ..aa.. ..bb..',
+        '...... .aaaa. .aaaaa .cccc. ......',
+        '...... .aaaa. .aaaaa .adad. ......',
+        '...... .aaaa. .aaaaa .aaaae ......',
+        '...... .e..e. .a..a. ...... ......',
       ]),
     },
     {
@@ -631,8 +662,22 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (daruma)
+      id: 'daruma', from: 'cand-daruma', name: 'Daruma', fraction: 0.95, seed: 4,
+      story: 'Knock it down and it rises again, every single time.',
+      ...voxels({ a: 0xe0565b, b: 0xe9b949, c: 0xf6efe4, d: 0x3a3442 }, [
+        '...... ...... ..aa.. ..aa.. ...... ......',
+        '...... ..aa.. .aaaa. .aaaa. ..aa.. .bbbb.',
+        '...... .aaaa. .aaaa. .aaaa. .aaaa. ......',
+        '..aa.. .aaaa. aaaaaa aaaaaa .aaaa. .cccc.',
+        '...... .aaaa. .aaaa. .aaaa. .aaaa. .dccd.',
+        '...... ..aa.. .aaaa. .aaaa. ..aa.. .acca.',
+        '...... ...... ..aa.. ..aa.. ...... ......',
+      ]),
+    },
+    {
       // from the object gallery (tea house); replaced the Pagoda
-      id: 'tea-house', name: 'Tea House', fraction: 1.0, seed: 1,
+      id: 'tea-house', name: 'Tea House', from: 'cand-teahouse', fraction: 1.0, seed: 1,
       story: 'Two lanterns lit, the kettle on, and room for one more.',
       ...voxels({ a: 0x9aa3ad, b: 0x6b4a3a, c: 0xf6efe4, d: 0xe0565b, e: 0xf6d365, f: 0x2f4a7a }, [
         '......... .aaaaaaa. .aaaaaaa. .aaaaaaa. .aaaaaaa. .aaaaaaa. .........',
@@ -646,8 +691,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (koinobori)
+      id: 'koinobori', from: 'cand-koinobori', name: 'Koinobori', fraction: 0.75, seed: 6,
+      story: 'A paper carp that swims the wind on festival mornings.',
+      ...voxels({ a: 0x6b4a3a, b: 0xe0565b, c: 0xfbf8f2, d: 0xe2728f, e: 0x3a3442, f: 0xe9b949 }, [
+        '.......... a......... .......... ..........',
+        '.......... a........b .........b ..........',
+        '.......... accccccc.b .ccccccc.b ..........',
+        '.......... acbdbbdbbb .cbdbbdbbb ..........',
+        '.......... acdbbdbbb. ..dbbdbbb. ..........',
+        '..ce...... acbbdbbdbb .cbbdbbdbb ..ce......',
+        '.......... abbdbbdb.b .bbdbbdb.b ..........',
+        '.......... f........b .........b ..........',
+      ]),
+    },
+    {
       // from the object gallery (taiko drum)
-      id: 'taiko-drum', name: 'Taiko Drum', fraction: 0.9, seed: 2,
+      id: 'taiko-drum', from: 'cand-taiko', name: 'Taiko Drum', fraction: 0.9, seed: 2,
       story: 'One beat for the dawn, one for dusk, and silence in between.',
       ...voxels({ a: 0x6b4a3a, b: 0xf6efe4, c: 0xe9b949, d: 0xe0565b }, [
         '....... .a...a. .a...a. .a...a. .......',
@@ -657,6 +717,19 @@ export const SHAPES = [
         '.bbbbb. .ddddd. .ddddd. .ddddd. .bbbbb.',
         '.bbbbb. .cdddc. .ddddd. .cdddc. .bbbbb.',
         '..bbb.. ..ccc.. ..ddd.. ..ccc.. ..bbb..',
+      ]),
+    },
+    {
+      // from the object gallery (origami fox)
+      id: 'origami-fox', from: 'cand-origami-fox', name: 'Origami Fox', fraction: 0.85, seed: 14,
+      story: 'Folded from a single sheet, and quicker than it looks.',
+      ...voxels({ a: 0xf2a03d, b: 0xfbf8f2, c: 0x3a3442 }, [
+        '....... .aaaa.. .aaaa.. .aaaa.. .......',
+        '....... aaaaa.. aaaaa.. .aaaa.. .......',
+        '....... a..aaaa a..aaaa ...abba .......',
+        '....... b..aaaa a..aaaa ...caac .......',
+        '....... b..a..a ....... ....... .......',
+        '....... ...a..a ....... ....... .......',
       ]),
     },
     {
@@ -715,6 +788,35 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (star)
+      id: 'star', from: 'cand-star', name: 'Star', fraction: 0.7, seed: 16,
+      story: 'The first one out, so the others know where to go.',
+      ...voxels({ a: 0xf6d365, b: 0xe9b949 }, [
+        'aa...aa aa...aa',
+        '.aa.aa. .aa.aa.',
+        '..aaa.. ..aaa..',
+        '.aabaa. .aabaa.',
+        'aaabaaa aaabaaa',
+        '..aaa.. ..aaa..',
+        '...a... ...a...',
+        '...a... ...a...',
+      ]),
+    },
+    {
+      // from the object gallery (rain cloud)
+      id: 'rain-cloud', from: 'cand-rain-cloud', name: 'Rain Cloud', fraction: 0.75, seed: 9,
+      story: 'It carries the evening rain carefully, one drop at a time.',
+      ...voxels({ a: 0x5b8fd6, b: 0xc9d1d9, c: 0xfbf8f2 }, [
+        '........ ........ ........ ........ ........',
+        '........ ........ ........ .....a.. ........',
+        '........ ........ ..a..... .....a.. ........',
+        '........ ....a... ..a..... .....a.. ........',
+        '........ .bbbbbbb .bbbbbbb .bbbbbbb ........',
+        '........ .ccccccc .ccccccc .ccccccc ........',
+        '........ ...cccc. ..ccccc. ...cccc. ........',
+      ]),
+    },
+    {
       id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
       story: 'Built on the coldest night, and smiling about it.',
       cell(x, y, z) {
@@ -740,6 +842,38 @@ export const SHAPES = [
         'G.G.....G.G',
         '...GG.GG...',
       ], 2, { G: 0x6cc28f }),
+    },
+    {
+      // from the object gallery (windmill)
+      id: 'windmill', from: 'cand-windmill', name: 'Windmill', fraction: 0.75, seed: 7,
+      story: 'It turns all night for a wind nobody else can feel.',
+      ...voxels({ a: 0xe8d3a3, b: 0x8a5a3c, c: 0xfbf8f2, d: 0x6b4a3a, e: 0xe0565b }, [
+        '....... .aaaaa. .aaaaa. .aaaaa. .......',
+        '....... ..aaa.. ..aaa.. ..aaa.. ...b...',
+        '....... ..aaa.. ..aaa.. ..aaa.. .......',
+        '....... ..aaa.. ..aaa.. ..aaa.. ..cd...',
+        '....... ..aaa.. ..aaa.. ..aaa.. ..cd...',
+        '....... ..aaa.. ..aaa.. ..aaa.. ..cdccc',
+        '....... ..eee.. ..eee.. ..eee.. ddddddd',
+        '....... ....... ...e... ....... cccdc..',
+        '....... ....... ....... ....... ...dc..',
+        '....... ....... ....... ....... ...dc..',
+      ]),
+    },
+    {
+      // from the object gallery (wishing well)
+      id: 'wishing-well', from: 'cand-well', name: 'Wishing Well', fraction: 0.75, seed: 10,
+      story: 'Every coin a wish, and the water keeps them all.',
+      ...voxels({ a: 0x9aa3ad, b: 0x5b8fd6, c: 0x8a5a3c, d: 0xd9b48f, e: 0xe0565b }, [
+        '...a... .aaaaa. .aaaaa. aaaaaaa .aaaaa. .aaaaa. ...a...',
+        '...a... .aaaaa. .abbba. aabbbaa .abbba. .aaaaa. ...a...',
+        '...a... .aaaaa. .a...a. aa...aa .a...a. .aaaaa. ...a...',
+        '....... ....... ....... .c.c.c. ....... ....... .......',
+        '....... ....... ....... .c.d.c. ....... ....... .......',
+        '....... ....... ....... .c.d.c. ....... ....... .......',
+        '....... ....... eeeeeee eeeeeee eeeeeee ....... .......',
+        '....... ....... ....... .eeeee. ....... ....... .......',
+      ]),
     },
     {
       id: 'owl', name: 'Owl', dims: [6, 7, 4], fraction: 1.0, seed: 1,
