@@ -1364,7 +1364,15 @@ else after(CARVE_AT, carveLogo);
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
-const buildMap = () => { if (mapBuilt) return; mapBuilt = true; renderMenu(true, false, false); mark('title: map built'); };
+// it starts at its top: the title and the map are one page, so the swipe carries
+// on into the map's head rather than jumping to the current stone
+const buildMap = () => {
+  if (mapBuilt) return;
+  mapBuilt = true;
+  renderMenu(false, false, false);
+  mapSheet().scrollTop = 0;
+  mark('title: map built');
+};
 after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 
 // the scroll: k px up. The title moves with it, the logo too (by shifting the

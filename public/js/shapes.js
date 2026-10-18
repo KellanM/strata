@@ -282,14 +282,15 @@ export const SHAPES = [
       },
     },
     {
-      // A banded skep with a door you can only see once it's open, and one bee.
-      id: 'beehive', name: 'Beehive', dims: [5, 6, 5], fraction: 0.65, seed: 3,
+      // A banded skep with a door you can only see once it's open, hanging by a
+      // dark stem that springs from the top block's upper corner.
+      id: 'beehive', name: 'Beehive', dims: [5, 7, 5], fraction: 0.65, seed: 3,
       story: 'A whole summer of sunlight, stored away in wax.',
       cell(x, y, z) {
         const r = ring(x - 2, z - 2);
+        if (y === 6) return x === 2 && z === 1 ? 0x2d3142 : 0;   // the stem: shares the top block's back top edge
         if (y === 1 && x === 2 && z === 4) return 0;
         if (y === 5) return r === 0 ? 0xd99a2b : 0;
-        if (x === 4 && y === 3 && z === 3) return 0x2d3142;   // a bee, clinging to the hive's side
         return r <= [2.2, 2.3, 2.1, 1.7, 1.0][y] ? (y % 2 ? 0xe9b949 : 0xd99a2b) : 0;
       },
     },
