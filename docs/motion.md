@@ -34,6 +34,10 @@ three.js and canvas work.
   drag.
 - **Cover before you swap.** Never change what's under a transition until the
   cover (veil, map, overlay) is fully opaque. This caused the old-level flash.
+- **Never fade the parent of a blurred backdrop.** While an element's parent has
+  opacity below 1, its `backdrop-filter` can't see the scene, so it shows
+  everything sharp and then snaps the blur on when the fade ends. Fade the
+  children and toggle the parent's `visibility` (see `#menu` in style.css).
 - **Render on change.** Code that swaps the scene draws once immediately
   (`draw()` in `startPuzzle`), so the canvas never lags the page.
 - **Quiet backdrops.** Anything set up behind something else (the block behind
