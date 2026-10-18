@@ -29,7 +29,8 @@ html, body {
   overscroll-behavior: none;
 }
 
-html { min-height: 100vh; min-height: 100lvh; background: #c6a3c4; }
+html { min-height: 100vh; min-height: 100lvh; background: #c6a3c4; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { overflow-x: hidden; }
 body { background: transparent; }
 /* full large viewport: as a home-screen app iOS reports a shorter height for
    100%/inset, which left a strip above the home indicator */

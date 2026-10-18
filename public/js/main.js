@@ -922,7 +922,19 @@ function diveInto(el, palette, start) {
   }, 460);
 }
 
-window.addEventListener('resize', () => { if ($('#menu').classList.contains('show')) renderMenu(false); });
+// iOS fires resize mid-rotation with the old size, so lay the map out again
+// once the screen has settled (otherwise it keeps the landscape width and
+// shows only its right side back in portrait)
+let settleTimers = [];
+function relayout() {
+  settleTimers.forEach(clearTimeout);
+  const run = () => { resize(); if ($('#menu').classList.contains('show')) renderMenu(false); };
+  run();
+  settleTimers = [setTimeout(run, 250), setTimeout(run, 700)];
+}
+window.addEventListener('resize', relayout);
+window.addEventListener('orientationchange', relayout);
+window.visualViewport?.addEventListener('resize', relayout);
 
 function loading(on) { $('#loading').textContent = on ? 'carving' : ''; }
 
@@ -945,7 +957,6 @@ function resize() {
   rays.setSize(w * px, h * px);
   background.uniforms.uAspect.value = aspect;
 }
-window.addEventListener('resize', resize);
 
 let last = now();
 // Spin with a wind-up: ease back a touch, then flick into a fast whirl that
