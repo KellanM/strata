@@ -1,6 +1,6 @@
 # Level design
 
-The 38 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
+The 48 puzzles in `public/js/shapes.js` are grouped into five chapters (`CHAPTERS`). Each chapter has its own palette. Array order is play order.
 
 ## What makes a 3D nonogram satisfying
 
@@ -126,3 +126,17 @@ How the curve is shaped:
 - **Each chapter opens near its easiest level and peaks in its last third.** No step up between neighbours is more than 2.0 D.
 
 The test `each chapter ramps gently` enforces all three rules. Flat objects (Fan, Kite) face the viewer at the start (`view: 0.35`).
+
+## Gallery picks (chapters I and II)
+
+The player picked these from the object gallery (`/gallery/`).
+
+**How they get into the game.** `tools/bake-gallery.mjs` prints each pick's voxels as layered strings, and `voxels()` in SHAPES reads them. The game never loads gallery files, which aren't in the offline cache.
+
+**First Light** gains Toaster, Bed, Record Player, Alarm Clock and Bookshelf, tuned gently at 6.9–9.3 D. Steps and Heart stay first. The Visitor moves to Starfall, where it fits the theme, and is retuned to 12.2 D between Moon Rabbit and Snowman.
+
+**Moss Garden** gains Snail, Sunflower, Garden Bench, Fox and Garden Gnome.
+- The `cactus` level is replaced by the gallery's taller Cactus. It keeps the same id, so saves carry over, and moves from First Light to here.
+- The new levels sit around Bonsai's sweet spot, about 8–12 D.
+
+**Fixes made in both the gallery and the levels:** the gnome got his missing left eye, and the snail got a second eye stalk.

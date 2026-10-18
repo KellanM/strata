@@ -59,7 +59,7 @@ export default [
       .box([1, 3], [1, 3], [1, 3], C.blue)
       .box([1, 3], [4, 5], [1, 3], cheek)
       .box([1, 3], [3, 5], [3, 4], C.white).set(2, 2, 4, C.white)
-      .set(3, 5, 4, C.ink)                                       // a single eye above the beard
+      .set(1, 5, 4, C.ink).set(3, 5, 4, C.ink)                   // two eyes above the beard
       .box([0, 4], [6, 6], [0, 4], C.red).box([1, 3], [7, 7], [1, 3], C.red).box([2, 2], [8, 9], [2, 2], C.red).set(3, 9, 2, C.red);   // the hat tip flops over
     return g.entry({ id: 'cand-gnome', name: 'Garden Gnome' });
   })(),

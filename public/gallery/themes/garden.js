@@ -10,7 +10,7 @@ export default [
       if (z >= 1 && z <= 2 && r <= 2.6 && y >= 1) return r < 1.1 ? C.dbrown : r < 2 ? C.orange : C.crust;
       if (y === 0 && z >= 1 && z <= 2 && x <= 7) return C.sand;
       if (z >= 1 && z <= 2 && x <= 1 && y >= 1 && y <= 2) return C.sand;
-      if (z === 2 && (x === 0 || x === 1) && y === 3) return x === 0 ? C.ink : C.sand;
+      if (z >= 1 && z <= 2 && (x === 0 || x === 1) && y === 3) return x === 0 ? C.ink : C.sand;   // two eye stalks
       return 0;
     },
   },

@@ -17,6 +17,17 @@ const ring = (dx, dz) => Math.sqrt(dx * dx + dz * dz);
 const ell = (dx, dy, dz, rx, ry, rz) => (dx / rx) ** 2 + (dy / ry) ** 2 + (dz / rz) ** 2 <= 1;
 const DIRS8 = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 
+// Baked voxels (tools/bake-gallery.mjs): one string per height, bottom up;
+// in each, rows back to front separated by spaces, one character per x, '.'
+// for empty. `key` maps characters to colours.
+function voxels(key, layers) {
+  const grid = layers.map((l) => l.split(' '));
+  return {
+    dims: [grid[0][0].length, grid.length, grid[0].length],
+    cell: (x, y, z) => key[grid[y][z][x]] ?? 0,
+  };
+}
+
 // Regions of the map, in play order. Each shares a palette so a chapter reads
 // as one place; puzzles inside rise in size and in how few clues they show.
 // `line` is the one line shown on the chapter's title card.
@@ -57,20 +68,6 @@ export const SHAPES = [
       ], 2, { R: 0xe0546b }),
     },
     {
-      // A house plant: a trunk, two arms and one flower, easy lines to read in 3D.
-      id: 'cactus', name: 'Cactus', dims: [5, 7, 3], fraction: 0.2, seed: 6,
-      story: 'It waited a whole dry year to open one pink flower.',
-      cell(x, y, z) {
-        if (y <= 1) return x >= 1 && x <= 3 ? (y === 1 ? 0xd9725e : 0xc2604e) : 0;
-        if (z !== 1) return 0;
-        if (x === 2 && y <= 5) return 0x4f9a6b;
-        if (y === 6) return x === 2 ? 0xf08a9a : 0;
-        if ((x === 1 && y === 3) || (x === 0 && y >= 3 && y <= 4)) return 0x5fae6e;
-        if ((x === 3 && y === 4) || (x === 4 && y >= 4 && y <= 5)) return 0x5fae6e;
-        return 0;
-      },
-    },
-    {
       id: 'candle', name: 'Candle', dims: [4, 7, 4], fraction: 0.2, seed: 8,
       story: 'Lit before dawn, so the first visitor would find the way.',
       cell(x, y, z) {
@@ -94,6 +91,20 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (toaster)
+      id: 'toaster', name: 'Toaster', fraction: 0.3, seed: 1,
+      story: 'Two slices waiting, warm, for whoever wakes up first.',
+      ...voxels({ a: 0x5d6670, b: 0xc9d1d9, c: 0x3a3442, d: 0xd9b48f, e: 0xb9773f }, [
+        'aaaaaa. aaaaaa. aaaaaa. aaaaaa.',
+        'bbbbbb. bbbbbb. bbbbbb. bbbbbb.',
+        'bbbbbb. bbbbbb. bbbbbbc bbbbbb.',
+        'bbbbbb. bddddb. bddddb. bbbbbb.',
+        '....... .edde.. .edde.. .......',
+        '....... .eeee.. .eeee.. .......',
+        '....... ....... ....... .......',
+      ]),
+    },
+    {
       id: 'key', name: 'Key', fraction: 0.5, seed: 7, view: 0.35,
       story: 'It fits a lock somewhere further down the trail.',
       ...extrude([
@@ -103,6 +114,18 @@ export const SHAPES = [
         '.KK...K.KK',
         '......K..K',
       ], 2, { K: 0xe9b949 }),
+    },
+    {
+      // from the object gallery (bed)
+      id: 'bed', name: 'Bed', fraction: 0.3, seed: 1,
+      story: 'Made up neatly, the quilt turned down for someone coming home.',
+      ...voxels({ a: 0x7a4c2f, b: 0xa86f45, c: 0xf6efe4, d: 0xfbf8f2, e: 0x8cc8e8, f: 0x5b8fd6 }, [
+        'a...a ..... ..... ..... ..... ..... ..... ..... a...a',
+        'bbbbb ccccc ccccc ccccc ccccc ccccc ccccc ccccc bbbbb',
+        'bbbbb .ddd. .ddd. eeeee fffff fffff fffff fffff bbbbb',
+        'bbbbb ..... ..... ..... ..... ..... ..... ..... .....',
+        'bbbbb ..... ..... ..... ..... ..... ..... ..... .....',
+      ]),
     },
     {
       id: 'chair', name: 'Chair', dims: [4, 6, 4], fraction: 0.5, seed: 8,
@@ -116,18 +139,45 @@ export const SHAPES = [
       },
     },
     {
-      id: 'invader', name: 'Visitor', fraction: 0.5, seed: 7,
-      story: 'It came a very long way, and seems glad to be found.',
-      ...extrude([
-        '..G.....G..',
-        '...G...G...',
-        '..GGGGGGG..',
-        '.GG.GGG.GG.',
-        'GGGGGGGGGGG',
-        'G.GGGGGGG.G',
-        'G.G.....G.G',
-        '...GG.GG...',
-      ], 2, { G: 0x6cc28f }),
+      // from the object gallery (record-player)
+      id: 'record-player', name: 'Record Player', fraction: 0.3, seed: 1,
+      story: 'The record still turns. The last song never quite finished.',
+      ...voxels({ a: 0xa86f45, b: 0x7d8794, c: 0x3a3442, d: 0xe0565b, e: 0xe9b949 }, [
+        'aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa',
+        '.......b .ccccc.. .ccccc.. .ccdcc.. .ccccc.. .ccccc.. .......e',
+        '......bb .....bb. .....b.. ........ ........ ........ ........',
+      ]),
+    },
+    {
+      // from the object gallery (clock)
+      id: 'alarm-clock', name: 'Alarm Clock', fraction: 0.5, seed: 1,
+      story: 'It rang once at dawn, then let everyone sleep a little longer.',
+      ...voxels({ a: 0x3a3442, b: 0xe0565b, c: 0xfbf8f2, d: 0xe9b949 }, [
+        '.a...a. .a...a. .a...a.',
+        '.bbbbb. .bbbbb. .bbbbb.',
+        'bcccccb b.....b bcccccb',
+        'bccaacb b..aa.b bccaacb',
+        'bccaccb b..a..b bccaccb',
+        'bcccccb b.....b bcccccb',
+        '.bbbbb. .bbbbb. .bbbbb.',
+        'dd...dd dd...dd dd...dd',
+        '.d...d. .d...d. .d...d.',
+      ]),
+    },
+    {
+      // from the object gallery (bookshelf)
+      id: 'bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
+      story: 'A book for every colour, and one lying down to rest.',
+      ...voxels({ a: 0xa86f45, b: 0xe0565b, c: 0x5b8fd6, d: 0x5fae6e, e: 0xf4a3b5, f: 0xe9b949, g: 0x4fb3a9, h: 0xf08a6c, i: 0x9b7fd1, j: 0xf6d365 }, [
+        'aaaaaaa aaaaaaa aaaaaaa',
+        'a.....a abcdefa abcdefa',
+        'a.....a abcd.fa abcd.fa',
+        'a.....a ab.d..a ab.d..a',
+        'aaaaaaa aaaaaaa aaaaaaa',
+        'a.....a agh.ija agh.ija',
+        'a.....a ag..ija ag..ija',
+        'aaaaaaa aaaaaaa aaaaaaa',
+      ]),
     },
   ]),
 
@@ -153,6 +203,35 @@ export const SHAPES = [
         if (y === 5) return x === 2 && z === 2 ? 0x8a5a3c : x === 3 && z === 2 ? 0x5fae6e : 0;
         return ell(x - 2, y - 2, z - 2, 2.4, 2.3, 2.4) ? (y === 4 ? 0xe86a6a : 0xd9455a) : 0;
       },
+    },
+    {
+      // from the object gallery (snail)
+      id: 'snail', name: 'Snail', fraction: 0.4, seed: 1,
+      story: 'It carried its whole house across the garden before lunch.',
+      ...voxels({ a: 0xe8d3a3, b: 0xb9773f, c: 0xf2a03d, d: 0x6b4a3a, e: 0x3a3442 }, [
+        '........ aaaaaaaa aaaaaaaa ........',
+        '........ aa.bccb. aa.bccb. ........',
+        '........ aabcddcb aabcddcb ........',
+        '........ eabcddcb eabcddcb ........',
+        '........ ...bccb. ...bccb. ........',
+        '........ ....bb.. ....bb.. ........',
+      ]),
+    },
+    {
+      // from the object gallery (cactus)
+      id: 'cactus', name: 'Cactus', fraction: 0.4, seed: 1,
+      story: 'It kept the sunniest corner and flowered when nobody was looking.',
+      ...voxels({ a: 0xc8704b, b: 0xb8434b, c: 0x5fae6e, d: 0xf4a3b5 }, [
+        '.aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa.',
+        '.bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb.',
+        '....... ...c... ..ccc.. ...c... .......',
+        '....... ...c... ..ccccc ...c... .......',
+        '....... ...c... .cccccc ...c... .......',
+        '....... ...c... ccccc.c ...c... .......',
+        '....... ...c... ccccc.. ...c... .......',
+        '....... ...c... ..ccc.. ...c... .......',
+        '....... ....... ...d... ....... .......',
+      ]),
     },
     {
       id: 'cat', name: 'Cat', dims: [7, 6, 4], fraction: 0.65, seed: 4,
@@ -192,6 +271,23 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (sunflower)
+      id: 'sunflower', name: 'Sunflower', fraction: 0.65, seed: 1,
+      story: 'It turned all day long to keep the sun in view.',
+      ...voxels({ a: 0x5fae6e, b: 0x86c77f, c: 0xf6d365, d: 0x3f8a5b, e: 0x6b4a3a }, [
+        '....... ...a... .......',
+        '....... .bba... .......',
+        '....... ...abb. .......',
+        '....... ...a... .......',
+        '....... ...a... ..ccc..',
+        '....... ..dad.. .ccecc.',
+        '....... .ddddd. cceeecc',
+        '....... .ddddd. cceeecc',
+        '....... ..ddd.. .ccecc.',
+        '....... ....... ..ccc..',
+      ]),
+    },
+    {
       id: 'mushroom', name: 'Mushroom', dims: [7, 6, 7], fraction: 0.65, seed: 2,
       story: 'After the rain, a whole village of them, overnight.',
       cell(x, y, z) {
@@ -202,6 +298,19 @@ export const SHAPES = [
         const spot = y === 5 ? (dx + dz) % 2 === 0 && r2 > 0 : y === 4 && r2 >= 6 && (x + 2 * z) % 4 === 0;
         return spot ? 0xfff4e6 : 0xd9455a;
       },
+    },
+    {
+      // from the object gallery (garden-bench)
+      id: 'garden-bench', name: 'Garden Bench', fraction: 0.65, seed: 1,
+      story: 'A place to sit still while the garden does the growing.',
+      ...voxels({ a: 0x3a3442, b: 0xb9773f, c: 0x8a5a3c }, [
+        'a.......a ......... ......... a.......a',
+        'a.......a ......... ......... a.......a',
+        'a.......a bbbbbbbbb ccccccccc bbbbbbbbb',
+        'accccccca a.......a a.......a a.......a',
+        'abbbbbbba ......... ......... .........',
+        'ccccccccc ......... ......... .........',
+      ]),
     },
     {
       // A banded skep with a door you can only see once it's open, and one bee.
@@ -225,6 +334,38 @@ export const SHAPES = [
         if (ell(x - 4.8, y - 6, z - 2, 1.6, 0.7, 1.4)) return 0x3f9a6b;
         return 0;
       },
+    },
+    {
+      // from the object gallery (fox)
+      id: 'fox', name: 'Fox', fraction: 0.65, seed: 1,
+      story: 'It waited by the gate at dusk, tail wrapped round its paws.',
+      ...voxels({ a: 0xe2873e, b: 0xfbf8f2, c: 0x3a3442 }, [
+        '....... ....... .....aa ...a.aa .....aa .....aa .....bb',
+        '....... ....... ..aaaaa ..aaaaa ..aaaaa ..bbbaa .....bb',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. .......',
+        '....... ....... ....... ..aaa.. ...a... ..bbb.. ...b...',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ..bbb.. ...c...',
+        '....... ....... ...a... ..aaa.. ..cac.. ....... .......',
+        '....... ....... ....... .ca.ac. ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (gnome)
+      id: 'gnome', name: 'Garden Gnome', fraction: 0.65, seed: 1,
+      story: 'He has guarded the strawberries for years and eaten only a few.',
+      ...voxels({ a: 0x6b4a3a, b: 0x5b8fd6, c: 0xfbf8f2, d: 0xf6c9b5, e: 0x3a3442, f: 0xe0565b }, [
+        '..... .aaa. .aaa. .aaa. .....',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .bbb. .bbb. .bbb. ..c..',
+        '..... .bbb. .bbb. .ccc. .ccc.',
+        '..... .ddd. .ddd. .ccc. .ccc.',
+        '..... .ddd. .ddd. .ccc. .ece.',
+        'fffff fffff fffff fffff fffff',
+        '..... .fff. .fff. .fff. .....',
+        '..... ..... ..f.. ..... .....',
+        '..... ..... ..ff. ..... .....',
+      ]),
     },
     {
       id: 'tree', name: 'Pine', dims: [5, 9, 5], fraction: 0.65, seed: 3,
@@ -466,6 +607,20 @@ export const SHAPES = [
         if (x === 0 && y === 1 && (z === 1 || z === 2)) return 0xffffff;
         return 0;
       },
+    },
+    {
+      id: 'invader', name: 'Visitor', fraction: 0.65, seed: 1,
+      story: 'It came a very long way, and seems glad to be found.',
+      ...extrude([
+        '..G.....G..',
+        '...G...G...',
+        '..GGGGGGG..',
+        '.GG.GGG.GG.',
+        'GGGGGGGGGGG',
+        'G.GGGGGGG.G',
+        'G.G.....G.G',
+        '...GG.GG...',
+      ], 2, { G: 0x6cc28f }),
     },
     {
       id: 'snowman', name: 'Snowman', dims: [5, 9, 5], fraction: 0.9, seed: 3,
