@@ -68,17 +68,6 @@ export const SHAPES = [
       ], 2, { R: 0xe0546b }),
     },
     {
-      id: 'candle', name: 'Candle', dims: [4, 7, 4], fraction: 0.2, seed: 8,
-      story: 'Lit before dawn, so the first visitor would find the way.',
-      cell(x, y, z) {
-        const r = ring(x - 1.5, z - 1.5);
-        if (y === 0) return r <= 1.7 ? 0xe9b949 : 0;
-        if (y <= 4) return r <= 0.75 ? 0xf6efe4 : 0;
-        if (y === 5) return r <= 0.75 ? 0xf6a03a : 0;
-        return x === 1 && z === 2 ? 0xffd166 : 0;
-      },
-    },
-    {
       // The bath duck: the first round shape, still with every clue on show.
       id: 'duck', name: 'Duck', dims: [6, 5, 4], fraction: 0.2, seed: 2,
       story: 'It floated in from the bath and never went back.',
