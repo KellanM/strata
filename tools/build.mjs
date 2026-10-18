@@ -23,7 +23,11 @@ for (const f of ['build/three.module.min.js', 'build/three.core.min.js', 'exampl
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 let sha = (process.env.GITHUB_SHA || '').slice(0, 7);
 if (!sha) { try { sha = execSync('git rev-parse --short HEAD', { cwd: root }).toString().trim(); } catch { sha = ''; } }
-const stamp = `v${pkg.version}${sha ? ' · ' + sha : ''}`;
+// the patch number counts commits, so every deploy shows a new version
+let count = '';
+try { count = execSync('git rev-list --count HEAD', { cwd: root }).toString().trim(); } catch { count = ''; }
+const [major, minor] = pkg.version.split('.');
+const stamp = `v${major}.${minor}.${count || '0'}${sha ? ' · ' + sha : ''}`;
 const htmlPath = join(dist, 'index.html');
 writeFileSync(htmlPath, readFileSync(htmlPath, 'utf8').replace('<p id="version" class="version">dev</p>', `<p id="version" class="version">${stamp}</p>`));
 console.log(`stamped ${stamp}`);
