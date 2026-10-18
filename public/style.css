@@ -517,31 +517,49 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 /* ---------- journal ---------- */
 #map-journal { position: absolute; top: calc(12px + var(--safe-t)); left: 66px; z-index: 1; }
 #journal { display: block; padding: 0; }
-.jr-scroll { position: absolute; inset: 0; overflow-y: auto; padding: calc(70px + var(--safe-t)) 18px calc(30px + var(--safe-b)); scrollbar-width: none; }
+.jr-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 0 0 calc(30px + var(--safe-b)); scrollbar-width: none; }
 .jr-scroll::-webkit-scrollbar { display: none; }
-.jr-head { text-align: center; margin-bottom: 14px; }
+/* opaque: the journal is its own place, not a veil over the map */
+#journal { background: #f7dccb; }
+.jr-head { text-align: center; padding: calc(64px + var(--safe-t)) 20px 18px; background: linear-gradient(180deg, #f7dccb, #f3d7d0); }
 .jr-head h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; }
+#journal-count { margin: 10px 0 0; display: flex; justify-content: center; align-items: center; gap: 14px; }
+.jr-total { display: inline-flex; align-items: center; gap: 5px; letter-spacing: .14em; }
+.jr-total svg { width: 9px; height: 12px; }
+.jr-total .l, .jr-gems .on .l { fill: #fff2c2; }
+.jr-total .r, .jr-gems .on .r { fill: #e9b949; }
 #journal-close { position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 2; }
-#journal-grid { width: min(560px, 100%); margin: 0 auto; }
-.jr-chapter h3 { margin: 22px 0 10px; font-size: 11px; font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--ink-soft); }
-.jr-chapter h3 span { margin-right: 12px; opacity: .7; }
-.jr-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+#journal-grid { width: 100%; }
+/* each chapter is a band of its own sky, as on the map */
+.jr-chapter { color: var(--ink); background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom)); padding: 26px 18px 30px; }
+.jr-chapter header { width: min(560px, 100%); margin: 0 auto 18px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.jr-numeral { font-size: 11px; letter-spacing: .3em; opacity: .7; }
+.jr-chapter h3 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: .34em; padding-left: .34em; text-transform: uppercase; }
+.jr-progress { font-size: 10px; letter-spacing: .26em; text-transform: uppercase; opacity: .75; }
+.jr-bar { display: block; width: 120px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 18%, transparent); overflow: hidden; }
+.jr-bar i { display: block; height: 100%; background: #e9b949; border-radius: 2px; }
+.jr-chapter.complete .jr-progress { opacity: 1; color: #e9b949; text-shadow: 0 0 12px rgba(255, 220, 140, .8); }
+.jr-chapter.complete .jr-bar i { box-shadow: 0 0 10px #ffd77a; }
+.jr-tiles { width: min(560px, 100%); margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 16px 8px; }
 .jr-tile {
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; min-height: 118px; padding: 8px 4px;
-  border: 0; border-radius: 18px; color: var(--ink); cursor: pointer; font: inherit;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 55%, var(--panel-strong)), var(--panel));
-  box-shadow: 0 6px 18px rgba(40, 20, 60, 0.06); transition: transform .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; cursor: pointer; transition: transform .25s cubic-bezier(.2,.9,.3,1.3);
 }
-.jr-tile:active { transform: scale(.96); }
-.jr-tile img { width: 72px; height: 72px; object-fit: contain; }
+.jr-tile:active { transform: scale(.94); }
+/* found objects sit in a little pool of the chapter's light */
+.jr-pic { width: 88px; height: 88px; display: grid; place-items: center; border-radius: 50%; }
+.jr-tile.found .jr-pic { background: radial-gradient(circle at 50% 58%, color-mix(in srgb, var(--glow) 85%, transparent) 0%, transparent 68%); }
+.jr-tile img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(40, 20, 60, .14)); }
 .jr-tile .nm { font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.jr-tile:not(.found) { cursor: default; opacity: .55; background: var(--panel); }
-.jr-tile .unknown { display: grid; place-items: center; width: 40px; height: 40px; margin: auto 0 8px; transform: rotate(45deg); border: 1.5px dashed var(--ink-soft); border-radius: 8px; }
-.jr-tile .unknown::after { content: "?"; transform: rotate(-45deg); font-size: 15px; color: var(--ink-soft); }
-.jr-tile .unknown { font-size: 0; }
-.jr-tile.bonus.found { box-shadow: 0 0 0 1.5px var(--ink), 0 6px 18px rgba(40, 20, 60, 0.08); }
-.jr-tile .stars-mini { color: var(--ink); }
-
+.jr-tile:not(.found) { cursor: default; }
+.jr-tile:not(.found) .nm { opacity: .45; letter-spacing: .14em; text-transform: none; font-style: italic; }
+.jr-stone { width: 46px; height: 46px; opacity: .55; }
+.jr-tile.bonus .jr-pic { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 35%, transparent); }
+.jr-tile.bonus.found .jr-pic { box-shadow: inset 0 0 0 1.5px #e9b949, 0 0 18px rgba(255, 215, 122, .45); }
+.jr-gems { display: inline-flex; gap: 4px; }
+.jr-gems i { display: block; width: 8px; height: 11px; }
+.jr-gems svg { width: 100%; height: 100%; display: block; }
+.jr-gems i:not(.on) path { fill: none; stroke: currentColor; stroke-width: 1; opacity: .4; }
 #journal-view {
   position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center;
   background: linear-gradient(180deg, var(--sky-top, var(--sky)), var(--sky-bottom, var(--sky)));
@@ -599,3 +617,6 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #dev .primary { display: block; margin: 18px auto 0; }
 /* the install card steps aside while a panel is open (it would cover the version line) */
 body:has(#help.show, #dev.show, #journal.show, #win.show) #install, body.solved #install { opacity: 0; pointer-events: none; }
+
+#journal-view .jv-gems .jr-gems { gap: 7px; margin: 0 0 12px; }
+#journal-view .jv-gems .jr-gems i { width: 12px; height: 16px; }
