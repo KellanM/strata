@@ -972,11 +972,11 @@ function openMenu({ instant = false } = {}) {
   const wasOpen = menu.classList.contains('show');
   mark(instant ? 'map: show (instant)' : 'map: open');
   if (instant) {
-    menu.style.transition = 'none';
+    menu.classList.add('instant');
     show('#menu', true);
     renderMenu(true, true);
     void menu.offsetWidth;
-    menu.style.transition = '';
+    menu.classList.remove('instant');
     return;
   }
   show('#menu', true);
@@ -1378,7 +1378,12 @@ function setScroll(k) {
   titleScreen.style.translate = `0 ${-k}px`;
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
-  if (toMap()) mapSheet().style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
+  if (toMap()) {
+    const sheet = mapSheet();
+    sheet.style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
+    // the soft top edge (style.css #menu.pulling) slides up out of the sheet as it arrives
+    sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.3 * H * Math.min(1, k / H)).toFixed(1)}px`;
+  }
 }
 // glide from the current scroll to `to` (px), then call done
 function scrollTo(to, seconds, curve, done) {
@@ -1430,11 +1435,14 @@ function cancelPull() {
     if (pull.live || !titleUp) return;
     titleScreen.style.cssText = '';
     if (toMap()) {
-      $('#menu').style.transition = 'none';
+      const menu = $('#menu');
+      menu.classList.add('instant');   // gone at once, not a fade of the whole map
       show('#menu', false);
+      void menu.offsetWidth;
       mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = '';
-      $('#menu').style.transition = '';
-      $('#menu').classList.remove('pulling');
+      menu.classList.remove('pulling');
+      void menu.offsetWidth;
+      menu.classList.remove('instant');
     }
   });
 }

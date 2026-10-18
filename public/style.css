@@ -180,6 +180,15 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 
 /* ---------- puzzle map ---------- */
 #menu { display: block; padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+/* The map fades its parts, never itself: a parent with opacity < 1 stops the
+   backdrop's blur from seeing the scene, so fading #menu as a whole showed the
+   level sharp through it until the fade ended - then the blur snapped on. */
+#menu, #menu.show { opacity: 1; }
+#menu { visibility: hidden; transition: visibility 0s .5s; }
+#menu.show { visibility: visible; transition: visibility 0s; }
+#menu > * { opacity: 0; transition: opacity .5s ease; }
+#menu.show > * { opacity: 1; }
+#menu.instant, #menu.instant > *, #menu.pulling > * { transition: none; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
@@ -694,6 +703,16 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 @keyframes title-fade { from { opacity: 0; } }
 @keyframes title-breathe { 50% { opacity: .45; } }
 #menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close { opacity: 0; transition: none; }
+/* while the map comes up from the title, its sky has no edge: the backdrop reaches
+   well above the sheet and fades in over that reach, so the title's sky melts into it */
+/* the sheet's own top edge fades too; main.js slides the fade off the top as the map arrives */
+#menu.pulling .map-scroll { -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 12vh, #000 30vh);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 12vh, #000 30vh);
+  -webkit-mask-size: 100% calc(100% + 30vh); mask-size: 100% calc(100% + 30vh);
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+#menu.pulling .map-backdrop { top: -55vh;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh); }
 /* behind the title the block is only a backdrop */
 body:has(#title.show) .hud { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
