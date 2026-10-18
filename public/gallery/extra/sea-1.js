@@ -18,6 +18,7 @@ const puffer = grid(7, 7, 7)
 for (const [x, y, z] of [[3, 6, 3], [5, 5, 3], [1, 5, 2], [6, 3, 2], [6, 4, 4], [3, 5, 5], [5, 3, 5], [3, 3, 0], [1, 3, 5]])
   puffer.set(x, y, z, C.gold);
 puffer.set(0, 3, 3, C.coral).set(0, 4, 3, C.coral).set(0, 2, 3, C.coral)
+  .set(6, 3, 3, C.coral).set(6, 4, 3, C.coral).set(6, 2, 3, C.coral)   // a fin each side
   .set(2, 4, 5, C.ink).set(4, 4, 5, C.ink).set(3, 2, 6, C.coral);
 
 // Sandcastle: a keep and a taller front tower, crenellated, with a red flag.
@@ -56,14 +57,15 @@ const bottle = grid(8, 4, 4)
   .box([7, 7], [1, 2], [1, 2], C.brown);
 
 // Dolphin: a slim arched body mid-leap, tail fluke up, dorsal fin, pale belly, long beak.
-const dolphin = stamp(grid(10, 5, 3), [
+const dolphin = stamp(grid(10, 5, 4), [
   '......b...',
   'b....bb...',
   'bb.bbbbbb.',
   '.bbbbbbbbb',
   '..wwwwww..',
 ], [1, 2], { b: C.blue, w: C.cream });
-dolphin.box([6, 6], [4, 4], [2, 2], 0).set(7, 2, 2, C.ink).set(4, 1, 0, C.blue).set(5, 1, 0, C.blue);
+dolphin.box([6, 6], [4, 4], [2, 2], 0).set(7, 2, 2, C.ink).set(7, 2, 1, C.ink)   // an eye each side
+  .set(4, 1, 0, C.blue).set(5, 1, 0, C.blue).set(4, 1, 3, C.blue).set(5, 1, 3, C.blue);   // a flipper each side
 
 // Seal on a rock, balancing a ball on its nose.
 const seal = grid(7, 8, 5)
@@ -99,7 +101,7 @@ for (let x = 0; x <= 8; x++) {
   if (w === 2) rowboat.box([x, x], [1, 2], [1, 3], 0).box([x, x], [1, 1], [1, 3], C.tan);
 }
 rowboat.box([4, 4], [2, 2], [1, 3], C.crust).set(0, 2, 2, C.white).set(0, 3, 2, C.red)
-  .box([5, 5], [3, 3], [2, 4], C.tan);
+  .box([5, 5], [3, 3], [0, 4], C.tan);   // a pair of oars, one each side
 
 // Fishing float: red cap over a white body, a slender tip set a little off-centre.
 const float = grid(4, 8, 4)
@@ -135,7 +137,7 @@ const narwhal = grid(10, 5, 5)
   .ellipsoid([3.6, 2, 2], [3.2, 1.7, 1.7], (x, y) => (y <= 1 ? C.cream : C.navy))
   .box([7, 9], [2, 2], [2, 2], (x) => (x % 2 ? C.sand : C.cream))
   .box([0, 0], [2, 3], [1, 3], C.navy)
-  .set(5, 3, 3, C.ink);
+  .set(5, 3, 3, C.ink).set(5, 3, 1, C.ink);   // an eye each side
 
 // Hermit crab: a big banded spiral shell, a little red crab peeking out the front.
 const hermit = grid(7, 6, 6)
@@ -162,7 +164,7 @@ const helmet = grid(7, 7, 7)
   .ellipsoid([2.5, 4, 2.5], [2.6, 2.6, 2.6], (x, y) => (y >= 2 ? C.terracotta : null))
   .box([1, 4], [2, 5], [6, 6], (x, y) => (x >= 2 && x <= 3 && y >= 3 && y <= 4 ? C.navy : C.gold))
   .box([1, 4], [2, 5], [5, 5], (x, y) => (x >= 2 && x <= 3 && y >= 3 && y <= 4 ? C.navy : null))
-  .box([5, 5], [3, 4], [2, 3], C.gold).box([6, 6], [3, 4], [2, 3], C.navy);
+  .box([5, 5], [3, 4], [2, 3], C.navy).box([0, 0], [3, 4], [2, 3], C.navy);   // a side port each side
 
 // Ship's wheel: a wooden ring, four straight spokes with handles, a gold hub, one gold king spoke.
 const wheel = grid(9, 9, 1);

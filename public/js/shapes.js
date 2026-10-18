@@ -579,10 +579,10 @@ export const SHAPES = [
         '........ ........ ........ ........ ........ ........',
         '........ ........ ..aaaa.. ..aaaa.. ..aaaa.. ..aaaa..',
         '.bbbbbb. .bbbbbb. .bbbbbb. .bbbbbb. ..bbbb.. ..cbbc..',
-        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..bbbbee',
+        '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. eebbbbee',
         '.bbbbbb. dbbbbbbd dbbbbbbd .bbbbbb. ..bbbb.. ..abba..',
         '.bbbbbb. dbbbbbbd dbbbbbbd .bfbbfb. ........ ........',
-        '......e. .e....e. ........ ........ ........ ........',
+        '.e....e. .e....e. ........ ........ ........ ........',
       ]),
     },
     {
@@ -624,19 +624,19 @@ export const SHAPES = [
       },
     },
     {
-      id: 'pagoda', name: 'Pagoda', dims: [7, 9, 7], fraction: 1.0, seed: 8,
-      story: 'A bell sleeps in the top room. Try not to wake it.',
-      cell(x, y, z) {
-        const dx = Math.abs(x - 3), dz = Math.abs(z - 3), m = Math.max(dx, dz);
-        const roof = 0x3f7f7a;
-        if (y === 0) return m <= 2 ? 0x8d8a99 : 0;
-        if (y === 1 || y === 2) return m === 1 ? 0xd9553f : 0;
-        if (y === 3) return dx + dz <= 5 ? roof : 0;
-        if (y === 4 || y === 5) return m === 1 ? 0xd9553f : m === 0 && y === 4 ? 0xf2c14e : 0;
-        if (y === 6) return m <= 2 && dx + dz <= 3 ? roof : 0;
-        if (y === 7) return m <= 1 ? roof : 0;
-        return m === 0 ? 0xf2c14e : 0;
-      },
+      // from the object gallery (tea house); replaced the Pagoda
+      id: 'tea-house', name: 'Tea House', fraction: 1.0, seed: 1,
+      story: 'Two lanterns lit, the kettle on, and room for one more.',
+      ...voxels({ a: 0x9aa3ad, b: 0x6b4a3a, c: 0xf6efe4, d: 0xe0565b, e: 0xf6d365, f: 0x2f4a7a }, [
+        '......... .aaaaaaa. .aaaaaaa. .aaaaaaa. .aaaaaaa. .aaaaaaa. .........',
+        '......... ......... ..bcccb.. ..bcccb.. ..bcbcb.. .d.....d. .........',
+        '......... ......... ..bcccb.. ..bcccb.. ..bcbcb.. .e.....e. .........',
+        '......... ......... ..bcccb.. ..bcccb.. ..bcbcb.. ......... .........',
+        'fffffffff fffffffff fffffffff fffffffff fffffffff fffffffff fffffffff',
+        'f.......f .fffffff. .fffffff. .fffffff. .fffffff. .fffffff. f.......f',
+        '......... ......... ..fffff.. ..fffff.. ..fffff.. ......... .........',
+        '......... ......... ......... ...fff... ......... ......... .........',
+      ]),
     },
     {
       id: 'arch', name: 'Arch', dims: [9, 7, 3], fraction: 0.9, seed: 6,

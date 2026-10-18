@@ -2,10 +2,8 @@
 import { C, ell, disc, bitmap, plan, grid } from '../voxel.js';
 
 const balloon = grid(7, 10, 7)
-  .ellipsoid([3, 6.3, 3], [3.2, 3.4, 3.2], (x, y, z) => {
-    const a = Math.atan2(z - 3, x - 3);
-    return Math.floor(((a + Math.PI) / (2 * Math.PI)) * 6) % 2 ? C.red : C.yellow;
-  })
+  // four even panels, so it looks the same from every corner
+  .ellipsoid([3, 6.3, 3], [3.2, 3.4, 3.2], (x, y, z) => (Math.abs(x - 3) > Math.abs(z - 3) ? C.red : C.yellow))
   .box([2, 4], [3, 3], [2, 4], C.tan)                                     // the balloon's mouth
   .box([2, 4], [0, 1], [2, 4], C.tan)                                     // basket
   .set(2, 2, 2, C.dbrown).set(4, 2, 2, C.dbrown).set(2, 2, 4, C.dbrown).set(4, 2, 4, C.dbrown);
@@ -29,8 +27,7 @@ const ufo = grid(7, 5, 7)
   .cylinder('y', [3, 3], 2.2, [0, 0], C.dgrey)
   .cylinder('y', [3, 3], 1.6, [2, 3], (x, y) => (y === 3 ? C.sky : C.sky))
   .set(3, 4, 3, C.sky)
-  .set(0, 1, 3, C.yellow).set(6, 1, 3, C.yellow).set(3, 1, 0, C.yellow).set(3, 1, 6, C.yellow)
-  .set(4, 2, 4, C.leaf);
+  .set(0, 1, 3, C.yellow).set(6, 1, 3, C.yellow).set(3, 1, 0, C.yellow).set(3, 1, 6, C.yellow);
 
 // A telescope on a stand, its tube stepping up toward the sky.
 const telescope = grid(8, 8, 5)

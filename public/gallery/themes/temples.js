@@ -15,13 +15,16 @@ const lantern = grid(5, 9, 5)
   .box([1, 3], [1, 1], [1, 3], C.grey)
   .box([2, 2], [2, 3], [2, 2], C.grey)
   .box([1, 3], [4, 5], [1, 3], (x, y, z) => ((x === 2 || z === 2) && y === 5 && (x === 3 || z === 3) ? C.yellow : C.silver))
-  .set(3, 5, 2, C.yellow).set(2, 5, 3, C.yellow).set(2, 4, 2, C.orange)
+  .box([1, 3], [5, 5], [1, 3], C.silver)
+  .set(3, 4, 2, C.yellow).set(2, 4, 3, C.yellow).set(1, 4, 2, C.yellow).set(2, 4, 1, C.yellow)   // light through all four sides, below the roof's shadow
+  .set(2, 4, 2, C.orange)
   .box([0, 4], [6, 6], [0, 4], C.dgrey)
   .box([1, 3], [7, 7], [1, 3], C.dgrey)
   .set(2, 8, 2, C.grey);
 
+// a drumhead at each end of a red body
 const drum = grid(7, 7, 5)
-  .cylinder('z', [3, 3.5], 2.9, [1, 3], (x, y, z) => (z === 3 ? C.cream : (x + y) % 3 === 0 && (Math.abs(x - 3) + Math.abs(y - 3.5) > 2.5) ? C.gold : C.red))
+  .cylinder('z', [3, 3.5], 2.9, [0, 4], (x, y, z) => (z === 4 || z === 0 ? C.cream : (z === 1 || z === 3) && Math.hypot(x - 3, y - 3.5) > 2.2 ? C.gold : C.red))   // gold rim bands at both ends
   .box([1, 1], [0, 1], [2, 2], C.dbrown).box([5, 5], [0, 1], [2, 2], C.dbrown)
   .box([1, 5], [0, 0], [1, 3], (x, y, z) => (z === 1 || z === 3) && (x === 1 || x === 5) ? C.dbrown : null);
 
@@ -33,23 +36,22 @@ const teahouse = grid(9, 8, 7)
   .box([2, 6], [6, 6], [2, 4], C.navy)
   .box([3, 5], [7, 7], [3, 3], C.navy)
   .set(0, 5, 0, C.navy).set(8, 5, 0, C.navy).set(0, 5, 6, C.navy).set(8, 5, 6, C.navy)
-  .set(7, 1, 5, C.red).set(7, 2, 5, C.yellow);
+  .set(7, 1, 5, C.red).set(7, 2, 5, C.yellow).set(1, 1, 5, C.red).set(1, 2, 5, C.yellow);   // a lantern either side of the door
 
 // An origami crane: a folded body, wings swept up from its back, neck and red crown.
 const crane = grid(8, 6, 6)
   .box([2, 5], [1, 2], [2, 3], C.white)
   .box([3, 4], [3, 3], [0, 5], C.white)                                   // wings across the back
   .box([3, 3], [4, 4], [0, 0], C.white).box([3, 3], [4, 4], [5, 5], C.white) // tips lifted
-  .box([6, 6], [2, 4], [2, 2], C.white).set(7, 4, 2, C.white).set(7, 4, 3, C.ink)
+  .box([6, 6], [2, 4], [2, 2], C.white).set(7, 4, 2, C.white).set(7, 4, 3, C.ink).set(7, 4, 1, C.ink)   // an eye each side
   .set(6, 5, 2, C.red)
   .set(1, 2, 2, C.ink).set(1, 3, 2, C.ink).set(0, 3, 2, C.ink);           // tail
 
 const daruma = grid(6, 7, 6)
   .ellipsoid([2.5, 3, 2.5], [2.6, 3.2, 2.6], C.red)
   .box([1, 4], [3, 5], [5, 5], (x, y) => (y === 5 && (x === 1 || x === 4) ? C.red : C.cream))
-  .set(1, 4, 5, C.ink).set(3, 4, 5, C.cream).set(4, 4, 5, C.cream).set(2, 4, 5, C.cream)
-  .box([0, 5], [1, 1], [3, 5], (x, y, z) => (z === 5 && x > 0 && x < 5 ? C.gold : null))
-  .set(5, 3, 3, C.gold).set(5, 4, 4, C.cream).set(5, 4, 3, C.ink);
+  .set(1, 4, 5, C.ink).set(4, 4, 5, C.ink).set(2, 4, 5, C.cream).set(3, 4, 5, C.cream)   // both eyes painted
+  .box([0, 5], [1, 1], [3, 5], (x, y, z) => (z === 5 && x > 0 && x < 5 ? C.gold : null));
 
 const incense = grid(5, 8, 5)
   .cylinder('y', [2, 2], 2.2, [1, 2], (x, y, z) => (y === 2 && x === 2 && z === 2 ? C.dgrey : C.bronze))
