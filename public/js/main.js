@@ -996,7 +996,7 @@ function frame() {
     if (game.win) {
       stepCelebration(t);
       const H = canvas.clientHeight;
-      finale.update(t, camera, H, H - 215, H - 165);   // gems, then score, above the actions
+      finale.update(t, camera, H, H - 215, H - 154);   // gems, then score, above the actions
     }
 
     camDir.copy(camera.position).sub(controls.target).normalize();

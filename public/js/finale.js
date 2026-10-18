@@ -195,12 +195,12 @@ export class Finale {
     const font = '"Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif';
     g.font = `500 120px ${font}`;
     g.letterSpacing = '22px';
-    g.fillText(this.text.score.toLocaleString(), W / 2 + 11, H * 0.6);
+    g.fillText(this.text.score.toLocaleString(), W / 2 + 11, H * 0.42);
     if (this.text.best) {
-      g.globalAlpha = 0.6;
-      g.font = `500 30px ${font}`;
+      g.globalAlpha = 0.85;
+      g.font = `600 40px ${font}`;
       g.letterSpacing = '16px';
-      g.fillText('BEST', W / 2 + 8, H * 0.14);
+      g.fillText('BEST', W / 2 + 8, H * 0.86);      // just under the number
       g.globalAlpha = 1;
     }
     g.letterSpacing = '0px';
