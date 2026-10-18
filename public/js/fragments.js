@@ -1,4 +1,4 @@
-// A chiselled cube comes apart: it becomes 27 small cubes (3×3×3) that exactly
+// A chiselled cube comes apart: it becomes 8 small cubes (2×2×2) that exactly
 // rebuild it, and each shrinks away where it sits, the pieces nearest an open
 // side going first, so the cube crumbles in from its exposed faces. One
 // instanced draw for every piece of every recent break; all motion runs in the
@@ -8,7 +8,7 @@ import * as THREE from 'three';
 export const BREAK_TIME = 0.42;
 const TRAVEL = 0.32;                 // each piece's own flight
 const MAX_DELAY = BREAK_TIME - TRAVEL;
-const PIECE = 1 / 3;
+const PIECE = 1 / 2;
 
 const vertexShader = /* glsl */ `
   attribute vec3 aOrigin;     // piece centre at rest (world)
@@ -53,7 +53,7 @@ const fragmentShader = /* glsl */ `
 `;
 
 export class Fragments {
-  constructor(lightUniform, capacity = 27 * 40) {
+  constructor(lightUniform, capacity = 8 * 60) {
     this.capacity = capacity;
     this.next = 0;
     const box = new THREE.BoxGeometry(1, 1, 1);
@@ -91,7 +91,7 @@ export class Fragments {
   // sides (the sum of the free faces' normals).
   burst(center, open, time) {
     const o = new THREE.Vector3(), dir = new THREE.Vector3(), axis = new THREE.Vector3();
-    for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+    for (const x of [-0.5, 0.5]) for (const y of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) {
       const i = this.next++ % this.capacity;
       o.set(x, y, z);
       // pieces facing an open side leave first; the far ones follow

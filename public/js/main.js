@@ -400,7 +400,7 @@ function act(i, which) {
   game.undo.push({ kind: 'break', i });
   cubes.ripple(cell, t, 1, 7);
   const c = (h) => new THREE.Color(h);
-  // it comes apart into 27 pieces that slip out through its open sides
+  // it comes apart into 8 pieces that shrink away, open sides first
   fragments.burst(cellWorld(i), openSides(i), t);
   shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
     { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
