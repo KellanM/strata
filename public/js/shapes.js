@@ -174,6 +174,21 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 5: Rucksack)
+      id: 'rucksack', name: 'Rucksack', from: 'cand-p5-rucksack', fraction: 0.65, seed: 1,
+      story: 'Packed the night before, a tin mug clinking on the side.',
+      ...voxels({ a: 0x6b4a3a, b: 0xc98a4b, c: 0xa96f3a, d: 0xb59a6a, e: 0xc9d1d9, f: 0x6f7f4a, g: 0xe0565b, h: 0x5b7fc6, i: 0x3a3442 }, [
+        '.aaaaa. .aaaaa. .aaaaa. .aaaaa. ....... .......',
+        '.bbbbb. cbbbbbc cbbbbbc .bbbbb. ..aca.. .......',
+        '.bbbbb. cbbbbbc cbbbbbc .bbbbb. ..aca.. ..d.d..',
+        '.bbbbb. .bbbbb. .bbbbbe .bbbbb. .fafaf. .......',
+        '.bbbbb. .bbbbb. .bbbbbe .bbbbb. .ffffg. .......',
+        '..bbb.. .fffff. .fffff. .fffff. ....... .......',
+        '....... hhihihh hhihihh ....... ....... .......',
+        '....... hhihihh hhihihh ....... ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (bookshelf)
       id: 'bookshelf', from: 'cand-bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
       // hints curated for the solve path, not hidden at random (docs/aha-study.md)
@@ -391,6 +406,20 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 5: Mushroom Log)
+      id: 'mushroom-log', name: 'Mushroom Log', from: 'cand-p5-mushroom-log', fraction: 0.65, seed: 1,
+      story: 'The old log fell in a storm. Now it feeds a whole village.',
+      ...voxels({ a: 0x5e3f2a, b: 0x7a5236, c: 0xe2c290, d: 0xf0b45a, e: 0xb98a5a, f: 0x6fae5a, g: 0xf3e6cc, h: 0xd98a4a }, [
+        '......... ......... abbbbbbba ......... ......... .........',
+        '......... cbbbbbbbc cbbbbbbbc cbbbbbbbc ......... ......d..',
+        'abbbbbbba cbbbbbbbc ebbbbbbbe cbbbbbbbc abbbbbbba ..dd.ddd.',
+        '......... cbbbbbbbc cbbbbbbbc cbbbbbbbc ......... .........',
+        '......... ......... affffbbba ......... ......... .........',
+        '......... ......... ..ff..g.. ....g.... ......... .........',
+        '......... .....hhh. .....hhh. ....hhhh. ......... .........',
+      ]),
+    },
+    {
       // from the object gallery (page 4: Capybara & Yuzu)
       id: 'capybara', name: 'Capybara & Yuzu', from: 'cand-p4-capybara', fraction: 0.65, seed: 1,
       story: 'A warm bath, a yuzu balanced just so, and nowhere to be.',
@@ -580,6 +609,37 @@ export const SHAPES = [
         const tier = [2.3, 1.5, 1.0, 1.8, 1.0, 0.5][y - 2];
         return r2 <= tier * tier ? (y === 2 || y === 5 ? 0x2f7f58 : 0x3f9a6b) : 0;
       },
+    },
+    {
+      // from the object gallery (page 5: Wisteria Bonsai)
+      id: 'wisteria-bonsai', name: 'Wisteria Bonsai', from: 'cand-p5-wisteria', fraction: 0.65, seed: 1,
+      story: 'Every spring it remembers it was meant to be a waterfall.',
+      ...voxels({ a: 0xeee3cf, b: 0x6b4a3a, c: 0x8a5a3c, d: 0x8f6ad1, e: 0xc9a6e8, f: 0x7fbf6a, g: 0x5a9f55 }, [
+        '......... .a.aaa.a. .a.aaa.a. .a.aaa.a. .........',
+        '......... .aaaaaaa. .abbbbba. .aaaaaaa. .........',
+        '......... ......... ....c.... ......... .........',
+        '......... ...d..... ....d.... .d....... .........',
+        '......... .d.e.d... ..dcec... .e.d.d.d. .........',
+        '......... .e.e.e.d. ..ececc.d .e.e.e.e. .........',
+        '......... .fff.e.e. .ffff.c.e .fff.e.e. .........',
+        '......... .....fff. .....fgff .....fff. .........',
+        '......... ......f.. .....fff. ......f.. .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 5: Maple Bonsai)
+      id: 'maple-bonsai', name: 'Maple Bonsai', from: 'cand-p5-maple-bonsai', fraction: 0.65, seed: 1,
+      story: 'Forty autumns in a shallow pot, and it still turns red.',
+      ...voxels({ a: 0x5d6670, b: 0x6b4a3a, c: 0x8a5a3c, d: 0xd9483b, e: 0xf08a3c, f: 0xf6c14a }, [
+        '........ aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa ........',
+        '........ .aaaaaa. abbbbbba abbbbbba .aaaaaa. ........',
+        '........ ........ ...cc.d. ...cc... ........ ........',
+        '........ ........ ...c.... ....c... ........ ........',
+        '........ ........ ..cc.... ....cc.. ........ ........',
+        '........ ........ .dd..... .dd..c.. ........ ........',
+        '........ .dd..... dddd.ee. ddddeeee .dd..ee. ........',
+        '........ ..ff.... ..fffee. ..ff.ee. .....ee. ........',
+      ]),
     },
   ]),
   // ---------------------------------------------------------------- The Lagoon
@@ -892,6 +952,19 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 5: Tsukubai)
+      id: 'tsukubai', name: 'Tsukubai', from: 'cand-p5-tsukubai', fraction: 0.65, seed: 1,
+      story: 'Crouch to drink, and the water teaches you to be humble.',
+      ...voxels({ a: 0xd6cfc2, b: 0xc6bfb2, c: 0x6fae5a, d: 0x8f949c, e: 0x8fbf4a, f: 0x6f9f3a, g: 0x6fb7e0, h: 0xd9b48f }, [
+        'aaaaaaaaa bbbbbbbbb caaaaaaaa ccbbbbbbb ccaaaaaaa',
+        '......d.. .....ddd. ..e.ddddd .....ddd. ......d..',
+        '......d.. .....ddd. ..e.ddddd .....ddd. ......d..',
+        '......... .....ddd. ..f..dgd. .....ddd. .........',
+        '......... ......... ..e...g.. .......h. .....hhh.',
+        '......... ......... ..eeef... ......... .........',
+      ]),
+    },
+    {
       // Flat like the gate, but every rib is a decision.
       id: 'fan', name: 'Paper Fan', dims: [9, 6, 2], fraction: 1.0, seed: 1, view: 0.35,
       story: 'Folded open once a year, on the warmest evening.',
@@ -1084,6 +1157,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 5: Chochin)
+      id: 'chochin', name: 'Chochin', from: 'cand-p5-chochin', fraction: 0.65, seed: 1,
+      story: 'Folded flat all year, it opens wide for one bright night.',
+      ...voxels({ a: 0x3a3442, b: 0xe0c9a0, c: 0xfbf1dc, d: 0xf6a03d, e: 0xe0565b, f: 0xffd36a }, [
+        '..... ..a.. .aaa. ..a.. .....',
+        '..... .bbb. .bbb. .bbb. .....',
+        '.ccc. cc.cc c.d.c cc.cc .ccc.',
+        '.eee. bb.bb b.f.b bb.bb .eee.',
+        '.ece. cc.cc c...c cc.cc .ece.',
+        '.eee. bb.bb b...b bb.bb .eee.',
+        '.ccc. cc.cc c...c cc.cc .ccc.',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... ..a.. .aaa. ..a.. .....',
+        '..... ..... .aaa. ..... .....',
+      ]),
+    },
+    {
       // from the object gallery (koinobori)
       id: 'koinobori', from: 'cand-koinobori', name: 'Koinobori', fraction: 0.8, seed: 17,
       story: 'A paper carp that swims the wind on festival mornings.',
@@ -1131,6 +1221,20 @@ export const SHAPES = [
   // ---------------------------------------------------------------- Starfall
   // The sky at night: the longest climbs.
   ...chapter(6, [
+    {
+      // from the object gallery (page 5: Geode)
+      id: 'geode', name: 'Geode', from: 'cand-p5-geode', fraction: 0.65, seed: 1,
+      story: 'A dull grey stone, holding a night sky inside.',
+      ...voxels({ a: 0x6f6258, b: 0x8a7a6e, c: 0xe8e2f0, d: 0x9b6ad8, e: 0xc9a6f0, f: 0xf6ecff }, [
+        '....... ....... ....... ...a... ..aba..',
+        '....... ....... ..bab.. .bacab. .accca.',
+        '....... ..bbb.. .bcccb. .addeb. ace.ecb',
+        '....... ..bbb.. .acfcb. aceedcb bc...cb',
+        '....... ..bbb.. .bcccb. .adedb. ace.ecb',
+        '....... ....... ..bbb.. .bbcbb. .acccb.',
+        '....... ....... ....... ...b... ..bbb..',
+      ]),
+    },
     {
       // Starfall opens softly before the long climb.
       id: 'kite', name: 'Kite', dims: [6, 8, 2], fraction: 0.65, seed: 6, view: 0.35,
@@ -1233,6 +1337,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 5: Dreamcatcher)
+      id: 'dreamcatcher', name: 'Dreamcatcher', from: 'cand-p5-dreamcatcher', fraction: 0.65, seed: 1,
+      story: 'The bad dreams snag in the web. The good ones slip through.',
+      ...voxels({ a: 0x8cc8e8, b: 0xfbf8f2, c: 0xf6efe4, d: 0x4fd1c5, e: 0xc9955a }, [
+        '.a.b.a. ...a...',
+        '.b.b.b. ...b...',
+        '.c.d.c. .......',
+        '.eeeee. .eeeee.',
+        'ee.c.ee ee...ee',
+        'e.ccc.e e.....e',
+        'eccdcce e..d..e',
+        'e.ccc.e e.....e',
+        'ee.c.ee ee...ee',
+        '.eeeee. .eeeee.',
+      ]),
+    },
+    {
       // from the object gallery (page 4: Unicorn)
       id: 'unicorn', name: 'Unicorn', from: 'cand-p4-unicorn', fraction: 0.65, seed: 1,
       story: 'It only comes out when every star is lit.',
@@ -1276,6 +1397,23 @@ export const SHAPES = [
       ], 2, { G: 0x6cc28f }),
     },
     {
+      // from the object gallery (page 5: Weather Vane)
+      id: 'weather-vane', name: 'Weather Vane', from: 'cand-p5-weather-vane', fraction: 0.65, seed: 1,
+      story: 'The cockerel turns to face whatever wind is coming.',
+      ...voxels({ a: 0xb8434b, b: 0x5d6670, c: 0xe9b949, d: 0xc9952f, e: 0xe0565b, f: 0xf08a3c }, [
+        '....... .aaaaa. .aaaaa. .aaaaa. .......',
+        '....... ....... .aaaaa. ....... .......',
+        '....... ....... ...b... ....... .......',
+        '...c... ...b... .cbbbc. ...b... ...c...',
+        '....... ....... dd.b.d. ....... .......',
+        '....... ....... ddddddd ....... .......',
+        '....... ....... cccccd. ....... .......',
+        '....... ....... cc..ce. ....... .......',
+        '....... ....... c...ccf ....... .......',
+        '....... ....... ....ee. ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (windmill)
       id: 'windmill', from: 'cand-windmill', name: 'Windmill', fraction: 0.75, seed: 7,
       story: 'It turns all night for a wind nobody else can feel.',
@@ -1305,6 +1443,21 @@ export const SHAPES = [
         '....... ....... ....... .c.d.c. ....... ....... .......',
         '....... ....... eeeeeee eeeeeee eeeeeee ....... .......',
         '....... ....... ....... .eeeee. ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 5: Armillary Sphere)
+      id: 'armillary', name: 'Armillary Sphere', from: 'cand-p5-armillary', fraction: 0.65, seed: 1,
+      story: 'Rings of brass that hold the sky still long enough to read.',
+      ...voxels({ a: 0xb07a3a, b: 0xf2a03d, c: 0xe9b949, d: 0x5b8fd6, e: 0x5fae6e }, [
+        '....... .aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa. .......',
+        '....... ...b... ...b... .ccccc. ...b... ...b... .......',
+        '...b... ...b... ....... cc.c.cc ....... ...b... ...b...',
+        '...b... ....... ...d... c.edd.c ...d... ....... ...b...',
+        '...b... ....... ..edd.. c.ddd.c ..dde.. ....... ...b...',
+        '...b... ....... ...d... c.dde.c ...e... ....... ...b...',
+        '...b... ...b... ....... cc.c.cc ....... ...b... ...b...',
+        '....... ...b... ...b... .ccccc. ...b... ...b... .......',
       ]),
     },
     {
