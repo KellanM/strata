@@ -452,9 +452,11 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 }
 
 /* after a solve the tools step aside for the result card */
-.hud.bottom { transition: opacity .5s ease; }
-body.solved .hud.bottom { opacity: 0; }
-body.solved .hud.bottom * { pointer-events: none !important; }
+.hud.bottom, .hud.top { transition: opacity .5s ease; }
+body.solved .hud.bottom, body.solved .hud.top { opacity: 0; }
+body.solved .hud.bottom *, body.solved .hud.top * { pointer-events: none !important; }
+/* with the header gone, the title takes its place at the top */
+body.solved #win-title { top: calc(30px + var(--safe-t)); }
 
 /* sound toggles in How to play */
 .toggles { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }

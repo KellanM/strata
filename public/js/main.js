@@ -450,7 +450,7 @@ function win() {
   // fit everything into the band between the title and the actions
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
-  const bandTop = H * (g.entry.lesson ? 0.2 : 0.25) + (!g.entry.lesson && g.shape.story ? 44 : 0);
+  const bandTop = g.entry.lesson ? H * 0.2 : 30 + 104 + (g.shape.story ? 44 : 0);   // just under the title
   const bandBottom = g.entry.lesson ? H - 90 : H - 96;
   const band = Math.max(180, bandBottom - bandTop);
   const zoom = THREE.MathUtils.clamp((band / 2) / (sphere.radius * 0.92 * pxPerUnit), 0.5, 1.35);
