@@ -456,7 +456,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 body.solved .hud.bottom, body.solved .hud.top { opacity: 0; }
 body.solved .hud.bottom *, body.solved .hud.top * { pointer-events: none !important; }
 /* with the header gone, the title takes its place at the top */
-body.solved #win-title { top: calc(30px + var(--safe-t)); }
+body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* sound toggles in How to play */
 .toggles { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }

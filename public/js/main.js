@@ -445,13 +445,12 @@ function win() {
     const lowSky = new THREE.Color(g.palette.skyBottom).getHSL({}).l;
     const ink = lowSky > 0.45 ? '#' + new THREE.Color(g.palette.under).multiplyScalar(0.7).getHexString() : '#f6f3ff';
     finale.stage({ palette: g.palette, focus, bottom, reach, ink, t0: t });
-    box.union(finale.bounds());
   }
   // fit everything into the band between the title and the actions
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const H = canvas.clientHeight, pxPerUnit = H / (camera.top - camera.bottom);
-  const bandTop = g.entry.lesson ? H * 0.2 : 30 + 104 + (g.shape.story ? 44 : 0);   // just under the title
-  const bandBottom = g.entry.lesson ? H - 90 : H - 96;
+  const bandTop = g.entry.lesson ? H * 0.2 : 54 + 104 + (g.shape.story ? 44 : 0);   // just under the title
+  const bandBottom = g.entry.lesson ? H - 90 : H - 196;   // above the gems and score
   const band = Math.max(180, bandBottom - bandTop);
   const zoom = THREE.MathUtils.clamp((band / 2) / (sphere.radius * 0.92 * pxPerUnit), 0.5, 1.35);
   const shiftPx = H / 2 - (bandTop + bandBottom) / 2;
@@ -962,7 +961,11 @@ function frame() {
     if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 1.5));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
 
-    if (game.win) { stepCelebration(t); finale.update(t, camera); }
+    if (game.win) {
+      stepCelebration(t);
+      const H = canvas.clientHeight;
+      finale.update(t, camera, H, H - 158, H - 108);   // gems, then score, just above the actions
+    }
 
     camDir.copy(camera.position).sub(controls.target).normalize();
     handles.group.visible = !game.solved && game.shape.handles !== false;
