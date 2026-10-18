@@ -1,8 +1,8 @@
 // The journal: every object you've uncovered, gathered by chapter like the
 // map, each chapter on its own sky. Found objects sit in a little pool of
 // light with their gems (the same gold diamonds as the win screen); the rest
-// are still in the stone, an uncut block in the chapter's colours. Each
-// chapter shows how much of it has been found, and glows when complete.
+// are a soft dark blur, waiting. Each chapter shows how much of it has been
+// found, and glows when complete.
 // Tapping a found object opens it on a turntable with its one-line story.
 import * as THREE from 'three';
 import { CHAPTERS } from './shapes.js';
@@ -18,11 +18,8 @@ const hex = (h) => '#' + h.toString(16).padStart(6, '0');
 // (an unearned one shows only its outline, drawn as one path so no seam runs down the middle)
 const GEM = '<svg viewBox="0 0 12 16" aria-hidden="true"><path class="l" d="M6 0 0 8l6 8z"/><path class="r" d="M6 0l6 8-6 8z"/><path class="o" d="M6 .7 .9 8 6 15.3 11.1 8z"/></svg>';
 const gems = (n) => `<span class="jr-gems">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${GEM}</i>`).join('')}</span>`;
-// an uncut stone in the chapter's colours: the object is still inside
-const stone = (p) => `<svg class="jr-stone" viewBox="0 0 100 100" aria-hidden="true">
-  <path d="M50 12 88 33 50 54 12 33Z" fill="${hex(p.top)}"/>
-  <path d="M12 33 50 54v38L12 71Z" fill="${hex(p.lit)}"/>
-  <path d="M88 33 50 54v38l38-21Z" fill="${hex(p.shade)}"/></svg>`;
+// not found yet: a soft dark blur where the object will be
+const SHADOW = '<i class="jr-shadow" aria-hidden="true"></i>';
 
 function inkFor(p) {
   const sky = new THREE.Color(p.skyTop).lerp(new THREE.Color(p.skyBottom), 0.5);
@@ -50,6 +47,7 @@ export function renderJournal(root, { entries, solved }) {
     sec.style.setProperty('--sky-bottom', hex(p.skyBottom));
     sec.style.setProperty('--glow', hex(p.glow));
     sec.style.setProperty('--ink', inkFor(p));
+    if (inkFor(p) === '#f4f1ff') sec.classList.add('dark');
     sec.innerHTML = `<header>
         <span class="jr-numeral">${ch.numeral}</span>
         <h3>${esc(ch.name)}</h3>
@@ -68,7 +66,7 @@ export function renderJournal(root, { entries, solved }) {
         Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
         b.addEventListener('click', () => openView(root, e, n));
       } else {
-        b.innerHTML = `<span class="jr-pic">${stone(p)}</span><span class="nm">${e.shape.bonus ? 'shrine' : '&nbsp;'}</span>`;
+        b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? 'shrine' : '&nbsp;'}</span>`;
         b.setAttribute('aria-label', e.shape.bonus ? 'A shrine, not yet opened' : 'Not yet uncovered');
         b.disabled = true;
       }

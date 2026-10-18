@@ -553,7 +553,10 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .jr-tile .nm { font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .jr-tile:not(.found) { cursor: default; }
 .jr-tile:not(.found) .nm { opacity: .45; letter-spacing: .14em; text-transform: none; font-style: italic; }
-.jr-stone { width: 46px; height: 46px; opacity: .55; }
+.jr-shadow { width: 64px; height: 64px; border-radius: 50%;
+  /* a gaussian falloff: dark in the middle, no edge at all */
+  background: radial-gradient(closest-side, rgba(20, 16, 40, .2) 0%, rgba(20, 16, 40, .15) 30%, rgba(20, 16, 40, .07) 60%, rgba(20, 16, 40, .02) 85%, transparent 100%); }
+.jr-chapter.dark .jr-shadow { background: radial-gradient(closest-side, rgba(0, 0, 8, .42) 0%, rgba(0, 0, 8, .3) 30%, rgba(0, 0, 8, .14) 60%, rgba(0, 0, 8, .04) 85%, transparent 100%); }
 .jr-tile.bonus .jr-pic { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 35%, transparent); }
 .jr-tile.bonus.found .jr-pic { box-shadow: inset 0 0 0 1.5px #e9b949, 0 0 18px rgba(255, 215, 122, .45); }
 .jr-gems { display: inline-flex; gap: 4px; }
