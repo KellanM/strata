@@ -26,6 +26,10 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+// overshoots a touch and settles: the diamonds pop into place
+const easeOutBack = (k) => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
+
 // Reuses the buffer when the point count is unchanged, otherwise swaps it.
 function setPoints(obj, pts) {
   const attr = obj.geometry.getAttribute('position');
@@ -44,14 +48,33 @@ export class PeelHandles {
     const mat = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: this.uniforms });
     const geo = new THREE.OctahedronGeometry(0.3);
     geo.scale(1, 1.35, 1);
-    this.railMat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.4 });
     this.items = [0, 1, 2].map((axis) => {
       const mesh = new THREE.Mesh(geo, mat);
-      const rail = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), this.railMat);
+      const rail = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ transparent: true, opacity: 0.4 }));
       const ticks = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ size: 3, sizeAttenuation: false, transparent: true, opacity: 0.5 }));
       this.group.add(mesh, rail, ticks);
-      return { axis, mesh, rail, ticks, side: 1, offset: new THREE.Vector3() };
+      return { axis, mesh, rail, ticks, side: 1, offset: new THREE.Vector3(), k: 0 };
     });
+    // in / out: the handles arrive once the block is whole and leave when it's solved
+    this.on = false;
+    this.since = -99;
+  }
+
+  // Show or hide with an animation (no-op if already in that state).
+  setShown(on, time) {
+    if (on === this.on) return;
+    this.on = on;
+    this.since = time;
+  }
+
+  // Hidden at once, no animation (a new level starts without them).
+  reset() { this.on = false; this.since = -99; }
+
+  // 0..1 (a little over 1 mid-pop) for the handle on axis a
+  amount(time, a) {
+    if (this.on) return easeOutBack(clamp01((time - this.since - a * 0.09) / 0.5));
+    const k = clamp01((time - this.since - (2 - a) * 0.04) / 0.26);
+    return 1 - k * k * k;
   }
 
   setPalette(p) {
@@ -59,8 +82,7 @@ export class PeelHandles {
     this.uniforms.cTop.value.setHex(p.lit);
     this.uniforms.cLit.value.setHex(p.shade);
     this.uniforms.cShade.value.setHex(p.under);
-    this.railMat.color.setHex(p.shade);
-    for (const it of this.items) it.ticks.material.color.setHex(p.shade);
+    for (const it of this.items) { it.rail.material.color.setHex(p.shade); it.ticks.material.color.setHex(p.shade); }
   }
 
   // dims: puzzle dims. camDir: unit vector from target to camera.
@@ -70,7 +92,8 @@ export class PeelHandles {
     for (const it of this.items) {
       const a = it.axis;
       const usable = dims[a] > 1;
-      it.mesh.visible = it.rail.visible = it.ticks.visible = usable;
+      const k = it.k = this.amount(time, a), line = clamp01(k);
+      it.mesh.visible = it.rail.visible = it.ticks.visible = usable && k > 0.001;
       const active = a === peel.axis && peel.peeled > 0;
       it.side = active ? peel.side : cam[a] >= 0 ? 1 : -1;
       // Rails ride silhouette edges so they never cover a face, one per corner:
@@ -85,13 +108,16 @@ export class PeelHandles {
       const half = dims[a] / 2;
       pos[a] = it.side * (keep - half + 0.4);
       it.mesh.position.fromArray(pos);
-      it.mesh.rotation.y = time * 0.6 + a * 2.1;
+      it.mesh.rotation.y = time * 0.6 + a * 2.1 + (1 - line) * 2.4;   // spins in as it arrives
       const s = 1 + (pulse ? 0.18 * (0.5 + 0.5 * Math.sin(time * 6)) : 0) + (it === this.grabbed ? 0.2 : 0);
-      it.mesh.scale.setScalar(s);
+      it.mesh.scale.setScalar(s * Math.max(k, 0.001));
 
+      // the rail draws out from the diamond both ways; the ticks fade in with it
       const p0 = [...pos], p1 = [...pos];
-      p0[a] = -half - 0.4; p1[a] = half + 0.4;
+      p0[a] = pos[a] + (-half - 0.4 - pos[a]) * line; p1[a] = pos[a] + (half + 0.4 - pos[a]) * line;
       setPoints(it.rail, [new THREE.Vector3(...p0), new THREE.Vector3(...p1)]);
+      it.rail.material.opacity = 0.4 * line;
+      it.ticks.material.opacity = 0.5 * line * line;
       const ticks = [];
       for (let k = 0; k <= dims[a]; k++) { const q = [...pos]; q[a] = k - half; ticks.push(new THREE.Vector3(...q)); }
       setPoints(it.ticks, ticks);
@@ -103,7 +129,7 @@ export class PeelHandles {
     let best = null, bestD = radius;
     const v = new THREE.Vector3();
     for (const it of this.items) {
-      if (!it.mesh.visible) continue;
+      if (!it.mesh.visible || it.k < 0.6) continue;
       v.copy(it.mesh.position).project(camera);
       const sx = rect.left + (v.x * 0.5 + 0.5) * rect.width, sy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
       const d = Math.hypot(sx - clientX, sy - clientY);

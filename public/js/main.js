@@ -116,6 +116,7 @@ function startPuzzle(entry) {
   document.body.classList.remove('solved');
   finale.hide();
   fragments.clear();
+  handles.reset();
   clearResult();
   $('#actions').classList.remove('show');
   // look square-on at the broad face of flat puzzles, isometric otherwise
@@ -1065,7 +1066,8 @@ function draw() {
     }
 
     camDir.copy(camera.position).sub(controls.target).normalize();
-    handles.group.visible = !game.solved && game.shape.handles !== false && t >= (game.introEnd ?? 0);
+    handles.group.visible = game.shape.handles !== false;
+    handles.setShown(!game.solved && t >= (game.introEnd ?? 0), reduceMotion ? -99 : t);   // they pop in once the block is whole
     handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, !!currentHint()?.pulseHandle);
   }
   rayBoost *= Math.exp(-dt * 1.6);
