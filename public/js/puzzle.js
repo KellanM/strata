@@ -93,6 +93,27 @@ export class Puzzle {
   }
 }
 
+// What one visible line's clue settles, given what's known (state: 0 unknown,
+// 1 solid, 2 empty, per cell). Returns { and, or } over the line's positions
+// (a bit set in `and`: solid in every fit; clear in `or`: empty in every fit),
+// or null if nothing fits. The tutorial's stuck hint uses it.
+export function lineFits(line, state) {
+  const n = line.cells.length;
+  let solidM = 0, emptyM = 0;
+  for (let t = 0; t < n; t++) {
+    const s = state[line.cells[t]];
+    if (s === SOLID) solidM |= 1 << t;
+    else if (s === EMPTY) emptyM |= 1 << t;
+  }
+  const cands = tableFor(n).get(line.count * 3 + line.style) || [];
+  let and = (1 << n) - 1, or = 0, any = false;
+  for (const m of cands) {
+    if ((m & emptyM) || (m & solidM) !== solidM) continue;
+    and &= m; or |= m; any = true;
+  }
+  return any ? { and, or } : null;
+}
+
 // Propagates line constraints to a fixed point. Returns true if every cell is
 // determined (the puzzle is solvable by pure line logic with the visible clues).
 export function lineSolve(p) {

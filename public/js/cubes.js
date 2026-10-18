@@ -55,6 +55,8 @@ const vertexShader = /* glsl */ `
   uniform vec4 uRip[${MAX_RIPPLES}];       // origin.xyz, start time
   uniform vec2 uRipParam[${MAX_RIPPLES}];  // amplitude, speed
   uniform vec3 uHint;
+  uniform vec4 uHintLine;  // a row to glow: a cell on it (xyz) and its axis (w; -1 = none)
+  uniform float uCalm;     // 1 under Reduce Motion: hint cues hold still instead of breathing
   uniform float uWin;      // time the puzzle was solved (-99 while playing)
   uniform float uIntro;    // time the level began: the block assembles itself (-99 = no intro)
   uniform float uIntroSpeed;   // 1 in levels; faster for the title's logo
@@ -71,6 +73,7 @@ const vertexShader = /* glsl */ `
   varying float vHeight;
   varying float vPeelFade;
   varying vec3 vCell;
+  varying float vHintLine;
 
   void main() {
     vec3 n = normal;
@@ -141,7 +144,15 @@ const vertexShader = /* glsl */ `
       offset.x += sin(age * 70.0) * 0.07 * m;
     }
 
-    if (distance(aCell, uHint) < 0.1) offset.y += 0.07 * (0.5 + 0.5 * sin(uTime * 4.0));
+    if (distance(aCell, uHint) < 0.1 && uCalm < 0.5) offset.y += 0.07 * (0.5 + 0.5 * sin(uTime * 4.0));
+
+    // tutorial: the row a clue counts, every cube of it, lit softly
+    vHintLine = 0.0;
+    if (uHintLine.w > -0.5) {
+      vec3 dl = abs(aCell - uHintLine.xyz);
+      if (uHintLine.w < 0.5) dl.x = 0.0; else if (uHintLine.w < 1.5) dl.y = 0.0; else dl.z = 0.0;
+      vHintLine = step(max(dl.x, max(dl.y, dl.z)), 0.1);
+    }
 
     float height = aCell.y / max(uDims.y - 1.0, 1.0);
 
@@ -185,6 +196,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uDims;
   uniform vec3 uHover;
   uniform vec3 uHint;
+  uniform float uCalm;
   uniform vec2 uLight;     // xz direction of the key light
   uniform vec3 cTop, cLit, cShade, cUnder;
   uniform vec3 pTop, pLit, pShade;
@@ -202,6 +214,7 @@ const fragmentShader = /* glsl */ `
   varying float vHeight;
   varying float vPeelFade;
   varying vec3 vCell;
+  varying float vHintLine;
 
   float bit(float bits, float p2) { return mod(floor(bits / p2 + 0.001), 2.0); }
 
@@ -248,6 +261,11 @@ const fragmentShader = /* glsl */ `
     // vertical gradient: bases sink into haze
     base = mix(cHaze, base, 0.78 + 0.22 * smoothstep(0.0, 0.85, vHeight));
 
+    // tutorial: the row a hint is about glows, slower and softer than the cube
+    // to tap; lit before the glyph is inked, so its number stays legible
+    float slow = uCalm > 0.5 ? 0.5 : 0.5 + 0.5 * sin(uTime * 2.2);
+    base = mix(base, cGlow, vHintLine * (0.3 + 0.2 * slow));
+
     // clue glyph, inked in a darker (or lighter) tone of the face itself
     vec3 col = base;
     if (vTile > 0.5) {
@@ -284,7 +302,8 @@ const fragmentShader = /* glsl */ `
     if (distance(vCell, uHover) < 0.1) col = mix(col, vec3(1.0), 0.14 + 0.1 * edge);
 
     // tutorial: the cube to try next breathes
-    if (distance(vCell, uHint) < 0.1) col = mix(col, vec3(1.0), 0.12 + 0.3 * (0.5 + 0.5 * sin(uTime * 4.0)));
+    float breath = uCalm > 0.5 ? 0.5 : 0.5 + 0.5 * sin(uTime * 4.0);
+    if (distance(vCell, uHint) < 0.1) col = mix(col, vec3(1.0), 0.12 + 0.3 * breath);
 
     // mistake flash
     if (vState.w >= 0.0) col = mix(col, cMistake, exp(-(uTime - vState.w) * 2.5) * 0.85);
@@ -310,6 +329,8 @@ export class Cubes {
       uPeel: { value: new THREE.Vector3(1, 99, 1) },
       uHover: { value: new THREE.Vector3(-99, -99, -99) },
       uHint: { value: new THREE.Vector3(-99, -99, -99) },
+      uHintLine: { value: new THREE.Vector4(0, 0, 0, -1) },
+      uCalm: { value: 0 },
       uLight: { value: new THREE.Vector2(-0.45, 0.9).normalize() },
       uRip: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, 0, -99)) },
       uRipParam: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector2(0, 1)) },

@@ -109,7 +109,9 @@ export class PeelHandles {
       pos[a] = it.side * (keep - half + 0.4);
       it.mesh.position.fromArray(pos);
       it.mesh.rotation.y = time * 0.6 + a * 2.1 + (1 - line) * 2.4;   // spins in as it arrives
-      const s = 1 + (pulse ? 0.18 * (0.5 + 0.5 * Math.sin(time * 6)) : 0) + (it === this.grabbed ? 0.2 : 0);
+      // pulse: true breathes; 'still' (Reduce Motion) holds the handle a little larger instead
+      const beat = pulse === 'still' ? 0.12 : pulse ? 0.18 * (0.5 + 0.5 * Math.sin(time * 6)) : 0;
+      const s = 1 + beat + (it === this.grabbed ? 0.2 : 0);
       it.mesh.scale.setScalar(s * Math.max(k, 0.001));
 
       // the rail draws out from the diamond both ways; the ticks fade in with it

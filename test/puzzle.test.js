@@ -116,10 +116,19 @@ test('isSolved requires every empty cell broken', () => {
 
 test('tutorial lessons are solvable with exactly the clues they show', async () => {
   const { TUTORIAL } = await import('../public/js/shapes.js');
+  const events = new Set(['break', 'paint', 'mistake', 'rotate', 'peel', 'solved']);
+  const ids = new Set();
   for (const lesson of TUTORIAL) {
     const p = make(lesson);
-    for (const line of p.lines) line.hidden = !lesson.show[line.axis];
-    assert.ok(lineSolve(p), `${lesson.id} not solvable`);
+    assert.ok(setClues(p, lesson) && lineSolve(p), `${lesson.id} not solvable`);
+    assert.ok(!ids.has(lesson.id), `${lesson.id} repeated`); ids.add(lesson.id);
+    assert.equal(lesson.hints.at(-1)?.until, 'solved', `${lesson.id}: the last hint must last until it is solved`);
+    for (const h of lesson.hints) {
+      assert.ok(events.has(h.until), `${lesson.id}: unknown event ${h.until}`);
+      assert.ok(h.text.split(/\s+/).length <= 18, `${lesson.id}: hint too long: ${h.text}`);
+      const cells = [h.pulse, h.line?.slice(1)].filter(Boolean);
+      for (const c of cells) assert.ok(c.every((v, a) => v >= 0 && v < lesson.dims[a]), `${lesson.id}: hint cell outside the block`);
+    }
   }
 });
 

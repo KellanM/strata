@@ -67,6 +67,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 #pz-meta { font-size: inherit; }
 #timer:not(:empty)::before { content: "·"; margin: 0 .55em 0 .35em; }
 #strikes { color: #d4505a; letter-spacing: .25em; }
+.slip { color: #d4505a; }
 #strikes:not(:empty) { margin-left: .8em; }
 
 .tools {
@@ -98,6 +99,17 @@ body.dark .segmented::before { background: rgba(255, 255, 255, 0.14); box-shadow
 }
 .tool svg { width: 17px; height: 17px; }
 .tool.on { color: var(--ink); }
+/* tutorial: the tool a hint asks for breathes, at the pace of the hinted cube */
+.tool.cue { color: var(--ink); }
+.tool.cue::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 2px var(--ink); opacity: .5; animation: tool-cue 1.57s ease-in-out infinite;
+}
+@keyframes tool-cue { 0%, 100% { opacity: .15; } 50% { opacity: .6; } }
+@media (prefers-reduced-motion: reduce) {
+  .tool.cue::after { animation: none; opacity: .45; }
+  #coach, #coach.show { transform: translate(-50%, 0); }
+}
 
 #press-ring {
   position: fixed; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%;
@@ -168,9 +180,18 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   padding: 14px 18px 12px; border-radius: 20px; text-align: center;
   background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 10px 30px rgba(40, 20, 60, 0.08);
-  opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .6s var(--ease-out);
+  opacity: 0; pointer-events: none;
+  /* leaves with `in`, faster than it came (docs/motion.md) */
+  transition: opacity var(--dur-base) var(--ease-in), transform var(--dur-base) var(--ease-in);
 }
-#coach.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#coach.show {
+  opacity: 1; transform: translate(-50%, 0); pointer-events: auto;
+  transition: opacity var(--dur-slow) var(--ease-fade), transform var(--dur-slow) var(--ease-out);
+}
+/* between hints the card keeps only its dots and skip: the block is tried first */
+#coach.quiet { padding: 8px 18px 4px; }
+#coach.quiet #coach-text { display: none; }
+#coach-skip[hidden] { display: none; }
 #coach-text { margin: 6px 0 4px; font-size: 15px; line-height: 1.45; }
 #coach-dots { display: flex; gap: 6px; justify-content: center; }
 #coach-dots i { width: 6px; height: 6px; transform: rotate(45deg); background: var(--line); transition: background .4s; }

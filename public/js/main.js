@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
-import { Puzzle, setClues } from './puzzle.js';
+import { Puzzle, setClues, lineFits } from './puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
@@ -59,7 +59,7 @@ let tool = 'break';
 // peeled: whole layers (game logic). keepVisual: what the shader eases toward.
 const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
-let tutorial = null;          // { step, hint }
+let tutorial = null;          // { step, hint, open }: open = the current hint is showing (a `wait` hint holds back)
 let updateReady = false;      // a new version has taken over; reload at a calm moment
 let lastTouch = null;         // { i, point }: where the last pick met its cube
 let titleUp = true;           // the launch title is showing: the block is a backdrop, no HUD or handles
@@ -70,6 +70,7 @@ const clock0 = performance.now();
 const now = () => ((performance.now() - clock0) / 1000) * motionRate;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+cubes.uniforms.uCalm.value = reduceMotion ? 1 : 0;   // hint cues hold still
 const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 
 // ---------------------------------------------------------------- puzzles
@@ -99,6 +100,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
     undo: [], mistakes: 0, start: now(), elapsed: 0, solved: false, revealStart: -1,
   };
   if (!entry.lesson) tutorial = null;
+  resetCoaching(entry, quiet);
 
   if (!cubes.mesh || !cubes.mesh.parent) scene.add(cubes.build(puzzle));
   else cubes.build(puzzle);
@@ -290,7 +292,7 @@ function setPeeled(n, silent = false) {
   peel.peeled = next;
   peel.keepVisual = dim - next;
   if (changed || silent) refreshAO();
-  if (changed && !silent) { buzz(6); sound.peel(); if (next > 0) tutorialEvent('peel'); }
+  if (changed && !silent) { buzz(6); sound.peel(); poke(); if (next > 0) tutorialEvent('peel'); }
 }
 
 // ---------------------------------------------------------------- picking
@@ -411,6 +413,7 @@ function finishIntro() {
 
 function act(i, which) {
   if (!game || game.solved || i < 0) return;
+  poke();
   if (now() < (game.introEnd ?? 0)) finishIntro();   // don't make people wait: the block is whole at once
   const t = now();
   const cell = game.puzzle.coords(i);
@@ -444,6 +447,7 @@ function act(i, which) {
     buzz([30, 40, 30]);
     sound.mistake();
     updateStrikes();
+    tutorialEvent('mistake');
     return;
   }
 
@@ -470,6 +474,7 @@ function act(i, which) {
 
 function undo() {
   if (!game || game.solved) return;
+  poke();
   const u = game.undo.pop();
   if (!u) return;
   const t = now();
@@ -594,32 +599,67 @@ function win() {
 
 // ---------------------------------------------------------------- tutorial
 
+// docs/tutorial-study.md. A lesson's hints come one at a time, each held until
+// its event. A hint with `wait` stays quiet until the player pauses that long
+// or slips: the block is tried first, the words come only when needed. When a
+// player is stuck (a lesson's `nudge`, or the first levels), a row that has a
+// move glows; pausing longer, its cube breathes too. Nothing is ever forced.
+
+let coachCard = null;     // a one-off line on a level: { text, until }
+let idleFrom = 0;         // scene time of the player's last action
+let nudge = null;         // the stuck hint showing: { level: 1 | 2, line, cell }
+const NUDGE_LEVEL = 25;   // seconds of stillness on levels 1-3 before a row glows
+const NUDGE_LESSON = 10;
+
 function startTutorial(step = 0) {
-  tutorial = { step, hint: 0 };
+  tutorial = { step, hint: 0, open: !TUTORIAL[step].hints[0]?.wait };
   const lesson = TUTORIAL[step];
-  startPuzzle({ shape: lesson, palette: PALETTES.find((p) => p.name === ['Dawn', 'Lagoon', 'Mint', 'Dawn', 'Night'][step % 5]) ?? PALETTES[0], number: null, lesson: step + 1 });
+  const palette = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
+  startPuzzle({ shape: lesson, palette, number: null, lesson: step + 1 });
+}
+
+// startPuzzle: a fresh block starts its coaching from rest
+function resetCoaching(entry, quiet) {
+  idleFrom = now();
+  nudge = null;
+  coachCard = null;
+  // the first real stone: the rule newcomers most often misread, gone at the first chisel
+  if (!quiet && !entry.lesson && entry.number === 1 && !solvedStore[entry.shape.id]) {
+    coachCard = { text: 'Each number counts the row running straight in from its face. Take your time.', until: 'break' };
+  }
 }
 
 function currentHint() {
   return tutorial && game?.entry.lesson ? TUTORIAL[tutorial.step].hints[tutorial.hint] : null;
 }
 
+// anything the player does restarts the quiet clock and lets a nudge go
+function poke() {
+  idleFrom = now();
+  if (nudge) { nudge = null; applyCues(); }
+}
+
 function tutorialEvent(kind) {
+  if (coachCard && kind === coachCard.until) { coachCard = null; renderCoach(); }
   const h = currentHint();
   if (!h) return;
   if (kind === 'solved') {
     tutorial.hint = TUTORIAL[tutorial.step].hints.length;   // past the last hint
+    tutorial.open = true;
     renderCoach(tutorial.step === TUTORIAL.length - 1 ? 'That’s everything. Well done.' : 'Nice.');
     const g = game, step = tutorial.step;
-    setTimeout(() => {
+    after(2.2, () => {
       if (game !== g) return;
       if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
       else finishTutorial();
-    }, 2200);
+    });
     return;
   }
+  // a slip is the moment a held-back hint is worth reading
+  if (kind === 'mistake' && !tutorial.open && h.until !== 'mistake') { tutorial.open = true; renderCoach(); }
   if (h.until !== kind) return;
   tutorial.hint++;
+  tutorial.open = !currentHint()?.wait;
   renderCoach();
 }
 
@@ -628,21 +668,102 @@ function finishTutorial() {
   tutorial = null;
   renderCoach();
   controls.autoRotate = !reduceMotion;
-  showWin('You’re ready', 'tap · hold · turn · peel', 'Play No. 1');
+  showWin('You’re ready', 'tap · mark · turn · peel', 'Play No. 1');
 }
 
 function renderCoach(override) {
   const coach = $('#coach');
+  const lesson = !!(tutorial && game?.entry.lesson);
+  if (!lesson && !coachCard) { coach.classList.remove('show'); applyCues(); return; }
   const h = currentHint();
-  if (!tutorial || !game?.entry.lesson) { coach.classList.remove('show'); return; }
-  $('#coach-text').textContent = override || h?.text || '';
-  $('#coach-dots').innerHTML = TUTORIAL.map((_, k) =>
-    `<i class="${k < tutorial.step ? 'done' : k === tutorial.step ? 'now' : ''}"></i>`).join('');
-  coach.classList.remove('show');
-  void coach.offsetWidth;
-  coach.classList.add('show');
-  const pulse = h?.pulse;
-  cubes.uniforms.uHint.value.set(...(pulse || [-99, -99, -99]));
+  const text = override || (lesson ? (tutorial.open ? h?.text : '') : coachCard.text) || '';
+  const was = $('#coach-text').textContent, wasShown = coach.classList.contains('show');
+  $('#coach-text').textContent = text;
+  $('#coach-dots').innerHTML = lesson ? TUTORIAL.map((_, k) =>
+    `<i class="${k < tutorial.step ? 'done' : k === tutorial.step ? 'now' : ''}"></i>`).join('') : '';
+  $('#coach-skip').hidden = !lesson;
+  coach.classList.toggle('quiet', !text);     // between hints: just the dots and skip
+  if (!wasShown || (text && text !== was)) {  // new words arrive; the same words stay put
+    coach.classList.remove('show');
+    void coach.offsetWidth;
+    coach.classList.add('show');
+  }
+  applyCues();
+}
+
+// What the block and controls point at: the showing hint's cues, else a nudge.
+function applyCues() {
+  const h = tutorial && game?.entry.lesson && tutorial.open ? currentHint() : null;
+  const u = cubes.uniforms;
+  const pulse = h?.pulse ?? (nudge?.level > 1 ? nudge.cell : null);
+  u.uHint.value.set(...(pulse || [-99, -99, -99]));
+  const line = h?.line ?? nudge?.line;
+  if (line) u.uHintLine.value.set(line[1], line[2], line[3], line[0]);
+  else u.uHintLine.value.set(0, 0, 0, -1);
+  document.querySelectorAll('.tool').forEach((b) =>
+    b.classList.toggle('cue', !!h?.pulseTool && b.dataset.tool === h.pulseTool && tool !== h.pulseTool));
+}
+
+// seconds of stillness before a stuck player is shown a row (0: never here)
+function nudgeAfter() {
+  const e = game.entry;
+  if (e.lesson) {
+    const h = currentHint();
+    if (!tutorial || !h) return 0;
+    if (TUTORIAL[tutorial.step].nudge) return TUTORIAL[tutorial.step].nudge;
+    // only once the lesson's own words are showing, and only if they point at nothing
+    const quiet = !h.line && !h.pulse && !h.pulseTool && !h.pulseHandle;
+    return tutorial.open && quiet && (h.until === 'solved' || h.until === 'break') ? NUDGE_LESSON : 0;
+  }
+  return e.number && e.number <= 3 && !solvedStore[e.shape.id] ? NUDGE_LEVEL : 0;
+}
+
+// The first move the clues allow from what the player has shown they know
+// (chiselled cubes, correct marks): the row that proves a cube can go, and
+// that cube. Deductions they haven't acted on are followed silently.
+function findMove() {
+  const p = game.puzzle;
+  const state = new Uint8Array(p.size);
+  for (let i = 0; i < p.size; i++) {
+    if (game.broken[i]) state[i] = 2;
+    else if (game.painted[i] && p.solid[i]) state[i] = 1;
+  }
+  // the earliest pass that frees a cube; of its moves, the one nearest the eye
+  for (let pass = 0, changed = true; changed && pass < 64; pass++) {
+    changed = false;
+    let best = null, bestNear = -Infinity;
+    for (const line of p.lines) {
+      if (line.hidden) continue;
+      const fit = lineFits(line, state);
+      if (!fit) return null;
+      for (let t = 0; t < line.cells.length; t++) {
+        const c = line.cells[t];
+        if (state[c]) continue;
+        if (!((fit.or >> t) & 1)) {
+          const near = cellWorld(c).dot(camDir);
+          if (near > bestNear) { bestNear = near; best = { line: [line.axis, ...p.coords(c)], cell: p.coords(c) }; }
+        } else if ((fit.and >> t) & 1) { state[c] = 1; changed = true; }
+      }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+
+// every frame: a held-back hint opens on a pause; a stuck player gets a nudge
+function coachTick(t) {
+  if (!game || game.solved || titleUp || t < (game.introEnd ?? 0)) return;
+  if (document.querySelector('.overlay.show')) { idleFrom = t; return; }   // time away from the block doesn't count
+  const idle = t - idleFrom;
+  const h = currentHint();
+  if (h && !tutorial.open && h.wait && idle > h.wait) { tutorial.open = true; renderCoach(); }
+  const wait = nudgeAfter();
+  const level = nudge?.level ?? 0;
+  if (wait && level < 2 && idle > wait * (level + 1)) {
+    const move = findMove();
+    if (move) { nudge = { level: level + 1, ...move }; applyCues(); mark(`nudge ${nudge.level}`); }
+    else idleFrom = t;   // nothing to point at: wait another while
+  }
 }
 
 // ---------------------------------------------------------------- input
@@ -753,7 +874,7 @@ canvas.addEventListener('dblclick', (e) => { if (pick(e.clientX, e.clientY) < 0)
 let rotateFrom = null;
 controls.addEventListener('start', () => { rotateFrom = camera.position.clone(); viewAnim = null; });
 controls.addEventListener('end', () => {
-  if (rotateFrom && rotateFrom.angleTo(camera.position) > 0.25) tutorialEvent('rotate');
+  if (rotateFrom && rotateFrom.angleTo(camera.position) > 0.25) { poke(); tutorialEvent('rotate'); }
   rotateFrom = null;
 });
 
@@ -765,6 +886,7 @@ function setTool(t) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-checked', on);
   });
+  applyCues();
 }
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
@@ -1157,7 +1279,9 @@ function draw() {
     camDir.copy(camera.position).sub(controls.target).normalize();
     handles.group.visible = game.shape.handles !== false;
     handles.setShown(!game.solved && !titleUp && t >= (game.introEnd ?? 0), reduceMotion ? -99 : t);   // they pop in once the block is whole
-    handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, !!currentHint()?.pulseHandle);
+    const handleCue = !!(tutorial?.open && currentHint()?.pulseHandle) && (reduceMotion ? 'still' : true);
+    handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, handleCue);
+    coachTick(t);
   }
   rayBoost *= Math.exp(-dt * 1.6);
 
@@ -1291,6 +1415,7 @@ function maybeShowInstall() {
   if (installed) return;
   const later = Number(localStorage.getItem('strata.install.later')) || 0;
   if (Date.now() - later < 3 * 24 * 3600 * 1000) return;     // asked again after three days
+  if (!localStorage.getItem('strata.tutorial')) return;        // never over the lessons: asked on a later visit
   if (!isIOS && !isAndroid && !installPrompt) return;          // desktop without an install offer
   const card = $('#install');
   // steps for this browser; a real Install button whenever the browser offers one
@@ -1520,4 +1645,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { get game() { return game; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera };
+window.strata = { get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera };
