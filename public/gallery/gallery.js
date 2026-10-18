@@ -2,6 +2,8 @@
 // Built-in candidates live in themes/<theme>.js; other builders add files to
 // extra/ and list them in extra/manifest.json ("<theme>-<n>.js"), which are
 // merged into their theme with numbering continuing (I-01 … I-NN).
+// Further pages (?page=2 …) hold fresh rounds of ideas: page<n>/manifest.json
+// lists "<theme>-<k>.js" files in page<n>/; their cards are numbered P2·I-01.
 import * as THREE from 'three';
 import { PALETTES } from '../js/palettes.js';
 import { renderThumb } from '../js/thumbs.js';
@@ -28,18 +30,37 @@ const turned = (s) => {
   return { ...s, id: s.id + ':back', cell: (x, y, z) => s.cell(X - 1 - x, y, Z - 1 - z) };
 };
 
+const PAGE = Math.max(1, Number(new URLSearchParams(location.search).get('page')) || 1);
+const PAGES = 2;
+const numberOf = (t, k) => `${PAGE > 1 ? `P${PAGE}·` : ''}${t.numeral}-${String(k + 1).padStart(2, '0')}`;
+
 async function load() {
   const lists = {};
-  for (const t of THEMES) lists[t.key] = [...(await import(`./themes/${t.key}.js`)).default];
+  const dir = PAGE > 1 ? `page${PAGE}` : 'extra';
+  for (const t of THEMES) lists[t.key] = PAGE > 1 ? [] : [...(await import(`./themes/${t.key}.js`)).default];
   try {
-    const manifest = await (await fetch('extra/manifest.json', { cache: 'no-store' })).json();
+    const manifest = await (await fetch(`${dir}/manifest.json`, { cache: 'no-store' })).json();
     for (const file of manifest) {
       const key = file.split('-')[0];
       if (!lists[key]) continue;
-      try { lists[key].push(...(await import(`./extra/${file}`)).default); } catch (e) { console.warn('gallery: skipped', file, e); }
+      try { lists[key].push(...(await import(`./${dir}/${file}`)).default); } catch (e) { console.warn('gallery: skipped', file, e); }
     }
-  } catch { /* no extras */ }
+  } catch { /* nothing more on this page */ }
   return lists;
+}
+
+// page links under the title
+{
+  const nav = document.createElement('nav');
+  nav.className = 'pages';
+  for (let n = 1; n <= PAGES; n++) {
+    const a = document.createElement('a');
+    a.href = n === 1 ? 'index.html' : `index.html?page=${n}`;
+    a.textContent = `Page ${n}`;
+    if (n === PAGE) a.className = 'on';
+    nav.appendChild(a);
+  }
+  document.querySelector('header.top').appendChild(nav);
 }
 
 function inkFor(p) {
@@ -57,6 +78,7 @@ function renderPicks() {
 const lists = await load();
 const root = $('#themes');
 for (const t of THEMES) {
+  if (!lists[t.key].length) continue;              // later pages show only themes with new ideas
   const p = PALETTES.find((q) => q.name === t.palette);
   const { dark, ink } = inkFor(p);
   const sec = document.createElement('section');
@@ -69,7 +91,7 @@ for (const t of THEMES) {
   sec.innerHTML = `<header><div class="numeral">${t.numeral}</div><h2>${t.name}</h2><div class="chapter">${t.chapter}</div></header><div class="grid"></div>`;
   const grid = sec.querySelector('.grid');
   lists[t.key].forEach((shape, k) => {
-    const num = `${t.numeral}-${String(k + 1).padStart(2, '0')}`;
+    const num = numberOf(t, k);
     const st = stats(shape);
     const card = document.createElement('button');
     card.className = 'card' + (picks.has(num) ? ' picked' : '');
@@ -97,7 +119,7 @@ renderPicks();
 $('#picks-copy').addEventListener('click', async () => {
   const text = [...picks].map((n) => {
     for (const t of THEMES) {
-      const k = lists[t.key].findIndex((_, i) => `${t.numeral}-${String(i + 1).padStart(2, '0')}` === n);
+      const k = lists[t.key].findIndex((_, i) => numberOf(t, i) === n);
       if (k >= 0) return `${n} ${lists[t.key][k].name}`;
     }
     return n;
