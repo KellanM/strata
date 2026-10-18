@@ -68,16 +68,18 @@ export const SHAPES = [
       ], 2, { R: 0xe0546b }),
     },
     {
-      // The bath duck: the first round shape, still with every clue on show.
-      id: 'duck', name: 'Duck', dims: [6, 5, 4], fraction: 0.2, seed: 2,
-      story: 'It floated in from the bath and never went back.',
-      cell(x, y, z) {
-        if (x === 5 && y === 3 && (z === 1 || z === 2)) return 0xf08a3c;
-        if (ell(x - 4, y - 3.2, z - 1.5, 1.3, 1.2, 1.3)) return 0xf6c945;
-        if (ell(x - 2.4, y - 1, z - 1.5, 2.6, 1.3, 1.7)) return 0xf6c945;
-        if (x === 0 && y === 2 && (z === 1 || z === 2)) return 0xf6c945;
-        return 0;
-      },
+      // from the object gallery (candle)
+      id: 'candle', name: 'Candle', fraction: 0.1, seed: 3,
+      story: 'Lit before dawn, so the first visitor would find the way.',
+      ...voxels({ a: 0xe9b949, b: 0xf6efe4, c: 0x3a3442, d: 0xf2a03d }, [
+        '.aaa. aaaaa aaaaa aaaaa .aaa.',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .bbb. .bbb. .bbb. .....',
+        '..... .b.b. ..b.. .b.b. .....',
+        '..... ..... ..c.. ..... .....',
+        '..... ..... ..d.. ..... .....',
+      ]),
     },
     {
       // from the object gallery (toaster)
