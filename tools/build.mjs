@@ -5,6 +5,7 @@ import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFi
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
@@ -17,6 +18,15 @@ for (const f of ['build/three.module.min.js', 'build/three.core.min.js', 'exampl
   mkdirSync(join(out, '..'), { recursive: true });
   cpSync(join(three, f), out);
 }
+
+// stamp the version into How to play: package version and the commit it was built from
+const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+let sha = (process.env.GITHUB_SHA || '').slice(0, 7);
+if (!sha) { try { sha = execSync('git rev-parse --short HEAD', { cwd: root }).toString().trim(); } catch { sha = ''; } }
+const stamp = `v${pkg.version}${sha ? ' · ' + sha : ''}`;
+const htmlPath = join(dist, 'index.html');
+writeFileSync(htmlPath, readFileSync(htmlPath, 'utf8').replace('<p id="version" class="version">dev</p>', `<p id="version" class="version">${stamp}</p>`));
+console.log(`stamped ${stamp}`);
 
 const files = [];
 const walk = (dir) => {
@@ -38,4 +48,5 @@ const sw = readFileSync(swPath, 'utf8')
   .replace("const VERSION = 'dev';", `const VERSION = '${version}';`)
   .replace('const FILES = [];', `const FILES = ${JSON.stringify(['./', ...files], null, 2)};`);
 writeFileSync(swPath, sw);
+
 console.log(`dist/ built: ${files.length} files, version ${version}`);

@@ -1,6 +1,6 @@
 {
   "name": "nonogram-3d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "3D nonogram (peel-the-layers picross) served over the local network",
   "type": "module",

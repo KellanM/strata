@@ -553,3 +553,6 @@ body.solved #win-title { top: calc(30px + var(--safe-t)); }
 #journal-view .jv-story { margin: 0 auto 10px; max-width: 320px; font-size: 15px; line-height: 1.5; }
 #journal-view .jv-hint { opacity: .55; }
 #journal-back { position: absolute; top: calc(12px + var(--safe-t)); left: 14px; }
+
+/* the build stamps this; it tells which version a phone is running */
+.version { margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
