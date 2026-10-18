@@ -36,7 +36,7 @@ const files = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p);
+    if (statSync(p).isDirectory()) { if (relative(dist, p) !== 'gallery') walk(p); }   // the gallery is deployed but never cached offline
     else if (name !== 'sw.js' && name !== 'icon.svg') files.push(relative(dist, p).split(sep).join('/'));
   }
 };
