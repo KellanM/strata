@@ -23,9 +23,9 @@ const list = [
   (() => {
     const g = grid(5, 6, 5);
     g.cylinder('y', [2, 2], 2.2, [0, 3], jam)
-      .cylinder('y', [2, 2], 2.2, [1, 2], (x, y, z) => (x === 4 || z === 4 ? C.cream : null))
+      .cylinder('y', [2, 2], 2.2, [1, 2], (x, y, z) => ((x - 2) ** 2 + (z - 2) ** 2 > 1.5 ? C.cream : null))   // label all round
       .cylinder('y', [2, 2], 2.3, [4, 4], C.red)
-      .set(2, 5, 2, C.red).set(3, 5, 2, C.white);
+      .set(2, 5, 2, C.red);
     return g.entry({ id: 'cand-jam-jar', name: 'Jam Jar' });
   })(),
 
@@ -34,8 +34,7 @@ const list = [
     const g = grid(6, 5, 3);
     g.box([0, 5], [0, 0], [0, 2], wood)
       .box([0, 1], [1, 3], [0, 1], C.white).box([0, 1], [4, 4], [0, 1], tin)
-      .box([3, 4], [1, 3], [1, 2], C.ink).box([3, 4], [4, 4], [1, 2], tin)
-      .set(1, 2, 1, C.sky);                                   // a dab of blue on the salt
+      .box([3, 4], [1, 3], [1, 2], C.ink).box([3, 4], [4, 4], [1, 2], tin);
     return g.entry({ id: 'cand-salt-pepper', name: 'Salt & Pepper' });
   })(),
 
@@ -93,8 +92,8 @@ const list = [
   (() => {
     const g = grid(6, 5, 4);
     g.box([0, 4], [0, 1], [0, 3], C.pink)
-      .set(1, 2, 2, C.sky).set(2, 2, 2, C.sky).set(2, 3, 2, C.sky).set(3, 3, 2, C.sky).set(3, 4, 2, C.white)
-      .set(5, 0, 2, C.sky);
+      .set(1, 2, 1, C.sky).set(1, 2, 2, C.sky).set(2, 2, 1, C.sky).set(1, 3, 1, C.sky)   // a bubble cluster
+      .set(3, 2, 2, C.white);                                                            // and one more
     return g.entry({ id: 'cand-soap', name: 'Soap' });
   })(),
 
@@ -115,18 +114,18 @@ const list = [
     g.ellipsoid([2.5, 2.2, 2.5], [2.5, 2.3, 2.5], C.rose)
       .ellipsoid([2.5, 2.2, 2.5], [2.5, 2.3, 2.5], (x, y, z) => (Math.abs(x - z) < 1 ? C.dred : null))
       .box([3, 3], [0, 0], [3, 5], C.rose).box([3, 5], [0, 0], [5, 5], C.rose);
-    return g.entry({ id: 'cand-yarn', name: 'Ball of Yarn' });
+    return { ...g.entry({ id: 'cand-yarn', name: 'Ball of Yarn' }), qa: 'drop', qaWhy: 'reads as a pink box with a strip from every angle' };
   })(),
 
   // a little teddy bear: round ears, a cream snout, dark eyes, a red bow
   (() => {
     const g = grid(6, 7, 5);
     g.ellipsoid([2.5, 1.8, 2], [2.3, 1.9, 1.9], C.tan)
-      .ellipsoid([2.5, 4.6, 2.2], [1.9, 1.6, 1.7], C.tan)
-      .set(1, 6, 2, C.brown).set(4, 6, 2, C.brown)
-      .set(1, 5, 3, C.ink).set(4, 5, 3, C.ink)
-      .set(2, 4, 4, C.cream).set(3, 4, 4, C.cream)
-      .set(3, 3, 3, C.red);
+      .ellipsoid([2.5, 4.6, 2], [2.6, 1.6, 1.7], C.tan)
+      .set(1, 6, 2, C.brown).set(4, 6, 2, C.brown)               // ears
+      .set(1, 5, 3, C.ink).set(4, 5, 3, C.ink)                   // eyes, one each side of the snout
+      .set(2, 4, 4, C.cream).set(3, 4, 4, C.cream)               // snout
+      .set(2, 3, 3, C.red).set(3, 3, 3, C.red);                  // bow
     return g.entry({ id: 'cand-teddy', name: 'Teddy Bear' });
   })(),
 
@@ -182,9 +181,9 @@ const list = [
 
   // a wedge of cheese with holes on its faces
   (() => {
-    const g = grid(6, 4, 5);
-    g.box([0, 5], [0, 3], [0, 4], (x, y) => (y <= 3 - Math.floor(x * 0.65) ? C.yellow : null))
-      .clear(1, 1, 4).clear(3, 0, 4).clear(0, 2, 2).set(5, 0, 4, C.yellow);
+    const g = grid(6, 3, 5);
+    g.box([0, 5], [0, 2], [0, 4], (x, y, z) => (z <= Math.round(x * 0.8) ? C.yellow : null))
+      .clear(5, 1, 1).clear(5, 0, 3).clear(4, 2, 1).clear(3, 1, 2);   // holes on the end and the top
     return g.entry({ id: 'cand-cheese', name: 'Cheese' });
   })(),
 
@@ -194,7 +193,7 @@ const list = [
     g.cylinder('y', [2.5, 2.5], 2.8, [0, 0], C.terracotta)
       .cylinder('y', [2.5, 2.5], 2.6, [1, 1], C.red)
       .cylinder('y', [2.5, 2.5], 2.8, [1, 1], (x, y, z) => ((x - 2.5) ** 2 + (z - 2.5) ** 2 > 4.4 ? C.crust : null))
-      .cylinder('y', [2.5, 2.5], 2.3, [2, 2], (x) => (x % 2 === 1 ? C.crust : null));
+      .cylinder('y', [2.5, 2.5], 2.3, [2, 2], (x, y, z) => (x % 2 === 1 || z % 2 === 1 ? C.crust : null));
     return g.entry({ id: 'cand-cherry-pie', name: 'Cherry Pie' });
   })(),
 
@@ -223,7 +222,7 @@ const list = [
     g.box([0, 4], [0, 0], [1, 1], tin)
       .box([4, 6], [0, 0], [0, 2], tin)
       .box([5, 6], [1, 2], [1, 2], C.white);
-    return g.entry({ id: 'cand-sugar-spoon', name: 'Sugar & Spoon' });
+    return { ...g.entry({ id: 'cand-sugar-spoon', name: 'Sugar & Spoon' }), qa: 'drop', qaWhy: 'too small and flat to read as a spoon; the cube floats on a stick' };
   })(),
 
   // a boiled egg in a yellow cup with toast soldiers laid alongside
@@ -233,7 +232,7 @@ const list = [
       .ellipsoid([1.5, 3, 2], [1.4, 1.7, 1.4], (x, y) => (y >= 2 ? C.cream : null))
       .set(1, 4, 2, C.orange).set(2, 4, 2, C.orange)
       .box([3, 6], [0, 0], [1, 1], C.crust).box([3, 6], [0, 0], [3, 3], C.crust);
-    return g.entry({ id: 'cand-egg-soldiers', name: 'Egg & Soldiers' });
+    return { ...g.entry({ id: 'cand-egg-soldiers', name: 'Egg & Soldiers' }), qa: 'drop', qaWhy: 'egg reads as a white box; soldiers read as planks' };
   })(),
 
   // a rubber stamp: red knob, wooden block, an inky foot
@@ -279,6 +278,6 @@ const list = [
 ];
 
 // clue hiding tuned so each sits in the easy band (D ≈ 6.4), right after Steps and Heart
-const TUNE = {"cand-milk-carton":{"fraction":0.35,"seed":6},"cand-jam-jar":{"fraction":0.05,"seed":3},"cand-sock":{"fraction":0.65,"seed":5},"cand-mitten":{"fraction":0.45,"seed":2},"cand-umbrella":{"fraction":0.35,"seed":7},"cand-paint-tin":{"fraction":0.15,"seed":5},"cand-toothbrush":{"fraction":0.15,"seed":4},"cand-soap":{"fraction":0.45,"seed":4},"cand-pencil":{"fraction":0.55,"seed":3},"cand-yarn":{"fraction":0.15,"seed":7},"cand-teddy":{"fraction":0.05,"seed":5},"cand-music-box":{"fraction":0.15,"seed":5},"cand-snow-globe":{"fraction":0.25,"seed":8},"cand-toast":{"fraction":0.65,"seed":7},"cand-cookie-jar":{"fraction":0.15,"seed":2},"cand-vase":{"fraction":0.05,"seed":7},"cand-cheese":{"fraction":0.45,"seed":4},"cand-cherry-pie":{"fraction":0.35,"seed":6},"cand-mailbox":{"fraction":0.25,"seed":5},"cand-matchbox":{"fraction":0.45,"seed":2},"cand-sugar-spoon":{"fraction":0.25,"seed":1},"cand-egg-soldiers":{"fraction":0.25,"seed":2},"cand-stamp":{"fraction":0.35,"seed":7},"cand-spray-bottle":{"fraction":0.35,"seed":7},"cand-hot-water-bottle":{"fraction":0.45,"seed":1},"cand-light-bulb":{"fraction":0.35,"seed":5},"cand-salt-pepper":{"fraction":0.45,"seed":6}};
+const TUNE = {"cand-milk-carton":{"fraction":0.35,"seed":6},"cand-jam-jar":{"fraction":0.2,"seed":9},"cand-sock":{"fraction":0.65,"seed":5},"cand-mitten":{"fraction":0.45,"seed":2},"cand-umbrella":{"fraction":0.35,"seed":7},"cand-paint-tin":{"fraction":0.15,"seed":5},"cand-toothbrush":{"fraction":0.15,"seed":4},"cand-soap":{"fraction":0.45,"seed":4},"cand-pencil":{"fraction":0.55,"seed":3},"cand-yarn":{"fraction":0.15,"seed":7},"cand-teddy":{"fraction":0.05,"seed":5},"cand-music-box":{"fraction":0.15,"seed":5},"cand-snow-globe":{"fraction":0.25,"seed":8},"cand-toast":{"fraction":0.65,"seed":7},"cand-cookie-jar":{"fraction":0.15,"seed":2},"cand-vase":{"fraction":0.05,"seed":7},"cand-cheese":{"fraction":0.45,"seed":4},"cand-cherry-pie":{"fraction":0.35,"seed":6},"cand-mailbox":{"fraction":0.25,"seed":5},"cand-matchbox":{"fraction":0.45,"seed":2},"cand-sugar-spoon":{"fraction":0.25,"seed":1},"cand-egg-soldiers":{"fraction":0.25,"seed":2},"cand-stamp":{"fraction":0.35,"seed":7},"cand-spray-bottle":{"fraction":0.35,"seed":7},"cand-hot-water-bottle":{"fraction":0.45,"seed":1},"cand-light-bulb":{"fraction":0.35,"seed":5},"cand-salt-pepper":{"fraction":0.45,"seed":6}};
 
 export default list.map((e) => ({ ...e, ...TUNE[e.id] }));

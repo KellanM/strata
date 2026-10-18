@@ -116,12 +116,14 @@ for (const t of SECTIONS) {
     const num = numberOf(t, k);
     const st = stats(shape);
     const card = document.createElement('button');
-    card.className = 'card' + (picks.has(num) ? ' picked' : '');
+    card.className = 'card' + (picks.has(num) ? ' picked' : '') + (shape.qa === 'drop' ? ' dropped' : '');
+    if (shape.qa === 'drop') card.title = shape.qaWhy ?? 'flagged to drop in QA';
     card.innerHTML = `<span class="num">${num}</span>
       <span class="heart" role="button" aria-label="Pick">♥</span>
       <span class="pics"><img alt=""><img class="alt" alt=""></span>
       <span class="name">${shape.name}</span>
-      <span class="meta${st.solvable ? '' : ' bad'}">${shape.dims.join('×')} · ${st.cubes} cubes · ${st.solvable ? 'D ' + st.D.toFixed(1) : 'unsolvable'}</span>`;
+      <span class="meta${st.solvable ? '' : ' bad'}">${shape.dims.join('×')} · ${st.cubes} cubes · ${st.solvable ? 'D ' + st.D.toFixed(1) : 'unsolvable'}</span>
+      ${shape.qa === 'drop' ? `<span class="qa-drop">QA: drop · ${shape.qaWhy ?? ''}</span>` : ''}`;
     const [a, b] = card.querySelectorAll('img');
     a.src = renderThumb(shape, p, { size: 150 });
     b.src = renderThumb(turned(shape), p, { size: 80 });

@@ -67,7 +67,7 @@ export default [
       .set(4, 4, 3, C.ink).set(5, 4, 3, C.ink)                    // eyes over the pages
       .box([3, 6], [1, 3], [3, 3], (x) => (x === 3 || x === 6 ? book : page));   // the open book
     g.set(4, 4, 3, C.ink);
-    return { ...g.entry({ id: 'cand-bookworm', name: 'Bookworm' }), fraction: 0.25, seed: 4 };
+    return { ...g.entry({ id: 'cand-bookworm', name: 'Bookworm' }), qa: 'drop', qaWhy: 'reads as a purple box and a pink hook; the worm is lost', fraction: 0.25, seed: 4 };
   })(),
 
   // a watering can pouring a tiny rainbow
@@ -131,7 +131,7 @@ export default [
     g.ellipsoid([2, 1.5, 1.5], [2.2, 1.5, 1.5], bean)
       .set(1, 2, 3, C.ink).set(3, 2, 3, C.ink)                    // sleepy eyes
       .set(2, 3, 1, C.green).set(2, 4, 1, leaf).set(3, 4, 1, leaf);
-    return { ...g.entry({ id: 'cand-sleepy-bean', name: 'Sleepy Bean' }), fraction: 0.3, seed: 5 };
+    return { ...g.entry({ id: 'cand-sleepy-bean', name: 'Sleepy Bean' }), qa: 'drop', qaWhy: 'only 17 cubes; the eyes read as feet', fraction: 0.3, seed: 5 };
   })(),
 
   // an apple with a worm peeking out of its side, wearing a hat

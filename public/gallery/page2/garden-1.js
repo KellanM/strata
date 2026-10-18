@@ -22,10 +22,9 @@ const ENTRIES = [
     const g = grid(6, 4, 4);
     g.ellipsoid([2.4, 1.1, 1.5], [2.1, 1.25, 1.3], mouse)
       .ellipsoid([4.4, 1.3, 1.5], [1.25, 1.1, 1.05], mouse)
-      .set(4, 2, 1, blush).set(4, 3, 1, blush).set(4, 2, 2, blush).set(4, 3, 2, blush)   // one big ear
-      .clear(4, 3, 1)
-      .set(5, 1, 2, blush)                                     // nose
-      .set(5, 2, 2, C.ink)                                     // eye
+      .set(4, 2, 0, blush).set(4, 3, 0, blush).set(4, 2, 3, blush).set(4, 3, 3, blush)   // two round ears
+      .set(5, 1, 1, blush).set(5, 1, 2, blush)                 // nose
+      .set(5, 2, 1, C.ink).set(5, 2, 2, C.ink)                 // two eyes
       .set(0, 1, 1, blush).set(0, 2, 1, blush).set(0, 3, 1, blush).set(1, 3, 1, blush);   // tail curling up
     return g.entry({ id: 'cand-p2-mouse', name: 'Field Mouse' });
   })(),
@@ -36,7 +35,7 @@ const ENTRIES = [
     ['.sss.', 's...s', 's...s', 's...s', '.sss.'],
     ['.s.s.', 'syyys', '.yyy.', 'syyys', '.s.s.'],
     ['.....', '.yyy.', '.yyy.', '.yyy.', '.....'],
-    ['.....', '.yyy.', '.yyy.', '.ykyo', '.....'],
+    ['.....', '.yyy.', '.yyy.', '.kyk.', '..o..'],
     ['.....', '..y..', '.yyy.', '.....', '.....'],
   ], { s: shell, y: C.yellow, k: C.ink, o: C.orange }, { id: 'cand-p2-chick', name: 'Hatching Chick' }),
 
@@ -155,7 +154,7 @@ const ENTRIES = [
       .box([2, 2], [4, 5], [2, 2], bell).set(3, 4, 2, bell)
       .set(1, 2, 0, C.leaf).set(0, 2, 0, C.leaf);
     g.set(2, 6, 1, C.green).set(2, 6, 2, C.green).set(2, 5, 1, C.green);
-    return g.entry({ id: 'cand-p2-bluebell', name: 'Bluebells' });
+    return { ...g.entry({ id: 'cand-p2-bluebell', name: 'Bluebells' }), qa: 'drop', qaWhy: 'reads as a green hook with blue blobs; the bells do not read' };
   })(),
 
   // an earthworm: a pink wiggly body rising out of a soil mound, a happy face
@@ -169,9 +168,9 @@ const ENTRIES = [
   // an ant: a round abdomen, a pinched waist, a grey head with a white eye and antenna
   L(7, 4, 5, [
     ['.......', '.k..k..', '.......', '.k..k..', '.......'],
-    ['.......', 'kkk.dd.', 'kkkkddd', 'kkk.ddw', '.......'],
-    ['.......', '.......', '.k...dk', '.......', '.......'],
-    ['.......', '.......', '......k', '.......', '.......'],
+    ['.......', 'kkk.ddw', 'kkkkddd', 'kkk.ddw', '.......'],
+    ['.......', '......k', '.k...d.', '......k', '.......'],
+    ['.......', '......k', '.......', '......k', '.......'],
   ], { k: C.ink, d: C.dgrey, w: C.white }, { id: 'cand-p2-ant', name: 'Ant' }),
 
   // a daffodil: a yellow star of petals with an orange trumpet, a tall stem and leaf
