@@ -82,6 +82,12 @@ class Sound {
     this.sfx.connect(this.dry);
     this.sfxTonal = ctx.createGain(); this.sfxTonal.gain.value = this.sfxOn ? 0.5 : 0;
     this.sfxTonal.connect(this.tonal);
+    // the heavenly layer of long runs: mostly hall, a little dry
+    this.heaven = ctx.createGain(); this.heaven.gain.value = this.sfxOn ? 0.5 : 0;
+    const heavenWet = ctx.createGain(); heavenWet.gain.value = 0.9;
+    this.heaven.connect(heavenWet); heavenWet.connect(this.verb);
+    const heavenDry = ctx.createGain(); heavenDry.gain.value = 0.35;
+    this.heaven.connect(heavenDry); heavenDry.connect(this.out);
 
     this.music = ctx.createGain(); this.music.gain.value = 0;
     this.duckGain = ctx.createGain(); this.duckGain.gain.value = 1;
@@ -108,7 +114,7 @@ class Sound {
   setSfx(on) {
     this.sfxOn = on; localStorage.setItem('strata.sfx', on ? '1' : '0');
     if (!this.ctx) return;
-    for (const b of [this.sfx, this.sfxTonal]) b.gain.setTargetAtTime(on ? 0.5 : 0, this.ctx.currentTime, 0.05);
+    for (const b of [this.sfx, this.sfxTonal, this.heaven]) b.gain.setTargetAtTime(on ? 0.5 : 0, this.ctx.currentTime, 0.05);
   }
 
   setMusic(on) {
@@ -313,12 +319,36 @@ class Sound {
     } else {
       midi = this.degree(this.startDegree() + Math.min(c.step, 9), this.key.root + 24);
     }
-    this.noise({ dur: 0.01, gain: 0.32, freq: 3500 * rand(0.85, 1.15), q: 1.5 });
-    this.body(midi, 0.16);
+    // once a run reaches the top it grows heavenly: h climbs 0 -> 1 over ~18 more chisels
+    const h = Math.min(1, Math.max(0, (c.step - 9) / 18));
+    this.noise({ dur: 0.01, gain: 0.32 * (1 - 0.35 * h), freq: 3500 * rand(0.85, 1.15), q: 1.5 });
+    this.body(midi, 0.16 * (1 - 0.4 * h));
     this.fmBell(midi + 12, { gain: 0.016, index: 2, indexEnd: 0.05, indexTime: 0.05, decay: 0.22 });
+    if (h > 0) this.heavenly(midi, h, c.step);
     if (c.step === 7) {
       this.fmBell(midi + 12, { at: this.nextSixteenth(), gain: 0.07, decay: 1.2 });
       this.nudge(900, 1.6);
+    }
+  }
+
+  // The heavenly layer over a long run at the top: a detuned pair of sines an
+  // octave up that drift between the sounding chord's tones (a choir-like
+  // shimmer), slow attacks and long tails into the hall, and every eighth
+  // chisel a soft wide chord swell. Grows with h (0..1).
+  heavenly(midi, h, step) {
+    const tones = this.chordTones();
+    const halo = this.key.root + 36 + tones[step % tones.length] + (step % 3 === 0 ? 12 : 0);
+    const attack = 0.02 + 0.05 * h, decay = 0.6 + 1.4 * h;
+    for (const det of [-6, 6]) {
+      this.tone(halo, { dest: this.heaven, type: 'sine', attack, decay, gain: 0.018 + 0.03 * h, detune: det });
+    }
+    this.tone(midi + 12, { dest: this.heaven, type: 'sine', attack: attack * 1.5, decay: decay * 0.8, gain: 0.012 * h, partial: 2, partialGain: 0.3 });
+    this.nudge(300 + 700 * h, 2.2);
+    if (step % 8 === 0) {
+      const at = this.nextSixteenth();
+      tones.forEach((t, k) => {
+        this.tone(this.key.root + 36 + t, { dest: this.heaven, at: at + k * 0.04, type: 'sine', attack: 0.25, decay: 2.6, gain: 0.02 + 0.02 * h, detune: k % 2 ? 5 : -5 });
+      });
     }
   }
 
