@@ -10,6 +10,15 @@ were found.
 
 ## Checklist (apply to every object)
 
+- **Review from every side before calling it done**: all four iso corners, a
+  top-down and a straight front view (tools/qa-sheet.mjs). One camera angle
+  hides mistakes.
+- **Paired features match**: eyes, ears, horns, wings, arms/legs, claws, fins,
+  whiskers, cheeks, paired handles/straps — same colour, same size, mirrored.
+  "Deliberate asymmetry" means a readable character choice (a tilted hat, one
+  raised paw), never a one-sided eye, horn or wing. The user has flagged this
+  repeatedly (gnome, snail, pelican, dragon).
+
 - Design the silhouette in the iso view first; the identifying feature must
   read at 1 voxel and from at least 3 of the 4 spin angles.
 - Sizes: small things 5–6³; props/creatures 7³; tall 5×9×5–6×10×6; wide
