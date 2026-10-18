@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeOrbit, SHOW_SPIN } from './orbit.js';
+import { makeOrbit } from './orbit.js';
 import { Puzzle, hideClues } from './puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
@@ -12,7 +12,7 @@ import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
-import { rate as motionRate, after, mark, reveal, devFlags, ease } from './motion.js';
+import { rate as motionRate, after, mark, reveal, devFlags, ease, DUR, BEAT } from './motion.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -141,18 +141,21 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   show('#menu', false);
   show('#win', false);
   renderCoach();
-  maybeChapterCard(entry);
+  // the first step into a chapter: its card is held on its own sky first, and
+  // the block assembles as it leaves
+  const hold = !quiet && !entry.lesson && chapterUnseen(entry) && !reduceMotion ? DUR.ceremony : 0;
+  maybeChapterCard(entry, hold ? (introDelay + hold) * 1000 / motionRate : 0);
 
   // the block assembles itself: cubes drop into place from the base up, then a
   // soft wave runs through the finished stone; taps wait until it's whole
   // (after a map dive, it waits for the veil to lift so the whole drop is seen)
   const still = reduceMotion || (quiet && !assemble);
-  const t0 = now() + introDelay;
+  const t0 = now() + introDelay + hold;
   cubes.uniforms.uIntro.value = still ? -99 : t0;
   cubes.uniforms.uIntroSpeed.value = introSpeed;
   game.introEnd = still ? 0 : t0 + INTRO_TIME / introSpeed;
   if (!quiet) {
-    sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
+    sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay + hold);
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   }
   if (quiet && !assemble) handles.setShown(true, -99);   // already in place, no pop
@@ -165,7 +168,12 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
 // block for a breath: numeral, name, one line. Tap to let it go.
 const chapterCard = $('#chapter-card');
 let chapterCardTimer = 0;
-function maybeChapterCard(entry) {
+function chapterUnseen(entry) {
+  const ch = CHAPTERS.find((c) => c.name === entry.shape.chapter);
+  return !!ch && !JSON.parse(localStorage.getItem('strata.chapters') || '[]').includes(ch.name);
+}
+// holdMs: the block waits this long for the card (0: the card shows over the block)
+function maybeChapterCard(entry, holdMs = 0) {
   const ch = !entry.lesson && CHAPTERS.find((c) => c.name === entry.shape.chapter);
   if (!ch) return;
   // wait a beat: boot starts a puzzle quietly behind the title, which isn't entering it
@@ -181,10 +189,18 @@ function maybeChapterCard(entry) {
     chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
     chapterCard.classList.add('show');
     clearTimeout(chapterCardTimer);
-    chapterCardTimer = setTimeout(() => chapterCard.classList.remove('show'), 2900);
+    chapterCardTimer = setTimeout(() => chapterCard.classList.remove('show'), holdMs ? holdMs + 150 : 2900);
   }, 60);
 }
-chapterCard.addEventListener('click', () => { clearTimeout(chapterCardTimer); chapterCard.classList.remove('show'); });
+chapterCard.addEventListener('click', () => {
+  clearTimeout(chapterCardTimer);
+  chapterCard.classList.remove('show');
+  // tapping the card lets the block come now rather than wait out the hold
+  if (game && now() < cubes.uniforms.uIntro.value) {
+    cubes.uniforms.uIntro.value = now();
+    game.introEnd = now() + INTRO_TIME / cubes.uniforms.uIntroSpeed.value;
+  }
+});
 
 function applyPalette(p) {
   const a = p.lightAngle ?? 0, c = Math.cos(a), s = Math.sin(a);
@@ -387,9 +403,16 @@ function buzz(pattern) {
 
 const INTRO_TIME = 0.7;   // the level-start assembly (shader: delays ≤ 0.38 s + 0.3 s fall)
 
+function finishIntro() {
+  cubes.uniforms.uIntro.value = -99;
+  game.introEnd = now();
+  chapterCard.classList.remove('show');
+  mark('level: assembly skipped by a tap');
+}
+
 function act(i, which) {
   if (!game || game.solved || i < 0) return;
-  if (now() < (game.introEnd ?? 0)) return;          // the block is still assembling
+  if (now() < (game.introEnd ?? 0)) finishIntro();   // don't make people wait: the block is whole at once
   const t = now();
   const cell = game.puzzle.coords(i);
   const p = game.palette;
@@ -511,14 +534,15 @@ function win() {
   const shiftPx = H / 2 - (bandTop + bandBottom) / 2;
   const target = sphere.center.clone();
   target.y -= shiftPx / (pxPerUnit * zoom) / Math.cos(g.homeEl);
-  g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson };
+  // it whirls down onto the pose its map stone shows (thumbs use an azimuth of 45°), then holds still
+  g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson, pose: g.homeAz - Math.PI / 4 };
   if (!g.entry.lesson) document.body.classList.add('solved');
   resetView();
 
   cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], t + 0.3, 2.2, 5);
   cubes.ripple([(d[0] - 1) / 2, -1, (d[2] - 1) / 2], t + 1.0, 1.4, 8);   // the landing
   rayBoost = 2.6;
-  buzz([12, 50, 30, 400, 60]);
+  buzz([12, 50, 30, 908, 60]);   // the last pulse is the landing, 1.0 s in
   sound.win();
   $('#pz-name').textContent = g.shape.name;
 
@@ -781,10 +805,31 @@ function goNext() {
   clearResult();
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
-  if (game.entry.lesson) startPuzzle(list[0]);
+  if (game.entry.lesson) washInto(list[0].palette, () => startPuzzle(list[0]));
   else if (game.entry.bonus) { $('#actions').classList.remove('show'); openMenu(); }   // shrines lead back to the map
-  else if (idx >= 0) startPuzzle(list[(idx + 1) % list.length]);
+  else if (idx >= 0) { const next = list[(idx + 1) % list.length]; washInto(next.palette, () => startPuzzle(next)); }
   else startRandom(game.shape.dims[0]);
+}
+
+// Level -> next level: the screen washes into the next level's sky (not black,
+// not a cut), the level is swapped under it, and the wash lifts as it assembles
+function washInto(palette, start) {
+  if (reduceMotion || diving) { start(); return; }
+  diving = true;
+  const hexOf = (h) => '#' + new THREE.Color(h).getHexString();
+  veil.style.background = `linear-gradient(180deg, ${hexOf(palette.skyTop)}, ${hexOf(palette.skyBottom)})`;
+  veil.classList.add('open', 'washing');
+  mark('next: wash');
+  after(0.26, () => {
+    introDelay = 0.3;
+    start();
+    introDelay = 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      veil.classList.remove('washing');
+      mark('next: wash lifts');
+      after(0.5, () => { veil.classList.remove('open'); diving = false; });
+    }));
+  });
 }
 $('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); openMenu(); });
 $('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); openMenu(); });
@@ -863,7 +908,7 @@ function showResult(g, result, isBest) {
   let t = 2300;
   for (let k = 0; k < result.stars; k++) {
     at(t, () => { finale.lightGem(k, now()); buzz(8); sound.star(k); rayBoost = Math.max(rayBoost, 0.5); });
-    t += 720;
+    t += Math.round(BEAT * 1000);   // on the music's beat
   }
   if (isBest) at(t + 80, () => { finale.setScore(result.total, true); sound.best(); });
   at(t + 200, () => actions.classList.add('show'));
@@ -889,6 +934,7 @@ function updateStrikes() {
 const DRIFT_SIZES = [6, 8, 10];
 
 let stopReveal = () => {};
+let mapRevealed = false;      // the stones cascade in the first time the map is seen each session, not every time
 function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
@@ -911,7 +957,10 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   });
   // stones and region names fade and rise in as they come into view (not on a
   // quiet re-layout, which would make the whole map blink)
-  if (animate) stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: $('#menu .map-scroll') });
+  if (animate && !mapRevealed) {
+    mapRevealed = true;
+    stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: $('#menu .map-scroll') });
+  }
 }
 
 // Level -> map: the map pulls back out of the stone you were playing, as if
@@ -969,7 +1018,10 @@ function closeMenu() {
 const veil = document.createElement('div');
 veil.id = 'veil';
 veil.setAttribute('aria-hidden', 'true');
-document.body.appendChild(veil);
+const veilGlow = document.createElement('div');   // the portal's leading diamond, in the level's glow
+veilGlow.id = 'veil-glow';
+veilGlow.setAttribute('aria-hidden', 'true');
+document.body.append(veilGlow, veil);
 let diving = false;
 function diveInto(el, palette, start) {
   if (diving) return;
@@ -987,10 +1039,14 @@ function diveInto(el, palette, start) {
   menu.classList.add('diving');
   veil.style.background = `radial-gradient(circle at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, ${hexOf(palette.glow)}, ${hexOf(palette.skyTop)} 45%, ${hexOf(palette.skyBottom)})`;
   // the level's sky opens out of the stone like a portal
-  veil.style.setProperty('--vx', `${r.left + r.width / 2}px`);
-  veil.style.setProperty('--vy', `${r.top + r.height / 2}px`);
+  for (const v of [veil, veilGlow]) {
+    v.style.setProperty('--vx', `${r.left + r.width / 2}px`);
+    v.style.setProperty('--vy', `${r.top + r.height / 2}px`);
+  }
+  veilGlow.style.background = hexOf(palette.glow);
   menu.classList.remove('arriving', 'settling', 'leaving');
-  veil.classList.add('open', 'in');
+  void veil.offsetWidth;   // commit the closed diamond at the stone first, so it opens from there
+  for (const v of [veil, veilGlow]) v.classList.add('open', 'in');
   mark('dive: portal opens');
   after(0.46, () => {
     introDelay = 0.35;                 // the veil takes ~0.45 s to lift
@@ -998,9 +1054,9 @@ function diveInto(el, palette, start) {
     introDelay = 0;
     mark('dive: level built');
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      veil.classList.remove('in');
+      for (const v of [veil, veilGlow]) v.classList.remove('in');
       mark('dive: veil lifts');
-      after(0.5, () => veil.classList.remove('open'));   // close the portal once it has faded
+      after(0.5, () => { for (const v of [veil, veilGlow]) v.classList.remove('open'); });   // close the portal once it has faded
       // reset the (hidden) map only after the block has assembled: restyling the
       // whole map mid-animation dropped a frame on phones
       after(0.35 + INTRO_TIME + 0.25, () => { menu.classList.remove('diving'); diving = false; });
@@ -1055,11 +1111,12 @@ function stepCelebration(t) {
     const windup = Math.min(1, age / 0.34);
     const s = Math.max(0, age - 0.34);
     const whirl = w.lesson ? Math.PI * 2 : Math.PI * 4;
-    angle = -0.25 * Math.sin(windup * Math.PI / 2) + whirl * (1 - Math.exp(-s / 0.7)) + SHOW_SPIN * s;
+    // the wind-up's -0.25 is folded into the settle, so it comes to rest exactly on the pose
+    angle = -0.25 * Math.sin(windup * Math.PI / 2) + (whirl + w.pose + 0.25) * (1 - Math.exp(-s / 0.7));
     const leap = Math.min(1, s / 0.66);
     lift = 0.5 * Math.sin(Math.PI * leap) * (leap < 1 ? 1 : 0)
       + 0.09 * Math.sin((s - 0.66) * 1.5) * THREE.MathUtils.smoothstep(s, 0.66, 2.2);
-  }
+  } else angle = w.pose;
   const c = Math.cos(angle), sn = Math.sin(angle);
   const fx = w.focus.x, fz = w.focus.z;
   mesh.rotation.y = angle;
@@ -1304,7 +1361,7 @@ function setScroll(k) {
   titleScreen.style.translate = `0 ${-k}px`;
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
-  if (toMap()) mapSheet().style.transform = `translateY(${H - k}px)`;
+  if (toMap()) mapSheet().style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
 }
 // glide from the current scroll to `to` (px), then call done
 function scrollTo(to, seconds, curve, done) {
@@ -1332,6 +1389,7 @@ function startPull() {
   show('#menu', true);
   // the stones cascade in as the map comes up
   stopReveal();
+  mapRevealed = true;
   stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: mapSheet() });
 }
 function finishPull() {
@@ -1345,7 +1403,7 @@ function finishPull() {
     titleScreen.classList.remove('show');
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
-    if (toMap()) { mapSheet().style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); }
+    if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); }
   });
   if (!toMap()) after(0.25, () => startTutorial(0));
 }
@@ -1357,7 +1415,7 @@ function cancelPull() {
     if (toMap()) {
       $('#menu').style.transition = 'none';
       show('#menu', false);
-      mapSheet().style.cssText = '';
+      mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = '';
       $('#menu').style.transition = '';
       $('#menu').classList.remove('pulling');
     }

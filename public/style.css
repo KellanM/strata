@@ -186,9 +186,11 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   scrollbar-width: none; touch-action: pan-y;
 }
 .map-scroll::-webkit-scrollbar { display: none; }
-/* the trail floats over the live scene: a veil of the palettes, slightly see-through */
-.map-scroll::before {
-  content: ""; position: fixed; inset: 0; z-index: -1;
+/* the trail floats over the live scene: a veil of the palettes, slightly see-through.
+   Its own fixed layer, not part of the scroller: when the scroller zooms (open,
+   dive) a backdrop inside it would scroll away with the content and pop back after */
+.map-backdrop {
+  position: fixed; inset: 0;
   background: color-mix(in srgb, var(--sky) 55%, transparent);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
@@ -374,11 +376,15 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .map-node.tapped .cube, .map-node.tapped .obj { animation: tap-pop .32s var(--ease-pop) both; }
 @keyframes tap-pop { 0% { scale: .9; } 55% { scale: 1.16; } 100% { scale: 1.1; } }
 #menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal { opacity: 0; transition: opacity .2s; }
-/* the level's sky opens out of the tapped stone as a growing circle, then fades as the block assembles */
-#veil { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
-  clip-path: circle(0px at var(--vx, 50%) var(--vy, 50%)); }
-#veil.open { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 50%)); }
-#veil.in { opacity: 1; transition: clip-path .42s var(--ease-inOut); }
+/* the level's sky opens out of the tapped stone as nested diamonds (a cube's top face):
+   the glow leads, the sky follows; then it fades as the block assembles */
+#veil, #veil-glow { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
+  clip-path: polygon(var(--vx, 50%) var(--vy, 50%), var(--vx, 50%) var(--vy, 50%), var(--vx, 50%) var(--vy, 50%), var(--vx, 50%) var(--vy, 50%)); }
+#veil.open, #veil-glow.open { clip-path: polygon(var(--vx, 50%) calc(var(--vy, 50%) - 160vmax), calc(var(--vx, 50%) + 270vmax) var(--vy, 50%), var(--vx, 50%) calc(var(--vy, 50%) + 160vmax), calc(var(--vx, 50%) - 270vmax) var(--vy, 50%)); }
+#veil-glow.in { opacity: 1; transition: clip-path .42s var(--ease-inOut); }
+#veil.in { opacity: 1; transition: clip-path .42s var(--ease-inOut) .07s; }
+/* level -> next level: a plain wash of the next sky */
+#veil.washing { opacity: 1; transition: opacity .26s var(--ease-fade); }
 
 /* level -> map: it pulls back out of the stone you were on */
 #menu.arriving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.35); opacity: 0; transition: none; }

@@ -16,9 +16,13 @@ export const EASE = {
   inOut: [0.35, 0, 0.2, 1],         // starts promptly: a response to a tap must move at once
   pop: [0.2, 0.9, 0.3, 1.35],
   glide: [0.25, 1, 0.5, 1],          // long, soft arrival (camera-like moves)
+  fade: [0.4, 0, 0.6, 1],            // opacity and colour dissolves (washes, veils)
 };
 // Durations in seconds: quick feedback, standard, slow, whole-scene changes.
-export const DUR = { quick: 0.16, base: 0.3, slow: 0.5, scene: 0.7 };
+// hold: a named still beat; ceremony: once-per-chapter moments.
+export const DUR = { quick: 0.16, base: 0.3, slow: 0.5, scene: 0.7, hold: 0.6, ceremony: 1.2 };
+// One beat of the music (audio.js plays at 72 BPM): rhythmic UI (the win's gems) lands on it.
+export const BEAT = 60 / 72;
 
 const DEV_SLOW = 'strata.dev.slowmo', DEV_LOG = 'strata.dev.motionlog';
 export const slowMotion = localStorage.getItem(DEV_SLOW) === '1';

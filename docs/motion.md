@@ -17,6 +17,10 @@ duration is changed once and every transition that uses it follows.
 | `DUR.base` 0.3 s | `var(--dur-base)` | UI elements entering and leaving |
 | `DUR.slow` 0.5 s | `var(--dur-slow)` | larger elements, scroll reveal |
 | `DUR.scene` 0.7 s | `var(--dur-scene)` | whole-screen changes |
+| `DUR.hold` 0.6 s | `var(--dur-hold)` | a named still beat between two moves |
+| `DUR.ceremony` 1.2 s | `var(--dur-ceremony)` | once-per-chapter moments (the held chapter card) |
+| `EASE.fade` | `var(--ease-fade)` | opacity and colour dissolves (the Next wash) |
+| `BEAT` 0.833 s | — | one beat of the music (72 BPM): rhythmic UI such as the win's gems |
 
 In JS, `ease.out(k)` etc. are the same curves as functions (0..1 → 0..1), for
 three.js and canvas work.
@@ -36,6 +40,11 @@ three.js and canvas work.
   the map at launch) starts in its final state, silent.
 - **Timers go through `after(seconds, fn)`, not `setTimeout`,** so slow motion
   slows them too. The scene clock `now()` in main.js is already scaled.
+- **`pop` is for things that arrive by momentum** (a flick, a reveal, a gem
+  landing), not for answering a tap: a pressed button or stone settles without
+  overshoot (Apple, *Designing Fluid Interfaces*).
+- **Don't make people wait for an animation they see every time:** a tap during
+  the level-start assembly finishes it at once and counts.
 - **Reduce Motion skips the animation, not the change.** Every effect checks
   `reduceMotion`.
 
@@ -65,4 +74,12 @@ three.js and canvas work.
 Older CSS still has some one-off curves. Move them onto the tokens when you
 touch them.
 
-Research for the next round of motion work is in `docs/motion-study.md`.
+Research behind these rules: `docs/motion-study.md`. Applied from it so far:
+- the win spin settles on the object's map pose;
+- Next washes through the next level's sky;
+- a tap skips the assembly;
+- the win buzz lands with the object;
+- the gems fall on the beat;
+- the portal is nested diamonds;
+- a chapter's card is held before its first block;
+- the map cascade plays once a session.
