@@ -146,6 +146,7 @@ function startPuzzle(entry) {
   sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay);
   cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
   rayBoost = 1;
+  draw();
 }
 
 // The first time you step into a chapter, its title card rises over the
@@ -1004,7 +1005,9 @@ function stepCelebration(t) {
   }
 }
 
-function frame() {
+// one picture of the world; frame() runs it every display frame, and a level
+// start runs it at once so the canvas never shows the old level after the page has moved on
+function draw() {
   const t = now();
   const dt = Math.min(0.05, t - last);
   last = t;
@@ -1025,7 +1028,7 @@ function frame() {
     }
 
     camDir.copy(camera.position).sub(controls.target).normalize();
-    handles.group.visible = !game.solved && game.shape.handles !== false;
+    handles.group.visible = !game.solved && game.shape.handles !== false && t >= (game.introEnd ?? 0);
     handles.layout(game.puzzle.dims, camDir, { ...peel, keepVisual: u.uPeel.value.y }, t, !!currentHint()?.pulseHandle);
   }
   rayBoost *= Math.exp(-dt * 1.6);
@@ -1071,7 +1074,9 @@ function frame() {
   renderer.clear();
   renderer.render(scene, camera);
   if (game) rays.composite(renderer);
-
+}
+function frame() {
+  draw();
   requestAnimationFrame(frame);
 }
 
