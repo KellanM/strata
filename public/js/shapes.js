@@ -281,7 +281,11 @@ export const SHAPES = [
         if (y <= 2) return r2 <= 1 ? 0xf3e6d0 : 0;
         const r = [3.3, 3.0, 2.2][y - 3];
         if (r2 > r * r) return 0;
-        const spot = y === 5 ? (dx + dz) % 2 === 0 && r2 > 0 : y === 4 && r2 >= 6 && (x + 2 * z) % 4 === 0;
+        // white spots set evenly round the cap, so they match from every side:
+        // one on the crown, four at the diagonals above, four at the sides below
+        const spot = (y === 5 && r2 === 0)
+          || (y === 4 && Math.abs(dx) === 2 && Math.abs(dz) === 2)
+          || (y === 3 && r2 === 9 && (dx === 0 || dz === 0));
         return spot ? 0xfff4e6 : 0xd9455a;
       },
     },
