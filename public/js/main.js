@@ -316,30 +316,45 @@ function cellWorld(i) {
 // ---------------------------------------------------------------- actions
 
 // Haptics. Android: the Vibration API. iOS Safari has none, but toggling a
-// native switch control gives one system tick (Safari 17.4+). It only fires
-// from inside a touch handler, so on iOS a pattern becomes a single tick and
-// delayed moments (stars landing) stay silent to the hand.
-const iosTick = (() => {
-  if (navigator.vibrate || !/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent) || !('ontouchend' in document)) return null;
+// native <input switch> gives one system tick (iOS 18+). iOS only honours it
+// inside a gesture it trusts (touchend or click; not pointerup, where taps
+// land here), so a tick asked for elsewhere waits for the touchend of the same
+// touch. Patterns become a single tick. The element is made, clicked and
+// removed each time, as the ios-haptics library does.
+const iosHaptics = !navigator.vibrate && /iP(hone|ad|od)|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+function iosTick() {
   const label = document.createElement('label');
   label.setAttribute('aria-hidden', 'true');
-  label.style.cssText = 'position:fixed;left:-100px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden';
+  label.style.display = 'none';
   const input = document.createElement('input');
   input.type = 'checkbox';
   input.setAttribute('switch', '');
-  input.tabIndex = -1;
   label.appendChild(input);
-  document.body.appendChild(label);
-  return () => label.click();
-})();
-let lastTick = 0;
+  document.head.appendChild(label);
+  label.click();
+  label.remove();
+}
+let tickPending = 0, lastTick = 0;
+function flushTick() {
+  if (!tickPending) return;
+  const t = performance.now();
+  if (t - tickPending < 600 && t - lastTick > 35) { lastTick = t; iosTick(); }
+  tickPending = 0;
+}
+if (iosHaptics) {
+  document.addEventListener('touchend', flushTick, { capture: true, passive: true });
+  document.addEventListener('click', flushTick, { capture: true });
+}
 function buzz(pattern) {
   if (navigator.vibrate) { navigator.vibrate(pattern); return; }
-  if (!iosTick) return;
-  const t = performance.now();
-  if (t - lastTick < 35) return;      // ticks closer than this blur together
-  lastTick = t;
-  iosTick();
+  if (!iosHaptics) return;
+  const type = window.event?.type;
+  if (type === 'click' || type === 'touchend') {           // already inside a trusted gesture
+    const t = performance.now();
+    if (t - lastTick > 35) { lastTick = t; iosTick(); }
+  } else {
+    tickPending = performance.now();                        // fires on this touch's touchend
+  }
 }
 
 function act(i, which) {
