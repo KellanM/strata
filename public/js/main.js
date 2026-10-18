@@ -1262,8 +1262,9 @@ maybeShowInstall();
 
 applyPalette(PALETTES[0]);
 resize();
-// The title: under the name, the logo makes itself - a 2x2x2 stone snaps
-// together, then its near top corner is chiselled away, as on the app icon.
+// The title: under the name, the logo makes itself - a whole 2x2x2 stone is
+// there from the start, then its near top corner is chiselled away, as on the
+// app icon.
 // The title and the map are one tall page: swipe up and the title and logo
 // scroll off the top while the map comes up from below (the touch also lets the
 // sound start). The very first time, the swipe begins the first lesson instead.
@@ -1271,9 +1272,8 @@ const titleScreen = $('#title');
 const LOGO = { id: 'logo', name: 'Strata', dims: [2, 2, 2], view: Math.PI / 4, handles: false, show: [0, 0, 0],
   cell: (x, y, z) => (x & y & z ? 0 : 0xffffff) };
 const LOGO_CORNER = 7;   // (1, 1, 1): the corner nearest the camera
-introDelay = 0.15;
-startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true, assemble: true, introSpeed: 2.2 });
-introDelay = 0;
+startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true });
+const CARVE_AT = 0.7;   // s after launch: long enough to see the whole stone first
 mark('title');
 function carveLogo() {
   if (game?.shape !== LOGO || game.broken[LOGO_CORNER]) return;
@@ -1286,12 +1286,12 @@ function carveLogo() {
   mark('title: logo carved');
 }
 if (reduceMotion) carveLogo();
-else after(game.introEnd + 0.25 - now(), carveLogo);
+else after(CARVE_AT, carveLogo);
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
 const buildMap = () => { if (mapBuilt) return; mapBuilt = true; renderMenu(true, false, false); mark('title: map built'); };
-after(reduceMotion ? 0 : game.introEnd + 0.25 + 0.6 - now(), buildMap);
+after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 
 // the scroll: k px up. The title moves with it, the logo too (by shifting the
 // camera's view), and the map sheet follows from just below the screen.
