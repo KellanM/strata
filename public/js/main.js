@@ -6,6 +6,7 @@ import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
 import { sound } from './audio.js';
 import { Finale } from './finale.js';
+import { Fragments } from './fragments.js';
 import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
@@ -35,6 +36,8 @@ const handles = new PeelHandles(cubes.uniforms.uLight);
 scene.add(background.mesh, motes.points, shards.points, handles.group);
 const finale = new Finale(cubes.uniforms.uLight);
 scene.add(finale.group);
+const fragments = new Fragments(cubes.uniforms.uLight);
+scene.add(fragments.mesh);
 
 // shockwave rings that roll out across the ground when a puzzle is solved
 const winRings = [0, 0.22, 0.5].map((delay) => {
@@ -109,6 +112,7 @@ function startPuzzle(entry) {
   $('#win-title').classList.remove('show');
   document.body.classList.remove('solved');
   finale.hide();
+  fragments.clear();
   clearResult();
   $('#actions').classList.remove('show');
   // look square-on at the broad face of flat puzzles, isometric otherwise
@@ -165,6 +169,7 @@ function applyPalette(p) {
   cubes.uniforms.uLight.value.set(-0.45 * c - 0.9 * s, -0.45 * s + 0.9 * c).normalize();
   const dark = new THREE.Color(p.skyTop).getHSL({}).l < 0.35;
   cubes.setPalette(p);
+  fragments.setPalette(p);
   background.setPalette(p);
   rays.setPalette(p, dark);
   motes.setPalette(p);
@@ -289,6 +294,19 @@ function pick(clientX, clientY) {
   return -1;
 }
 
+// The way out for a cube's pieces: the sum of the normals of its faces that
+// have no cube beside them (toward the camera if somehow none are free).
+function openSides(i) {
+  const [x, y, z] = game.puzzle.coords(i), d = game.puzzle.dims;
+  const out = new THREE.Vector3(), c = [x, y, z];
+  for (let a = 0; a < 3; a++) for (const s of [-1, 1]) {
+    const n = [...c]; n[a] += s;
+    const inside = n[a] >= 0 && n[a] < d[a];
+    if (!inside || !present(game.puzzle.idx(n[0], n[1], n[2]))) out.setComponent(a, out.getComponent(a) + s);
+  }
+  return out.lengthSq() ? out.normalize() : camDir.clone();
+}
+
 function cellWorld(i) {
   const [x, y, z] = game.puzzle.coords(i);
   const d = game.puzzle.dims;
@@ -366,9 +384,10 @@ function act(i, which) {
   game.undo.push({ kind: 'break', i });
   cubes.ripple(cell, t, 1, 7);
   const c = (h) => new THREE.Color(h);
-  // a small puff of stone dust from the cube itself, in the block's own tones
-  shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 3 : 6, 0.32,
-    { size: 0.5, life: 0.6, gravity: 1.2, spread: 0.85 });
+  // it comes apart into 27 pieces that slip out through its open sides
+  fragments.burst(cellWorld(i), openSides(i), t);
+  shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
+    { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
   const pz = game.puzzle;
@@ -963,7 +982,7 @@ function frame() {
 
   // shared time / scale uniforms
   const unitPx = renderer.domElement.height / ((camera.top - camera.bottom) / camera.zoom);
-  motes.uniforms.uTime.value = shards.uniforms.uTime.value = t;
+  motes.uniforms.uTime.value = shards.uniforms.uTime.value = fragments.uniforms.uTime.value = t;
   motes.uniforms.uUnitPx.value = shards.uniforms.uUnitPx.value = unitPx;
   motes.uniforms.uFocus.value = camera.position.distanceTo(controls.target);
   background.uniforms.uTime.value = t;
@@ -984,7 +1003,7 @@ function frame() {
       background.mesh.visible = motes.points.visible = shards.points.visible = handles.group.visible = false;
       const ringsOn = winRings.map((r) => r.mesh.visible);
       const finaleOn = finale.group.visible;
-      finale.group.visible = false;
+      finale.group.visible = fragments.mesh.visible = false;
       for (const r of winRings) r.mesh.visible = false;
       cubes.uniforms.uMask.value = 1;
       renderer.render(scene, camera);
@@ -993,6 +1012,7 @@ function frame() {
       handles.group.visible = vis;
       winRings.forEach((r, k) => { r.mesh.visible = ringsOn[k]; });
       finale.group.visible = finaleOn;
+      fragments.mesh.visible = true;
     });
   }
 

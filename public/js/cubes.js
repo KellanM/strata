@@ -84,13 +84,8 @@ const vertexShader = /* glsl */ `
     float scale = 1.0;
     vec3 offset = vec3(0.0);
 
-    // chiselled away: lift, shrink, tumble out
-    if (aState.z >= 0.0) {
-      float a = (uTime - aState.z) / 0.42;
-      if (a >= 1.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-      scale = 1.0 - a * a * (3.0 - 2.0 * a);
-      offset.y += 0.5 * a * a;
-    }
+    // chiselled away: the cube is gone the instant it splits into pieces (fragments.js)
+    if (aState.z >= 0.0 && uTime >= aState.z) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
 
     // peeling: layers beyond the cut slide out along the peel axis and shrink
     int pa = int(uPeel.x);
