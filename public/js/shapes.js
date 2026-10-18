@@ -313,6 +313,19 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (pumpkin)
+      id: 'pumpkin', name: 'Pumpkin', fraction: 0.65, seed: 1,
+      story: 'Grown fat on a whole summer, waiting for the first frost.',
+      ...voxels({ a: 0xe78a2e, b: 0xf2a03d, c: 0x6b4a3a, d: 0x5fae6e }, [
+        '....... ....... ....... ...a... ....... ....... .......',
+        '....... ..abb.. .abbab. .bbaaa. .abbab. ..abb.. .......',
+        '..aba.. .babba. aabbabb bbbaaaa aabbabb .babba. ..aba..',
+        '...b... .babba. .abbab. bbbaaaa .abbab. .babba. ...b...',
+        '....... ....... ..bba.. ..baa.. ..bba.. ....... .......',
+        '....... ....... ....... ...cc.. ....dd. ....... .......',
+      ]),
+    },
+    {
       id: 'bonsai', name: 'Bonsai', dims: [7, 7, 5], fraction: 0.65, seed: 3,
       story: 'Three hundred years of careful pruning, and one stubborn branch.',
       cell(x, y, z) {

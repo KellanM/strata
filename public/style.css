@@ -598,4 +598,4 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .dev-row.danger { color: #c4485a; }
 #dev .primary { display: block; margin: 18px auto 0; }
 /* the install card steps aside while a panel is open (it would cover the version line) */
-body:has(#help.show, #dev.show, #journal.show, #win.show) #install { opacity: 0; pointer-events: none; }
+body:has(#help.show, #dev.show, #journal.show, #win.show) #install, body.solved #install { opacity: 0; pointer-events: none; }
