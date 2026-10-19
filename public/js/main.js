@@ -100,6 +100,53 @@ function puzzleList() {
   });
 }
 
+// A level left half-done is kept: its chisels, marks, mistakes, undo and time
+// come back when it's opened again, after a quit or a restart. Levels and
+// shrines only (not lessons, the logo or a drift), the 8 most recent.
+const PROGRESS_KEY = 'strata.progress', PROGRESS_KEEP = 8;
+const keepsProgress = (g) => !!g && !g.entry.lesson && g.shape.id !== 'logo' && !g.shape.id.startsWith('random');
+function readProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch { return {}; }
+}
+function saveProgress() {
+  const g = game;
+  if (!keepsProgress(g) || g.solved) return;
+  const all = readProgress();
+  const on = (a) => a.reduce((o, v, i) => (v && o.push(i), o), []);
+  all[g.shape.id] = { b: on(g.broken), p: on(g.painted), u: g.undo.map((u) => [u.kind === 'break' ? 1 : 0, u.i]),
+    m: g.mistakes, t: Math.round((now() - g.start) * 10) / 10, at: Date.now() };
+  const ids = Object.keys(all).sort((a, b) => all[b].at - all[a].at);
+  for (const id of ids.slice(PROGRESS_KEEP)) delete all[id];
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(all)); } catch { /* storage full: the level just starts fresh */ }
+}
+function clearProgress(id) {
+  const all = readProgress();
+  if (!(id in all)) return;
+  delete all[id];
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+}
+function restoreProgress(g) {
+  if (!keepsProgress(g)) return;
+  const saved = readProgress()[g.shape.id];
+  if (!saved) return;
+  const n = g.puzzle.size, ok = (i) => Number.isInteger(i) && i >= 0 && i < n;
+  // a stale save (the level changed shape since) is dropped, not half-applied
+  if (![...saved.b, ...saved.p].every(ok) || saved.b.some((i) => g.puzzle.solid[i])) { clearProgress(g.shape.id); return; }
+  for (const i of saved.b) { g.broken[i] = 1; cubes.setState(i, undefined, undefined, 0); }
+  for (const i of saved.p) { g.painted[i] = 1; cubes.setState(i, 1, 0); }
+  g.undo = (saved.u ?? []).filter(([, i]) => ok(i)).map(([k, i]) => ({ kind: k ? 'break' : 'paint', i }));
+  g.mistakes = saved.m | 0;
+  g.start = now() - (saved.t || 0);
+  g.restored = true;
+  mark(`level: ${g.shape.id} resumed (${saved.b.length} chiselled, ${saved.t}s)`);
+}
+// the clock stops while the app is away (in the background, or the phone locked)
+document.addEventListener('visibilitychange', () => {
+  if (!game || game.solved) return;
+  if (document.hidden) { game.away = now(); saveProgress(); }
+  else if (game.away != null) { game.start += now() - game.away; game.away = null; }
+});
+
 // quiet: a backdrop (behind the title or map at launch) - no sound, already
 // whole unless `assemble` asks for the silent build
 function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } = {}) {
@@ -121,6 +168,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
 
   if (!cubes.mesh || !cubes.mesh.parent) scene.add(cubes.build(puzzle));
   else cubes.build(puzzle);
+  restoreProgress(game);   // after the build: it resets every cube's state
   applyPalette(palette);
   sound.setKey(palette.base ?? palette.name);
 
@@ -176,7 +224,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   cubes.uniforms.uIntro.value = still ? -99 : t0;
   cubes.uniforms.uIntroSpeed.value = introSpeed;
   game.introEnd = still ? 0 : t0 + INTRO_TIME / introSpeed;
-  refreshFocus();
+  if (game.restored) refreshAO(); else refreshFocus();
   if (!quiet) {
     sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay + hold);
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
@@ -466,6 +514,7 @@ function act(i, which) {
     buzz(8);
     sound.mark(!!game.painted[i]);
     refreshFocus();
+    saveProgress();
     if (game.painted[i]) tutorialEvent('paint');
     return;
   }
@@ -487,6 +536,7 @@ function act(i, which) {
     buzz([30, 40, 30]);
     sound.mistake();
     updateStrikes();
+    saveProgress();
     tutorialEvent('mistake');
     return;
   }
@@ -508,6 +558,7 @@ function act(i, which) {
   for (let k = 0; k < pz.size; k++) if (!pz.solid[k]) { total++; if (!game.broken[k]) left++; }
   sound.chisel(total ? 1 - left / total : 1);
   refreshAO();
+  saveProgress();
   tutorialEvent('break');
   if (game.puzzle.isSolved(game.broken)) win();
 }
@@ -530,6 +581,7 @@ function undo() {
   cubes.ripple(game.puzzle.coords(u.i), t, 0.5, 9);
   buzz(6);
   sound.undo();
+  saveProgress();
 }
 
 // The finale: the block holds its breath, the stone falls away to true colour
@@ -541,6 +593,7 @@ function win() {
   mark('win');
   g.solved = true;
   g.elapsed = t - g.start;
+  clearProgress(g.shape.id);
   g.revealStart = t + 0.3;
   setPeeled(0, true);
   cubes.uniforms.uHover.value.set(-99, -99, -99);
