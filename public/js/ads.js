@@ -45,7 +45,7 @@ export const CONFIG = {
     adsPerDay: 3,             // and 3 a day (AppLovin warns of saturation above "one or two")
   },
   web: { adSec: 5 },          // the placeholder's countdown
-  removeAds: { sku: 'strata.remove_ads', price: '$3.99' },
+  removeAds: { sku: 'strata.remove_ads', price: '$2.99' },
 };
 
 webProvider.adSec = CONFIG.web.adSec;

@@ -443,7 +443,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 - **Shrines through an ad.** A shrine locked only by stars, on a chapter the trail has reached, offers "This shrine opens at 12 stars. / 8 gathered so far" with NOT NOW / WATCH TO OPEN.
   - Once opened it stays open: `strata.ads.shrines`, passed to map.js as `openedShrines`.
   - It's never offered for a chapter the trail hasn't reached.
-- **Remove Ads** sits in How to play under Sound/Music: "Strata is free. Remove ads and support it.", REMOVE ADS · $3.99, a perk line, and "restore purchase".
+- **Remove Ads** sits in How to play under Sound/Music: "Strata is free. Remove ads and support it.", REMOVE ADS · $2.99, a perk line, and "restore purchase".
   - On the web, the purchase is a card labelled "simulated purchase".
   - After buying, the section shows "Thank you for keeping Strata whole."
   - With Remove Ads there are no interstitials. The empty lantern and the shrine work without an ad, at the same caps.
@@ -475,7 +475,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 | Placeholder ad | 5 s countdown, then a close button |
 | Lantern flames | Start with 3, cap 5. +1 each morning (local date, once however long away). +1 for a level's first flawless solve (never for a re-solve, a drift, or a level already flawless before flames existed). +1 the first time a chapter is completed |
 | Lantern by ad | 1 per stone a day, 3 a day. Same caps without an ad under Remove Ads |
-| Remove Ads | `strata.remove_ads`, $3.99, non-consumable |
+| Remove Ads | `strata.remove_ads`, $2.99, non-consumable |
 | Row clear (main.js) | `ROW_CLEAR_STEP` 85 ms between the first two cubes; each later gap ×0.93 (`ROW_CLEAR_EASE`), at least 45 ms |
 
 **Verified**
@@ -534,7 +534,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 ## Kellan's decisions (2026-10-19)
 
 - **Gem fill: rejected.** "Feels pay to win." Gems keep meaning a clean hand, so no gem can be bought or watched for.
-- **Remove Ads:** $3.99, framed as support: "Strata is free. Remove ads and support it."
+- **Remove Ads:** $2.99 (was $3.99; Kellan lowered it 2026-10-19), framed as support: "Strata is free. Remove ads and support it."
 - **Lantern flames are earned by play:** +1 each morning, +1 for a level's first flawless solve, +1 the first time a chapter is completed; start 3, cap 5.
 - **Interstitials between levels:** yes, at the caps as built.
 - **Shrines can be opened with an ad,** once the trail has reached their chapter (reversing the study's "no").
@@ -548,7 +548,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
    - or don't offer the gem fill at all, and rely on the lantern plus interstitials.
 
    This is the biggest brand call: stars currently mean "a clean hand".
-2. **The Remove Ads price.** $2.99, $3.99 or $4.99? And should it also be framed as "support the game" (a tip jar), or stay purely functional?
+2. **The Remove Ads price.** $2.99, $3.99 or $4.99? And should it also be framed as "support the game" (a tip jar), or stay purely functional? **Decided 2026-10-19: $2.99, framed as support.**
 3. **Lantern economy.** Should flames also be earned by play (one per chapter completed, or per flawless solve), so that an engaged player rarely needs an ad?
 4. **Interstitial ceiling.** Is a flat ceiling of about 1 per 3 solves and 4 minutes acceptable, knowing it leaves revenue on the table compared with the industry's every-level cadence? Or do you want to A/B a tighter variant?
 5. **Should the shrines ever be ad-reachable?** Recommended: no.
