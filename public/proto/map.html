@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#161b36">
+  <meta name="robots" content="noindex">
+  <title>Strata · map study prototype</title>
+  <link rel="stylesheet" href="proto.css">
+  <script type="importmap">
+    { "imports": { "three": "../vendor/three/build/three.module.min.js" } }
+  </script>
+</head>
+<body>
+  <!-- A study prototype for docs/map-study.md. Not linked from the game. -->
+  <canvas id="world"></canvas>
+  <div id="flat" hidden></div>
+  <div id="scroller"><div id="overlay"></div><div id="spacer"></div></div>
+
+  <section id="title" aria-label="Strata. Swipe up to begin">
+    <h1>Strata</h1>
+    <p class="sub">peel the stone · find the shape</p>
+    <div class="logo"></div>
+    <p class="tap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>swipe up</p>
+  </section>
+
+  <button id="devbtn" aria-label="Study controls">≡</button>
+  <div id="devpanel">
+    <label>Save state<select id="scenario"></select></label>
+    <div class="row"><button id="dir-a">A · 3D world</button><button id="dir-b">B · 2.5D layers</button></div>
+    <button id="unlock">Solve the next stone (ceremony)</button>
+    <button id="replay">Replay the title</button>
+    <div class="row"><button id="perfbtn">Frame times</button><button id="rmbtn">Reduce Motion</button></div>
+    <p>A study prototype for docs/map-study.md. It reads the game's levels and rules, never its save.</p>
+  </div>
+  <div id="perf"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

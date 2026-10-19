@@ -36,7 +36,8 @@ const files = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) { if (relative(dist, p) !== 'gallery') walk(p); }   // the gallery is deployed but never cached offline
+    // the gallery and study prototypes (proto/) are deployed but never cached offline
+    if (statSync(p).isDirectory()) { if (!['gallery', 'proto'].includes(relative(dist, p))) walk(p); }
     else if (name !== 'sw.js' && name !== 'icon.svg') files.push(relative(dist, p).split(sep).join('/'));
   }
 };
