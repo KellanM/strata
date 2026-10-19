@@ -2023,6 +2023,11 @@ function setScroll(k) {
   const H = window.innerHeight;
   titleScreen.style.translate = `0 ${-k}px`;
   mapWorld.setView(titleU);   // the sky moves with the sheet in the same frame, or its edge shows mid-swipe
+  // the logo's light is drawn over the sky; the map sheet would cut it off along its top
+  // edge, so it fades as the logo leaves the screen
+  const fade = Math.min(1, Math.max(0, (k / H - 0.4) / 0.45));
+  canvas.style.transition = fade > 0 ? 'none' : '';
+  canvas.style.opacity = fade > 0 ? (1 - fade * fade * (3 - 2 * fade)).toFixed(3) : '';
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
   if (toMap()) {
@@ -2086,9 +2091,9 @@ function finishPull() {
   });
   if (!toMap()) after(0.25, () => startTutorial(0));
 }
-function cancelPull() {
+function cancelPull(seconds = 0.35) {
   pull.live = false;
-  scrollTo(0, 0.35, ease.out, () => {
+  scrollTo(0, seconds, ease.out, () => {
     if (pull.live || !titleUp) return;
     titleScreen.style.cssText = '';
     if (toMap()) {
@@ -2132,6 +2137,86 @@ const endPull = (e) => {
 };
 titleScreen.addEventListener('pointerup', endPull);
 titleScreen.addEventListener('pointercancel', endPull);
+
+// And back up: at the top of the map, pull down and the title comes back down
+// over it, the night sky and the logo with it - the same page, scrolled the other
+// way. Let go past a fifth of the screen (or with a flick) and the title stays;
+// short of it, the map settles back. A level left open is saved first (its
+// progress resumes when it's next opened).
+const ascent = { id: null, y0: 0, lastY: 0, lastT: 0, v: 0, live: false };
+const atMapTop = () => !titleUp && toMap() && mapBuilt && !diving && $('#menu').classList.contains('show')
+  && !$('#menu').classList.contains('arriving') && !$('#menu').classList.contains('settling') && mapSheet().scrollTop <= 0;
+function beginAscent() {
+  ascent.live = true;
+  mark('title: pull back up');
+  if (game?.shape !== LOGO) {
+    saveProgress();
+    titleUp = true;   // before the logo is set: no lantern, no HUD
+    startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true });
+    game.broken[LOGO_CORNER] = 1;
+    cubes.setState(LOGO_CORNER, undefined, undefined, 0);   // already carved
+    refreshAO();
+  }
+  titleUp = true;
+  const menu = $('#menu');
+  menu.classList.add('instant');
+  menu.style.transition = 'none';
+  mapSheet().style.transition = 'none';
+  menu.classList.add('pulling');
+  show('#menu', true);   // startPuzzle hid it
+  titleScreen.style.transition = 'none';
+  titleScreen.classList.add('show');
+  setScroll(window.innerHeight);
+  void menu.offsetWidth;
+  menu.classList.remove('instant');
+}
+function endAscent(cancelled) {
+  if (!ascent.live) return;
+  ascent.live = false;
+  const H = window.innerHeight, down = H - pull.k;
+  if (!cancelled && (down > H * 0.2 || ascent.v > 0.5)) {
+    mark('title: back');
+    cancelPull(reduceMotion ? 0.01 : 0.35 + 0.5 * (pull.k / window.innerHeight));   // the rest of the way to the title
+  } else finishPull();   // not far enough: back down to the map
+}
+mapSheet().addEventListener('touchstart', (e) => {
+  if (e.touches.length !== 1 || !atMapTop()) { ascent.id = null; return; }
+  const t = e.touches[0];
+  ascent.id = t.identifier; ascent.y0 = ascent.lastY = t.clientY; ascent.lastT = performance.now(); ascent.v = 0;
+}, { passive: true });
+mapSheet().addEventListener('touchmove', (e) => {
+  if (ascent.id === null) return;
+  const t = [...e.changedTouches].find((c) => c.identifier === ascent.id);
+  if (!t) return;
+  const dy = t.clientY - ascent.y0, now_ = performance.now();   // + is down
+  ascent.v = (t.clientY - ascent.lastY) / Math.max(1, now_ - ascent.lastT);
+  ascent.lastY = t.clientY; ascent.lastT = now_;
+  if (!ascent.live) {
+    if (dy < -6 || mapSheet().scrollTop > 0) { ascent.id = null; return; }   // a scroll down the map
+    if (dy < 10) return;
+    beginAscent();
+  }
+  e.preventDefault();   // the page follows the finger, not the scroller's bounce
+  setScroll(Math.max(0, window.innerHeight - Math.max(0, dy - 10)));
+}, { passive: false });
+for (const ev of ['touchend', 'touchcancel']) mapSheet().addEventListener(ev, (e) => {
+  if (ascent.id === null || ![...e.changedTouches].some((c) => c.identifier === ascent.id)) return;
+  ascent.id = null;
+  endAscent(e.type === 'touchcancel');
+});
+// a mouse or trackpad: scrolling on up past the top of the map goes back to the title
+let wheelUp = 0, wheelAt = 0;
+mapSheet().addEventListener('wheel', (e) => {
+  if (e.deltaY >= 0 || !atMapTop()) { wheelUp = 0; return; }
+  const t = performance.now();
+  if (t - wheelAt > 400) wheelUp = 0;
+  wheelAt = t;
+  wheelUp -= e.deltaY;
+  if (wheelUp < 240) return;
+  wheelUp = 0;
+  beginAscent();
+  endAscent(false);
+}, { passive: true });
 window.addEventListener('keydown', (e) => {
   if (!titleUp || !['Enter', ' ', 'ArrowUp'].includes(e.key)) return;
   startPull();
