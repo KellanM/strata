@@ -1,0 +1,11 @@
+[{"key":"orchard","numeral":"✦IV","name":"The Orchard","chapter":"shrine candidates · things that grow","palette":"Orchard","skyTop":"#fbe3b6","skyBottom":"#d9a77c"},
+ {"key":"festival","numeral":"✦XII","name":"Lantern Festival","chapter":"shrine candidates · festival things, lit from within","palette":"Festival","skyTop":"#1c1433","skyBottom":"#6b2346"},
+ {"key":"desert","numeral":"VIII","name":"Desert Oasis","chapter":"new levels · heat shimmer, palm shade, cool water","palette":"Desert","skyTop":"#fde7b8","skyBottom":"#e59a5c"},
+ {"key":"first-light","numeral":"✦I","name":"First Light","chapter":"shrine alternative to the Cottage · home and morning","palette":"Dawn","skyTop":"#f7dccb","skyBottom":"#c6a3c4"},
+ {"key":"moss-garden","numeral":"✦III","name":"Moss Garden","chapter":"shrine alternative to the Frog · small creatures of the garden","palette":"Mint","skyTop":"#eaf2df","skyBottom":"#aed0c0"},
+ {"key":"autumn-woods","numeral":"✦V","name":"Autumn Woods","chapter":"shrine alternative to the Cider Press · leaf fall, woodsmoke","palette":"Autumn","skyTop":"#f6d2a2","skyBottom":"#b8654a"},
+ {"key":"lagoon","numeral":"✦VI","name":"The Lagoon","chapter":"shrine alternative to the Whale · the sea and the shore","palette":"Lagoon","skyTop":"#cdeae4","skyBottom":"#7aa5c2"},
+ {"key":"deep","numeral":"✦VII","name":"The Deep","chapter":"shrine alternative to the Black Smoker · the sea below the sea","palette":"Deep","skyTop":"#0d2a3f","skyBottom":"#1f6f7a"},
+ {"key":"desert-shrine","numeral":"✦VIII","name":"Desert Oasis","chapter":"shrine alternative to the Keyhole Arch · a well is waiting","palette":"Desert","skyTop":"#fde7b8","skyBottom":"#e59a5c"},
+ {"key":"ember-steps","numeral":"✦IX","name":"Ember Steps","chapter":"shrine alternative to the Paper Lantern · temples and stairways","palette":"Dusk","skyTop":"#3a2e5e","skyBottom":"#e79a7e"},
+ {"key":"clockwork","numeral":"✦XI","name":"Clockwork Workshop","chapter":"shrine alternative to the Gear Train · gears, ticking, small machines","palette":"Clockwork","skyTop":"#3b2a1e","skyBottom":"#c98b4a"}]
