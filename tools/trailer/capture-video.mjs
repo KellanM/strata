@@ -4,97 +4,61 @@
 // the page; CSS animations are paused and seeked to the same clock. Frames go
 // straight into ffmpeg as JPEGs (no frame folder on disk).
 //
-//   node tools/trailer/capture-video.mjs [out.mp4]      (server on PORT 5198)
-import { chromium } from 'playwright';
+//   PORT=5230 TRAILER=v2 node tools/trailer/capture-video.mjs [out.mp4]
+//   (TRAILER unset: v1. LIMIT=secs renders only the start; SCALE=1 renders 540×960 for a quick look)
+import { chromium } from 'file:///C:/Users/Kellan/AppData/Roaming/npm/node_modules/playwright/index.mjs';   // the global install
 import { spawn } from 'node:child_process';
-import { buildTimeline, PAGE_HELPERS, FPS, SIZE, DURATION, SOLVED } from './timeline.mjs';
+import { T, OUT, URL, CHROME, VIRTUAL_TIME, withLock, storageFor, SEED_STORAGE } from './lib.mjs';
 
-const OUT = process.argv[2] ?? 'trailer/video.mp4';
-const URL = `http://localhost:${process.env.PORT ?? 5198}/`;
-const CHROME = process.env.QA_CHROME;
+const { buildTimeline, PAGE_HELPERS, FPS, SIZE, DURATION, SOLVED = [], PREROLL = [] } = T;
+const OUTFILE = process.argv[2] ?? OUT('video') + '.mp4';
+const scale = +process.env.SCALE || SIZE.scale;
+const step = (page, n = 1) => page.evaluate((n) => { for (let k = 0; k < n; k++) window.__advance(1000 / 30); }, n);
 
-const VIRTUAL_TIME = `(() => {
-  let vt = 0;
-  const base = Date.now();
-  performance.now = () => vt;
-  Date.now = () => base + vt;
-  let raf = [], rafId = 1, timers = [], tid = 1;
-  window.requestAnimationFrame = (cb) => { const id = rafId++; raf.push([id, cb]); return id; };
-  window.cancelAnimationFrame = (id) => { raf = raf.filter((r) => r[0] !== id); };
-  window.setTimeout = (fn, ms = 0, ...a) => { const id = tid++; timers.push({ id, at: vt + Math.max(0, +ms || 0), fn, a }); return id; };
-  window.clearTimeout = (id) => { timers = timers.filter((t) => t.id !== id); };
-  window.setInterval = (fn, ms, ...a) => {
-    const id = tid++;
-    const tick = () => { timers.push({ id, at: vt + ms, fn: tick, a: [] }); fn(...a); };
-    timers.push({ id, at: vt + ms, fn: tick, a: [] });
-    return id;
-  };
-  window.clearInterval = window.clearTimeout;
-  const starts = new WeakMap();
-  window.__advance = (ms) => {
-    const end = vt + ms;
-    for (;;) {
-      timers.sort((x, y) => x.at - y.at);
-      const t = timers[0];
-      if (!t || t.at > end) break;
-      timers.shift();
-      vt = Math.max(vt, t.at);
-      try { typeof t.fn === 'function' && t.fn(...t.a); } catch (e) { console.error(e); }
+await withLock(async () => {
+  const browser = await chromium.launch({ executablePath: CHROME, args: ['--autoplay-policy=no-user-gesture-required'] });
+  try {
+    const ctx = await browser.newContext({ viewport: { width: SIZE.width, height: SIZE.height }, deviceScaleFactor: scale });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+    await page.addInitScript(VIRTUAL_TIME);
+    // the video pass is silent
+    await page.addInitScript(SEED_STORAGE, { ...storageFor(SOLVED), 'strata.sfx': '0', ...(process.env.MLOG ? { [process.env.MLOG]: '1' } : {}) });
+    await page.goto(URL);
+    await page.waitForFunction(() => window.strata && window.__advance);
+    await step(page, 30);
+    await page.evaluate(PAGE_HELPERS);
+    for (const [act, args, secs] of PREROLL) {
+      await page.evaluate(([act, args]) => window.__trailer[act](...args), [act, args]);
+      await step(page, Math.round(secs * FPS));
     }
-    vt = end;
-    const q = raf; raf = [];
-    for (const [, cb] of q) { try { cb(vt); } catch (e) { console.error(e); } }
-    for (const an of document.getAnimations()) {
-      if (!starts.has(an)) starts.set(an, vt - (an.currentTime ?? 0));
-      try { an.pause(); an.currentTime = vt - starts.get(an); } catch (e) {}
+
+    const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p', '-r', String(FPS), OUTFILE], { stdio: ['pipe', 'inherit', 'inherit'] });
+
+    const timeline = buildTimeline().filter((a) => !a.audio && !(a.t >= +process.env.CUT));   // CUT=secs: nothing after (to watch a beat play out)
+    const frames = Math.round((+process.env.LIMIT || DURATION) * FPS);
+    let next = 0;
+    const t0 = Date.now();
+    for (let f = 0; f < frames; f++) {
+      const time = f / FPS;
+      while (next < timeline.length && timeline[next].t <= time + 1e-6) {
+        const a = timeline[next++];
+        if (a.act === 'ff') await step(page, Math.round(a.args[0] * FPS));
+        else await page.evaluate(([act, args]) => window.__trailer[act](...args), [a.act, a.args]);
+      }
+      await step(page);
+      const jpg = await page.screenshot({ type: 'jpeg', quality: 94 });
+      if (!ff.stdin.write(jpg)) await new Promise((r) => ff.stdin.once('drain', r));
+      if (f % 60 === 0) console.log(`frame ${f}/${frames}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
     }
-  };
-})();`;
-
-const browser = await chromium.launch({ executablePath: CHROME, args: ['--autoplay-policy=no-user-gesture-required'] });
-const ctx = await browser.newContext({ viewport: { width: SIZE.width, height: SIZE.height }, deviceScaleFactor: SIZE.scale });
-const page = await ctx.newPage();
-const errors = [];
-page.on('pageerror', (e) => errors.push(String(e)));
-await page.addInitScript(VIRTUAL_TIME);
-await page.addInitScript((solved) => {
-  localStorage.clear();
-  localStorage.setItem('strata.tutorial', '1');
-  localStorage.setItem('strata.install.later', String(Date.now()));
-  localStorage.setItem('strata.chapters', JSON.stringify(['First Light', 'Moss Garden', 'The Orchard', 'The Lagoon', 'Ember Steps', 'Lantern Festival', 'Starfall']));
-  const s = {}; solved.forEach((id) => { s[id] = { time: 80, mistakes: 0, stars: 3, score: 1500 }; });
-  localStorage.setItem('strata.solved', JSON.stringify(s));
-  localStorage.setItem('strata.sfx', '0');   // the video pass is silent
-}, SOLVED);
-await page.goto(URL);
-await page.waitForFunction(() => window.strata && window.__advance);
-for (let k = 0; k < 30; k++) await page.evaluate(() => window.__advance(1000 / 30));
-await page.evaluate(PAGE_HELPERS);
-
-const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
-  '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p', '-r', String(FPS), OUT], { stdio: ['pipe', 'inherit', 'inherit'] });
-
-const timeline = buildTimeline().filter((a) => !a.audio);
-const frames = Math.round((+process.env.LIMIT || DURATION) * FPS);
-let next = 0;
-const t0 = Date.now();
-for (let f = 0; f < frames; f++) {
-  const time = f / FPS;
-  while (next < timeline.length && timeline[next].t <= time + 1e-6) {
-    const a = timeline[next++];
-    if (a.act === 'ff') {
-      const steps = Math.round(a.args[0] * FPS);
-      for (let k = 0; k < steps; k++) await page.evaluate(() => window.__advance(1000 / 30));
-    } else {
-      await page.evaluate(([act, args]) => window.__trailer[act](...args), [a.act, a.args]);
-    }
+    ff.stdin.end();
+    await new Promise((r) => ff.on('close', r));
+    const info = await page.evaluate(() => ({ rows: window.__rows, progress: document.querySelector('#map-progress')?.textContent, log: document.querySelector('#motion-log')?.innerText, menu: document.querySelector('#menu').className, scroll: document.querySelector('#menu .map-scroll')?.scrollTop, title: document.querySelector('#title').className }));
+    console.log('video done', OUTFILE, JSON.stringify(info), errors.length ? 'ERRORS: ' + errors.join(' | ') : 'no page errors');
+  } finally {
+    await browser.close();
   }
-  await page.evaluate(() => window.__advance(1000 / 30));
-  const jpg = await page.screenshot({ type: 'jpeg', quality: 94 });
-  if (!ff.stdin.write(jpg)) await new Promise((r) => ff.stdin.once('drain', r));
-  if (f % 60 === 0) console.log(`frame ${f}/${frames}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-}
-ff.stdin.end();
-await new Promise((r) => ff.on('close', r));
-await browser.close();
-console.log('video done', OUT, errors.length ? 'ERRORS: ' + errors.join(' | ') : 'no page errors');
+});
