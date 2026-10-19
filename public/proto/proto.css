@@ -133,6 +133,21 @@ body.noshadow .p-node .label, body.noshadow .p-region { text-shadow: none; }
 body.notextshadow .p-node .label, body.notextshadow .p-region, body.notextshadow .p-node.on-dark .label { text-shadow: none !important; }
 body.nolabels .p-node .label, body.nolabels .p-region { display: none; }
 body.noimg .p-node .obj, body.noimg .p-node .cube { visibility: hidden; }
+/* ---- direction B: the page (stones and trail together, scrolled by the browser) */
+#spacer.flow { margin-top: 0; position: relative; }
+#content { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+#content > * { position: absolute; left: 0; top: 0; }
+#content > .p-hero { will-change: transform; }
+/* today's trail (style.css .trail / .walked / .draw), unchanged */
+.p-trail { overflow: visible; pointer-events: none; }
+.p-trail .trail { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; stroke-opacity: .55; }
+.p-trail .trail.walked { stroke-dasharray: none; stroke-width: 2.2; stroke-opacity: .45; }
+.p-trail .trail.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: trail-draw 1.2s .5s ease-in-out forwards; }
+.p-trail .trail.spur { stroke-dasharray: 0.1 6; stroke-opacity: .35; stroke-width: 1.8; }
+@keyframes trail-draw { to { stroke-dashoffset: 0; } }
+.b-bank { position: absolute; left: 0; top: 0; pointer-events: none; }
+.b-spr.cloud { pointer-events: none; }
+
 /* ---- direction B: flat layers */
 #flat > * { position: absolute; left: 0; top: 0; }
 .b-sea { inset: 0; width: 100%; height: 100%; overflow: hidden; }

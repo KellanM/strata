@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Strata · voxel scenery sheet</title>
+  <script type="importmap">{ "imports": { "three": "../vendor/three/build/three.module.min.js" } }</script>
+  <style>
+    body { margin: 0; font: 11px/1.4 "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: #4a3d63; background: #efe6ea; }
+    section { padding: 14px 10px 6px; }
+    h2 { margin: 0 0 6px; font-size: 11px; font-weight: 500; }
+    .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    img { display: block; }
+  </style>
+</head>
+<body>
+  <!-- The map study's voxel scenery (docs/map-study.md), one row per biome, on its own sky. -->
+  <div id="sheet"></div>
+  <script type="module">
+    import { PALETTES } from '../js/palettes.js';
+    import { designs, renderVoxels } from './voxels.js';
+    import { rng } from './data.js';
+    const hex = (h) => '#' + h.toString(16).padStart(6, '0');
+    for (const p of PALETTES) {
+      const s = document.createElement('section');
+      s.style.background = `linear-gradient(180deg, ${hex(p.skyTop)}, ${hex(p.skyBottom)})`;
+      if ((p.skyTop >> 16) < 0x60) s.style.color = '#eef0ff';
+      s.innerHTML = `<h2>${p.name}</h2><div class="row"></div>`;
+      document.getElementById('sheet').appendChild(s);
+      designs(p).forEach((make, i) => {
+        const r = renderVoxels(make(rng(p.name + i)), p, { haze: p.skyBottom });
+        const img = new Image(); img.src = r.url; img.width = r.w; img.height = r.h;
+        s.querySelector('.row').appendChild(img);
+      });
+    }
+    document.body.dataset.done = '1';
+  </script>
+</body>
+</html>

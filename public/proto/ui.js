@@ -44,6 +44,52 @@ export function heroSVG(p) {
   </svg>`;
 }
 
+// A shrine: a faceted gem over a slim spire, gold once its stars open it
+const GOLD = { top: 0xfff2c2, lit: 0xf3c95a, shade: 0xc98d2e, under: 0x8a5a1c };
+function shrineGem(p, state, size = 54) {
+  const g = state === 'locked' ? p : GOLD;
+  return `<svg class="cube shrine-gem" viewBox="0 0 100 120" style="width:${size}px;height:${size * 1.2}px" aria-hidden="true">
+    <path d="M42 112L50 108L58 112L50 116Z" fill="${hex(p.top)}"/>
+    <path d="M44 111L50 76L50 116Z" fill="${hex(p.lit)}"/><path d="M56 111L50 76L50 116Z" fill="${hex(p.shade)}"/>
+    <path d="M50 14L68 42L50 51Z" fill="${hex(g.top)}"/><path d="M50 14L32 42L50 51Z" fill="${hex(g.lit)}"/>
+    <path d="M32 42L50 51L50 70Z" fill="${hex(g.shade)}"/><path d="M68 42L50 51L50 70Z" fill="${hex(g.under)}"/>
+  </svg>`;
+}
+
+// Today's trail (map.js): Catmull-Rom curves through the stones, dotted, solid
+// where walked, in the colour of the stone it leads to. Nothing under cloud.
+function segment(p0, p1, p2, p3) {
+  const t = 1 / 6;
+  const c1 = [p1[0] + (p2[0] - p0[0]) * t, p1[1] + (p2[1] - p0[1]) * t];
+  const c2 = [p2[0] - (p3[0] - p1[0]) * t, p2[1] - (p3[1] - p1[1]) * t];
+  return `M${p1[0].toFixed(1)},${p1[1].toFixed(1)}C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+}
+export function trailSVG(map, W, drawFrom = null) {
+  const cx = W / 2, t = map.trail, pts = t.map((n) => [cx + n.x, n.z]);
+  let m = '';
+  for (let i = 0; i < t.length - 1; i++) {
+    const a = t[i], b = t[i + 1];
+    if (b.region && !b.region.reached) continue;
+    const walked = b.state !== 'locked' && a.state === 'solved';
+    const draw = drawFrom && drawFrom.has(b) ? ' draw' : '';
+    m += `<path d="${segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1])}" class="trail${walked ? ' walked' : ''}${draw}" data-r="${b.region?.index ?? ''}" stroke="${hex(b.palette.under)}"/>`;
+  }
+  for (const r of map.regions) {
+    if (!r.shrine || !r.reached) continue;
+    const a = r.last, s = r.shrine;
+    m += `<path d="M${cx + a.x},${a.z}Q${cx + (a.x + s.x) / 2},${s.z} ${cx + s.x},${s.z}" class="trail spur" stroke="${hex(a.palette.under)}"/>`;
+  }
+  return `<svg class="p-trail" width="${W}" height="${map.height}" viewBox="0 0 ${W} ${map.height}" aria-hidden="true">${m}</svg>`;
+}
+
+// Flow placement: everything in the page itself at its map position, once.
+export function placeFlow(layer, W) {
+  for (const it of layer.items) {
+    it.el.style.display = '';
+    it.el.style.transform = `translate(${(W / 2 + it.x).toFixed(1)}px, ${it.z.toFixed(1)}px)`;
+  }
+}
+
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg>';
 const starRow = (n) => `<span class="stars-mini" aria-label="${n} of 3 stars">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
 
@@ -91,7 +137,7 @@ export function buildLayer(root, map, { onTap } = {}) {
       if (n.kind === 'bonus') {
         num = '✦'; name = s ? shape.name : 'Shrine';
         meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${n.need} ★` : 'open';
-        art = '';
+        art = shrineGem(n.region.base, n.state);
       } else {
         num = String(n.entry.number).padStart(2, '0');
         name = s ? shape.name : n.state === 'locked' ? '' : '???';

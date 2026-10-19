@@ -1,16 +1,19 @@
-// Map study prototype: title -> map as one camera move over a sea of cloud.
+// Map study prototype: title -> map over a sea of cloud.
 // Not linked from the game; nothing here writes the game's saved state.
-//   ?dir=a        three.js world (primary)   ?dir=b  layered 2.5D (comparison)
+//   ?dir=b        layered 2.5D (the chosen direction, default)   ?dir=a  three.js world
 //   ?s=mid        save state (see SCENARIOS in data.js)
+//   ?clouds=      cumulus | painted | voxel | mist (direction B)
+//   ?scenery=     voxel | lowpoly (direction B)
 //   ?map=1        skip the title            ?rm=1   behave as under Reduce Motion
-import { buildMap, SCENARIOS } from './data.js';
-import { buildLayer, placeLayer, heroSVG } from './ui.js';
+import { buildMap, SCENARIOS, rng } from './data.js';
+import { buildLayer, placeLayer, heroSVG, trailSVG, placeFlow } from './ui.js';
 import { ease, DUR } from '../js/motion.js';
 import { sound } from '../js/audio.js';
 
 const params = new URLSearchParams(location.search);
 const scenario = SCENARIOS[params.get('s')] ? params.get('s') : 'mid';
-const dirName = params.get('dir') === 'b' ? 'b' : 'a';
+const dirName = params.get('dir') === 'a' ? 'a' : 'b';
+const flow = dirName === 'b';      // B: stones and trail live in the page itself
 const reduceMotion = params.get('rm') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -22,7 +25,7 @@ const W = () => window.innerWidth, H = () => window.innerHeight;
 
 const dir = dirName === 'a'
   ? new (await import('./world.js')).World($('#world'), map, numParams(['hfov', 'mapPitch', 'topPitch', 'titlePitch', 'lean']))
-  : new (await import('./layers.js')).Layers($('#flat'), map);
+  : new (await import('./layers.js')).Layers($('#flat'), map, { scenery: params.get('scenery') || 'voxel', clouds: params.get('clouds') || 'cumulus' });
 if (dirName === 'b') { $('#world').hidden = true; $('#flat').hidden = false; }
 document.body.classList.add(`dir-${dirName}`);
 
@@ -32,10 +35,26 @@ function numParams(keys) {
   return o;
 }
 
+// A: the stones are placed over the world each frame (a track in a sticky
+// overlay). B: they are part of the page, with the trail, in one container
+// that the browser scrolls: they cannot leave their lines.
 const track = document.createElement('div');
 track.id = 'track';
 overlay.appendChild(track);
-let layer = buildLayer(track, map, { onTap });
+const content = document.createElement('div');
+content.id = 'content';
+if (flow) { overlay.hidden = true; spacer.appendChild(content); spacer.classList.add('flow'); }
+let layer = buildLayer(flow ? content : track, map, { onTap });
+let trailHTML = '';
+function layoutFlow(drawFrom = null) {
+  if (!flow) return;
+  trailHTML = trailSVG(map, W(), drawFrom);
+  content.insertAdjacentHTML('afterbegin', trailHTML);
+  content.querySelectorAll('.p-trail').forEach((s, i) => { if (i > 0) s.remove(); });
+  placeFlow(layer, W());
+  content.querySelectorAll('.trail.draw').forEach((p) => p.style.setProperty('--len', (p.getTotalLength() + 2).toFixed(1)));
+}
+layoutFlow();
 function onTap(n, el) {
   sound.unlock();
   sound.stone(map.nodes.indexOf(n));
@@ -46,7 +65,8 @@ function onTap(n, el) {
 function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   dir.setSize(W(), H(), dpr);
-  spacer.style.height = `${Math.max(H() + 10, map.height - H() * 0.35)}px`;
+  spacer.style.height = flow ? `${map.height}px` : `${Math.max(H() + 10, map.height - H() * 0.35)}px`;
+  if (flow && content.isConnected && layer) { content.querySelector('.p-trail')?.remove(); layoutFlow(); }
 }
 resize();
 window.addEventListener('resize', resize);
@@ -65,7 +85,15 @@ setTimeout(() => {
 
 function setTitle(u) {
   view.u = u;
-  // the name and the logo belong to the sky: they rise with it and fade
+  if (flow) {
+    // B: one page. The name and the logo are part of the sky, which is the top
+    // of the page: they move exactly as far as the map does (no parallax)
+    const off = dir.offset(u);
+    titleEl.style.transform = `translateY(${(off - dir.offset(0)).toFixed(1)}px)`;
+    content.style.transform = view.titleUp || u < 1 ? `translateY(${off.toFixed(1)}px)` : '';
+    return;
+  }
+  // A: the name and the logo belong to the sky: they rise with it and fade
   const y = -u * H() * 0.9;
   titleEl.style.transform = `translateY(${y.toFixed(1)}px)`;
   titleEl.style.opacity = String(1 - clamp((u - 0.12) / 0.4));
@@ -125,7 +153,7 @@ function enterMap() {
   scroller.classList.add('live');
   scroller.scrollTop = 0;
 }
-if (!view.titleUp) enterMap();
+if (!view.titleUp) enterMap(); else setTitle(0);
 
 // ---------------------------------------------------------------- frame
 const perf = { last: performance.now(), d: [] };
@@ -134,7 +162,11 @@ function frame(now) {
   perf.d.push(dt); if (perf.d.length > 90) perf.d.shift();
   const s = readScroll();
   dir.setView(view.u, s);
-  if (!noDom) {
+  if (flow) {
+    // the page scrolls itself; only the walking hero is placed by hand
+    const h = layer.hero;
+    if (h.walking) h.el.style.transform = `translate(${(W() / 2 + h.x).toFixed(1)}px, ${(h.z + (h.dy ?? 0)).toFixed(1)}px)`;
+  } else if (!noDom) {
     // the track's own move: the cloud's vertical scale at the screen centre, times the scroll
     const a = dir.project(0, 0, s + H() / 2, {}).y, b = dir.project(0, 0, s + H() / 2 + 100, {}).y;
     placeLayer(layer, dir.project.bind(dir), dir.viewZ, H(), track, -s * (b - a) / 100, settle && !view.titleUp);
@@ -203,14 +235,21 @@ async function unlockNext() {
   // the new state, with the newly reached chapters' stones still under cloud
   const prevHero = { x: layer.hero.x, z: layer.hero.z };
   const wakeSet = new Set(woke);
+  const wasOpen = new Set(map.trail.filter((n) => n.state !== 'locked').map((n) => n.entry?.shape.id ?? n.kind));
   map = next;
-  layer = buildLayer(track, map, { onTap });
+  layer = buildLayer(flow ? content : track, map, { onTap });
+  // today's trail draws itself on to the stones that just opened
+  layoutFlow(new Set(map.trail.filter((n) => n.state !== 'locked' && !wasOpen.has(n.entry?.shape.id ?? n.kind))));
   for (const it of layer.items) {
     if (it.node === undefined) continue;
     if (it.node.entry?.shape.id === cur.entry.shape.id) it.el.classList.add('fresh');
     if (wakeSet.has(it.node.region)) { it.el.style.opacity = '0'; it.el.style.transition = 'opacity .9s ease'; }
   }
+  // the trail inside a chapter whose cloud is about to part waits for it
+  const hidden = [...content.querySelectorAll('.trail')].filter((p) => woke.some((r) => String(r.index) === p.dataset.r));
+  for (const p of hidden) { p.style.opacity = '0'; p.style.transition = 'opacity .9s ease'; }
   layer.hero.x = prevHero.x; layer.hero.z = prevHero.z;
+  layer.hero.walking = true;
   dir.rebuildPath(map);
   dir.setDrawn(from);
   sound.stone(map.nodes.indexOf(cur));
@@ -222,6 +261,7 @@ async function unlockNext() {
   await tween(dur, (k) => { dir.setDrawn(from + (to - from) * k); walk(k); });
   layer.hero.el.classList.remove('walking');
   dir.setDrawn(1e9);
+  if (!woke.length) layer.hero.walking = false;
   // the cloud parts over a newly reached chapter
   for (const r of woke) {
     sound.setKey(r.base.name);
@@ -231,8 +271,11 @@ async function unlockNext() {
     await tween(reduceMotion ? 0 : DUR.ceremony * 2, (k) => {
       dir.setPart(r.index, k);
       for (const it of items) if (k > 0.25 + 0.5 * clamp((it.z - r.top) / (r.bottom - r.top))) it.el.style.opacity = '';
-    }, (k) => k);   // linear: the shader staggers each billow by its distance from the trail
+      if (k > 0.3) for (const p of hidden) p.style.opacity = '';
+    }, (k) => k);   // linear: each billow staggers by its distance from the trail
     for (const it of items) it.el.style.opacity = '';
+    for (const p of hidden) p.style.opacity = '';
+    layer.hero.walking = false;
     sound.stone(3);
   }
   busy = false;
@@ -263,6 +306,11 @@ const go = (patch) => { const p = new URLSearchParams(location.search); for (con
 sel.addEventListener('change', () => go({ s: sel.value }));
 panel.querySelector('#dir-a').addEventListener('click', () => go({ dir: 'a' }));
 panel.querySelector('#dir-b').addEventListener('click', () => go({ dir: 'b' }));
+for (const id of ['clouds', 'scenery']) {
+  const s = panel.querySelector(`#${id}`);
+  if (params.get(id)) s.value = params.get(id);
+  s.addEventListener('change', () => go({ [id]: s.value, dir: 'b' }));
+}
 panel.querySelector('#replay').addEventListener('click', () => go({ map: null }));
 panel.querySelector('#unlock').addEventListener('click', () => { panel.classList.remove('show'); unlockNext(); });
 panel.querySelector('#perfbtn').addEventListener('click', () => perfEl.classList.toggle('show'));

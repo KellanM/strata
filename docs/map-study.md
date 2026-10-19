@@ -15,6 +15,61 @@ The best way to see the ceremony is `?s=threshold&map=1`, then *Solve the next s
 
 The prototype reads the game's real `SHAPES`, `CHAPTERS`, `BONUS`, palettes, `progress()`, `bonusFor()`, `recordStars()` and `renderThumb()`. It never writes the game's save. The build deploys `proto/` but leaves it out of the offline cache (`tools/build.mjs`), exactly as it does `gallery/`.
 
+## Round 2: Kellan's review (2026-10-19)
+
+**Decisions (Kellan):**
+- **Direction B, the 2.5D layers, is the direction.** It is now the prototype's default; `?dir=a` still opens the 3D world.
+- **The title and the logo don't parallax.** They are the top of the page and move exactly as far as the map does. Only the stars drift, at 88–96% of the page's motion.
+- **Today's trail design comes back.** It keeps `segment()`'s curves and the `.trail`, `.walked` and `.draw` styles, coloured by the stone each segment leads to. The gold dashes are dropped.
+- **The scenery is voxels, built for beauty with no puzzle rules,** and the clouds need iterating.
+
+**The bug: stones drifted off their lines.**
+- *Root cause.* In round 1 the stones and the lines lived in two different layers, and JS glued them together every frame:
+  - The stones sat in a `position: sticky` overlay inside the scroller, placed by JS per frame.
+  - The lines were drawn elsewhere: in B, an SVG in a separate fixed layer moved by JS; in A, a WebGL ribbon on the canvas.
+- *How it shows.* Any frame where the two disagree shows as drift:
+  - During iOS momentum scrolling, the compositor moves the scroller (and with it the sticky layer) while JS-placed layers trail by a frame.
+  - In A, the canvas was 100lvh tall while its projection used `innerHeight`. With Safari's toolbars showing, the WebGL image stretched vertically against the DOM, so stones slid further off the dashes the lower they were.
+  - B also lifted shrine nodes 30 px above their spur's end.
+- *Limit.* The analysis is from the code. Desktop Chromium can't reproduce iOS momentum or its toolbars.
+- *Fix, by construction.* In B the stones, labels, hero and trail are now one container inside the scroller's own content, so the browser scrolls them together. They can't separate under momentum, resize or slow frames.
+- *Verified.* `shots/map-study/b-evidence.mjs` measured the distance from each trail end on screen to its stone centre, every frame, through a wheel fling with the CPU throttled ×4 and after a resize. It saw 3–7 ends per screen across 93 frames, and the worst was **0.00 px**. Recording: `shots/map-study/video/b-scroll-locked.mp4`.
+
+**Clouds: four treatments on the real map** (`shots/map-study/clouds-compare.png`; rows top to bottom are cumulus, painted, voxel, mist; columns are an open chapter, the boundary into a chapter under cloud, and a dark chapter under cloud).
+
+| Treatment | Verdict |
+|---|---|
+| **Cumulus: crisp heaped lobes, lit tops, cool shaded undersides (Sky, K4)** | **Chosen.** It frames the edges clearly without busy detail, keeps its shape at phone size, and its banks read as a cloud wall. |
+| Painted: soft layered banks | Pleasant but blurry. The edges disappear on pale chapters. |
+| Voxel cloud masses | Next to voxel islands they read as popcorn or rubble. The same lesson as round 1's faceted clouds: clouds and land need different materials. |
+| Mist ribbons | Too faint to frame. A locked chapter becomes a flat wash. |
+
+- **Locked chapters are a solid body of cloud.** A gradient body with no gaps for the sea to show through, covered in billows and densest along its leading edge. Round 1's sprite tiling read as fish scales.
+- **The parting.** The bank is two halves that move apart from the trail outward. Billows near the middle go first, drift wider than the body and thin away, and the chapter's stones and trail fade in behind them. It takes about 1.5 s of visible change (`video/b-cloud-parting.mp4`, `b-cloud-parting-strip.png`).
+- **Still to tune:** dark-chapter banks (The Deep) still lean teal.
+
+**Voxel scenery** (`public/proto/voxels.js`; every biome's set on `proto/voxels.html`; `shots/map-study/voxel-sheet-v1.png`).
+- **How they're rendered.** Islands are drawn once by the game's own block shader (`cubes.js`): the face-colour ramp, crease AO, and bases sinking into the chapter's cloud colour. Glowing cubes get a soft light painted over the render. The sprites are then plain images in the layers, so the per-frame cost is the same as before.
+- **Two or three signature islands per biome:**
+  - First Light: a meadow with a cottage window lit and a waterfall.
+  - Teatime: a layered cake mesa with a teapot.
+  - The Lagoon: an atoll with a lagoon, a palm and a lighthouse.
+  - The Deep: glowing coral spires.
+  - Desert Oasis: a sandstone arch and an oasis.
+  - Ember Steps: a stepped temple, a torii and lanterns.
+  - Old Stones: a stone circle.
+  - Clockwork Workshop: a brass tower with a gear and lit windows.
+  - Lantern Festival: a lantern pagoda.
+  - Frost Peaks: a snow peak with pines, and an igloo.
+  - Cloud Isles: a floating isle trailing a waterfall.
+  - Starfall: an observatory among glowing crystals.
+  - Plus groves and strata spires.
+- **Judgement** (`scenery-voxel-vs-lowpoly.png`, the same places with voxel on top and low-poly below): **voxels work**. They speak the same language as the stones' objects, so the map reads as one world. The low-poly islands look like another game.
+- **Weaknesses:**
+  - At ~4.4 px per voxel the islands are small. A larger signature island per chapter would carry more.
+  - The generic strata spire repeats across biomes.
+  - Building all the sprites takes about 1.5 s at load. In the game, render them once at build time.
+
 ## Brief
 
 Kellan's request, in short:
