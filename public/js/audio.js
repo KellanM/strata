@@ -52,11 +52,12 @@ class Sound {
     this.progress = 0;
     this.chain = { step: 0, last: -9 };
     this.lastChisel = 0;
+    this.held = false;
   }
 
   // Browsers only allow audio after a gesture: called on the first pointerdown.
   unlock() {
-    if (this.ctx) { if (this.ctx.state === 'suspended' && !document.hidden) this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state === 'suspended' && !document.hidden && !this.held) this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     if (navigator.audioSession) navigator.audioSession.type = 'ambient';   // respect the iOS silent switch
@@ -109,8 +110,17 @@ class Sound {
     this.voices = [];
     this.clock0 = ctx.currentTime;
 
-    document.addEventListener('visibilitychange', () => { if (document.hidden) ctx.suspend(); else ctx.resume(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ctx.suspend(); else if (!this.held) ctx.resume(); });
     this.startBed();
+  }
+
+  // An ad is up: the game's music and effects stop, and nothing (a tap, the
+  // app coming back) starts them again until it lets go.
+  hold(on) {
+    this.held = !!on;
+    if (!this.ctx) return;
+    if (on) this.ctx.suspend();
+    else if (!document.hidden) this.ctx.resume();
   }
 
   setKey(paletteName) {

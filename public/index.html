@@ -42,7 +42,12 @@
       <span id="pz-name">Strata</span>
       <span class="sub-line"><span id="pz-meta"></span><span id="timer">0:00</span><span id="strikes" aria-label="mistakes"></span></span>
     </div>
-    <span class="hud-spacer" aria-hidden="true"></span>
+    <span class="hud-spacer">
+      <button id="lantern" class="icon-btn" aria-label="Lantern: light a row with a move" hidden>
+        <svg viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0M8 6.5h8M9 6.5 7.5 9v8.5L9 20h6l1.5-2.5V9L15 6.5M7.5 20.5h9"/><path class="flame" d="M12 11.2c1.1 1.2 1.4 2.1 1.4 2.8a1.4 1.4 0 0 1-2.8 0c0-.7.3-1.6 1.4-2.8z"/></svg>
+        <span class="flames" aria-hidden="true"></span>
+      </button>
+    </span>
   </header>
 
   <div id="coach" role="status" aria-live="polite">
@@ -129,7 +134,7 @@
       <p><b>Tap</b> to chisel. Switch to <b>Mark</b> (or <b>hold</b> a cube) for one you know stays: marked cubes can't be chiselled. <b>Double-tap</b> a 0 to clear its whole row.</p>
       <p>Chiselling a cube that belongs is a slip (<span class="slip">✕</span>). The cube is kept for you.</p>
       <p><b>Drag</b> to turn the block and pinch to zoom. Drag a <b>diamond handle</b> along its rail to peel layers away and see inside. <b>Double-tap</b> empty space to reset the view.</p>
-      <p><b>Gems:</b> one for uncovering the shape, two for only a few slips, three for none. Marking and peeling never cost a gem, and there's no rush. On the first stones, pause and a row with a move will glow.</p>
+      <p><b>Gems:</b> one for uncovering the shape, two for only a few slips, three for none. Marking and peeling never cost a gem, and there's no rush. On the first stones, pause and a row with a move will glow. Later, the <b>lantern</b> at the top lights one: a new flame each morning.</p>
       <div class="home-tip">
         <p><b>Best on your Home Screen</b>: full screen, with sound, and it plays offline.</p>
         <p><b>iPhone:</b> Safari's <span class="glyph-share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></span> then <b>Add to Home Screen</b>.<br>
@@ -138,6 +143,18 @@
       <div class="toggles">
         <button id="toggle-sfx" class="toggle">Sound</button>
         <button id="toggle-music" class="toggle">Music</button>
+      </div>
+      <div id="support" class="support">
+        <div class="support-offer">
+          <p>Strata is free. Remove ads and support it.</p>
+          <div class="row"><button id="remove-ads">Remove ads · $3.99</button></div>
+          <p class="perk">then the lantern and shrines need no ad</p>
+          <button id="restore-ads" class="restore">restore purchase</button>
+        </div>
+        <div class="support-thanks">
+          <p>Thank you for keeping Strata whole.</p>
+          <p class="perk">every ad gone, for good</p>
+        </div>
       </div>
       <button class="primary" data-close>Begin</button>
       <p id="version" class="version">dev</p>
@@ -152,6 +169,9 @@
         <button class="dev-row" id="dev-unlock">Unlock all levels <span id="dev-unlock-state"></span></button>
         <button class="dev-row" id="dev-slowmo">Slow motion ×4 <span id="dev-slowmo-state"></span></button>
         <button class="dev-row" id="dev-motionlog">Motion log <span id="dev-motionlog-state"></span></button>
+        <button class="dev-row" id="dev-ads">Simulated ads <span id="dev-ads-state"></span></button>
+        <button class="dev-row" id="dev-flames">+3 flames <span id="dev-flames-state"></span></button>
+        <button class="dev-row" id="dev-ads-reset">Reset ads, flames, shrines <span>›</span></button>
         <button class="dev-row" id="dev-tutorial">Replay the tutorial <span>›</span></button>
         <button class="dev-row danger" id="dev-reset">Reset progress <span>›</span></button>
       </div>
@@ -192,6 +212,13 @@
     <div class="install-actions">
       <button id="install-go" class="primary">Install</button>
       <button id="install-later">Later</button>
+    </div>
+  </aside>
+  <aside id="offer" role="dialog" aria-live="polite">
+    <div class="offer-card">
+      <p class="offer-text"></p>
+      <p class="small offer-small"></p>
+      <div class="row"><button data-no>Not now</button><button class="primary" data-yes></button></div>
     </div>
   </aside>
   <div id="loading" aria-live="polite"></div>

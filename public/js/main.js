@@ -15,6 +15,7 @@ import { MapWorld } from './mapworld.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
 import { rate as motionRate, after, mark, reveal, devFlags, ease, DUR, BEAT } from './motion.js';
 import { migrateSaves } from './migrate.js';
+import * as ads from './ads.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -83,6 +84,11 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const mapWorld = new MapWorld($('#map-world'), $('#menu .map-scroll'));
 const menuEl = $('#menu');
 const titleEl = $('#title');
+// the hint lantern (top-right HUD slot) and the small card that offers a gift
+// (an empty lantern, a shrine short of stars); declared here, before boot's first startPuzzle
+const lanternEl = $('#lantern');
+const offerEl = $('#offer');
+let offerAction = null;
 let titleU = 0;               // the title pan, 0 (stars) .. 1 (the map at its top)
 let mapUpSince = -1;          // scene time the map covered the level (-1: it doesn't)
 migrateSaves();   // once, before the save is read: old shrine solves move to their levels
@@ -208,6 +214,8 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   show('#menu', false);
   show('#win', false);
   renderCoach();
+  closeOffer();
+  renderLantern(!quiet);
   // the first step into a chapter: its card is held on its own sky first, and
   // the block assembles as it leaves
   // a shrine always has its card held: "✦ The Shrine of …", with its bells
@@ -687,6 +695,11 @@ function win() {
     };
     localStorage.setItem('strata.solved', JSON.stringify(solvedStore));
   }
+  // the ads' solve count, and the lantern's flames (once ever per gain)
+  const ch = !g.entry.bonus && g.shape.chapter;
+  const completed = ch && !prev && SHAPES.filter((s) => s.chapter === ch).every((s) => solvedStore[s.id]) ? ch : null;
+  ads.noteSolve({ id: g.shape.id, flawless: g.mistakes === 0, wasFlawless: prev?.mistakes === 0,
+    drift: g.shape.id.startsWith('random'), completedChapter: completed });
   setTimeout(() => {
     if (game !== g) return;
     showResult(g, result, isBest);
@@ -909,6 +922,7 @@ canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 // Capture phase so a handle grab never reaches OrbitControls.
 canvas.addEventListener('pointerdown', (e) => {
   activePointers.add(e.pointerId);
+  if (offerEl.classList.contains('show')) closeOffer();   // back to the block: the offer steps aside
   clearTimeout(press?.timer);
   ring.classList.remove('go');
   if (activePointers.size !== 1) { press = null; drag = null; return; }
@@ -1084,7 +1098,7 @@ function setTool(t) {
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 $('#menu-btn').addEventListener('click', openMenu);
-$('#map-help').addEventListener('click', () => show('#help', true));
+$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); show('#help', true); });
 
 // every level and bonus stone, each in its chapter's palette for the journal
 function journalEntries() {
@@ -1115,7 +1129,7 @@ function goNext() {
   const list = puzzleList();
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
   if (game.entry.lesson) washInto(list[0].palette, () => startPuzzle(list[0]));
-  else if (game.entry.bonus) { $('#actions').classList.remove('show'); openMenu(); }   // shrines lead back to the map
+  else if (game.entry.bonus) { $('#actions').classList.remove('show'); resultToMap(); }   // shrines lead back to the map
   else if (idx >= 0) { const next = list[(idx + 1) % list.length]; washInto(next.palette, () => startPuzzle(next)); }
   else startRandom(game.shape.dims[0]);
 }
@@ -1140,8 +1154,8 @@ function washInto(palette, start) {
     }));
   });
 }
-$('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); openMenu(); });
-$('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); openMenu(); });
+$('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); resultToMap(); });
+$('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); resultToMap(); });
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
 $('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });
@@ -1263,7 +1277,9 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
     celebrate,
     onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0)),
     onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
-    onPlay: (entry, el) => diveInto(el, entry.palette, () => startPuzzle(entry)),
+    onPlay: (entry, el) => { closeOffer(); diveInto(el, entry.palette, () => startPuzzle(entry)); },
+    openedShrines: ads.openedShrines(),
+    onShrineLocked: offerShrine,
     world: mapWorld,
     // a chapter's cloud parts: the music moves into its key, with a sweep; a bell as it clears
     onPart: (r) => { sound.setKey(r.base.name); sound.peel(); },
@@ -1293,6 +1309,7 @@ function openMenu({ instant = false } = {}) {
     menu.classList.remove('instant');
     return;
   }
+  closeOffer();
   mapWorld.backdrop(game?.entry?.palette);
   show('#menu', true);
   renderMenu(true, true);
@@ -1473,7 +1490,7 @@ function draw() {
     // and the rest of the stone settles into shade while it shows
     const dimTo = cubes.focusAny && !game.solved && t >= (game.introEnd ?? 0) ? 1 : 0;
     u.uFocusDim.value += (dimTo - u.uFocusDim.value) * Math.min(1, dt * (dimTo ? 2.5 : 4));
-    if (!game.solved) $('#timer').textContent = fmt(t - game.start);
+    if (!game.solved) $('#timer').textContent = fmt((game.adAway ?? t) - game.start);   // it stands still under an ad
 
     if (game.win) {
       stepCelebration(t);
@@ -1580,6 +1597,170 @@ $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); r
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
 renderSoundToggles();
 
+// ---------------------------------------------------------------- ads, the lantern, Remove Ads
+
+// docs/ads-study.md. ads.js decides (every cap) and its provider shows; here
+// are the moments: the breath and interstitial on the way from a result to
+// the map, the lantern, a shrine opened by an ad, and Remove Ads.
+
+// While an ad is up the game's sound stops, and a level's clock stands still.
+ads.onAd((on) => {
+  sound.hold(on);
+  if (!game || game.solved) return;
+  if (on) game.adAway = now();
+  else if (game.adAway != null) { game.start += now() - game.adAway; game.adAway = null; }
+});
+
+function adContext(g) {
+  const k = g.shape.chapter ? CHAPTERS.findIndex((c) => c.name === g.shape.chapter) : -1;
+  return { lesson: !!g.entry.lesson, chapterIndex: k < 0 ? null : k };
+}
+
+// Result -> map (Map on the result, or leaving a shrine). If an interstitial
+// may show: the stone's own sky washes in with plain words (C1), the ad, then
+// the map's usual pull-back as the sky lifts. Never on Next or Replay.
+let toMapBusy = false;
+async function resultToMap() {
+  const g = game;
+  const placement = g?.entry.bonus ? 'shrine_to_map' : 'result_to_map';
+  if (toMapBusy || !g?.solved || !ads.canShow(placement, adContext(g))) { if (!toMapBusy) openMenu(); return; }
+  toMapBusy = true;
+  try {
+    const el = await breath(g.palette);
+    await ads.showInterstitial(placement);
+    openMenu();
+    el.classList.remove('in');
+    setTimeout(() => el.remove(), reduceMotion ? 0 : 500);
+  } finally { toMapBusy = false; }
+}
+
+function breath(palette) {
+  const hexOf = (h) => '#' + new THREE.Color(h).getHexString();
+  const el = document.createElement('div');
+  el.id = 'breath';
+  el.setAttribute('role', 'status');
+  el.style.background = `linear-gradient(180deg, ${hexOf(palette.skyTop)}, ${hexOf(palette.skyBottom)})`;
+  el.innerHTML = '<p class="pause">a short ad,<br>then the map</p><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>';
+  document.body.appendChild(el);
+  mark('ads: breath');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  return new Promise((resolve) => setTimeout(() => resolve(el), ads.CONFIG.interstitial.breathSec * 1000 / motionRate));
+}
+
+// The small card. Only ever opened by a tap on the thing it's about.
+function openOffer({ text, small = '', yes = null, onYes = null, onMap = false }) {
+  offerEl.querySelector('.offer-text').textContent = text;
+  offerEl.querySelector('.offer-small').textContent = small;
+  const y = offerEl.querySelector('[data-yes]');
+  y.hidden = !yes;
+  y.textContent = yes ?? '';
+  offerEl.classList.toggle('on-map', onMap);
+  offerAction = onYes;
+  offerEl.classList.remove('show'); void offerEl.offsetWidth;
+  offerEl.classList.add('show');
+}
+function closeOffer() {
+  offerEl.classList.remove('show');
+  offerAction = null;
+}
+offerEl.querySelector('[data-no]').addEventListener('click', closeOffer);
+offerEl.querySelector('[data-yes]').addEventListener('click', () => { const run = offerAction; closeOffer(); run?.(); });
+
+// The hint lantern: in a level's empty top-right slot (not in lessons). A flame
+// lights one row with a move, the same light as the stuck nudge. Its flames are
+// small diamonds beneath it; none when it's empty, never a "0".
+const lanternShown = () => !!game && !game.entry.lesson && game.shape.id !== 'logo' && !titleUp;
+function renderLantern(rise = true) {
+  const on = lanternShown();
+  lanternEl.hidden = !on;
+  if (!on) return;
+  const n = ads.flames();
+  lanternEl.classList.toggle('lit', n > 0);
+  lanternEl.querySelector('.flames').innerHTML = '<i></i>'.repeat(n);
+  lanternEl.setAttribute('aria-label', n ? `Lantern, ${n} flame${n > 1 ? 's' : ''}: light a row with a move` : 'Lantern: light a row with a move');
+  // a flame gained since it was last seen rises into it, once the block is whole
+  if (rise && ads.takeRisen() > 0 && !reduceMotion) {
+    const g = game;
+    after(Math.max(0.6, (game.introEnd ?? 0) - now()) + 0.2, () => {
+      if (game !== g || lanternEl.hidden) return;
+      const f = document.createElement('span');
+      f.className = 'rise';
+      lanternEl.appendChild(f);
+      setTimeout(() => f.remove(), 1500);
+    });
+  }
+}
+function lightRow(move) {
+  idleFrom = now();
+  nudge = { level: 2, ...move };
+  applyCues();
+  mark('lantern: a row lit');
+  lanternEl.classList.add('glow');
+  setTimeout(() => lanternEl.classList.remove('glow'), 1400);
+}
+lanternEl.addEventListener('click', () => {
+  if (!lanternShown() || game.solved) return;
+  if (now() < (game.introEnd ?? 0)) finishIntro();
+  if (offerEl.classList.contains('show')) { closeOffer(); return; }
+  const move = findMove();
+  if (!move) { lanternEl.classList.remove('nudge'); void lanternEl.offsetWidth; lanternEl.classList.add('nudge'); return; }
+  if (ads.spendFlame()) { lightRow(move); renderLantern(false); return; }
+  // empty: an ad lights the row (it doesn't store a flame); at most 1 a stone, 3 a day
+  const g = game, id = g.shape.id, can = ads.lanternOffer(id);
+  if (can && ads.adsRemoved()) { ads.noteLanternAd(id); lightRow(move); return; }
+  openOffer({
+    text: 'A lantern lights one row with a move.',
+    small: 'a new flame each morning',
+    yes: can ? 'Watch an ad' : null,
+    onYes: async () => {
+      const ok = await ads.showRewarded('lantern');
+      if (!ok || game !== g || g.solved) return;
+      ads.noteLanternAd(id);
+      const m = findMove();
+      if (m) lightRow(m);
+    },
+  });
+});
+
+// A shrine locked only because its stars are short, on a chapter the trail has
+// reached: tapping it offers to open it with an ad (for good, map.js reads it).
+function offerShrine(s) {
+  const id = s.entry.shape.id;
+  if (!ads.shrineAdEligible({ ...s, opened: ads.openedShrines().has(id) })) return false;
+  const free = ads.adsRemoved() || !ads.enabled();
+  openOffer({
+    text: `This shrine opens at ${s.need} stars.`,
+    small: `${s.stars} gathered so far`,
+    yes: free ? 'Open it' : 'Watch to open',
+    onMap: true,
+    onYes: async () => {
+      if (!(await ads.showRewarded('shrine'))) return;
+      ads.openShrine(id);
+      mark(`shrine opened by ad: ${id}`);
+      renderMenu(false, false, false);
+      sound.stone(3);
+    },
+  });
+  return true;
+}
+
+// Remove Ads, in How to play under the sound toggles
+function renderSupport() { $('#support').classList.toggle('owned', ads.adsRemoved()); }
+$('#remove-ads').addEventListener('click', async () => {
+  if (await ads.buyRemoveAds()) { renderSupport(); renderLantern(false); }
+});
+$('#restore-ads').addEventListener('click', async (e) => {
+  const b = e.currentTarget;
+  if (await ads.restorePurchases()) { renderSupport(); return; }
+  b.textContent = 'nothing to restore';
+  setTimeout(() => { b.textContent = 'restore purchase'; }, 1800);
+});
+
+function renderDevAds() {
+  $('#dev-ads-state').textContent = ads.enabled() ? 'on' : 'off';
+  $('#dev-flames-state').textContent = String(ads.flames());
+}
+
 // ---------------------------------------------------------------- developer panel
 
 // Hidden on purpose: hold the version line in How to play (a quick tap still
@@ -1589,6 +1770,7 @@ function openDev() {
   devPress.opened = true;
   $('#dev-unlock-state').textContent = localStorage.getItem('strata.dev.unlock') === '1' ? 'on' : 'off';
   $('#dev .dev-version').textContent = $('#version').textContent;
+  renderDevAds();
   show('#help', false);
   show('#dev', true);
   buzz(12);
@@ -1615,6 +1797,13 @@ $('#dev-unlock').addEventListener('click', () => {
   const on = localStorage.getItem('strata.dev.unlock') !== '1';
   localStorage.setItem('strata.dev.unlock', on ? '1' : '0');
   $('#dev-unlock-state').textContent = on ? 'on' : 'off';
+  if ($('#menu').classList.contains('show')) renderMenu(false);
+});
+$('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
+$('#dev-flames').addEventListener('click', () => { ads.devAddFlames(3); renderDevAds(); renderLantern(false); });
+$('#dev-ads-reset').addEventListener('click', () => {
+  ads.devReset();
+  renderDevAds(); renderSupport(); renderLantern(false);
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
@@ -1668,6 +1857,8 @@ maybeShowInstall();
 
 // ---------------------------------------------------------------- boot
 
+ads.init();   // first: a fresh save marks this session its first (no interstitials in it)
+renderSupport();
 applyPalette(PALETTES[0]);
 resize();
 // The title: under the name, the logo makes itself - a whole 2x2x2 stone is
@@ -1858,7 +2049,7 @@ requestAnimationFrame(frame);
 // new version has taken over, reload at a calm moment (the map or the result
 // screen), never in the middle of a puzzle. Tapping the version line in How to
 // play checks right away.
-function calmMoment() { return !game || game.solved || $('#menu').classList.contains('show'); }
+function calmMoment() { return !ads.adShowing() && !$('#breath') && (!game || game.solved || $('#menu').classList.contains('show')); }
 function applyUpdate() { if (updateReady && calmMoment()) location.reload(); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const hadController = !!navigator.serviceWorker.controller;
@@ -1884,4 +2075,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes };
+window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes };

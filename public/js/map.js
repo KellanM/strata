@@ -176,7 +176,9 @@ let drawSeq = 0;
  * opts: { entries, solved, learned, lessons, drift: number[], driftPalette,
  *         onPlay(entry, el), onLearn(el), onDrift(n, el), fmt(seconds), scroll: bool,
  *         celebrate: bool (play one-off reveals; false for passive re-renders),
- *         world: MapWorld, onPart(region), onParted(region) }
+ *         world: MapWorld, onPart(region), onParted(region),
+ *         openedShrines: Set of shrine ids opened by an ad (ads.js),
+ *         onShrineLocked({ entry, el, reached, stars, need, solved }) -> true if it took the tap }
  */
 export function renderMap(root, opts) {
   const { entries, solved, learned, lessons, drift, driftPalette } = opts;
@@ -261,8 +263,9 @@ export function renderMap(root, opts) {
         kind: 'bonus', x: x0 + colW * (leftSide ? 0.14 : 0.86), y: r.folded ? r.labelY + 120 : r.last.y + STEP * 0.62,
         palette: entry.palette, sky: r.items[0].palette, entry, region: r, need,
         // stars open it, once the trail has reached the chapter (stars from
-        // stones that moved here when the map grew don't open it from afar)
-        state: solved[b.id] ? 'solved' : devUnlock() || (r.stars >= need && r.reached) ? 'open' : 'locked',
+        // stones that moved here when the map grew don't open it from afar);
+        // or an ad did, on a chapter the trail has reached (ads.js)
+        state: solved[b.id] ? 'solved' : devUnlock() || (r.reached && (r.stars >= need || !!opts.openedShrines?.has(b.id))) ? 'open' : 'locked',
       };
       nodes.push(r.shrine);
       if (!r.folded) y += STEP * 0.35;
@@ -454,6 +457,8 @@ export function renderMap(root, opts) {
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
         b.addEventListener('click', () => {
+          // a shrine short only of stars may be offered another way in (main.js)
+          if (isBonus && opts.onShrineLocked?.({ entry: n.entry, el: b, reached: n.region.reached, stars: n.region.stars, need: shrineStars(n.region), solved: false })) return;
           b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge');
         });
       } else {

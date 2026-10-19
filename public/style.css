@@ -848,3 +848,89 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
   .trail.draw { stroke-dashoffset: 0; }
   .map-node, .trail { transition: none; }
 }
+
+/* ---------- ads, the lantern, Remove Ads (docs/ads-study.md; styleframes in proto/ads.html) ---------- */
+/* the hint lantern, in the top-right HUD slot: its flame lit while it has one;
+   the flames it holds are small diamonds beneath it, none when it is empty */
+#lantern { position: relative; }
+#lantern[hidden] { display: none; }
+#lantern .flame { fill: currentColor; fill-opacity: 0; transition: fill-opacity .6s var(--ease-fade); }
+#lantern.lit .flame { fill: #e9b24e; fill-opacity: .95; stroke: #c98d2e; }
+#lantern:not(.lit) svg { opacity: .62; }
+#lantern .flames { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); display: flex; gap: 4px; }
+#lantern .flames i { width: 3.5px; height: 3.5px; transform: rotate(45deg); background: var(--ink-soft); opacity: .7; }
+#lantern.glow { box-shadow: 0 6px 24px rgba(40, 20, 60, 0.08), 0 0 22px 4px rgba(255, 236, 170, .7); }
+#lantern .rise { position: absolute; left: 50%; top: 50%; width: 10px; height: 13px; margin: -6px 0 0 -5px; pointer-events: none;
+  background: radial-gradient(closest-side, #fff6d6, rgba(255, 220, 140, .9) 45%, rgba(255, 210, 120, 0));
+  border-radius: 50% 50% 45% 45%; animation: flame-rise 1.4s var(--ease-out) both; }
+@keyframes flame-rise { 0% { transform: translateY(46px) scale(.7); opacity: 0; } 25% { opacity: 1; } 80% { transform: translateY(1px) scale(1); opacity: 1; } 100% { transform: translateY(0) scale(.6); opacity: 0; } }
+#lantern.nudge { animation: lantern-nudge .45s ease; }
+@keyframes lantern-nudge { 30% { transform: translateX(-3px); } 60% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { #lantern .rise, #lantern.nudge { animation: none; opacity: 0; } }
+
+/* a small card that offers a gift: the empty lantern, a shrine short of stars */
+#offer { position: fixed; z-index: 8; left: 50%; bottom: calc(96px + var(--safe-b)); width: min(330px, calc(100% - 40px));
+  transform: translate(-50%, 10px); opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-in), transform var(--dur-base) var(--ease-in); }
+#offer.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto;
+  transition: opacity var(--dur-slow) var(--ease-fade), transform var(--dur-slow) var(--ease-out); }
+#offer.on-map { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); --line: rgba(74, 61, 99, .16); --sky: #f7dccb; --panel-strong: rgba(255, 250, 243, .9); color: var(--ink); }
+.offer-card { padding: 16px 20px 14px; border-radius: 22px; text-align: center;
+  background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 14px 40px rgba(40, 20, 60, 0.14); }
+.offer-card p { margin: 0; font-size: 14px; line-height: 1.5; letter-spacing: .02em; }
+.offer-card .small { margin-top: 4px; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+.offer-card .small:empty { display: none; }
+.offer-card .row { margin-top: 12px; }
+.offer-card .row button { font-size: 11px; padding: 10px 16px; }
+.offer-card .row button.primary { font-size: 11px; padding: 10px 18px; }
+.offer-card .row button[hidden] { display: none; }
+
+/* Remove Ads, under the sound toggles in How to play */
+.support { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; }
+.support p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
+.support .row { margin-top: 0; }
+.support .perk { margin: 10px 0 0; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); line-height: 1.6; }
+.support .restore { display: block; margin: 10px auto 0; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 4px 8px; }
+.support-thanks { display: none; }
+.support.owned .support-offer { display: none; }
+.support.owned .support-thanks { display: block; }
+.support.owned .support-thanks p:first-child { margin-bottom: 0; }
+
+/* the breath before an interstitial: the stone's own sky, and plain words */
+#breath { position: fixed; inset: 0; z-index: 55; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  text-align: center; opacity: 0; transition: opacity .45s var(--ease-fade); pointer-events: auto; }
+#breath.in { opacity: 1; }
+#breath .pause { margin: 0; font-size: 14px; line-height: 1.7; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
+#breath .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+#breath .dots i { width: 5px; height: 5px; transform: rotate(45deg); background: var(--ink-soft); opacity: .3; animation: breath-dot 1.2s ease-in-out infinite; }
+#breath .dots i:nth-child(2) { animation-delay: .2s; }
+#breath .dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes breath-dot { 0%, 100% { opacity: .3; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #breath { transition: none; } #breath .dots i { animation: none; } }
+
+/* the web prototype's placeholder ad (ads-web.js): plainly not the game */
+.sim-ad { position: fixed; inset: 0; z-index: 60; background: #17161c; color: #e9e6f2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  font-family: system-ui, sans-serif; text-align: center; padding: 24px; opacity: 0; transition: opacity .25s ease; }
+.sim-ad.in { opacity: 1; }
+.sim-ad.leaving { opacity: 0; }
+.sim-label { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; padding: 6px 12px; border: 1px dashed #8a85a0; border-radius: 6px; color: #c9c4dc; font-family: system-ui, sans-serif; }
+.sim-ad .sim-what { font-size: 13px; color: #8f8aa6; max-width: 270px; line-height: 1.5; margin: 0; }
+.sim-ad .sim-slot { width: min(300px, 80vw); aspect-ratio: 1; border-radius: 14px; display: grid; place-items: center;
+  background: repeating-linear-gradient(45deg, #201f27 0 12px, #1c1b22 12px 24px); color: #5d5874; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+.sim-timer { position: absolute; top: calc(18px + var(--safe-t)); right: 18px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 13px; color: #c9c4dc; }
+.sim-timer[hidden] { display: none; }
+.sim-timer svg { position: absolute; inset: 0; width: 34px; height: 34px; transform: rotate(-90deg); stroke: #6e6985; stroke-width: 1.5; }
+.sim-timer b { font-weight: 400; }
+.sim-close { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+  color: #e9e6f2; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.sim-close[hidden] { display: none; }
+.sim-early { position: absolute; bottom: calc(28px + var(--safe-b)); left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: .24em;
+  text-transform: uppercase; color: #8f8aa6; padding: 10px 14px; white-space: nowrap; }
+.sim-buy { position: fixed; inset: 0; z-index: 61; display: grid; place-items: center; padding: 20px;
+  background: rgba(30, 26, 40, .28); opacity: 0; transition: opacity .25s ease;
+  --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); --line: rgba(74, 61, 99, .16); --sky: #f7dccb; --panel-strong: rgba(255, 250, 243, .96); color: var(--ink); }
+.sim-buy.in { opacity: 1; }
+.sim-buy .offer-card { width: min(330px, 100%); }
+.sim-buy .sim-label { display: inline-block; margin-bottom: 12px; color: var(--ink-soft); border-color: var(--line); font-size: 10px; }
