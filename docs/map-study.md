@@ -15,6 +15,55 @@ The best way to see the ceremony is `?s=threshold&map=1`, then *Solve the next s
 
 The prototype reads the game's real `SHAPES`, `CHAPTERS`, `BONUS`, palettes, `progress()`, `bonusFor()`, `recordStars()` and `renderThumb()`. It never writes the game's save. The build deploys `proto/` but leaves it out of the offline cache (`tools/build.mjs`), exactly as it does `gallery/`.
 
+## Round 3: mist, and mountain tops (2026-10-19)
+
+**Kellan:**
+> "For clouds let's go with mist… the islands look rough, they should feel like mountain tops with the bases obscured by the mist so they are sticking out. And they should have bigger voxels."
+
+**Mist is the clouds** (`public/proto/layers.js`, the prototype's default):
+- **Colour.** Mist is lit by its own sky: warm cream in warm chapters, peach at dusk, cool only at night.
+- **On the peaks.** Most of it hangs on the peaks: one soft band (edge alpha under 0.6) sits across each peak's lower slopes, exactly where its base has faded out. Bands never come within 40 px of the trail.
+- **Free bands.** A few faint ones remain, far back.
+- **Motion.** Everything drifts slowly on its own `translate` property; nothing moves under Reduce Motion.
+- **Locked chapters** sit behind a dense wall of mist:
+  - its leading edge is feathered;
+  - the chapter's signature summit stands behind the edge, on the side away from its name (the teaser);
+  - two faint silhouettes show deeper in.
+- **The lift.** On unlock the bands thin from the trail outward, rising and spreading as they fade, and the wall clears last (`video/r3-mist-lift.mp4`, `r3-final-mist-lift-strip.png`).
+
+**Mountain tops** (`public/proto/peaks.js`; the sheet is at `proto/voxels.html`):
+- **Built from heightfields:** a concave summit set off-centre, one ridge spur, terraces of uneven depth. Ground only on ledges wide enough to stand on, quiet strata, no per-voxel noise. A tidy pass removes thin columns and anything floating.
+- **Voxels are big.** About 10 px per voxel for a signature summit and 7.5 for the others.
+- **The base dissolves.** It fades to nothing in the render, and the mist band covers the cut.
+- **Composition, per screen:** a big summit cropped by the edge, a small pale peak far back on the other side, and every third chapter keeps a stretch of open mist.
+- **Each biome:** a signature landmark on its summit, plus its own two landform families. Signatures include:
+  - a sun shrine;
+  - a beacon cairn with its fire lit (the new Beacon Hills);
+  - a lighthouse crag;
+  - sea stacks with glowing tips;
+  - a mesa arch;
+  - a torii summit;
+  - standing stones;
+  - a clock tower;
+  - a pagoda;
+  - snow horns;
+  - a cairn with a pennant;
+  - a crystal.
+
+**The adversarial passes:** three critique rounds, each by a fresh art-director subagent against the checklist. Before and after sheets are `shots/map-study/r3-round{1..4}-{sheet,map,locked}.png`.
+
+| Round | What the critic found | What changed |
+|---|---|---|
+| 1 | Mist edges clipped into hard cards. Peaks were stepped cakes and Christmas trees. Bases reappeared below the mist. The same four shapes repeated in every biome. Stripe noise. Voxels too fine. Mechanical placement. Lilac mist went muddy in warm chapters. The teaser didn't pierce. | Soft lobes kept inside each ribbon. Heightfield peaks, half the voxel count. Strong base fade with mist at the cut. Per-biome landforms. Warm and cool mist. Alternating sides. New signatures. |
+| 2 | Scale collapsed into trinkets. One-voxel needles. Shapes repeated within a biome. Flat slabs read as trays. Bases still showed in three chapters. Free mist blobs read as stickers. No depth. The teaser hit the title. | Larger voxels. Summit caps and the tidy pass. Three shapes per biome (new chimney rocks for Clockwork). Butte tops broken into levels. The base fully gone at the cut. Mist anchored to the peaks. A far pale peak per screen. The teaser moved opposite the title. |
+| 3 | Verdict: show it as a direction pass. Deep, Lagoon, Festival, Dusk, Cloud Isles and Starfall land. Still weak: slab signatures, Beacon Hills with no kit, opaque mist under signatures, the teaser, noisy Autumn, Frost, Orchard and Mint summits, and crops crowding titles. | Narrowing tiers for the slab biomes. A Beacon Hills kit with its fire lit. Base mist at alpha 0.55 and clear of the trail. One clean landmark per summit. Summits 90 px clear of names, cropped at the rock, never at the landmark. A larger teaser. |
+
+**Still open** (my judgement, not tested with players):
+- The First Light shrine is small.
+- Some far peaks are hard to see on dark chapters.
+- The locked wall is a large plain area below its teaser.
+- Building the sprites takes about 1.5 s at load; the game should pre-render them at build time.
+
 ## Round 2: Kellan's review (2026-10-19)
 
 **Decisions (Kellan):**

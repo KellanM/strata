@@ -305,7 +305,7 @@ export function dispose() {
  * ppv: CSS px per voxel. Returns { url, w, h } with w/h in CSS px and the
  * sprite's anchor (where its base centre sits) as ax/ay fractions.
  */
-export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze } = {}) {
+export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze, tint = null, fade = 0 } = {}) {
   setup();
   const THREE_ = THREE;
   const [X, Y, Z] = [g.X, g.Y, g.Z];
@@ -352,14 +352,30 @@ export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze } = {}) {
     for (const i of g.glow) {
       const x = i % X, y = Math.floor(i / X) % Y, z = Math.floor(i / (X * Y));
       const v = new THREE_.Vector3(x + 0.5 - X / 2, y + 0.5 - Y / 2, z + 0.5 - Z / 2).project(camera);
-      const px = (v.x * 0.5 + 0.5) * out.width, py = (-v.y * 0.5 + 0.5) * out.height, r = ppv * dpr * 2.4;
+      const px = (v.x * 0.5 + 0.5) * out.width, py = (-v.y * 0.5 + 0.5) * out.height, r = ppv * dpr * 1.8;
       const col = C(g.v[i]);
       const grad = ctx.createRadialGradient(px, py, 0, px, py, r);
       const rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
-      grad.addColorStop(0, `rgba(${rgb},.38)`); grad.addColorStop(1, `rgba(${rgb},0)`);
+      grad.addColorStop(0, `rgba(${rgb},.26)`); grad.addColorStop(1, `rgba(${rgb},0)`);
       ctx.fillStyle = grad; ctx.fillRect(px - r, py - r, r * 2, r * 2);
     }
   }
+  // distance: the whole peak leans toward the mist's colour
+  if (tint) {
+    ctx.globalCompositeOperation = 'source-atop';
+    const t = C(tint.color);
+    ctx.fillStyle = `rgba(${Math.round(t.r * 255)},${Math.round(t.g * 255)},${Math.round(t.b * 255)},${tint.amount})`;
+    ctx.fillRect(0, 0, out.width, out.height);
+  }
+  // the base dissolves: the lower part of the sprite fades out into the mist
+  if (fade > 0) {
+    ctx.globalCompositeOperation = 'destination-out';
+    const y0 = out.height * (1 - fade), y1 = out.height * (1 - fade * 0.4);   // fully gone over the last 40% of the fade
+    const grad = ctx.createLinearGradient(0, y0, 0, y1);
+    grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = grad; ctx.fillRect(0, y0, out.width, out.height - y0);
+  }
+  ctx.globalCompositeOperation = 'source-over';
   // where the base's centre lands, so the sprite can be placed by its foot
   const foot = new THREE_.Vector3(0, -Y / 2, 0).project(camera);
   return { url: out.toDataURL('image/png'), w, h, ax: foot.x * 0.5 + 0.5, ay: -foot.y * 0.5 + 0.5 };

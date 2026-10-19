@@ -16,6 +16,7 @@ import { Soup, island, soupGeometry, KITS, lightOf } from './islands.js';
 import { rng, trailXAt } from './data.js';
 import { seaColours } from './world.js';
 import { designs, renderVoxels, grid as vgrid, dispose as disposeVoxels } from './voxels.js';
+import { peaksFor } from './peaks.js';
 
 const C = (h) => new THREE.Color(h);
 const css = (c, a = 1) => `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${a})`;
@@ -23,7 +24,7 @@ export const RATES = { far: 0.84, near: 1, front: 1.12 };
 export const CLOUDS = ['painted', 'cumulus', 'voxel', 'mist'];
 
 export class Layers {
-  constructor(root, map, { scenery = 'voxel', clouds = 'cumulus' } = {}) {
+  constructor(root, map, { scenery = 'voxel', clouds = 'mist' } = {}) {
     this.root = root; this.map = map; this.u = 0; this.s = 0; this.parts = new Float32Array(32);
     this.opts = { scenery, clouds };
     root.innerHTML = '';
@@ -164,6 +165,120 @@ export class Layers {
     });
   }
 
+  // ---------------------------------------------------------------- mist and mountain tops (round 3)
+  peakSprite(r, i, o) {
+    const sc = seaColours(r.base);
+    return this.memo(`pk|${r.base.name}|${i}|${o.ppv}|${o.tint ?? 0}`, () => {
+      const list = peaksFor(r.base);
+      const mistCol = this.mistColour(r);
+      return renderVoxels(list[i % list.length].make(), r.base, { haze: sc.sea.getHex(), ppv: o.ppv, fade: o.fade ?? 0.42, tint: o.tint ? { color: mistCol.getHex(), amount: o.tint } : null });
+    });
+  }
+  // mist lit by its own sky: warm cream in warm chapters, cool only at night
+  mistColour(r) {
+    const p = r.base, sc = seaColours(p);
+    if (p.name === 'Night') return sc.sea.clone().lerp(C(0xdfe6ff), 0.62);
+    if (sc.dark) return C(p.skyBottom).lerp(C(0xffffff), 0.42).lerp(C(p.glow), 0.15);
+    return C(0xffffff).lerp(C(p.skyTop), 0.42);
+  }
+  // a ribbon of mist: overlapping soft ellipses, brightest along the middle
+  mistRibbon(col, seed, w, h, alpha) {
+    return this.memo(`mr|${col.getHex()}|${seed}|${w}|${h}|${alpha}`, () => {
+      const rand = rng(`mist${seed}`);
+      const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2;
+      const g = c.getContext('2d'); g.scale(2, 2);
+      const n = 6 + Math.floor(rand() * 4);
+      for (let i = 0; i < n; i++) {
+        // every lobe stays inside the canvas, so no edge is ever cut straight
+        const rx = w * (0.16 + rand() * 0.18), ry = h * (0.2 + rand() * 0.14);
+        const x = rx + rand() * (w - 2 * rx), y = h / 2 + (rand() - 0.5) * (h - 2 * ry) * 0.6;
+        const grad = g.createRadialGradient(x, y, 0, x, y, rx);
+        grad.addColorStop(0, css(col, alpha)); grad.addColorStop(0.55, css(col, alpha * 0.6)); grad.addColorStop(1, css(col, 0));
+        g.save(); g.translate(x, y); g.scale(1, ry / rx); g.translate(-x, -y);
+        g.fillStyle = grad; g.fillRect(x - rx, y - rx, rx * 2, rx * 2); g.restore();
+      }
+      return { url: c.toDataURL(), w, h, ax: 0.5, ay: 0.5 };
+    });
+  }
+  buildMist(r, chunk, rand, put) {
+    const map = this.map;
+    const mist = this.mistColour(r), sc = seaColours(r.base);
+    const drift = (img) => { img.classList.add('drift'); img.style.setProperty('--dur', `${(18 + rand() * 16).toFixed(1)}s`); img.style.setProperty('--delay', `${(-rand() * 20).toFixed(1)}s`); return img; };
+    const FADE = 0.5;   // the lower half of a peak's sprite fades out; fully gone by its last 20%
+    // a peak, its base fading out, and the densest band of mist exactly where it's gone
+    const peak = (layer, x, z, i, o, cls = '') => {
+      const spr = this.peakSprite(r, i, { fade: FADE, ...o });
+      const img = put(layer, x, z, spr, 1, `peak ${cls}`);
+      const cut = z - spr.h * spr.ay + spr.h * (1 - FADE * 0.55);
+      // soft (edge alpha well under 0.6) and never within 40 px of the trail
+      let w = Math.round(spr.w * 1.9);
+      const tx = trailXAt(map, cut), inner = x - Math.sign(x || 1) * w / 2;
+      if (Math.sign(x || 1) * (inner - tx) < 40) w = Math.max(90, Math.round(2 * Math.abs(x - (tx + Math.sign(x || 1) * 40))));
+      drift(put(layer, x, cut, this.mistRibbon(mist, 10 + i, w, Math.round(Math.max(70, spr.h * 0.5)), 0.55), 1, `mist base ${cls}`));
+      return { spr, img };
+    };
+    const W2 = this.w / 2 || 195;
+    // the depth pair on each screen: a big summit near the stones, cropped by
+    // the edge (about 38% off), and a small pale peak far back on the other side
+    const side = r.index % 2 ? -1 : 1;
+    let zs = r.labelZ + 200;
+    for (let z = r.labelZ + 120; z < Math.min(r.bottom - 100, r.labelZ + 520); z += 20) {
+      if (Math.sign(trailXAt(map, z)) === -side && Math.abs(trailXAt(map, z)) > 50) { zs = z + 60; break; }
+    }
+    // clear of the chapter's name by 90 px, and never cropped at its landmark
+    const sigSpr = this.peakSprite(r, 0, { ppv: 10, fade: FADE });
+    zs = Math.min(r.bottom - 60, Math.max(zs, r.labelZ + 90 + sigSpr.h * sigSpr.ay));
+    const sig = { x: side * (W2 - sigSpr.w * 0.22), z: zs };
+    peak('far', -side * (W2 - 40), zs - 120, 3, { ppv: 4.5, tint: 0.5 }, 'distant');
+    // lower in the chapter: another landform near the stones and a far one,
+    // except in every third chapter, which keeps a stretch of open mist
+    if (r.index % 3 !== 2) {
+      const z = Math.min(r.bottom - 160, r.labelZ + 700);
+      const x2 = trailXAt(map, z), sd = Math.abs(x2) > 30 ? -Math.sign(x2) : -side;
+      const w = this.peakSprite(r, 1 + (r.index % 2), { ppv: 7.5, fade: FADE }).w;
+      peak('near', sd * (W2 - w * 0.12), z, 1 + (r.index % 2), { ppv: 7.5 });
+      peak('far', -sd * (W2 - 40), z - 140, 4, { ppv: 4.5, tint: 0.5 }, 'distant');
+    }
+    // a few free bands only, far back and faint; the rest of the mist hangs on the peaks
+    for (let z = r.top + 80; z < r.bottom; z += 260 + rand() * 120) {
+      const sd = rand() < 0.5 ? -1 : 1;
+      drift(put('far', sd * (250 + rand() * 60), z, this.mistRibbon(mist, 6 + Math.floor(rand() * 4), 300, 70, 0.32), 1, 'mist'));
+    }
+    if (!r.reached) {
+      // its signature summit stands behind the veil's top edge, on the side
+      // away from the chapter's name: only its upper part shows (the teaser)
+      const labelSide = trailXAt(map, r.labelZ) > 0 ? -1 : 1;
+      const tw = this.peakSprite(r, 0, { ppv: 10, fade: FADE });
+      peak('near', -labelSide * (W2 - tw.w * 0.3), r.top + 40 - tw.h * 0.3 + tw.h * tw.ay, 0, { ppv: 10 }, 'teaser');
+      // the veil: a dense wall of mist that lifts when the trail reaches it
+      const wall = document.createElement('div');
+      wall.className = 'b-wall';
+      const z0 = r.top + 30, z1 = r.bottom + 60;
+      wall.style.transform = `translate(-560px, ${z0}px)`;
+      wall.style.width = '1120px'; wall.style.height = `${z1 - z0}px`;
+      wall.style.background = `linear-gradient(180deg, ${css(mist, 0)} 0, ${css(mist, 0.94)} 110px, ${css(mist, 0.97)} 100%)`;
+      this.layers.near.appendChild(wall); chunk.els.push(wall);
+      const veil = { wall, base: wall.style.transform, kids: [] };
+      for (let z = r.top + 10; z < r.bottom + 40; z += 58) {
+        for (let x = -420; x <= 420; x += 150 + rand() * 50) {
+          const img = put('near', x + (rand() - 0.5) * 50, z + (rand() - 0.5) * 30, this.mistRibbon(mist, Math.floor(rand() * 8), 280, 80, 0.85), 0.8 + rand() * 0.5, 'mist veil');
+          veil.kids.push({ img, base: img.style.transform, x, seed: rand() });
+        }
+      }
+      chunk.veil = veil;
+      // two faint silhouettes deeper in the veil: more lies inside
+      for (const [k, i] of [[0.45, 1], [0.75, 2]]) {
+        const pz = r.top + (r.bottom - r.top) * k;
+        if (pz > r.bottom - 100) continue;
+        const { img } = peak('near', (i === 1 ? -1 : 1) * (W2 - 30), pz, i, { ppv: 6, tint: 0.2 }, 'ghost');
+        img.style.opacity = '0.26';
+        veil.kids.push({ img, base: img.style.transform, x: 0, seed: 0.5, ghost: true });
+      }
+    } else {
+      peak('near', sig.x, sig.z, 0, { ppv: 10 });
+    }
+  }
+
   // ---------------------------------------------------------------- placement
   buildScenery() {
     const map = this.map;
@@ -179,6 +294,13 @@ export class Layers {
         img.style.transform = `translate(${(x - w * spr.ax).toFixed(0)}px, ${(z - h * spr.ay).toFixed(0)}px)${rand() < 0.5 && cls.includes('cloud') ? ' scaleX(-1)' : ''}`;
         this.layers[layer].appendChild(img); chunk.els.push(img); return img;
       };
+      if (this.opts.clouds === 'mist' && this.opts.scenery === 'voxel') {
+        this.buildMist(r, chunk, rand, put);
+        for (const el of chunk.els) el.style.display = 'none';
+        chunk.on = false;
+        this.chunks.push(chunk);
+        continue;
+      }
       const isle = (k, size, hero, seed) => this.opts.scenery === 'lowpoly'
         ? this.lowpolyIsle(r, hero ? KITS[r.name]?.hero ?? 'peak' : (KITS[r.name]?.kinds ?? ['peak'])[k % 3], size, hero, `${r.name}${seed}`)
         : this.voxelIsle(r, k, seed % 2);
@@ -243,6 +365,20 @@ export class Layers {
   setPart(i, k) {
     this.parts[i] = k;
     const c = this.chunks.find((c) => c.r.index === i);
+    if (c?.veil) {
+      // the mist lifts: it thins from the trail outward, its bands rising and
+      // spreading as they fade; the wall behind them clears last
+      const v = c.veil, e = k * k * (3 - 2 * k);
+      v.wall.style.transform = `${v.base} translateY(${(-e * 70).toFixed(1)}px)`;
+      v.wall.style.opacity = String(Math.max(0, 1 - Math.pow(k, 1.4) * 1.15));
+      for (const q of v.kids) {
+        const kk = Math.min(1, Math.max(0, k * 1.5 - (Math.abs(q.x) / 420) * 0.4 - q.seed * 0.15));
+        const ee = kk * kk * (3 - 2 * kk);
+        q.img.style.transform = `${q.base} translate(${(Math.sign(q.x || 1) * ee * (90 + 90 * q.seed)).toFixed(1)}px, ${(-ee * (70 + 60 * q.seed)).toFixed(1)}px)`;
+        q.img.style.opacity = String(Math.max(0, (q.ghost ? 0.26 : 1) * (1 - ee)));
+      }
+      return;
+    }
     for (const h of c?.bank ?? []) {
       // the middle opens first; billows drift wider than the body and thin away
       const e = k * k * (3 - 2 * k);

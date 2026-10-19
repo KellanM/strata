@@ -4,35 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
-  <title>Strata · voxel scenery sheet</title>
+  <title>Strata · mountain tops sheet</title>
   <script type="importmap">{ "imports": { "three": "../vendor/three/build/three.module.min.js" } }</script>
   <style>
     body { margin: 0; font: 11px/1.4 "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: #4a3d63; background: #efe6ea; }
-    section { padding: 14px 10px 6px; }
-    h2 { margin: 0 0 6px; font-size: 11px; font-weight: 500; }
-    .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
-    img { display: block; }
+    section { position: relative; padding: 12px 10px 0; overflow: hidden; }
+    h2 { margin: 0 0 4px; font-size: 11px; font-weight: 500; position: relative; z-index: 2; }
+    .row { display: flex; gap: 6px; align-items: flex-end; position: relative; z-index: 1; }
+    .row img { display: block; }
+    .mist { position: absolute; left: -10%; right: -10%; bottom: 0; height: 46px; z-index: 2;
+      background: linear-gradient(180deg, rgba(255,255,255,0), var(--m) 70%); }
   </style>
 </head>
 <body>
-  <!-- The map study's voxel scenery (docs/map-study.md), one row per biome, on its own sky. -->
+  <!-- The map study's voxel mountain tops (docs/map-study.md, round 3): each biome on its own cloud colour. -->
   <div id="sheet"></div>
   <script type="module">
     import { PALETTES } from '../js/palettes.js';
-    import { designs, renderVoxels } from './voxels.js';
-    import { rng } from './data.js';
-    const hex = (h) => '#' + h.toString(16).padStart(6, '0');
+    import { renderVoxels } from './voxels.js';
+    import { peaksFor } from './peaks.js';
+    import { seaColours } from './world.js';
+    const css = (c, a = 1) => `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${a})`;
+    const only = new URLSearchParams(location.search).get('only');
     for (const p of PALETTES) {
+      if (only && !only.split(',').includes(p.name)) continue;
+      const sea = seaColours(p).sea;
       const s = document.createElement('section');
-      s.style.background = `linear-gradient(180deg, ${hex(p.skyTop)}, ${hex(p.skyBottom)})`;
-      if ((p.skyTop >> 16) < 0x60) s.style.color = '#eef0ff';
-      s.innerHTML = `<h2>${p.name}</h2><div class="row"></div>`;
+      s.style.background = css(sea);
+      s.style.setProperty('--m', css(sea.clone().lerp({ r: 1, g: 1, b: 1 }, 0.5)));
+      if (seaColours(p).dark) s.style.color = '#eef0ff';
+      s.innerHTML = `<h2>${p.name}</h2><div class="row"></div><div class="mist"></div>`;
       document.getElementById('sheet').appendChild(s);
-      designs(p).forEach((make, i) => {
-        const r = renderVoxels(make(rng(p.name + i)), p, { haze: p.skyBottom });
+      for (const [k, { make }] of peaksFor(p).entries()) {
+        const r = renderVoxels(make(), p, { haze: sea.getHex(), ppv: k ? (k > 2 ? 4.5 : 6) : 8, fade: 0.5 });
         const img = new Image(); img.src = r.url; img.width = r.w; img.height = r.h;
         s.querySelector('.row').appendChild(img);
-      });
+      }
     }
     document.body.dataset.done = '1';
   </script>

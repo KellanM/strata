@@ -25,7 +25,7 @@ const W = () => window.innerWidth, H = () => window.innerHeight;
 
 const dir = dirName === 'a'
   ? new (await import('./world.js')).World($('#world'), map, numParams(['hfov', 'mapPitch', 'topPitch', 'titlePitch', 'lean']))
-  : new (await import('./layers.js')).Layers($('#flat'), map, { scenery: params.get('scenery') || 'voxel', clouds: params.get('clouds') || 'cumulus' });
+  : new (await import('./layers.js')).Layers($('#flat'), map, { scenery: params.get('scenery') || 'voxel', clouds: params.get('clouds') || 'mist' });
 if (dirName === 'b') { $('#world').hidden = true; $('#flat').hidden = false; }
 document.body.classList.add(`dir-${dirName}`);
 
