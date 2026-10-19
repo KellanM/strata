@@ -4,11 +4,12 @@
 // Checks existing behaviour only; it changes no clue.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHAPES, BONUS, TUTORIAL } from '../public/js/shapes.js';
+import { SHAPES, BONUS, TUTORIAL, cluesShown } from '../public/js/shapes.js';
 import { prepare, countSolutions, cluesConsistent, bruteCount } from '../tools/aha-lib.mjs';
 
 test('every puzzle has exactly one solution under its shown clues (independent search)', () => {
-  for (const shape of [...SHAPES, ...BONUS, ...TUTORIAL]) {
+  // (a lesson showing no clues at all is solved by sight, through its ghost: puzzle.test.js)
+  for (const shape of [...SHAPES, ...BONUS, ...TUTORIAL.filter(cluesShown)]) {
     const p = prepare(shape);
     assert.ok(cluesConsistent(p), `${shape.id}: a clue disagrees with the shape`);
     const r = countSolutions(p, 2);

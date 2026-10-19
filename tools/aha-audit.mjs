@@ -3,7 +3,7 @@
 //   node tools/aha-audit.mjs          table
 //   node tools/aha-audit.mjs --md     markdown table (docs/aha-study.md)
 //   node tools/aha-audit.mjs <id>     one level, wave by wave
-import { SHAPES, BONUS, TUTORIAL } from '../public/js/shapes.js';
+import { SHAPES, BONUS, TUTORIAL, cluesShown } from '../public/js/shapes.js';
 import { Puzzle, lineSolve } from '../public/js/puzzle.js';
 import { mulberry32 } from '../public/js/puzzle.js';
 import { analyse, countSolutions, bruteCount, quality, solvedBy, TYPES } from './aha-lib.mjs';
@@ -13,7 +13,7 @@ const only = process.argv.slice(2).find((a) => !a.startsWith('--'));
 const all = [
   ...SHAPES,
   ...BONUS.map((b) => ({ ...b, chapter: `${b.chapter} (bonus)` })),
-  ...TUTORIAL.map((t) => ({ ...t, chapter: 'Tutorial' })),
+  ...TUTORIAL.filter(cluesShown).map((t) => ({ ...t, chapter: 'Tutorial' })),   // a lesson with no clues is solved by sight
 ];
 
 const pct = (v) => `${Math.round(v * 100)}%`;

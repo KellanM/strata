@@ -2426,38 +2426,55 @@ export function buildCells(shape) {
 //   line: [axis, x, y, z]   the row along `axis` through that cube glows
 //   pulseHandle / pulseTool: 'paint' | 'break'   point at a control
 // `nudge` (seconds): if the player pauses that long, a row with a move glows.
+// `name` is the object the lesson's stone hides: unknown ("?") until it is
+// uncovered, then named over it, as in a level. Its cubes' colours make it read.
+// `ghost` (0..1): the hidden object shows faintly through the stone, so the
+// goal is seen before anything is said (the first two lessons only). A lesson
+// that shows no clues at all must have a ghost: it is solved by sight.
+const RED = 0xe0546b, CREAM = 0xf3e3c3, TAN = 0xc9a27a, WOOD = 0xb9773f, BARK = 0x8a5a34, YELLOW = 0xe9b949;
 export const TUTORIAL = [
   {
-    // a 0 empties its row; the forced first move is a chisel
-    id: 'lesson-clear', name: 'Clear', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 0 ? 0xe9b949 : 0),
+    // the goal itself, before any number: something is in the stone; carve the rest away
+    id: 'lesson-hidden', name: 'Mushroom', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [0, 0, 0],
+    ghost: 0.62,
+    cell: (x, y) => (y === 2 ? RED : x === 1 ? TAN : 0),
     hints: [
-      { text: 'This row’s number is 0: none of its cubes stay. Tap one to chisel it.', line: [0, 0, 1, 0], pulse: [0, 1, 0], until: 'break' },
-      { text: 'Clear the rest of the 0 row.', line: [0, 0, 1, 0], until: 'solved' },
+      { text: 'Something is hidden in this stone. Chisel away the plain stone around it.', pulse: [0, 1, 0], until: 'break' },
+      { text: 'Keep going until only the hidden thing is left.', wait: 6, until: 'solved' },
+    ],
+  },
+  {
+    // numbers count the hidden object's cubes in their row: seen while the object still shows
+    id: 'lesson-clear', name: 'Pencil', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
+    ghost: 0.6,
+    cell: (x, y) => (y === 0 ? [0xe58f9e, YELLOW, 0x6b6470][x] : 0),   // eraser, body, graphite tip
+    hints: [
+      { text: 'Each number counts the hidden object’s cubes in its row.', line: [0, 0, 0, 0], until: 'break' },
+      { text: 'So a 0 row has none of them: chisel it all.', line: [0, 0, 1, 0], until: 'solved' },
     ],
   },
   {
     // a full count keeps every cube, and a slip is safe and visible
-    id: 'lesson-keep', name: 'Keep', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 ? 0x5db6ae : 0),
+    id: 'lesson-keep', name: 'Log', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 1 ? (x === 1 ? WOOD : BARK) : 0),
     hints: [
-      { text: 'A 3 in a row of three: every cube stays. Try chiselling one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
+      { text: 'A 3 in a row of three: all three are the object’s. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
       { text: 'That ✕ was a slip: the cube is kept, but slips cost gems. Clear the 0 rows.', until: 'solved' },
     ],
   },
   {
     // the Mark tool: a cube you know stays can't be chiselled by accident
-    id: 'lesson-mark', name: 'Mark', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 ? 0x6cc28f : 0),
+    id: 'lesson-mark', name: 'Caterpillar', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 1 ? (x === 3 ? 0x3f8a52 : x % 2 ? 0x6cc28f : 0x8fd49b) : 0),
     hints: [
-      { text: 'The 4 row all stays. Switch to Mark below, then tap one of its cubes.', line: [0, 0, 1, 0], pulseTool: 'paint', until: 'paint' },
+      { text: 'The 4 row is all object. Switch to Mark below, then tap one of its cubes.', line: [0, 0, 1, 0], pulseTool: 'paint', until: 'paint' },
       { text: 'Marked cubes are safe from the chisel. Back to Chisel, and clear the 0 row.', pulseTool: 'break', until: 'solved' },
     ],
   },
   {
     // numbers on top count their column; two directions combine
-    id: 'lesson-cross', name: 'Columns', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
-    cell: (x, y) => (x === 1 || y === 1 ? 0xe0546b : 0),
+    id: 'lesson-cross', name: 'Flower', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (x === 1 && y === 1 ? YELLOW : x === 1 || y === 1 ? RED : 0),
     hints: [
       { text: 'Numbers on top count their column, straight down.', line: [1, 1, 0, 0], until: 'break' },
       { text: 'Each 1 keeps a single cube. The two 3s say which.', wait: 8, until: 'solved' },
@@ -2465,8 +2482,8 @@ export const TUTORIAL = [
   },
   {
     // numbers on the front count the row running back, away from you
-    id: 'lesson-depth', name: 'Depth', sky: 'Lagoon', view: 0.45, handles: false, dims: [3, 1, 3], show: [0, 0, 1],
-    cell: (x) => (x === 1 ? 0x5b8fd6 : 0),
+    id: 'lesson-depth', name: 'Train', sky: 'Lagoon', view: 0.45, handles: false, dims: [3, 1, 3], show: [0, 0, 1],
+    cell: (x, y, z) => (x === 1 ? (z === 2 ? RED : 0x5b8fd6) : 0),
     hints: [
       { text: 'Numbers on the front count the row running straight back, away from you.', line: [2, 0, 0, 0], until: 'break' },
       { text: 'Clear both 0 rows, all the way to the back.', until: 'solved' },
@@ -2474,7 +2491,7 @@ export const TUTORIAL = [
   },
   {
     // turning the block: three 1s point at a cube you can't see from here
-    id: 'lesson-turn', name: 'Turn', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [2, 2, 2], show: [1, 1, 1],
+    id: 'lesson-turn', name: 'Steps', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [2, 2, 2], show: [1, 1, 1],
     cell: (x, y, z) => (x + y + z === 0 ? 0 : 0x6cc28f),
     hints: [
       { text: 'Drag anywhere to turn the block.', wait: 5, until: 'rotate' },
@@ -2499,9 +2516,9 @@ export const TUTORIAL = [
   },
   {
     // a blank face hides its clue; the others are enough
-    id: 'lesson-blank', name: 'Blank', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1],
+    id: 'lesson-blank', name: 'Hammer', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1],
     clues: '###|.#.|.........',
-    cell: (x, y) => (y === 2 || x === 1 ? 0x6cc28f : 0),
+    cell: (x, y) => (y === 2 ? 0x8e98a6 : x === 1 ? WOOD : 0),
     hints: [
       { text: 'A face with no number is a hidden clue. The others are enough.', line: [1, 0, 0, 0], until: 'break' },
       { text: 'The middle column’s 3 decides the two 1s.', wait: 8, until: 'solved' },
@@ -2510,7 +2527,7 @@ export const TUTORIAL = [
   {
     // peeling: the inside is only reached by slicing layers away
     id: 'lesson-peel', name: 'Lantern', sky: 'Night', dims: [3, 3, 3], show: [1, 1, 1],
-    cell: (x, y, z) => (x === 1 && y === 1 && z === 1 ? 0 : 0xe9b949),
+    cell: (x, y, z) => (x === 1 && y === 1 && z === 1 ? 0 : YELLOW),
     hints: [
       { text: 'Something is hidden inside. Drag a diamond along its rail to peel a layer away.', pulseHandle: true, until: 'peel' },
       { text: 'Every row through the middle is circled: split around one gap. Chisel it.', pulse: [1, 1, 1], until: 'solved' },
@@ -2519,10 +2536,12 @@ export const TUTORIAL = [
   {
     // the bridge to level 1: a whole small stone with some blank faces, on your own
     id: 'lesson-stool', name: 'Stool', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
-    cell: (x, y, z) => (y === 2 || ((x !== 1) && (z !== 1)) ? (y === 2 ? 0xe58f84 : 0xb9773f) : 0),
+    cell: (x, y, z) => (y === 2 || ((x !== 1) && (z !== 1)) ? (y === 2 ? 0xe58f84 : WOOD) : 0),
     hints: [
       { text: 'A whole stone, on your own. If you pause, a row with a move will glow.', until: 'break' },
       { text: '', until: 'solved' },
     ],
   },
 ];
+// a lesson that shows no number at all (it is solved by sight, through its ghost)
+export const cluesShown = (lesson) => !(lesson.show && lesson.show.every((v) => !v));

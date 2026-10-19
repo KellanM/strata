@@ -228,3 +228,114 @@ Screenshots of each lesson's key moment are in `shots/tutorial/` (gitignored):
   - glow visibility in sunlight.
 - **"Try chiselling one anyway" invites a deliberate error.** It's safe here, but some players may find it odd. Watch for it.
 - **Eleven lessons is long by count, though each takes seconds.** Watch whether the dots row (11 diamonds) reads as a chore.
+
+## Second pass: the objective (2026-10-18)
+
+Kellan, after the first UX tests of the eleven-lesson tutorial:
+
+> "I think we're teaching the mechanics better now, but they don't know the purpose / objective of the game."
+
+Testers learned how to chisel and peel, but not why. They still needed someone to explain afterwards.
+
+### Diagnosis: a first-time play-through at 390×844
+
+I played from a clean localStorage with Playwright (shots in `shots/tutorial/`, gitignored). The goal was never stated or shown in any of these places:
+
+| # | Where | What a newcomer met |
+|---|---|---|
+| O1 | Title → lesson 1 | The only statement of purpose was the title's small subtitle, "peel the stone · find the shape". It is gone by the time the swipe ends. |
+| O2 | Lesson 1 (Clear) | The first words were a rule ("This row's number is 0: none of its cubes stay"). "Stay" was never tied to anything. Nothing said the stone holds something, or that chiselling is how you find it. |
+| O3 | Every lesson's HUD | The title was the lesson's verb ("Clear", "Keep", "Columns"). It named the skill, not an object you're looking for. |
+| O4 | Every lesson's solve | **No payoff.** The block turned yellow and the coach said "Nice." Lessons 1–6 revealed plain bars (a 3-cube bar, a 4-cube bar, a plus). Nothing was named, so nothing said "this is what you were digging for". Levels say "you uncovered" and name the object; lessons skipped that code (`win()` returned early). |
+| O5 | Numbers | Every lesson said a number counts the cubes that "stay". It never said they are the *object's* cubes, so the number meant nothing beyond its row. |
+| O6 | End card | It read "YOU UNCOVERED / YOU'RE READY": the static "you uncovered" label sat above the tutorial's own words. The mechanics recap ("tap · mark · turn · peel") came where the goal should have been. |
+| O7 | Level 1 | Its one card was about direction, not purpose. |
+
+So a newcomer reached level 1 knowing the verbs and the number rule, without ever having been shown the noun.
+
+### Design
+
+**Exemplars.**
+- *Picross 3D* (DS/3DS): every puzzle's subject is unknown until it's solved. Then it shows in colour with its name. That naming is the reason to finish.
+- *Monument Valley*: the goal (the exit, the totem) is visible before you can reach it. You see where you're going, and nobody says it.
+- *The Witness*, *Baba Is You*: a first screen with one obvious action, where doing it is the explanation.
+
+None of these was re-researched for this pass. See the sources table above.
+
+**Principle.** Show the noun before the verbs. Let the player see what they are digging for, then name it every time it appears, as levels already do.
+
+**Directions weighed:**
+- **A ghost of the object, then the reveal: built.** In the first two lessons the object shows faintly through the stone in its own colours. The player sees the goal and what "done" looks like before reading anything.
+- **"You found a ___" payoff: built,** reusing the level's "you uncovered" title.
+- **One number and its row lit, tied to the object: built.** Lesson 2 glows a 3 row whose three cubes are visibly the object's colours.
+- **A wordless before → after demo: not built separately.** The ghost lesson *is* the before → after, played by the player instead of watched. A demo the player watches would put a screen of passivity before the first tap.
+- **A progress meter: not built.** In the ghost lessons the ghost itself shows how much is left. A HUD meter adds chrome to every level for a question testers didn't raise. Revisit if testers ask "am I nearly done?" in level 1.
+
+### Changes, lesson by lesson (now 12)
+
+| # | Lesson | Object | Change |
+|---|---|---|---|
+| 1 | **Hidden (new)** | Mushroom, 3×3×1, no numbers | The object shows through the stone (`ghost: 0.62`), surfacing softly once the block is whole. "Something is hidden in this stone. Chisel away the plain stone around it." One plain cube breathes. After 6 s still: "Keep going until only the hidden thing is left." Solved: **YOU UNCOVERED / MUSHROOM**. |
+| 2 | Clear → **Pencil** | Pencil (eraser, body, graphite tip) | Ghost at 0.6. The 3 row glows: "Each number counts the hidden object's cubes in its row." There, three coloured cubes sit beside a 3. After the first chisel the 0 row glows: "So a 0 row has none of them: chisel it all." |
+| 3 | Keep → **Log** | Log | No ghost from here on. "A 3 in a row of three: all three are the object's. Chisel one anyway." |
+| 4 | Mark → **Caterpillar** | Caterpillar | "The 4 row is all object." |
+| 5 | Columns → **Flower** | Flower (yellow centre) | Recoloured and named. |
+| 6 | Depth → **Train** | Train (red engine at the front) | Recoloured and named. |
+| 7 | Turn → **Steps** | Steps | Named. |
+| 8–9 | Arch, Comb | unchanged | Named already. |
+| 10 | Blank → **Hammer** | Hammer (grey head, wooden handle) | Recoloured and named. |
+| 11–12 | Lantern, Stool | unchanged | Named already. |
+
+The lesson ids are unchanged, so `lesson-clear` is now the Pencil.
+
+**Every lesson:**
+- The HUD title is **?** until solved, then the object's name, as a level shows "No. 1" until solved.
+- On solving, the coach steps aside and the level's title plays: "YOU UNCOVERED" and then the name, letter by letter. The HUD fades as in a level (`body.solved`).
+- The lesson holds 3.6 s on its object. A tap moves on, once 1.8 s have passed, so the name has landed. This replaces "Nice." and the 2.2 s cut.
+
+**Around the lessons:**
+- **End card:** "LESSONS DONE / YOU'RE READY / UNCOVER WHAT'S INSIDE". `showWin` takes the small label, which fixes "you uncovered you're ready".
+- **Level 1 card:** "Each number counts the object's cubes in the row running in from its face."
+- **Help:** "Every stone hides an object. Chisel away every cube that isn't part of it, and the object is uncovered in its true colours. A number counts the object's cubes…"
+
+**Code:**
+- `cubes.js`: one tutorial uniform, `uGhost`. It tints object cubes toward their true colour, lit by the same ramp, before the row glow and glyph ink, so numbers stay legible.
+- `main.js`: eases it in with `ease.out` over `DUR.ceremony` after the assembly. It is set at once under Reduce Motion.
+- The win title now uses `after()`, so slow motion slows it too.
+
+**Tests:**
+- A lesson that shows no clues at all must have a ghost. Lesson 1 is solved by sight, so it's exempt from `lineSolve` and from the independent uniqueness search.
+- Every other lesson is still uniquely line-solvable with its clues.
+- Every lesson's object needs a name of 12 characters or fewer.
+
+### Results (observed in Chromium at 390×844, not user tests)
+
+Screenshots (gitignored):
+- `shots/tutorial/objective-01-hidden.png`: the ghosted mushroom and the first line;
+- `objective-02-hidden-wait`;
+- `objective-03-hidden-uncovered`: the payoff;
+- `objective-04-count-number`: the 3 row lit beside three coloured cubes;
+- `objective-05-count-zero`;
+- `objective-06-count-uncovered`;
+- `objective-07-keep-no-ghost`;
+- `objective-08-uncovered-4`: the Caterpillar title;
+- `objective-09-ready`: the end card;
+- `objective-10-level1`;
+- Reduce Motion: `objective-rm-01-hidden`, `objective-rm-03-hidden-uncovered` and `objective-rm-04-count-number`.
+
+What the runs showed:
+- **The first pencil had a tan tip,** which vanished into the cream stone under the ghost. The 3 then seemed to count two cubes, which broke the lesson's one equation. The tip is now graphite and the ghost was raised to 0.6.
+- **Two end-card lines wrapped to two rows** ("every stone hides something", "find what the stone hides"). "Uncover what's inside" fits on one, and echoes "you uncovered".
+- **Tap-to-continue:** a tap 0.8 s after a solve is ignored; a tap at 2.2 s moves on.
+- **The full run works end to end** (12 lessons, end card, level 1) with no console errors.
+- **Lesson time:** each solve now holds about 1.4 s longer unless tapped, so about 17 s more over the whole tutorial.
+
+### What to watch in the next UX test
+
+1. **After lesson 1, ask "what are you trying to do?"** The target answer: "find the thing hidden in the stone" or "carve away what isn't the mushroom". If the answer is still "tap the cubes", the ghost reads as decoration, not as a goal.
+2. **The ghost-to-numbers handover (lesson 2 → 3).** Does anyone ask where the colours went, or look for them in lesson 3? If so, lesson 3 may need a line ("Now the numbers alone show it").
+3. **Does anyone chisel the coloured cubes in lesson 1?** That would mean "plain stone" didn't read.
+4. **At level 1's first pause, can they say what a number counts?** Listen for "how many of the object's cubes are in that row".
+5. **The payoff hold.** Watch whether people wait for the name or tap through. Tapping through at 1.8 s is fine, but if they tap before the name shows, the hold is too long.
+6. **The objects' names.** Are Log, Train and Hammer recognisable from three to five cubes? If an object needs its name to make sense, the name is doing its job. If the name surprises people, the colours need work.
+7. **Still open:** a progress sense ("am I nearly done?") in real levels, and whether twelve dots feel like a chore.

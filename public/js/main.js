@@ -98,8 +98,10 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
     broken: new Uint8Array(puzzle.size),
     painted: new Uint8Array(puzzle.size),
     undo: [], mistakes: 0, start: now(), elapsed: 0, solved: false, revealStart: -1,
+    ghost: entry.lesson ? shape.ghost ?? 0 : 0,   // the first lessons let the hidden object show through
   };
   if (!entry.lesson) tutorial = null;
+  lessonNext = null;
   resetCoaching(entry, quiet);
 
   if (!cubes.mesh || !cubes.mesh.parent) scene.add(cubes.build(puzzle));
@@ -134,7 +136,8 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   resize();
   controls.update();
 
-  $('#pz-name').textContent = entry.lesson ? shape.name : solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
+  // a lesson's object is a mystery until it's uncovered, as a level's is
+  $('#pz-name').textContent = entry.lesson ? '?' : solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
   $('#pz-meta').textContent = entry.lesson
     ? `lesson ${entry.lesson} of ${TUTORIAL.length}`
     : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
@@ -540,7 +543,7 @@ function win() {
   target.y -= shiftPx / (pxPerUnit * zoom) / Math.cos(g.homeEl);
   // it whirls down onto the pose its map stone shows (thumbs use an azimuth of 45°), then holds still
   g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson, pose: g.homeAz - Math.PI / 4 };
-  if (!g.entry.lesson) document.body.classList.add('solved');
+  document.body.classList.add('solved');   // the HUD steps aside; a lesson's too, for its name
   resetView();
 
   cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], t + 0.3, 2.2, 5);
@@ -566,16 +569,18 @@ function win() {
   const flash = $('#flash');
   flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
 
-  if (g.entry.lesson) { tutorialEvent('solved'); return; }
-
+  // the payoff, lessons too: the object is named over it ("you uncovered ...")
   const title = $('#win-title');
   const letters = [...g.shape.name];
+  const story = !g.entry.lesson && g.shape.story;
   title.innerHTML = '<span class="sub">you uncovered</span><span class="name' + (letters.length > 9 ? ' long' : '') + '">' +
     letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
-    (g.shape.story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
-  if (g.shape.story) title.querySelector('.story').textContent = g.shape.story;
+    (story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
+  if (story) title.querySelector('.story').textContent = story;
   title.classList.remove('show'); void title.offsetWidth;
-  setTimeout(() => { if (game === g) title.classList.add('show'); }, 1100);
+  after(1.1, () => { if (game === g) title.classList.add('show'); });
+
+  if (g.entry.lesson) { tutorialEvent('solved'); return; }
   // a run of flawless solves feeds the streak bonus
   const streak = g.mistakes === 0 ? (Number(localStorage.getItem('strata.streak')) || 0) + 1 : 0;
   localStorage.setItem('strata.streak', String(streak));
@@ -610,6 +615,10 @@ let idleFrom = 0;         // scene time of the player's last action
 let nudge = null;         // the stuck hint showing: { level: 1 | 2, line, cell }
 const NUDGE_LEVEL = 25;   // seconds of stillness on levels 1-3 before a row glows
 const NUDGE_LESSON = 10;
+// a solved lesson holds on its uncovered object, named, before the next stone;
+// a tap moves on sooner, once the name has had time to land
+const LESSON_PAYOFF = 3.6, LESSON_TAP_AFTER = 1.8;
+let lessonNext = null;    // while a solved lesson is on show: move on now (if it's been long enough)
 
 function startTutorial(step = 0) {
   tutorial = { step, hint: 0, open: !TUTORIAL[step].hints[0]?.wait };
@@ -625,7 +634,7 @@ function resetCoaching(entry, quiet) {
   coachCard = null;
   // the first real stone: the rule newcomers most often misread, gone at the first chisel
   if (!quiet && !entry.lesson && entry.number === 1 && !solvedStore[entry.shape.id]) {
-    coachCard = { text: 'Each number counts the row running straight in from its face. Take your time.', until: 'break' };
+    coachCard = { text: 'Each number counts the object’s cubes in the row running in from its face.', until: 'break' };
   }
 }
 
@@ -644,15 +653,20 @@ function tutorialEvent(kind) {
   const h = currentHint();
   if (!h) return;
   if (kind === 'solved') {
+    // the coach steps aside: the object's name is the only words now (win())
     tutorial.hint = TUTORIAL[tutorial.step].hints.length;   // past the last hint
     tutorial.open = true;
-    renderCoach(tutorial.step === TUTORIAL.length - 1 ? 'That’s everything. Well done.' : 'Nice.');
-    const g = game, step = tutorial.step;
-    after(2.2, () => {
-      if (game !== g) return;
+    renderCoach();
+    const g = game, step = tutorial.step, t0 = now();
+    const go = () => {
+      if (game !== g || lessonNext !== next) return;
+      lessonNext = null;
       if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
       else finishTutorial();
-    });
+    };
+    const next = () => { if (now() - t0 >= LESSON_TAP_AFTER) go(); };
+    lessonNext = next;
+    after(LESSON_PAYOFF, go);
     return;
   }
   // a slip is the moment a held-back hint is worth reading
@@ -668,13 +682,15 @@ function finishTutorial() {
   tutorial = null;
   renderCoach();
   controls.autoRotate = !reduceMotion;
-  showWin('You’re ready', 'tap · mark · turn · peel', 'Play No. 1');
+  // the goal once more, in the words level 1 will need
+  showWin('You’re ready', 'uncover what’s inside', 'Play No. 1', 'lessons done');
 }
 
 function renderCoach(override) {
   const coach = $('#coach');
   const lesson = !!(tutorial && game?.entry.lesson);
-  if (!lesson && !coachCard) { coach.classList.remove('show'); applyCues(); return; }
+  // a solved lesson's object has the stage to itself (its name is over it)
+  if ((!lesson && !coachCard) || (lesson && game.solved)) { coach.classList.remove('show'); applyCues(); return; }
   const h = currentHint();
   const text = override || (lesson ? (tutorial.open ? h?.text : '') : coachCard.text) || '';
   const was = $('#coach-text').textContent, wasShown = coach.classList.contains('show');
@@ -853,7 +869,9 @@ function endPointer(e, cancelled) {
   }
   if (!press) return;
   clearTimeout(press.timer);
-  if (!cancelled && !press.moved && !press.done && game?.solved && resultFinish) {
+  if (!cancelled && !press.moved && !press.done && game?.solved && lessonNext) {
+    lessonNext();   // a solved lesson: on to the next, once its object has been named
+  } else if (!cancelled && !press.moved && !press.done && game?.solved && resultFinish) {
     resultFinish();
   } else if (!cancelled && !press.moved && !press.done) {
     const i = pick(press.x, press.y);
@@ -984,9 +1002,10 @@ function startRandom(n) {
 
 function show(sel, on) { $(sel).classList.toggle('show', on); }
 
-function showWin(name, stats, nextLabel) {
+function showWin(name, stats, nextLabel, sub = 'you uncovered') {
   clearResult();
   $('#win').classList.remove('result-mode');
+  $('#win .plain .sub').textContent = sub;
   $('#win-name').textContent = name;
   $('#win-stats').textContent = stats;
   $('#win-next').textContent = nextLabel;
@@ -1268,6 +1287,8 @@ function draw() {
     u.uTime.value = t;
     u.uPeel.value.y += (peel.keepVisual - u.uPeel.value.y) * Math.min(1, dt * (reduceMotion || drag ? 60 : 9));
     if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 1.5));
+    // a lesson's ghost surfaces softly once the block is whole (at once under Reduce Motion)
+    u.uGhost.value = game.ghost * (reduceMotion ? 1 : ease.out(Math.min(1, Math.max(0, (t - (game.introEnd ?? 0)) / DUR.ceremony))));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
 
     if (game.win) {

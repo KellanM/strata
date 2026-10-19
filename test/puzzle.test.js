@@ -115,12 +115,15 @@ test('isSolved requires every empty cell broken', () => {
 });
 
 test('tutorial lessons are solvable with exactly the clues they show', async () => {
-  const { TUTORIAL } = await import('../public/js/shapes.js');
+  const { TUTORIAL, cluesShown } = await import('../public/js/shapes.js');
   const events = new Set(['break', 'paint', 'mistake', 'rotate', 'peel', 'solved']);
   const ids = new Set();
   for (const lesson of TUTORIAL) {
     const p = make(lesson);
-    assert.ok(setClues(p, lesson) && lineSolve(p), `${lesson.id} not solvable`);
+    // a lesson with no numbers at all is solved by sight: its object must show through (ghost)
+    if (!cluesShown(lesson)) assert.ok(lesson.ghost > 0.3, `${lesson.id} shows no clues and no ghost`);
+    else assert.ok(setClues(p, lesson) && lineSolve(p), `${lesson.id} not solvable`);
+    assert.ok(lesson.name && lesson.name.length <= 12, `${lesson.id}: its object needs a short name`);
     assert.ok(!ids.has(lesson.id), `${lesson.id} repeated`); ids.add(lesson.id);
     assert.equal(lesson.hints.at(-1)?.until, 'solved', `${lesson.id}: the last hint must last until it is solved`);
     for (const h of lesson.hints) {

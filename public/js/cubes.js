@@ -197,6 +197,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uHover;
   uniform vec3 uHint;
   uniform float uCalm;
+  uniform float uGhost;    // tutorial: the hidden object shows faintly through the stone (0 = not at all)
   uniform vec2 uLight;     // xz direction of the key light
   uniform vec3 cTop, cLit, cShade, cUnder;
   uniform vec3 pTop, pLit, pShade;
@@ -260,6 +261,13 @@ const fragmentShader = /* glsl */ `
 
     // vertical gradient: bases sink into haze
     base = mix(cHaze, base, 0.78 + 0.22 * smoothstep(0.0, 0.85, vHeight));
+
+    // tutorial: the hidden object shows through the stone in its own colours,
+    // so the goal is seen before a word is read (the first lessons' ghost)
+    if (uGhost > 0.0 && dot(vColor, vec3(1.0)) > 0.01) {
+      vec3 gc = vColor * ramp(wn, vec3(1.05), vec3(0.92), vec3(0.72), vec3(0.55));
+      base = mix(base, gc, uGhost);
+    }
 
     // tutorial: the row a hint is about glows, slower and softer than the cube
     // to tap; lit before the glyph is inked, so its number stays legible
@@ -331,6 +339,7 @@ export class Cubes {
       uHint: { value: new THREE.Vector3(-99, -99, -99) },
       uHintLine: { value: new THREE.Vector4(0, 0, 0, -1) },
       uCalm: { value: 0 },
+      uGhost: { value: 0 },
       uLight: { value: new THREE.Vector2(-0.45, 0.9).normalize() },
       uRip: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, 0, -99)) },
       uRipParam: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector2(0, 1)) },
