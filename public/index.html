@@ -35,7 +35,7 @@
   </div>
 
   <header class="hud top">
-    <button id="menu-btn" class="icon-btn" aria-label="Puzzles">
+    <button id="menu-btn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     </button>
     <div class="title">
@@ -221,6 +221,13 @@
       <div class="row"><button data-no>Not now</button><button class="primary" data-yes></button></div>
     </div>
   </aside>
+  <div id="pause" role="dialog" aria-label="Paused">
+    <div class="pause-card">
+      <button data-pause="resume">Resume</button>
+      <button data-pause="restart">Restart</button>
+      <button data-pause="map">Map</button>
+    </div>
+  </div>
   <div id="loading" aria-live="polite"></div>
 
   <script type="module" src="js/main.js"></script>

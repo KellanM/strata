@@ -120,7 +120,7 @@ function saveProgress() {
   const all = readProgress();
   const on = (a) => a.reduce((o, v, i) => (v && o.push(i), o), []);
   all[g.shape.id] = { b: on(g.broken), p: on(g.painted), u: g.undo.map((u) => [u.kind === 'break' ? 1 : 0, u.i]),
-    m: g.mistakes, t: Math.round((now() - g.start) * 10) / 10, at: Date.now() };
+    m: g.mistakes, t: Math.round(((g.pausedAt ?? now()) - g.start) * 10) / 10, at: Date.now() };
   const ids = Object.keys(all).sort((a, b) => all[b].at - all[a].at);
   for (const id of ids.slice(PROGRESS_KEEP)) delete all[id];
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(all)); } catch { /* storage full: the level just starts fresh */ }
@@ -148,7 +148,7 @@ function restoreProgress(g) {
 }
 // the clock stops while the app is away (in the background, or the phone locked)
 document.addEventListener('visibilitychange', () => {
-  if (!game || game.solved) return;
+  if (!game || game.solved || game.pausedAt != null) return;   // paused: its clock already stands still
   if (document.hidden) { game.away = now(); saveProgress(); }
   else if (game.away != null) { game.start += now() - game.away; game.away = null; }
 });
@@ -1131,7 +1131,54 @@ function setTool(t) {
 }
 
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
-$('#menu-btn').addEventListener('click', openMenu);
+$('#menu-btn').addEventListener('click', () => (pausable() ? openPause() : openMenu()));
+
+// In a level the menu button opens a small card: Resume, Restart, Map. The
+// clock stops while it's up. A solved level, the title's logo, go straight to the map.
+const pauseEl = $('#pause'), restartBtn = pauseEl.querySelector('[data-pause="restart"]');
+const pausable = () => !!game && !game.solved && game.shape.id !== 'logo' && !titleUp;
+const begun = (g) => g.broken.some(Boolean) || g.painted.some(Boolean);
+function openPause() {
+  closeOffer();
+  game.pausedAt = now();
+  saveProgress();
+  restartBtn.classList.remove('confirm');
+  restartBtn.textContent = 'Restart';
+  // the map is shut until the lessons are done; a lesson's only way out is skip
+  pauseEl.querySelector('[data-pause="map"]').hidden = !!game.entry.lesson && !localStorage.getItem('strata.tutorial');
+  show('#pause', true);
+  mark('pause: open');
+}
+function closePause() {
+  if (!pauseEl.classList.contains('show')) return;
+  show('#pause', false);
+  if (game?.pausedAt != null) { game.start += now() - game.pausedAt; game.pausedAt = null; }
+}
+function restartLevel() {
+  const g = game;
+  // a level with chisels in it asks once more: "Start over?"
+  if (begun(g) && !restartBtn.classList.contains('confirm')) {
+    restartBtn.classList.add('confirm');
+    restartBtn.textContent = 'Start over?';
+    return;
+  }
+  closePause();
+  clearProgress(g.shape.id);
+  mark(`pause: restart ${g.shape.id}`);
+  if (g.entry.lesson) washInto(g.palette, () => startTutorial(g.entry.lesson - 1));
+  else washInto(g.palette, () => startPuzzle(g.entry));
+}
+pauseEl.addEventListener('click', (e) => {
+  const what = e.target.closest('[data-pause]')?.dataset.pause;
+  if (what === 'restart') restartLevel();
+  else if (what === 'map') { closePause(); saveProgress(); openMenu(); }
+  else if (what === 'resume' || !e.target.closest('.pause-card')) closePause();   // or a tap beside the card
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !pauseEl.classList.contains('show')) return;
+  e.stopImmediatePropagation();
+  closePause();
+}, true);
 $('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); show('#help', true); });
 
 // every level and bonus stone, each in its chapter's palette for the journal
@@ -1524,7 +1571,7 @@ function draw() {
     // and the rest of the stone settles into shade while it shows
     const dimTo = cubes.focusAny && !game.solved && t >= (game.introEnd ?? 0) ? 1 : 0;
     u.uFocusDim.value += (dimTo - u.uFocusDim.value) * Math.min(1, dt * (dimTo ? 2.5 : 4));
-    if (!game.solved) $('#timer').textContent = fmt((game.adAway ?? t) - game.start);   // it stands still under an ad
+    if (!game.solved) $('#timer').textContent = fmt((game.adAway ?? game.pausedAt ?? t) - game.start);   // it stands still under an ad or the pause card
 
     if (game.win) {
       stepCelebration(t);
