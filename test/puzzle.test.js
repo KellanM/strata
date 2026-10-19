@@ -129,7 +129,10 @@ test('tutorial lessons are solvable with exactly the clues they show', async () 
     for (const h of lesson.hints) {
       assert.ok(events.has(h.until), `${lesson.id}: unknown event ${h.until}`);
       assert.ok(h.text.split(/\s+/).length <= 18, `${lesson.id}: hint too long: ${h.text}`);
-      const cells = [h.pulse, h.line?.slice(1)].filter(Boolean);
+      // what a hint outlines (cubes.js focus) must lie on the block
+      const lines = [h.line, ...(h.lines ?? [])].filter(Boolean);
+      for (const l of lines) assert.ok([0, 1, 2].includes(l[0]), `${lesson.id}: a hint line needs an axis 0-2`);
+      const cells = [h.pulse, ...(h.focus ?? []), ...lines.map((l) => l.slice(1))].filter(Boolean);
       for (const c of cells) assert.ok(c.every((v, a) => v >= 0 && v < lesson.dims[a]), `${lesson.id}: hint cell outside the block`);
     }
   }

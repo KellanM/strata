@@ -57,6 +57,7 @@ export class GodRays {
     this.uniforms = {
       tMask: { value: this.maskRT.texture }, uCenter: { value: new THREE.Vector2(0.5, 0.5) },
       uTime: { value: 0 }, uAspect: { value: 1 },
+      uHaloR: { value: 0.03 },   // the tutorial outline's halo radius (uv height)
     };
     this.blurScene = new THREE.Scene();
     this.blurScene.add(fullscreen(new THREE.ShaderMaterial({
@@ -64,9 +65,19 @@ export class GodRays {
       fragmentShader: /* glsl */ `
         uniform sampler2D tMask;
         uniform vec2 uCenter;
-        uniform float uTime, uAspect;
+        uniform float uTime, uAspect, uHaloR;
         varying vec2 vUv;
         void main() {
+          // the tutorial's outlined cubes (mask g) glow softly out into the air:
+          // a small round blur, kept off the stone so numbers stay crisp
+          float halo = 0.0;
+          for (int k = 0; k < 24; k++) {
+            float a = float(k) * 2.39996, r = sqrt((float(k) + 0.5) / 24.0);
+            halo += texture2D(tMask, vUv + vec2(cos(a) / uAspect, sin(a)) * r * uHaloR).g;
+          }
+          vec2 me = texture2D(tMask, vUv).rg;
+          halo = halo / 24.0 * (1.0 - me.r);   // into the air only: on the stone the outline itself speaks
+
           vec2 dir = vUv - uCenter;
           vec2 stepv = dir * (0.92 / 56.0);
           vec2 uv = vUv;
@@ -87,13 +98,14 @@ export class GodRays {
             vec2 o = vec2(k == 0 ? 1.0 : (k == 1 ? -1.0 : 0.0), k == 2 ? 1.0 : (k == 3 ? -1.0 : 0.0)) * 0.006;
             near = max(near, texture2D(tMask, vUv + o).r);
           }
-          gl_FragColor = vec4(vec3(illum * streak * (1.0 - max(self, near))), 1.0);
+          gl_FragColor = vec4(illum * streak * (1.0 - max(self, near)), halo, 0.0, 1.0);
         }`,
     })));
 
     this.compUniforms = {
       tRays: { value: this.raysRT.texture }, cRays: { value: new THREE.Color() },
       cVignette: { value: new THREE.Color() }, uIntensity: { value: 1 }, uAspect: { value: 1 },
+      cHalo: { value: new THREE.Color() }, uHalo: { value: 1 },
     };
     this.compScene = new THREE.Scene();
     this.compScene.add(fullscreen(new THREE.ShaderMaterial({
@@ -102,11 +114,12 @@ export class GodRays {
       blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
       fragmentShader: /* glsl */ `
         uniform sampler2D tRays;
-        uniform vec3 cRays, cVignette;
-        uniform float uIntensity, uAspect;
+        uniform vec3 cRays, cVignette, cHalo;
+        uniform float uIntensity, uAspect, uHalo;
         varying vec2 vUv;
         void main() {
-          vec3 rays = cRays * texture2D(tRays, vUv).r * uIntensity;
+          vec2 rh = texture2D(tRays, vUv).rg;
+          vec3 rays = cRays * rh.r * uIntensity + cHalo * rh.g * uHalo;
           vec2 d = vUv - 0.5; d.x *= mix(1.0, uAspect, 0.5);
           float vig = smoothstep(0.38, 0.95, length(d) * 1.25) * 0.42;
           gl_FragColor = vec4(rays + cVignette * vig, vig);
@@ -123,6 +136,8 @@ export class GodRays {
 
   setPalette(p, dark) {
     this.compUniforms.cRays.value.setHex(p.rays);
+    this.compUniforms.cHalo.value.setHex(p.glow);
+    this.compUniforms.uHalo.value = dark ? 1.1 : 0.7;   // a pale sky needs less to show the same light
     this.compUniforms.cVignette.value.setHex(dark ? 0x05060c : p.under).multiplyScalar(dark ? 1 : 0.55);
   }
 

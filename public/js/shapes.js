@@ -2415,128 +2415,139 @@ export function buildCells(shape) {
 }
 
 
-// Guided lessons (docs/tutorial-study.md). One idea each, in the order level 1
-// and chapter I need them. Clues: `show` picks whole axes ([x, y, z]); `clues`
-// is a per-line mask as in levels (puzzle.js setClues); neither means the
-// usual hideClues(fraction, seed). `sky` is the palette.
+// Guided lessons (docs/tutorial-study.md). One idea each, in baby steps: rows
+// first (flat stones), then columns, then the row running back, turning, and
+// peeling. Each hides a small carved form that is honestly that size (a step,
+// a pillar, an arch, a rune...), never a pretend object. Clues: `show` picks
+// whole axes ([x, y, z]); `clues` is a per-line mask as in levels (puzzle.js
+// setClues); neither means the usual hideClues(fraction, seed). `sky` is the palette.
 // Each hint holds until its event fires: break | paint | mistake | rotate |
 // peel | solved. A hint with `wait` stays quiet until the player has paused
 // that long (or slipped); hints are for hesitation, not a script to read.
-//   pulse: [x, y, z]   that cube breathes
-//   line: [axis, x, y, z]   the row along `axis` through that cube glows
+// What a hint talks about is outlined on the block, with a soft breathing glow
+// (cubes.js focus), so a first-timer knows where to look and tap:
+//   pulse: [x, y, z]  /  focus: [[x, y, z], ...]   the cube(s) to act on
+//   line: [axis, x, y, z]  /  lines: [line, ...]   the row(s) a number counts
 //   pulseHandle / pulseTool: 'paint' | 'break'   point at a control
 // `nudge` (seconds): if the player pauses that long, a row with a move glows.
-// `name` is the object the lesson's stone hides: unknown ("?") until it is
-// uncovered, then named over it, as in a level. Its cubes' colours make it read.
-// `ghost` (0..1): the hidden object shows faintly through the stone, so the
+// `name` is the form the lesson's stone hides: unknown ("?") until it is
+// uncovered, then named over it, as in a level.
+// `ghost` (0..1): the hidden form shows faintly through the stone, so the
 // goal is seen before anything is said (the first two lessons only). A lesson
 // that shows no clues at all must have a ghost: it is solved by sight.
-const RED = 0xe0546b, CREAM = 0xf3e3c3, TAN = 0xc9a27a, WOOD = 0xb9773f, BARK = 0x8a5a34, YELLOW = 0xe9b949;
+const TERRACOTTA = 0xc8694a, CLAY = 0xe08a5e, TEAL = 0x4f9c98, SAND = 0xe2b886, UMBER = 0xa9774f;
+const SLATE = 0x8e98a6, MOSS = 0x8fae84, ROSE = 0xc98fb4, LAPIS = 0x5b8fd6;
 export const TUTORIAL = [
+  // ---- rows: flat stones, one face of numbers
   {
-    // the goal itself, before any number: something is in the stone; carve the rest away
-    id: 'lesson-hidden', name: 'Mushroom', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [0, 0, 0],
+    // the goal itself, before any number: a form is in the stone; carve the rest away
+    id: 'lesson-hidden', name: 'Pillar', sky: 'Lagoon', view: 0.42, handles: false, dims: [3, 3, 1], show: [0, 0, 0],
     ghost: 0.62,
-    cell: (x, y) => (y === 2 ? RED : x === 1 ? TAN : 0),
+    cell: (x, y) => (y === 1 ? (x === 1 ? CLAY : 0) : TERRACOTTA),   // base, shaft, capital
     hints: [
-      { text: 'Something is hidden in this stone. Chisel away the plain stone around it.', pulse: [0, 1, 0], until: 'break' },
-      { text: 'Keep going until only the hidden thing is left.', wait: 6, until: 'solved' },
+      { text: 'Something is hidden in this stone. Chisel away the plain stone around it.', focus: [[0, 1, 0], [2, 1, 0]], until: 'break' },
+      { text: 'Keep going until only the hidden form is left.', focus: [[0, 1, 0], [2, 1, 0]], wait: 6, until: 'solved' },
     ],
   },
   {
-    // numbers count the hidden object's cubes in their row: seen while the object still shows
-    id: 'lesson-clear', name: 'Pencil', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
+    // numbers count the hidden form's cubes in their row: seen while the form still shows
+    id: 'lesson-count', name: 'Step', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
     ghost: 0.6,
-    cell: (x, y) => (y === 0 ? [0xe58f9e, YELLOW, 0x6b6470][x] : 0),   // eraser, body, graphite tip
+    cell: (x, y) => (y === 0 ? [TEAL, 0x5fb0a8, TEAL][x] : 0),
     hints: [
-      { text: 'Each number counts the hidden object’s cubes in its row.', line: [0, 0, 0, 0], until: 'break' },
+      { text: 'Each number counts the hidden form’s cubes in its row.', line: [0, 0, 0, 0], until: 'break' },
       { text: 'So a 0 row has none of them: chisel it all.', line: [0, 0, 1, 0], until: 'solved' },
     ],
   },
   {
     // a full count keeps every cube, and a slip is safe and visible
-    id: 'lesson-keep', name: 'Log', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 ? (x === 1 ? WOOD : BARK) : 0),
+    id: 'lesson-keep', name: 'Plinth', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 ? UMBER : y === 1 ? SAND : 0),
     hints: [
-      { text: 'A 3 in a row of three: all three are the object’s. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
-      { text: 'That ✕ was a slip: the cube is kept, but slips cost gems. Clear the 0 rows.', until: 'solved' },
+      { text: 'A 3 in a row of three: all three are the form’s. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
+      { text: 'That ✕ was a slip: the cube is kept, but slips cost gems. Clear the 0 row.', line: [0, 0, 2, 0], until: 'solved' },
     ],
   },
   {
     // the Mark tool: a cube you know stays can't be chiselled by accident
-    id: 'lesson-mark', name: 'Caterpillar', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 ? (x === 3 ? 0x3f8a52 : x % 2 ? 0x6cc28f : 0x8fd49b) : 0),
+    id: 'lesson-mark', name: 'Wall', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 ? (x % 2 ? MOSS : 0xa89c8e) : 0),   // dry stone, moss between
     hints: [
-      { text: 'The 4 row is all object. Switch to Mark below, then tap one of its cubes.', line: [0, 0, 1, 0], pulseTool: 'paint', until: 'paint' },
-      { text: 'Marked cubes are safe from the chisel. Back to Chisel, and clear the 0 row.', pulseTool: 'break', until: 'solved' },
-    ],
-  },
-  {
-    // numbers on top count their column; two directions combine
-    id: 'lesson-cross', name: 'Flower', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
-    cell: (x, y) => (x === 1 && y === 1 ? YELLOW : x === 1 || y === 1 ? RED : 0),
-    hints: [
-      { text: 'Numbers on top count their column, straight down.', line: [1, 1, 0, 0], until: 'break' },
-      { text: 'Each 1 keeps a single cube. The two 3s say which.', wait: 8, until: 'solved' },
-    ],
-  },
-  {
-    // numbers on the front count the row running back, away from you
-    id: 'lesson-depth', name: 'Train', sky: 'Lagoon', view: 0.45, handles: false, dims: [3, 1, 3], show: [0, 0, 1],
-    cell: (x, y, z) => (x === 1 ? (z === 2 ? RED : 0x5b8fd6) : 0),
-    hints: [
-      { text: 'Numbers on the front count the row running straight back, away from you.', line: [2, 0, 0, 0], until: 'break' },
-      { text: 'Clear both 0 rows, all the way to the back.', until: 'solved' },
-    ],
-  },
-  {
-    // turning the block: three 1s point at a cube you can't see from here
-    id: 'lesson-turn', name: 'Steps', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [2, 2, 2], show: [1, 1, 1],
-    cell: (x, y, z) => (x + y + z === 0 ? 0 : 0x6cc28f),
-    hints: [
-      { text: 'Drag anywhere to turn the block.', wait: 5, until: 'rotate' },
-      { text: 'The three 1s all point at the same hidden cube.', wait: 6, until: 'solved' },
+      { text: 'The 4 row is all the form. Switch to Mark below, then tap one of its cubes.', line: [0, 0, 0, 0], pulseTool: 'paint', until: 'paint' },
+      { text: 'Marked cubes are safe from the chisel. Back to Chisel, and clear the 0 row.', line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
     ],
   },
   {
     // a circle: the cubes stay in two separate groups
     id: 'lesson-groups', name: 'Arch', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 || x !== 1 ? 0xc98fb4 : 0),
+    cell: (x, y) => (y === 1 ? (x === 1 ? 0xb6779f : ROSE) : x !== 1 ? ROSE : 0),   // keystone over two legs
     hints: [
       { text: 'A circle means its cubes stay in 2 separate groups, with a gap between.', line: [0, 0, 0, 0], until: 'solved' },
     ],
   },
   {
     // a square: three or more groups
-    id: 'lesson-square', name: 'Comb', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 1 || x % 2 === 0 ? 0x5db6ae : 0),
+    id: 'lesson-square', name: 'Colonnade', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 2, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 1 ? TEAL : x % 2 === 0 ? 0x6cc0b4 : 0),   // a beam on three columns
     hints: [
       { text: 'A square means 3 or more separate groups.', line: [0, 0, 0, 0], until: 'solved' },
     ],
   },
+  // ---- columns: a second face of numbers
+  {
+    // numbers on top count their column; two directions combine
+    id: 'lesson-cross', name: 'Rune', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (x === 1 && y === 1 ? 0x8fb8f0 : x === 1 || y === 1 ? LAPIS : 0),
+    hints: [
+      { text: 'Numbers on top count their column, straight down.', line: [1, 1, 0, 0], until: 'break' },
+      { text: 'Each 1 keeps a single cube. The two 3s say which.', lines: [[0, 0, 1, 0], [1, 1, 0, 0]], wait: 8, until: 'solved' },
+    ],
+  },
   {
     // a blank face hides its clue; the others are enough
-    id: 'lesson-blank', name: 'Hammer', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1],
+    id: 'lesson-blank', name: 'Cairn', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1],
     clues: '###|.#.|.........',
-    cell: (x, y) => (y === 2 ? 0x8e98a6 : x === 1 ? WOOD : 0),
+    cell: (x, y) => (y === 0 ? SLATE : x === 1 ? (y === 1 ? 0xa6aebb : 0xc0c6cf) : 0),   // stones stacked, smallest on top
     hints: [
       { text: 'A face with no number is a hidden clue. The others are enough.', line: [1, 0, 0, 0], until: 'break' },
-      { text: 'The middle column’s 3 decides the two 1s.', wait: 8, until: 'solved' },
+      { text: 'The middle column’s 3 decides the two 1s.', line: [1, 1, 0, 0], wait: 8, until: 'solved' },
+    ],
+  },
+  // ---- depth: the row running back, then turning, then the inside
+  {
+    // numbers on the front count the row running back, away from you
+    id: 'lesson-depth', name: 'Stair', sky: 'Lagoon', view: 0.45, handles: false, dims: [2, 2, 2], show: [0, 0, 1],
+    cell: (x, y) => (y === 0 ? TERRACOTTA : x === 0 ? CLAY : 0),   // one step up, two cubes deep
+    hints: [
+      { text: 'Numbers on the front count the row running straight back, away from you.', line: [2, 1, 1, 0], until: 'break' },
+      { text: 'Clear the 0 row, all the way to the back.', line: [2, 1, 1, 0], until: 'solved' },
+    ],
+  },
+  {
+    // turning the block: three 1s point at a cube you can't see from here
+    id: 'lesson-turn', name: 'Cornerstone', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [2, 2, 2], show: [1, 1, 1],
+    cell: (x, y, z) => (x + y + z === 0 ? 0 : (x + y + z) % 2 ? MOSS : 0x9fc2a8),
+    hints: [
+      { text: 'Drag anywhere to turn the block.', wait: 5, until: 'rotate' },
+      { text: 'The three 1s all point at the same hidden cube.', lines: [[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]], wait: 6, until: 'solved' },
     ],
   },
   {
     // peeling: the inside is only reached by slicing layers away
-    id: 'lesson-peel', name: 'Lantern', sky: 'Night', dims: [3, 3, 3], show: [1, 1, 1],
-    cell: (x, y, z) => (x === 1 && y === 1 && z === 1 ? 0 : YELLOW),
+    id: 'lesson-peel', name: 'Geode', sky: 'Night', dims: [3, 3, 3], show: [1, 1, 1],
+    cell: (x, y, z) => {
+      const mid = (x === 1) + (y === 1) + (z === 1);
+      return mid === 3 ? 0 : mid === 2 ? 0xa98ae0 : mid === 1 ? 0x857c9e : 0x6f6888;   // drab rind, amethyst showing through
+    },
     hints: [
-      { text: 'Something is hidden inside. Drag a diamond along its rail to peel a layer away.', pulseHandle: true, until: 'peel' },
+      { text: 'Its heart is out of sight. Drag a diamond along its rail to peel a layer away.', pulseHandle: true, until: 'peel' },
       { text: 'Every row through the middle is circled: split around one gap. Chisel it.', pulse: [1, 1, 1], until: 'solved' },
     ],
   },
   {
     // the bridge to level 1: a whole small stone with some blank faces, on your own
-    id: 'lesson-stool', name: 'Stool', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
-    cell: (x, y, z) => (y === 2 || ((x !== 1) && (z !== 1)) ? (y === 2 ? 0xe58f84 : WOOD) : 0),
+    id: 'lesson-stool', name: 'Dolmen', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
+    cell: (x, y, z) => (y === 2 ? 0xa79fb5 : x !== 1 && z !== 1 ? 0x8a8198 : 0),   // a capstone on four standing stones
     hints: [
       { text: 'A whole stone, on your own. If you pause, a row with a move will glow.', until: 'break' },
       { text: '', until: 'solved' },

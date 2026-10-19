@@ -339,3 +339,105 @@ What the runs showed:
 5. **The payoff hold.** Watch whether people wait for the name or tap through. Tapping through at 1.8 s is fine, but if they tap before the name shows, the hold is too long.
 6. **The objects' names.** Are Log, Train and Hammer recognisable from three to five cubes? If an object needs its name to make sense, the name is doing its job. If the name surprises people, the colours need work.
 7. **Still open:** a progress sense ("am I nearly done?") in real levels, and whether twelve dots feel like a chore.
+
+## Third pass: light on the cube, honest forms, baby steps (2026-10-18)
+
+Kellan, after a playtest:
+
+> "can you please nicely highlight the outline of the cube that the tutorial is talking about when relevant? Or else they might give up. … the objects that we uncover in the tutorial are pretty unrealistic. Like 3 blocks representing a train is so strange that it takes you out of the atmosphere of the game. … Maybe for the tutorial we can have a 3x3x1 then a 2x2, etc, taking baby steps"
+
+Kept from the second pass: the objective is shown first (the ghost), one idea per lesson, and at most one short line of text.
+
+### 1. The outline: light falls on what the words are about
+
+Whenever a line names cubes, those cubes are lit. This covers the cube to chisel, the cube to keep or mark, and the row a number counts. Hesitation nudges use the same light.
+
+**Look.** It follows `docs/study-record.md` (hand-picked face colours, tinted shadow, faked volumetric glow). It has three parts:
+- **A seam of light** traces the *group's* outer edges, not the edge of every cube. A row reads as one shape. The cube to act on inside a row gets its own seam, because the outline is drawn wherever the focus strength changes (row 0.6, cube 1).
+  - The seam's colour is the palette's `rays` glow on mid and dark faces.
+  - On pale faces it deepens to the glow's own hue (`cFocus`: HSL of `glow`, s 0.8, l 0.56), so it reads as a gilded edge on cream instead of vanishing.
+- **Tinted shade on the rest.** While anything is outlined, every other cube settles about 20% into the palette's shade hue (`uFocusDim`), so the light *falls on* the cubes being talked about. This is what made the cue readable on Dawn, Mint and Lagoon. A seam alone was nearly invisible there (first iteration, below).
+- **A halo into the air.** The god-rays mask carries the outlined cubes in its green channel. A small round blur of that channel is added in the composite with the palette's glow colour. It is kept off the stone (`× (1 − silhouette)`), so it never washes a number. It mostly shows on dark palettes.
+
+**Motion.**
+- The light breathes once every two beats (72 BPM, so 1.67 s per breath). While the music plays, the breath is locked to the music's clock (`sound.now − sound.clock0`).
+- It arrives in 0.5 s, timed with the coach line and starting once the assembly is done, and leaves in 0.33 s.
+- **Reduce Motion:** a steady glow with no breath.
+- A chiselled cube leaves the outline with its break. A marked cube is released from cube-level focus. When the next hint starts, the light moves on.
+
+**Code.**
+- `cubes.js`:
+  - per-instance `aFocus` (from, to, start time) and `aFocusEdge`: 4 edge bits per face, packed like `aAO`;
+  - `setFocus(puzzle, present, target, time)` computes the outline edges on the CPU;
+  - the shading runs before the glyph is inked, so numbers re-ink over it.
+- `main.js` `refreshFocus()` builds the target from the open hint (`line`/`lines`, `pulse`/`focus`) or from the nudge. It runs on hint change, break, mark, undo and peel.
+- The old row glow, cube breath and bob (`uHint`, `uHintLine`, `uCalm`) are gone; this replaces them.
+- **Bug fixed on the way:** the finale's slow gleam ran *during play* too (`uWin` is −99 while playing, so `won > 2.4` was always true). It made random cubes flash white every 4.5 s, which a newcomer would take for a hint. It is now gated to solved blocks.
+
+**Iterations (Chromium, 390×844):**
+1. A soft fill plus a wide rim read as lit lamps, not an outline. The halo also bled over the stone and greyed the "3" on its own face. → A thin seam (falloff 0.028) and a gentler lift, with the halo kept off the stone.
+2. On Dawn and Mint the seam alone was invisible (the Rune's column and the Dolmen nudge). → Tinted shade on everything else.
+3. On Mint the shade was still too faint, because Mint's shade colour is pale. → The shade hue is normalised to a fixed depth, so every palette settles by the same amount.
+
+### 2. Honest forms instead of pretend objects
+
+Three cubes can't be a train. Each lesson now hides a small carved form that really is that size, from the game's own world of stone, steps and standing stones. The ghost in lessons 1–2 shows the form, and the reveal names it ("You uncovered / Pillar").
+
+### 3. Baby steps: one direction at a time
+
+The order now grows one axis at a time:
+- rows on flat stones;
+- then a second face of numbers;
+- then the row running back on a 2×2×2;
+- then turning;
+- then the inside.
+
+| # | Size | Idea | Hides | Lit when the line shows |
+|---|---|---|---|---|
+| 1 | 3×3×1 | The goal: carve away the plain stone (ghost, no numbers) | **Pillar** (base, shaft, capital) | the two plain cubes |
+| 2 | 3×2×1 | A number counts the form's cubes in its row; 0 means none (ghost) | **Step** | the 3 row, then the 0 row |
+| 3 | 3×3×1 | A full row is all form; a slip is a ✕ that costs gems | **Plinth** | the 3 row, with the cube to try as its own; then the 0 row |
+| 4 | 4×2×1 | The Mark tool | **Wall** (dry stone and moss) | the 4 row, then the 0 row |
+| 5 | 3×2×1 | A circle means 2 groups | **Arch** | the circled row |
+| 6 | 5×2×1 | A square means 3+ groups | **Colonnade** | the squared row |
+| 7 | 3×3×1 | Numbers on top count their column | **Rune** (a carved cross) | the middle column; then both 3s |
+| 8 | 3×3×1 | A blank face hides its clue | **Cairn** (stones stacked, smallest on top) | the blank column; then the deciding 3 |
+| 9 | 2×2×2 | Front numbers count the row running back | **Stair** (one step up, two deep) | the 0 row running back |
+| 10 | 2×2×2 | Turning the block | **Cornerstone** | the three rows through the hidden corner (after the wait) |
+| 11 | 3×3×3 | Peeling | **Geode** (drab rind, amethyst showing through) | the hidden heart, once peeled |
+| 12 | 3×3×3 | Everything, alone | **Dolmen** (a capstone on four standing stones) | the nudge's row (after 9 s still) |
+
+Step → Stair → level 1's Steps is a deliberate thread.
+
+**Other changes:**
+- The circle and square now come before columns, because they only need rows.
+- Blank comes right after columns, the direction it uses.
+- Lesson 1 opens at the flatter front angle (0.42) so the Pillar reads as an I, not an S.
+- Copy says "form" instead of "object" in the lessons; level 1's card still says "object", because real levels hide real objects.
+
+**Saved progress:**
+- New ids are `lesson-count` and the Pillar/Step/... names on the old slots.
+- Lesson ids are stored nowhere. `strata.tutorial` keeps its meaning, and the lesson count is still 12, so nothing saved changes.
+
+**Tests:**
+- Every lesson but the ghost lesson is still uniquely line-solvable, checked by both the line solver and the independent search.
+- The hint test now also checks `lines` and `focus` cells and line axes.
+
+### Results (Chromium at 390×844, not user tests)
+
+Shots are in `shots/tutorial/` (gitignored); the QA script is `shots/tutorial/highlight.mjs` (`look | full | rm`).
+- **Light palettes:** `highlight-look-03-plinth` (Lagoon), `-04-wall` (Mint), `-07-rune-wait` (Dawn), `-12-dolmen-nudge` (Dawn).
+- **Dark palette:** `highlight-look-11-geode-peeled` (Night).
+- **The breath:** `highlight-pulse-0..3`, a quarter breath apart.
+- **Reduce Motion:** `highlight-rm-look-*`.
+- **The full run:** `highlight-01-pillar` … `highlight-14-level1`, with each reveal in `highlight-reveal-01-pillar` … `-12-dolmen`.
+- **End to end:** all 12 lessons were solved by real taps, drags and the Mark/Chisel buttons, then the end card, then level 1. There were no page errors at boot or during play.
+
+### What to watch in the next playtest
+
+1. **Do people tap the lit cubes without reading?** That's fine for lessons 1–4. If they tap lit cubes that are *meant to stay* (the Plinth's 3 row, the Wall's 4 row), the light is reading as "chisel here". The cube-level seam may then need to differ more from the row-level one.
+2. **Does the shade on the rest of the stone read as "look here", or as a dimmed, disabled block?**
+3. **Lesson 1 → 2:** with the ghost and the light both showing, can they still say what they're looking for?
+4. **The names.** Do Plinth, Cairn and Dolmen land, or do people need them explained? They are truthful but less familiar than Steps or Arch. A puzzled face at the reveal is fine; asking "what's a dolmen?" is a small delight; disengagement is not.
+5. **The 2×2×2 jump (lessons 8 → 9).** It's the biggest step in the sequence: from flat stones to depth and a new camera angle.
+6. **On a real phone in daylight:** is the gold seam visible on Mint and Lagoon at arm's length?

@@ -70,7 +70,6 @@ const clock0 = performance.now();
 const now = () => ((performance.now() - clock0) / 1000) * motionRate;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-cubes.uniforms.uCalm.value = reduceMotion ? 1 : 0;   // hint cues hold still
 const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 
 // ---------------------------------------------------------------- puzzles
@@ -158,6 +157,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   cubes.uniforms.uIntro.value = still ? -99 : t0;
   cubes.uniforms.uIntroSpeed.value = introSpeed;
   game.introEnd = still ? 0 : t0 + INTRO_TIME / introSpeed;
+  refreshFocus();
   if (!quiet) {
     sound.intro(Y, reduceMotion ? 0 : INTRO_TIME, introDelay + hold);
     cubes.ripple([(X - 1) / 2, -2, (Z - 1) / 2], t0 + (reduceMotion ? 0 : INTRO_TIME - 0.15), 1.2, 6);
@@ -273,7 +273,7 @@ function inPeel(i) {
 
 function present(i) { return !game.broken[i] && inPeel(i); }
 
-function refreshAO() { cubes.updateAO(game.puzzle, present); }
+function refreshAO() { cubes.updateAO(game.puzzle, present); refreshFocus(); }
 
 // Switches the peel axis/side. Layers peeled on the old axis fold back in.
 function setPeelAxis(axis, side) {
@@ -429,6 +429,7 @@ function act(i, which) {
     cubes.ripple(cell, t, 0.45, 10);
     buzz(8);
     sound.mark(!!game.painted[i]);
+    refreshFocus();
     if (game.painted[i]) tutorialEvent('paint');
     return;
   }
@@ -488,6 +489,7 @@ function undo() {
   } else {
     game.painted[u.i] ^= 1;
     cubes.setState(u.i, game.painted[u.i], t);
+    refreshFocus();
   }
   cubes.ripple(game.puzzle.coords(u.i), t, 0.5, 9);
   buzz(6);
@@ -710,14 +712,29 @@ function renderCoach(override) {
 // What the block and controls point at: the showing hint's cues, else a nudge.
 function applyCues() {
   const h = tutorial && game?.entry.lesson && tutorial.open ? currentHint() : null;
-  const u = cubes.uniforms;
-  const pulse = h?.pulse ?? (nudge?.level > 1 ? nudge.cell : null);
-  u.uHint.value.set(...(pulse || [-99, -99, -99]));
-  const line = h?.line ?? nudge?.line;
-  if (line) u.uHintLine.value.set(line[1], line[2], line[3], line[0]);
-  else u.uHintLine.value.set(0, 0, 0, -1);
+  refreshFocus();
   document.querySelectorAll('.tool').forEach((b) =>
     b.classList.toggle('cue', !!h?.pulseTool && b.dataset.tool === h.pulseTool && tool !== h.pulseTool));
+}
+
+// The cubes the words are about, outlined in light (cubes.js setFocus): the
+// row a number counts softly, the cube to act on more strongly. They arrive
+// with the words (once the block is whole) and let go as the player acts:
+// a chiselled cube goes, a marked one is released, the next hint moves them on.
+// A stuck player's nudge uses the same light.
+const FOCUS_ROW = 0.6, FOCUS_CUBE = 1;
+function refreshFocus() {
+  if (!game || game.introEnd === undefined) return;   // startPuzzle calls it once the assembly's timing is known
+  const h = tutorial && game.entry.lesson && tutorial.open && !game.solved ? currentHint() : null;
+  const p = game.puzzle;
+  const lines = h ? [h.line, ...(h.lines ?? [])].filter(Boolean) : nudge?.line ? [nudge.line] : [];
+  const cells = h ? [h.pulse, ...(h.focus ?? [])].filter(Boolean) : nudge?.level > 1 ? [nudge.cell] : [];
+  const target = new Float32Array(p.size);
+  for (const [axis, ...c] of lines) {
+    for (let k = 0; k < p.dims[axis]; k++) { const q = [...c]; q[axis] = k; target[p.idx(...q)] = FOCUS_ROW; }
+  }
+  for (const c of cells) { const i = p.idx(...c); if (!game.painted[i]) target[i] = FOCUS_CUBE; }
+  cubes.setFocus(p, present, target, Math.max(now(), game.introEnd ?? 0));
 }
 
 // seconds of stillness before a stuck player is shown a row (0: never here)
@@ -1289,6 +1306,13 @@ function draw() {
     if (game.revealStart > 0) u.uReveal.value = Math.min(1, Math.max(0, (t - game.revealStart) / 1.5));
     // a lesson's ghost surfaces softly once the block is whole (at once under Reduce Motion)
     u.uGhost.value = game.ghost * (reduceMotion ? 1 : ease.out(Math.min(1, Math.max(0, (t - (game.introEnd ?? 0)) / DUR.ceremony))));
+    // the tutorial outline breathes once every two beats of the music (on its
+    // clock while it plays); under Reduce Motion it holds a steady glow
+    const beatT = sound.ctx?.state === 'running' && motionRate === 1 ? sound.now - sound.clock0 : t;
+    u.uBreath.value = reduceMotion ? 0.65 : 0.5 - 0.5 * Math.cos(Math.PI * beatT / BEAT);
+    // and the rest of the stone settles into shade while it shows
+    const dimTo = cubes.focusAny && !game.solved && t >= (game.introEnd ?? 0) ? 1 : 0;
+    u.uFocusDim.value += (dimTo - u.uFocusDim.value) * Math.min(1, dt * (dimTo ? 2.5 : 4));
     if (!game.solved) $('#timer').textContent = fmt(t - game.start);
 
     if (game.win) {
@@ -1666,4 +1690,4 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera };
+window.strata = { get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes };
