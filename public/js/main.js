@@ -1667,6 +1667,13 @@ function frame() {
   document.body.classList.toggle('title-up', onTitle);   // style.css: plain classes, never body:has(), which re-styled every element each frame
   document.body.classList.toggle('menu-open', menuEl.classList.contains('show'));
   if (worldUp) mapWorld.setView(onTitle ? titleU : 1);   // the title's sky only: the map's scroll moves its world natively
+  // the title's logo is never a level: if a race ever leaves it bare (no title,
+  // no map), the map comes back
+  if (game?.shape.id === 'logo' && !onTitle && !menuEl.classList.contains('show') && !diving && !pull.live && !pull.gliding && !ascent.live) {
+    mark('title: logo left bare, back to the map');
+    titleUp = false;
+    openMenu({ instant: true });
+  }
   const t = now();
   if (mapUp) { if (mapUpSince < 0) mapUpSince = t; } else mapUpSince = -1;
   if (!(mapUp && t - mapUpSince > 0.6)) draw();
@@ -2043,17 +2050,20 @@ function setScroll(k) {
 // glide from the current scroll to `to` (px), then call done
 function scrollTo(to, seconds, curve, done) {
   cancelAnimationFrame(pull.anim);
+  pull.gliding = true;
   const from = pull.k, t0 = performance.now();
   const step = () => {
     const k = Math.min(1, ((performance.now() - t0) / 1000) * motionRate / seconds);
     setScroll(from + (to - from) * curve(k));
-    if (k < 1) pull.anim = requestAnimationFrame(step); else done?.();
+    if (k < 1) pull.anim = requestAnimationFrame(step); else { pull.gliding = false; done?.(); }
   };
   pull.anim = requestAnimationFrame(step);
 }
+// a glide cut short by a new touch: its ending never runs
+function stopGlide() { cancelAnimationFrame(pull.anim); pull.gliding = false; }
 function startPull() {
   pull.live = true;
-  cancelAnimationFrame(pull.anim);
+  stopGlide();
   mark('title: pull');
   titleScreen.style.transition = 'none';
   if (!toMap() || $('#menu').classList.contains('show')) return;
@@ -2090,7 +2100,8 @@ function finishPull() {
     titleScreen.classList.remove('show');
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
-    if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); }
+    titleUp = false;
+    if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true); }
   });
   if (!toMap()) after(0.25, () => startTutorial(0));
 }
@@ -2099,6 +2110,7 @@ function cancelPull(seconds = 0.35) {
   scrollTo(0, seconds, ease.out, () => {
     if (pull.live || !titleUp) return;
     titleScreen.style.cssText = '';
+    titleScreen.classList.add('show');
     if (toMap()) {
       const menu = $('#menu');
       menu.classList.add('instant');   // gone at once, not a fade of the whole map
@@ -2130,7 +2142,7 @@ const endPull = (e) => {
   if (e.pointerId !== pull.id) return;
   pull.id = null;
   if (!pull.live) {   // a tap: the whole descent, as a full swipe would
-    if (e.type === 'pointercancel') return;
+    if (e.type === 'pointercancel' || Math.abs(pull.dy) > 10 || pull.gliding) return;   // (a swipe down isn't a tap)
     startPull();
     finishPull();
     return;
@@ -2147,10 +2159,11 @@ titleScreen.addEventListener('pointercancel', endPull);
 // short of it, the map settles back. A level left open is saved first (its
 // progress resumes when it's next opened).
 const ascent = { id: null, y0: 0, lastY: 0, lastT: 0, v: 0, live: false };
-const atMapTop = () => !titleUp && toMap() && mapBuilt && !diving && $('#menu').classList.contains('show')
+const atMapTop = () => !titleUp && !pull.gliding && toMap() && mapBuilt && !diving && $('#menu').classList.contains('show')
   && !$('#menu').classList.contains('arriving') && !$('#menu').classList.contains('settling') && mapSheet().scrollTop <= 0;
 function beginAscent() {
   ascent.live = true;
+  stopGlide();
   mark('title: pull back up');
   if (game?.shape !== LOGO) {
     saveProgress();
@@ -2218,6 +2231,7 @@ mapSheet().addEventListener('wheel', (e) => {
   if (wheelUp < 240) return;
   wheelUp = 0;
   beginAscent();
+  ascent.v = 1;   // as a flick: the whole way up
   endAscent(false);
 }, { passive: true });
 window.addEventListener('keydown', (e) => {
