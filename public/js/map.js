@@ -185,7 +185,9 @@ export function renderMap(root, opts) {
   const fullW = root.clientWidth || window.innerWidth;
   const colW = Math.min(COL, fullW - 24);
   const x0 = (fullW - colW) / 2;
-  const { first, open } = progress(entries, solved);
+  // the lessons come first: until they're done, even First Light is under mist
+  // (it parts the first time the map opens after them)
+  const { first, open } = learned || devUnlock() ? progress(entries, solved) : { first: -1, open: entries.map(() => false) };
   const seenObjects = seenSet('strata.map.objects') ?? new Set();
   const seenChapters = seenSet('strata.map.chapters') ?? new Set();
   // chapters whose cloud has parted, and stones the gold has reached; the first
@@ -272,7 +274,7 @@ export function renderMap(root, opts) {
   y += GAP * 0.42;
   const driftLabelY = y;
   y += GAP * 0.58;
-  const allSolved = first < 0;
+  const allSolved = learned && first < 0;
   drift.forEach((n, j) => {
     nodes.push({ kind: 'drift', x: x0 + colW * (0.5 + (j - 1) * 0.3), y: y + (j === 1 ? 26 : 0), palette: driftPalette, sky: driftPalette, n, state: allSolved && j === 0 ? 'current' : 'open' });
   });

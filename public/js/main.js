@@ -719,13 +719,15 @@ function tutorialEvent(kind) {
   renderCoach();
 }
 
+// Lessons done (or skipped): back to the map, where First Light's mist parts
+// and the trail draws on to its first stone
 function finishTutorial() {
+  // a map never opened yet would count First Light as already seen (no parting)
+  for (const key of ['strata.map.parted', 'strata.map.lit']) if (localStorage.getItem(key) === null) localStorage.setItem(key, '[]');
   localStorage.setItem('strata.tutorial', '1');
   tutorial = null;
   renderCoach();
-  controls.autoRotate = !reduceMotion;
-  // the goal once more, in the words level 1 will need
-  showWin('You’re ready', 'uncover what’s inside', 'Play No. 1', 'lessons done');
+  openMenu();
 }
 
 function renderCoach(override) {
@@ -991,12 +993,7 @@ window.addEventListener('keydown', (e) => {
   if (viewOpen()) closeView(); else closeJournal();
 }, true);
 $('#help [data-close]').addEventListener('click', () => show('#help', false));
-$('#coach-skip').addEventListener('click', () => {
-  localStorage.setItem('strata.tutorial', '1');
-  tutorial = null;
-  renderCoach();
-  openMenu();
-});
+$('#coach-skip').addEventListener('click', finishTutorial);
 function goNext() {
   clearResult();
   const list = puzzleList();
