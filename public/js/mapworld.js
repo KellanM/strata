@@ -28,9 +28,10 @@ const PARALLAX = false;   // the islands don't drift; only the title's stars hav
 const NIGHT = '#121731';
 // the sky, top to bottom over 1.4 screens, ending at the horizon
 const SKY_STOPS = [[0, '#121731'], [0.45, '#232a52'], [0.72, '#4c5187'], [0.88, '#bd93b8'], [0.965, '#f6cbc4'], [1, '#ffeedd']];
-const skyGradient = (Hs) => `linear-gradient(180deg, ${SKY_STOPS.map(([k, c]) => `${c} ${(k * Hs).toFixed(1)}px`).join(', ')})`;
-const HORIZON = 'rgba(255, 248, 236, .9)';
-const DAWN_SEA = '#fbe6dc';
+// below the horizon the glow sinks slowly into the first chapter's sea, over
+// this many screens: the title's sky and the map are one curve, no edge
+const BELOW = [[0, 0xffeedd], [0.08, 0xfde4d9], [0.4, 0xf8dcd4]];
+const BELOW_END = 1.15;
 const DAWN = 60;   // the horizon sits this far below the top of the map's page
 
 // ---- colour, in plain hex (no three.js here)
@@ -38,6 +39,34 @@ const ch = (h, s) => (h >> s) & 255;
 export const mix = (a, b, t) => [16, 8, 0].reduce((o, s) => o | (Math.round(ch(a, s) + (ch(b, s) - ch(a, s)) * t) << s), 0);
 const lum = (h) => (0.2126 * ch(h, 16) + 0.7152 * ch(h, 8) + 0.0722 * ch(h, 0)) / 255;
 const rgba = (h, a = 1) => `rgba(${ch(h, 16)},${ch(h, 8)},${ch(h, 0)},${a})`;
+// The sky from the top of the title down through the horizon into the sea, as
+// one gradient. CSS joins its stops with straight lines, and each corner shows
+// as a band (worst at the horizon's bright peak), so the stops are joined by a
+// monotone cubic per channel and sampled finely: the light bends, never kinks.
+function dawnGradient(Hs, h, sea) {
+  const pts = [...SKY_STOPS.map(([k, c]) => [k * Hs, parseInt(c.slice(1), 16)]),
+    ...BELOW.slice(1).map(([k, c]) => [Hs + k * h, c]), [Hs + BELOW_END * h, sea]];
+  const xs = pts.map((p) => p[0]);
+  const chans = [16, 8, 0].map((sh) => {
+    const ys = pts.map((p) => ch(p[1], sh)), n = ys.length;
+    const d = xs.slice(1).map((x, i) => (ys[i + 1] - ys[i]) / (x - xs[i]));
+    // Fritsch-Carlson tangents: flat at a peak, so the horizon's glow is round
+    const m = ys.map((_, i) => (i === 0 ? d[0] : i === n - 1 ? d[n - 2] : d[i - 1] * d[i] <= 0 ? 0 : (2 * d[i - 1] * d[i]) / (d[i - 1] + d[i])));
+    return (x) => {
+      let i = 0;
+      while (i < n - 2 && x > xs[i + 1]) i++;
+      const w = xs[i + 1] - xs[i], t = Math.min(1, Math.max(0, (x - xs[i]) / w)), t2 = t * t, t3 = t2 * t;
+      const v = (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * w * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * w * m[i + 1];
+      return Math.round(Math.min(255, Math.max(0, v)));
+    };
+  });
+  const end = xs[xs.length - 1], N = 120, stops = [];
+  for (let k = 0; k <= N; k++) {
+    const x = (k / N) * end;
+    stops.push(`rgb(${chans.map((f) => f(x)).join(',')}) ${x.toFixed(1)}px`);
+  }
+  return { css: `linear-gradient(180deg, ${stops.join(', ')})`, height: end };
+}
 // a chapter's sea of mist, from its sky
 export function seaColour(p) {
   const dark = lum(p.skyTop) < 0.35;
@@ -70,9 +99,8 @@ export class MapWorld {
     this.backCol = null;
     // the title's sky (fixed)
     this.sky = document.createElement('div'); this.sky.className = 'mw-sky';
-    this.skyLine = document.createElement('div'); this.skyLine.className = 'mw-horizon';
     this.starWrap = document.createElement('div'); this.starWrap.className = 'mw-stars';
-    this.sky.append(this.starWrap, this.skyLine);
+    this.sky.append(this.starWrap);
     root.appendChild(this.sky);
     const rand = rng('stars');
     // three depths of stars; the title's pan moves them by only 88-96%
@@ -111,9 +139,9 @@ export class MapWorld {
   layoutSky() {
     const { w, h } = this, Hs = h * 1.4, d = Math.min(2, this.dpr);
     this.Hs = Hs;
+    const sea = this.firstSeaHex ?? 0xf3dcd4, g = dawnGradient(Hs, h, sea);
     this.sky.style.height = `${Hs + h + DAWN}px`;
-    this.sky.style.background = `${skyGradient(Hs)} 0 0 / 100% ${Hs.toFixed(1)}px no-repeat, linear-gradient(180deg, ${DAWN_SEA}, ${this.firstSea ?? '#f3dcd4'}) 0 ${Hs.toFixed(1)}px / 100% ${h}px no-repeat, ${this.firstSea ?? '#f3dcd4'}`;
-    this.skyLine.style.top = `${(Hs - 1).toFixed(1)}px`;
+    this.sky.style.background = `${g.css} 0 0 / 100% ${g.height.toFixed(1)}px no-repeat, ${rgba(sea)}`;
     this.starWrap.style.height = `${Hs}px`;
     for (const L of this.stars) {
       L.c.width = Math.round(w * d); L.c.height = Math.round(Hs * d);
@@ -142,7 +170,8 @@ export class MapWorld {
     this.chunks = [];
     // the colour script, one long gradient on the page's own clock
     const { regions } = model;
-    this.firstSea = rgba(seaColour(regions[0].base));
+    this.firstSeaHex = seaColour(regions[0].base);
+    this.firstSea = rgba(this.firstSeaHex);
     const stops = [`${this.firstSea} 0px`];
     for (const r of regions) {
       const c = rgba(seaColour(r.base));
@@ -160,8 +189,9 @@ export class MapWorld {
   layoutScene() {
     const { h } = this, Hs = h * 1.4;
     this.scene.style.height = `${this.model.end}px`;
-    this.dawn.style.height = `${DAWN + h}px`;
-    this.dawn.style.background = `linear-gradient(${HORIZON}, ${HORIZON}) 0 ${DAWN - 1}px / 100% 1.5px no-repeat, ${skyGradient(Hs)} 0 ${(DAWN - Hs).toFixed(1)}px / 100% ${Hs.toFixed(1)}px no-repeat, linear-gradient(180deg, ${DAWN_SEA}, ${this.firstSea}) 0 ${DAWN}px / 100% ${h}px no-repeat`;
+    const g = dawnGradient(Hs, h, this.firstSeaHex);
+    this.dawn.style.height = `${(DAWN + BELOW_END * h).toFixed(1)}px`;
+    this.dawn.style.background = `${g.css} 0 ${(DAWN - Hs).toFixed(1)}px / 100% ${g.height.toFixed(1)}px no-repeat`;
     // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
     const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
     this.layers.far.style.setProperty('--par', `${(range * (1 - FAR_RATE)).toFixed(1)}px`);

@@ -280,7 +280,6 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #map-world { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: -1; overflow: hidden; pointer-events: none; display: none; background: #121731; }
 body.world-up #map-world { display: block; }
 .mw-sky { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-.mw-horizon { position: absolute; left: 0; right: 0; height: 1.5px; background: rgba(255, 248, 236, .9); }
 .mw-stars { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden;
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 24px - 35vh), transparent calc(100% - 24px));
   mask-image: linear-gradient(180deg, #000 calc(100% - 24px - 35vh), transparent calc(100% - 24px)); }

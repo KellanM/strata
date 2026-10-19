@@ -754,3 +754,7 @@ The prototype plays the first-touch, release, stone and parting hooks.
 - The map grew to 151 stones in 7b780f1 while this study ran. The prototype reads the live data, so it shows 151.
 
 **No island parallax (2026-10-19).** Kellan: the floating islands shouldn't have parallax. The far layer's scroll-driven drift is off (`PARALLAX = false` in mapworld.js), so every island moves with the page. The title's stars keep their slight parallax.
+
+## The title-to-map seam (2026-10-19)
+
+Kellan: the gradient between the title and the map "comes to an abrupt end". Three causes: CSS joins gradient stops with straight lines, so the brightness peaked at the horizon and then went flat, which reads as an edge (a Mach band); a 1.5 px horizon line on top of that peak; and the fixed sky was moved one frame after the map sheet, so mid-swipe the two were a few px apart. Fixed by making the sky one curve from the top of the title, through a rounded horizon glow, down into the first chapter's sea over 1.15 screens (`dawnGradient` in mapworld.js: a monotone cubic per channel, sampled into 120 stops), by removing the line, and by moving the sky in the same call as the sheet. A tap on the title now runs the whole descent, as a full swipe does.

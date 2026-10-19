@@ -2022,6 +2022,7 @@ function setScroll(k) {
   titleU = Math.min(1, Math.max(0, k / window.innerHeight));
   const H = window.innerHeight;
   titleScreen.style.translate = `0 ${-k}px`;
+  mapWorld.setView(titleU);   // the sky moves with the sheet in the same frame, or its edge shows mid-swipe
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
   if (toMap()) {
@@ -2120,9 +2121,10 @@ titleScreen.addEventListener('pointermove', (e) => {
 const endPull = (e) => {
   if (e.pointerId !== pull.id) return;
   pull.id = null;
-  if (!pull.live) {   // a tap: show which way to go
-    const hint = titleScreen.querySelector('.tap');
-    hint.classList.remove('nudge'); void hint.offsetWidth; hint.classList.add('nudge');
+  if (!pull.live) {   // a tap: the whole descent, as a full swipe would
+    if (e.type === 'pointercancel') return;
+    startPull();
+    finishPull();
     return;
   }
   if (e.type !== 'pointercancel' && (pull.dy > window.innerHeight * 0.18 || pull.v > 0.5)) finishPull();
