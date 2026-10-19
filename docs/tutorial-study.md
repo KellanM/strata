@@ -448,7 +448,7 @@ Playtesters struggled to parse the hints. The worst was "A 3 in a row of three: 
 
 - **Say "shape"** for what the stone hides, and "belongs" for a cube that is part of it. "Stay" and "the form's" are gone.
 - **Point at what is lit:** "this row says 3", "the three glowing rows".
-- **Give the reason, then the action:** "This row says 3 and has 3 cubes, so all of them belong. Chisel one anyway."
+- **Give the reason, then the action:** "This row says 3 with 3 cubes, so all belong. Tap one to see what a mistake does."
 - **Name the result plainly:** "The ✕ means that cube belongs, so it stays. Mistakes cost gems."
 - **Circles and squares say what splits:** "the row's cubes split into two groups, with a gap between them."
 - **Stay within the 18-word limit** (test/puzzle.test.js).

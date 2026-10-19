@@ -2793,7 +2793,7 @@ export const TUTORIAL = [
     id: 'lesson-keep', name: 'Plinth', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
     cell: (x, y) => (y === 0 ? UMBER : y === 1 ? SAND : 0),
     hints: [
-      { text: 'This row says 3 and has 3 cubes, so all of them belong. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
+      { text: 'This row says 3 with 3 cubes, so all belong. Tap one to see what a mistake does.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
       { text: 'The ✕ means that cube belongs, so it stays. Mistakes cost gems. Now clear the 0 row.', line: [0, 0, 2, 0], until: 'solved' },
     ],
   },
