@@ -458,3 +458,11 @@ Level 1's card changed from "Each number counts the object's cubes in the row ru
 **Wall teaches the hold (2026-10-19).** After the Mark button, a new hint asks the player to switch back to Chisel and hold a cube to mark it (it waits for the mark). The last hint sums it up: "Tap to chisel, hold to mark, no switching needed." A mouse has no hold, so a hint's optional `mouse` text says right-click instead (`hintText` in main.js, shown when the pointer is fine and can hover). Checked with a real 700 ms touch hold on a touch phone viewport, and with a right-click on desktop (`shots/tutorial/hold.mjs`, `highlight.mjs full`).
 
 **The lessons end on the map (2026-10-19).** The "You're ready / Play No. 1" card is gone. Finishing the last lesson, or skipping, opens the map. Until the lessons are done, First Light is under mist like any chapter not yet reached (`renderMap` opens nothing while `learned` is false). So on the first map after the lessons, its mist parts, the trail draws on and stone 1 is current. `finishTutorial` seeds the map's seen-sets if the map has never rendered, so the parting isn't taken as already seen. Checked on a fresh save (`shots/tutorial/finish.mjs`).
+
+**Double-tap to mark a full row (2026-10-19).** The mirror of the 0 sweep: on Mark, double-tapping a face whose number equals the cubes still standing in its row (a 4 in a row of 4, or a 3 with the rest chiselled) marks the rest of the row. It uses the same cascade, and the mark note climbs the chord. Any other row: the second tap is just a tap, so it can never mark a wrong cube. Wall is now two courses high (4, 4, 0), so the hold still has a row to practise on after the double-tap:
+1. Mark one.
+2. Double-tap the 4 (event `markrow`, fired after the last mark).
+3. Hold on the second 4 row.
+4. Clear the 0 row.
+
+Checked with real touch double-taps and a hold (`shots/tutorial/markrow.mjs`): solved with no slips.

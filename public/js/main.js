@@ -520,7 +520,7 @@ function act(i, which) {
     game.undo.push({ kind: 'paint', i });
     cubes.ripple(cell, t, 0.45, 10);
     buzz(8);
-    sound.mark(!!game.painted[i]);
+    sound.mark(!!game.painted[i], markStep);
     refreshFocus();
     saveProgress();
     if (game.painted[i]) tutorialEvent('paint');
@@ -1007,9 +1007,9 @@ function endPointer(e, cancelled) {
       const t = now();
       if (t - lastEmptyTap < 0.35) { resetView(); lastEmptyTap = -1; } else lastEmptyTap = t;
     } else {
-      const face = which === 'break' ? tappedLine(i) : null;
+      const face = tappedLine(i);
       act(i, which);
-      lastChiselTap = face && { ...face, t: now(), x: press.x, y: press.y };
+      lastChiselTap = face && { ...face, which, t: now(), x: press.x, y: press.y };
     }
   }
   press = null;
@@ -1025,7 +1025,8 @@ function endPointer(e, cancelled) {
 const DOUBLE_TAP = 0.35, DOUBLE_TAP_PX = 30;
 const ROW_CLEAR_STEP = 0.085;   // seconds between the first two cubes of the cascade (the one tuning dial)
 const ROW_CLEAR_EASE = 0.93;    // each later gap is this much shorter, so the run gathers pace
-let lastChiselTap = null;       // { line, axis, side, i, t, x, y }: the last chiselling tap, for a double-tap
+let lastChiselTap = null;       // { line, axis, side, i, which, t, x, y }: the last tap on a cube, for a double-tap
+let markStep = 0;               // the note of a mark in a marked row's run (audio.js mark)
 let rowClearAt = -9;            // scene time of the last row clear (the browser's own dblclick must not reset the view)
 
 // the face of cube i the last pick met (lastTouch), and the line straight in from it
@@ -1039,10 +1040,20 @@ function tappedLine(i) {
 function rowClearTap(x, y, which) {
   const prev = lastChiselTap;
   lastChiselTap = null;
-  if (!prev || !game || game.solved || which !== 'break') return false;
+  if (!prev || !game || game.solved || which !== prev.which) return false;
   if (now() - prev.t > DOUBLE_TAP || Math.hypot(x - prev.x, y - prev.y) > DOUBLE_TAP_PX) return false;
   const { line, axis, side } = prev;
-  if (line.hidden || line.count !== 0) return false;
+  if (line.hidden) return false;
+  // Mark: a row whose number equals the cubes still standing in it is all the
+  // object's (a 5 in a row of 5, or a 3 with the rest chiselled): it is marked
+  // whole, the mirror of the 0. Any other row: the second tap is just a tap.
+  if (which === 'paint') {
+    const standing = line.cells.filter((c) => !game.broken[c]).length;
+    if (line.count === 0 || line.count !== standing) return false;
+    markRow(line, axis, side, prev.i);
+    return true;
+  }
+  if (line.count !== 0) return false;
   // the same spot is the same line: with its first cube gone, the ray there may
   // pass through the hole onto a neighbour, which is still this double-tap
   clearRow(line, axis, side, prev.i);
@@ -1066,6 +1077,29 @@ function clearRow(line, axis, side, from) {
       if (game !== g || g.solved || g.broken[c] || g.painted[c]) return;   // finished, left or marked meanwhile
       lastTouch = null;   // its pieces fly from its open sides
       act(c, 'break');
+    };
+    if (reduceMotion || k === 0) go();
+    else after(delay, go);
+    if (k > 0) gap = Math.max(0.045, gap * ROW_CLEAR_EASE);
+    delay += gap;
+  });
+}
+// the same cascade, marking: every standing cube of the row is the object's
+function markRow(line, axis, side, from) {
+  const g = game, p = g.puzzle;
+  const at = p.coords(from)[axis];
+  const key = (c) => { const k = (at - p.coords(c)[axis]) * side; return k >= 0 ? k : 1000 - k; };
+  const cells = [...line.cells].filter((c) => !g.broken[c] && !g.painted[c] && inPeel(c)).sort((a, b) => key(a) - key(b));
+  rowClearAt = now();
+  mark(`row mark: ${cells.length} cubes`);
+  if (!cells.length) return;
+  if (!reduceMotion) cubes.ripple(p.coords(from), now(), 0.8, 1 / ROW_CLEAR_STEP);
+  let delay = 0, gap = ROW_CLEAR_STEP;
+  cells.forEach((c, k) => {
+    const go = () => {
+      if (game !== g || g.solved) return;
+      if (!g.broken[c] && !g.painted[c]) { markStep = k + 1; act(c, 'paint'); markStep = 0; }
+      if (k === cells.length - 1) tutorialEvent('markrow');   // after the last, so its paints don't move a later hint on
     };
     if (reduceMotion || k === 0) go();
     else after(delay, go);

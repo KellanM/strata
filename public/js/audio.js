@@ -391,9 +391,11 @@ class Sound {
     this.tone(midi, { type: 'triangle', gain: gain * 0.35, decay: 0.1, detune: d });
   }
 
-  mark(on) {
+  // step: a run of marks (a whole row marked at once) climbs the chord
+  mark(on, step = 0) {
     if (!this.ctx) return;
-    const midi = this.key.root + 24 + this.chordTones()[0] + 12;     // around 600-700 Hz
+    const ch = this.chordTones();
+    const midi = this.key.root + 24 + ch[step % ch.length] + 12 * Math.floor(step / ch.length) + 12;     // around 600-700 Hz
     this.noise({ dur: 0.003, gain: 0.18, freq: 2500, type: 'lowpass', q: 0.7 });
     if (on) this.tone(midi, { type: 'sine', gain: 0.07, decay: 0.06, partial: 2, partialGain: 0.2 });
     else this.tone(midi, { type: 'sine', gain: 0.05, decay: 0.07, glideTo: -500, glideTime: 0.04 });

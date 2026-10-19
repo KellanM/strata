@@ -2802,16 +2802,19 @@ export const TUTORIAL = [
   },
   {
     // the Mark tool: a cube you know stays can't be chiselled by accident
-    id: 'lesson-mark', name: 'Wall', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 0 ? (x % 2 ? MOSS : 0xa89c8e) : 0),   // dry stone, moss between
+    id: 'lesson-mark', name: 'Wall', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y < 2 ? ((x + y) % 2 ? MOSS : 0xa89c8e) : 0),   // two courses of dry stone, moss between
     hints: [
       { text: 'All 4 cubes in this row belong. Pick Mark below, then tap one to protect it.', line: [0, 0, 0, 0], pulseTool: 'paint', until: 'paint' },
+      { text: 'Still on Mark, double-tap the 4 to mark the rest of its row at once.',
+        mouse: 'Still on Mark, double-click the 4 to mark the rest of its row at once.',
+        line: [0, 0, 0, 0], until: 'markrow' },
       { text: 'Marked cubes can’t be chiselled. Now switch back to Chisel and hold a cube here to mark it.',
         mouse: 'Marked cubes can’t be chiselled. Now switch back to Chisel and right-click a cube here to mark it.',
-        line: [0, 0, 0, 0], pulseTool: 'break', until: 'paint' },
+        line: [0, 0, 1, 0], pulseTool: 'break', until: 'paint' },
       { text: 'Tap to chisel, hold to mark, no switching needed. Now clear the 0 row.',
         mouse: 'Click to chisel, right-click to mark, no switching needed. Now clear the 0 row.',
-        line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
+        line: [0, 0, 2, 0], pulseTool: 'break', until: 'solved' },
     ],
   },
   {

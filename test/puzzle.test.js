@@ -116,7 +116,7 @@ test('isSolved requires every empty cell broken', () => {
 
 test('tutorial lessons are solvable with exactly the clues they show', async () => {
   const { TUTORIAL, cluesShown } = await import('../public/js/shapes.js');
-  const events = new Set(['break', 'paint', 'mistake', 'rotate', 'peel', 'solved']);
+  const events = new Set(['break', 'paint', 'mistake', 'rotate', 'peel', 'solved', 'markrow']);
   const ids = new Set();
   for (const lesson of TUTORIAL) {
     const p = make(lesson);
