@@ -367,7 +367,7 @@ What the experiment did **not** test: motion and timing (the halo on the gem sho
 
 Best frames: `shots/ads/r2-f-gem.png`, `r2-f-lantern.png`, `r2-f-remove.png`. Contrast: `r2-f-recharge.png`.
 
-## Web-prototype plan (not built; production code untouched in this study)
+## Web-prototype plan (as planned in the study; see "Built" below for what shipped)
 
 Build ads in the web app behind a tiny interface that a native plugin can implement later.
 
@@ -422,6 +422,73 @@ export const removeAds = { owned(), buy() -> Promise<boolean>, restore() }
   - gem once per stone;
   - flames refill at most to 3.
 - **Analytics stub:** `ads.log(event, placement)` to the console now; wire it to a real backend later. Without data, none of the caps can be tuned.
+
+## Built (2026-10-19)
+
+Kellan approved a set of pieces, and they shipped in the web app with placeholder ads. Where the build differs from the plan above, the build wins.
+
+**What shipped**
+- **Interstitial at the break.** Map on the result card (or the actions), and leaving a shrine, go through `resultToMap()` in main.js. If `ads.canShow()` allows it:
+  - first the breath (C1), a 1.2 s screen in the stone's own sky that says "a short ad, then the map";
+  - then the ad;
+  - then the map's usual pull-back as the sky lifts.
+  
+  Next and Replay never call it, and nothing shows mid-level or over the reveal and score.
+- **The hint lantern** sits in the top-right HUD slot, on levels, shrines and drifts (not lessons).
+  - A flame lights a row with a move. It reuses `findMove()` and the stuck nudge's light: `nudge = { level: 2, ...move }`.
+  - Its flames show as small diamonds under it, with none when it's empty, so there is never a "0".
+  - A flame gained since the lantern was last seen rises into it once the block is whole.
+  - **Empty:** the card from B ("A lantern lights one row with a move. / a new flame each morning", NOT NOW / WATCH AN AD). The ad lights the row and stores no flame. Once the caps are spent, the card shows only NOT NOW.
+  - The free nudge on levels 1–3 is unchanged.
+- **Shrines through an ad.** A shrine locked only by stars, on a chapter the trail has reached, offers "This shrine opens at 12 stars. / 8 gathered so far" with NOT NOW / WATCH TO OPEN.
+  - Once opened it stays open: `strata.ads.shrines`, passed to map.js as `openedShrines`.
+  - It's never offered for a chapter the trail hasn't reached.
+- **Remove Ads** sits in How to play under Sound/Music: "Strata is free. Remove ads and support it.", REMOVE ADS · $3.99, a perk line, and "restore purchase".
+  - On the web, the purchase is a card labelled "simulated purchase".
+  - After buying, the section shows "Thank you for keeping Strata whole."
+  - With Remove Ads there are no interstitials. The empty lantern and the shrine work without an ad, at the same caps.
+- **Double-tap a 0 to clear its row** (commit 1151d1a). Lesson 2 teaches it with "Double-tap the 0 to clear it all", which names the 0 because it sits only on the row's end face. How to play also says so.
+- **Developer panel:** Simulated ads on/off (off means no ads at all, and the rewarded gifts come free), +3 flames, and Reset ads, flames, shrines.
+- **Ad behaviour.** While an ad is up, the game's sound is held: `sound.hold()`, and neither a tap nor the app returning resumes it. The level clock also stands still. Every ad, purchase card and breath element is removed whole when it closes.
+- **The gem fill (hit list 2) was not built.** That is open question 1, still to be decided.
+
+**The module boundary for the native swap**
+- The game imports only `public/js/ads.js`. It holds:
+  - every cap (pure functions of a state object, tested in `test/ads.test.js`);
+  - the persisted state (`strata.ads`, plus `strata.ads.removed`, `strata.ads.shrines` and `strata.ads.off`);
+  - the first-session rule;
+  - the flames;
+  - the game-facing API: `canShow`, `showInterstitial`, `showRewarded`, `adsRemoved`, `buyRemoveAds`, `restorePurchases`, `onAd`.
+- The ad itself comes from **one provider object**: `{ name, ready(kind), interstitial(placement), rewarded(placement), purchase(sku, price), restore() }`.
+  - `public/js/ads-web.js` is the web one: the labelled placeholder with a 5 s countdown ring, close early on rewarded, and the simulated purchase.
+  - A Capacitor build calls `setProvider(maxProvider)`, which wraps AppLovin MAX (one interstitial unit, one rewarded unit) and StoreKit / Play Billing. Nothing else changes.
+  - `ready()` returning false makes `canShow` false, so the game never waits on an ad.
+- **Placement names** (for MAX reporting): `result_to_map`, `shrine_to_map` (interstitial); `lantern`, `shrine` (rewarded).
+- **Analytics stub:** `ads.log()` prints to the console when the URL contains `?adslog`.
+
+**The tuning numbers** (`CONFIG` in ads.js, all guesses to set from store data)
+
+| | |
+|---|---|
+| Interstitial | 1 per 3 solves, 4 min apart, 6 a day, flat. None in the lessons, First Light (chapter I and its shrine) or the first session. None with Remove Ads |
+| Breath before it | 1.2 s |
+| Placeholder ad | 5 s countdown, then a close button |
+| Lantern flames | Start with 3, cap 5. +1 each morning (local date, once however long away). +1 for a level's first flawless solve (never for a re-solve, a drift, or a level already flawless before flames existed). +1 the first time a chapter is completed |
+| Lantern by ad | 1 per stone a day, 3 a day. Same caps without an ad under Remove Ads |
+| Remove Ads | `strata.remove_ads`, $3.99, non-consumable |
+| Row clear (main.js) | `ROW_CLEAR_STEP` 85 ms between the first two cubes; each later gap ×0.93 (`ROW_CLEAR_EASE`), at least 45 ms |
+
+**Verified**
+- `npm test`: 34 tests (the 23 existing, plus 11 for the caps, the flames and shrine eligibility).
+- `shots/ads-build/ads.mjs`: 40 checks on a 390×844 touch phone, all passing, with no page errors at boot or after.
+- `shots/ads-build/rowclear.mjs`: lesson 2 with a real double tap, and the cascade strip `6-cascade-strip.png`.
+- `shots/ads-build/rise.mjs`: the flame rising into the lantern.
+
+**Not yet**
+- A "Report an ad" route.
+- Consent / ATT.
+- The 5th-interstitial Remove Ads line on the breath card.
+- The gem fill.
 
 ## Store-release checklist
 
