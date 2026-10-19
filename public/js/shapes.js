@@ -2774,8 +2774,8 @@ export const TUTORIAL = [
     ghost: 0.62,
     cell: (x, y) => (y === 1 ? (x === 1 ? CLAY : 0) : TERRACOTTA),   // base, shaft, capital
     hints: [
-      { text: 'Something is hidden in this stone. Chisel away the plain stone around it.', focus: [[0, 1, 0], [2, 1, 0]], until: 'break' },
-      { text: 'Keep going until only the hidden form is left.', focus: [[0, 1, 0], [2, 1, 0]], wait: 6, until: 'solved' },
+      { text: 'A shape is hidden in this stone. Tap the plain cubes around it to chisel them away.', focus: [[0, 1, 0], [2, 1, 0]], until: 'break' },
+      { text: 'Keep chiselling until only the hidden shape is left.', focus: [[0, 1, 0], [2, 1, 0]], wait: 6, until: 'solved' },
     ],
   },
   {
@@ -2784,8 +2784,8 @@ export const TUTORIAL = [
     ghost: 0.6,
     cell: (x, y) => (y === 0 ? [TEAL, 0x5fb0a8, TEAL][x] : 0),
     hints: [
-      { text: 'Each number counts the hidden form’s cubes in its row.', line: [0, 0, 0, 0], until: 'break' },
-      { text: 'So a 0 row has none of them: chisel it all.', line: [0, 0, 1, 0], until: 'solved' },
+      { text: 'The number beside a row says how many of its cubes belong to the shape.', line: [0, 0, 0, 0], until: 'break' },
+      { text: 'This row says 0, so none of it belongs. Chisel every cube in it.', line: [0, 0, 1, 0], until: 'solved' },
     ],
   },
   {
@@ -2793,8 +2793,8 @@ export const TUTORIAL = [
     id: 'lesson-keep', name: 'Plinth', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
     cell: (x, y) => (y === 0 ? UMBER : y === 1 ? SAND : 0),
     hints: [
-      { text: 'A 3 in a row of three: all three are the form’s. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
-      { text: 'That ✕ was a slip: the cube is kept, but slips cost gems. Clear the 0 row.', line: [0, 0, 2, 0], until: 'solved' },
+      { text: 'This row says 3 and has 3 cubes, so all of them belong. Chisel one anyway.', line: [0, 0, 1, 0], pulse: [1, 1, 0], until: 'mistake' },
+      { text: 'The ✕ means that cube belongs, so it stays. Mistakes cost gems. Now clear the 0 row.', line: [0, 0, 2, 0], until: 'solved' },
     ],
   },
   {
@@ -2802,8 +2802,8 @@ export const TUTORIAL = [
     id: 'lesson-mark', name: 'Wall', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 1], show: [1, 0, 0],
     cell: (x, y) => (y === 0 ? (x % 2 ? MOSS : 0xa89c8e) : 0),   // dry stone, moss between
     hints: [
-      { text: 'The 4 row is all the form. Switch to Mark below, then tap one of its cubes.', line: [0, 0, 0, 0], pulseTool: 'paint', until: 'paint' },
-      { text: 'Marked cubes are safe from the chisel. Back to Chisel, and clear the 0 row.', line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
+      { text: 'All 4 cubes in this row belong. Pick Mark below, then tap one to protect it.', line: [0, 0, 0, 0], pulseTool: 'paint', until: 'paint' },
+      { text: 'Marked cubes can’t be chiselled by mistake. Switch back to Chisel and clear the 0 row.', line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
     ],
   },
   {
@@ -2811,7 +2811,7 @@ export const TUTORIAL = [
     id: 'lesson-groups', name: 'Arch', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
     cell: (x, y) => (y === 1 ? (x === 1 ? 0xb6779f : ROSE) : x !== 1 ? ROSE : 0),   // keystone over two legs
     hints: [
-      { text: 'A circle means its cubes stay in 2 separate groups, with a gap between.', line: [0, 0, 0, 0], until: 'solved' },
+      { text: 'A circle means the row’s cubes split into two groups, with a gap between them.', line: [0, 0, 0, 0], until: 'solved' },
     ],
   },
   {
@@ -2819,7 +2819,7 @@ export const TUTORIAL = [
     id: 'lesson-square', name: 'Colonnade', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 2, 1], show: [1, 0, 0],
     cell: (x, y) => (y === 1 ? TEAL : x % 2 === 0 ? 0x6cc0b4 : 0),   // a beam on three columns
     hints: [
-      { text: 'A square means 3 or more separate groups.', line: [0, 0, 0, 0], until: 'solved' },
+      { text: 'A square means the row’s cubes split into three or more groups, with gaps between.', line: [0, 0, 0, 0], until: 'solved' },
     ],
   },
   // ---- columns: a second face of numbers
@@ -2828,8 +2828,8 @@ export const TUTORIAL = [
     id: 'lesson-cross', name: 'Rune', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
     cell: (x, y) => (x === 1 && y === 1 ? 0x8fb8f0 : x === 1 || y === 1 ? LAPIS : 0),
     hints: [
-      { text: 'Numbers on top count their column, straight down.', line: [1, 1, 0, 0], until: 'break' },
-      { text: 'Each 1 keeps a single cube. The two 3s say which.', lines: [[0, 0, 1, 0], [1, 1, 0, 0]], wait: 8, until: 'solved' },
+      { text: 'Numbers above the stone count the column straight down beneath them.', line: [1, 1, 0, 0], until: 'break' },
+      { text: 'Each 1 keeps just one cube. The 3s, across and down, show you which.', lines: [[0, 0, 1, 0], [1, 1, 0, 0]], wait: 8, until: 'solved' },
     ],
   },
   {
@@ -2838,8 +2838,8 @@ export const TUTORIAL = [
     clues: '###|.#.|.........',
     cell: (x, y) => (y === 0 ? SLATE : x === 1 ? (y === 1 ? 0xa6aebb : 0xc0c6cf) : 0),   // stones stacked, smallest on top
     hints: [
-      { text: 'A face with no number is a hidden clue. The others are enough.', line: [1, 0, 0, 0], until: 'break' },
-      { text: 'The middle column’s 3 decides the two 1s.', line: [1, 1, 0, 0], wait: 8, until: 'solved' },
+      { text: 'This column has no number, so its clue is hidden. The other numbers are enough.', line: [1, 0, 0, 0], until: 'break' },
+      { text: 'The middle column says 3, so in the rows that say 1, the cube is the middle one.', line: [1, 1, 0, 0], wait: 8, until: 'solved' },
     ],
   },
   // ---- depth: the row running back, then turning, then the inside
@@ -2848,8 +2848,8 @@ export const TUTORIAL = [
     id: 'lesson-depth', name: 'Stair', sky: 'Lagoon', view: 0.45, handles: false, dims: [2, 2, 2], show: [0, 0, 1],
     cell: (x, y) => (y === 0 ? TERRACOTTA : x === 0 ? CLAY : 0),   // one step up, two cubes deep
     hints: [
-      { text: 'Numbers on the front count the row running straight back, away from you.', line: [2, 1, 1, 0], until: 'break' },
-      { text: 'Clear the 0 row, all the way to the back.', line: [2, 1, 1, 0], until: 'solved' },
+      { text: 'Numbers on the front face count the row going straight back, away from you.', line: [2, 1, 1, 0], until: 'break' },
+      { text: 'This row says 0 all the way back. Chisel both its cubes, front and back.', line: [2, 1, 1, 0], until: 'solved' },
     ],
   },
   {
@@ -2857,8 +2857,8 @@ export const TUTORIAL = [
     id: 'lesson-turn', name: 'Cornerstone', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [2, 2, 2], show: [1, 1, 1],
     cell: (x, y, z) => (x + y + z === 0 ? 0 : (x + y + z) % 2 ? MOSS : 0x9fc2a8),
     hints: [
-      { text: 'Drag anywhere to turn the block.', wait: 5, until: 'rotate' },
-      { text: 'The three 1s all point at the same hidden cube.', lines: [[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]], wait: 6, until: 'solved' },
+      { text: 'Drag anywhere on the screen to turn the stone.', wait: 5, until: 'rotate' },
+      { text: 'The three glowing rows each say 1, and they all meet at one corner cube. Chisel it.', lines: [[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]], wait: 6, until: 'solved' },
     ],
   },
   {
@@ -2869,8 +2869,8 @@ export const TUTORIAL = [
       return mid === 3 ? 0 : mid === 2 ? 0xa98ae0 : mid === 1 ? 0x857c9e : 0x6f6888;   // drab rind, amethyst showing through
     },
     hints: [
-      { text: 'Its heart is out of sight. Drag a diamond along its rail to peel a layer away.', pulseHandle: true, until: 'peel' },
-      { text: 'Every row through the middle is circled: split around one gap. Chisel it.', pulse: [1, 1, 1], until: 'solved' },
+      { text: 'The middle is out of sight. Drag a diamond along its rail to slice a layer away.', pulseHandle: true, until: 'peel' },
+      { text: 'Rows through the centre show a circled 2: cube, gap, cube. So chisel the centre.', pulse: [1, 1, 1], until: 'solved' },
     ],
   },
   {
@@ -2878,7 +2878,7 @@ export const TUTORIAL = [
     id: 'lesson-stool', name: 'Dolmen', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
     cell: (x, y, z) => (y === 2 ? 0xa79fb5 : x !== 1 && z !== 1 ? 0x8a8198 : 0),   // a capstone on four standing stones
     hints: [
-      { text: 'A whole stone, on your own. If you pause, a row with a move will glow.', until: 'break' },
+      { text: 'Now a whole stone, on your own. Stuck? Wait, and a row you can solve will glow.', until: 'break' },
       { text: '', until: 'solved' },
     ],
   },

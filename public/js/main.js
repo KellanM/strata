@@ -672,7 +672,7 @@ function resetCoaching(entry, quiet) {
   coachCard = null;
   // the first real stone: the rule newcomers most often misread, gone at the first chisel
   if (!quiet && !entry.lesson && entry.number === 1 && !solvedStore[entry.shape.id]) {
-    coachCard = { text: 'Each number counts the object’s cubes in the row running in from its face.', until: 'break' };
+    coachCard = { text: 'Numbers now sit on three faces. Each counts the object’s cubes in its row: across, down or back.', until: 'break' };
   }
 }
 

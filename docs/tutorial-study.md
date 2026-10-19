@@ -441,3 +441,16 @@ Shots are in `shots/tutorial/` (gitignored); the QA script is `shots/tutorial/hi
 4. **The names.** Do Plinth, Cairn and Dolmen land, or do people need them explained? They are truthful but less familiar than Steps or Arch. A puzzled face at the reveal is fine; asking "what's a dolmen?" is a small delight; disengagement is not.
 5. **The 2×2×2 jump (lessons 8 → 9).** It's the biggest step in the sequence: from flat stones to depth and a new camera angle.
 6. **On a real phone in daylight:** is the gold seam visible on Mint and Lagoon at arm's length?
+
+## Pass 4: plain wording (2026-10-19)
+
+Playtesters struggled to parse the hints. The worst was "A 3 in a row of three: all three are the form's. Chisel one anyway." The hints had been squeezed into colon-joined riddles and used the word "form", which nothing else in the game uses. Every hint was rewritten by these rules:
+
+- **Say "shape"** for what the stone hides, and "belongs" for a cube that is part of it. "Stay" and "the form's" are gone.
+- **Point at what is lit:** "this row says 3", "the three glowing rows".
+- **Give the reason, then the action:** "This row says 3 and has 3 cubes, so all of them belong. Chisel one anyway."
+- **Name the result plainly:** "The ✕ means that cube belongs, so it stays. Mistakes cost gems."
+- **Circles and squares say what splits:** "the row's cubes split into two groups, with a gap between them."
+- **Stay within the 18-word limit** (test/puzzle.test.js).
+
+Level 1's card changed from "Each number counts the object's cubes in the row running in from its face" to "Numbers now sit on three faces. Each counts the object's cubes in its row: across, down or back."
