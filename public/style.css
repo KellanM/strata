@@ -388,6 +388,8 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #menu.has-game #map-close { opacity: 1; pointer-events: auto; }
 #map-help { position: absolute; top: calc(12px + var(--safe-t)); left: 14px; z-index: 1; }
 #menu:not(.show) #map-close { pointer-events: none; }
+/* (#menu.show > * would otherwise show it: it's only there with a level to go back to) */
+#menu:not(.has-game) #map-close { opacity: 0; pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .map-node.current .halo, .map-node.current .cube, .map-node.current .ring, .map-node.nudge .cube { animation: none; }

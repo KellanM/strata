@@ -58,6 +58,7 @@ export class GodRays {
       tMask: { value: this.maskRT.texture }, uCenter: { value: new THREE.Vector2(0.5, 0.5) },
       uTime: { value: 0 }, uAspect: { value: 1 },
       uHaloR: { value: 0.03 },   // the tutorial outline's halo radius (uv height)
+      uEvolve: { value: 0 },     // 0..1: the title's light slowly turns, swells and changes its shafts
     };
     this.blurScene = new THREE.Scene();
     this.blurScene.add(fullscreen(new THREE.ShaderMaterial({
@@ -65,7 +66,7 @@ export class GodRays {
       fragmentShader: /* glsl */ `
         uniform sampler2D tMask;
         uniform vec2 uCenter;
-        uniform float uTime, uAspect, uHaloR;
+        uniform float uTime, uAspect, uHaloR, uEvolve;
         varying vec2 vUv;
         void main() {
           // the tutorial's outlined cubes (mask g) glow softly out into the air:
@@ -79,7 +80,9 @@ export class GodRays {
           halo = halo / 24.0 * (1.0 - me.r);   // into the air only: on the stone the outline itself speaks
 
           vec2 dir = vUv - uCenter;
-          vec2 stepv = dir * (0.92 / 56.0);
+          // on the title the shafts breathe longer and shorter, very slowly
+          float reach = 0.92 * (1.0 + uEvolve * (0.07 * sin(uTime * 0.21) + 0.04 * sin(uTime * 0.13 + 2.0)));
+          vec2 stepv = dir * (reach / 56.0);
           vec2 uv = vUv;
           float illum = 0.0, decay = 1.0;
           for (int i = 0; i < 56; i++) {
@@ -90,8 +93,14 @@ export class GodRays {
           illum *= 0.045;
           vec2 da = dir; da.x *= uAspect;
           float ang = atan(da.y, da.x);
-          float streak = 0.55 + 0.22 * sin(ang * 7.0 + uTime * 0.13) + 0.16 * sin(ang * 13.0 - uTime * 0.21)
-                       + 0.12 * sin(ang * 29.0 + 1.7 + uTime * 0.07);
+          // the fan turns a little, back and forth, and its shafts drift at their own
+          // speeds (faster on the title, uEvolve), with a broad swell of light that wanders
+          float e = uEvolve, tt = uTime * (1.0 + 1.6 * e);
+          ang += e * 0.22 * sin(uTime * 0.045);
+          float streak = 0.55 + 0.22 * sin(ang * 7.0 + tt * 0.13) + 0.16 * sin(ang * 13.0 - tt * 0.21)
+                       + 0.12 * sin(ang * 29.0 + 1.7 + tt * 0.07)
+                       + e * 0.1 * sin(ang * 19.0 + 2.0 * sin(uTime * 0.09) - uTime * 0.17);
+          streak *= 1.0 + e * 0.28 * sin(ang * 2.0 - uTime * 0.11 + 1.3 * sin(uTime * 0.07));
           float self = texture2D(tMask, vUv).r;
           float near = 0.0;
           for (int k = 0; k < 4; k++) {

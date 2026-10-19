@@ -1253,7 +1253,7 @@ $('#act-map').addEventListener('click', () => { clearResult(); $('#actions').cla
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
 $('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });
-$('#map-close').addEventListener('click', () => { if (game) closeMenu(); });
+$('#map-close').addEventListener('click', () => { if (game && !game.solved) closeMenu(); });
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && game && $('#menu').classList.contains('show')) closeMenu();
 });
@@ -1357,7 +1357,8 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
   $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
-  $('#menu').classList.toggle('has-game', !!game && game.shape.id !== 'logo');
+  // the corner ✕ goes back to a level left part-way; a solved one (or the title's logo) has nothing to go back to
+  $('#menu').classList.toggle('has-game', !!game && game.shape.id !== 'logo' && !game.solved);
   stopReveal();
   renderMap($('#map'), {
     entries,
@@ -1608,6 +1609,8 @@ function draw() {
   motes.uniforms.uFocus.value = camera.position.distanceTo(controls.target);
   background.uniforms.uTime.value = t;
   rays.uniforms.uTime.value = t;
+  // the title's light slowly evolves; it eases back to the levels' steadier rays as the title goes
+  rays.uniforms.uEvolve.value += ((titleUp ? 1 : 0) - rays.uniforms.uEvolve.value) * Math.min(1, dt * 1.5);
   const gain = game?.palette.rayGain ?? 1;
   rays.compUniforms.uIntensity.value = gain * (0.42 + rayBoost * 0.5 + 0.05 * Math.sin(t * 0.7));
 

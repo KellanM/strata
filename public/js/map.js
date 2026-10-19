@@ -229,7 +229,8 @@ export function renderMap(root, opts) {
   let k = 0, y = 70;
   const place = () => x0 + colW * (0.5 + 0.28 * Math.sin(k * 0.92 + 0.5));
   const learnPal = regions[0]?.items[0].palette ?? driftPalette;
-  const learn = { kind: 'learn', x: place(), y, palette: learnPal, sky: learnPal, state: learned ? 'solved' : 'current' };
+  // the first stone of all sits on the centre line; the trail swings out from it
+  const learn = { kind: 'learn', x: x0 + colW * 0.5, y, palette: learnPal, sky: learnPal, state: learned ? 'solved' : 'current' };
   nodes.push(learn); trail.push(learn);
   k++; y += STEP * 0.9;
 
