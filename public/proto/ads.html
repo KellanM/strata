@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Strata · ads study styleframes</title>
+  <!-- A static study page for docs/ads-study.md. Not linked from the game, never
+       cached offline (tools/build.mjs skips proto/). The backdrops in ads/ are
+       real captures of the game at 390x844 (shots/ads/capture-base.mjs); the
+       proposed UI is drawn over them with the game's own style.css. -->
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    html, body { height: auto; overflow: auto; background: #2b2a33; }
+    body { padding: 28px; color: #eee; -webkit-user-select: text; user-select: text; }
+    .sheet { display: flex; flex-wrap: wrap; gap: 28px; }
+    figure { margin: 0; width: 390px; }
+    figcaption { font: 13px/1.45 system-ui, sans-serif; color: #cfcbd8; margin-top: 10px; letter-spacing: 0; text-transform: none; }
+    figcaption b { color: #fff; font-weight: 600; }
+    figcaption .tag { display: inline-block; font-size: 10px; letter-spacing: .14em; padding: 2px 7px; border-radius: 99px; margin-right: 6px; background: #3e6b5d; color: #e6fff4; }
+    figcaption .tag.no { background: #7a3a3f; color: #ffe8ea; }
+
+    /* each phone is the containing block for the game's position:fixed UI */
+    .phone {
+      position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 0;
+      transform: translateZ(0); color: var(--ink); font-family: var(--font);
+      -webkit-user-select: none; user-select: none;
+    }
+    .phone > img.bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    /* the Moss Garden level's own palette (applyPalette for Mint at its time of day) */
+    .phone.mint { --ink: #526e6c; --ink-soft: rgba(82, 110, 108, 0.66); --sky: #dae8d8; --line: rgba(82, 110, 108, 0.18); }
+
+    /* ---------- A. the result card: restore a gem ---------- */
+    .gift {
+      position: absolute; left: 50%; top: 718px; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 9px; white-space: nowrap;
+      padding: 9px 16px 9px 13px; border-radius: 999px;
+      font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+    .gift svg { width: 16px; height: 16px; stroke-width: 1.3; }
+    .gift .ad { color: var(--ink-soft); letter-spacing: .2em; }
+    .gift .ad::before { content: "·"; margin: 0 .5em 0 .1em; }
+    /* r2: the empty gem slot is the offer. A slow halo on it, two small words under it */
+    .fill { position: absolute; left: 252px; top: 590px; width: 72px; height: 140px; padding: 0; }
+    .fill .halo { position: absolute; left: 6px; top: 0; width: 60px; height: 74px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(255, 246, 210, .75), rgba(255, 246, 210, 0)); }
+    .fill .cap { position: absolute; left: -14px; right: -14px; top: 104px; text-align: center;
+      font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink); line-height: 1.5; }
+    .fill .cap em { display: block; font-style: normal; font-size: 8.5px; letter-spacing: .18em; color: var(--ink-soft); }
+    .gift-ghost {   /* where the gem would land: a faint dashed halo on the empty slot */
+      position: absolute; left: 266px; top: 603px; width: 44px; height: 52px; border-radius: 50%;
+      box-shadow: 0 0 0 1px var(--line); opacity: .0;
+    }
+
+    /* ---------- B. the lantern ---------- */
+    .lantern {
+      position: absolute; top: 12px; right: 14px;
+    }
+    .lantern svg { width: 22px; height: 22px; }
+    .lantern .count {
+      position: absolute; right: -2px; bottom: -2px; min-width: 18px; height: 18px; border-radius: 99px;
+      display: grid; place-items: center; font-size: 10px; letter-spacing: 0; font-variant-numeric: tabular-nums;
+      background: var(--panel-strong); box-shadow: 0 0 0 1px var(--line); color: var(--ink);
+    }
+    .lantern.lit { box-shadow: 0 0 0 1px var(--line), 0 0 26px 6px rgba(255, 236, 170, .75); }
+    .sheet-card {
+      position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+      width: min(330px, calc(100% - 40px)); padding: 16px 20px 14px; border-radius: 22px; text-align: center;
+      background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 14px 40px rgba(40, 20, 60, 0.14);
+    }
+    .sheet-card p { margin: 0; font-size: 14px; line-height: 1.5; letter-spacing: .02em; }
+    .sheet-card .small { margin-top: 4px; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+    .sheet-card .row { margin-top: 12px; }
+    .sheet-card .row button { font-size: 11px; padding: 10px 16px; }
+    .sheet-card .row button.primary { font-size: 11px; padding: 10px 18px; }
+    .glowrow {   /* a sketch of the existing nudge light on one row */
+      position: absolute; left: 80px; top: 455px; width: 230px; height: 26px; border-radius: 8px;
+      background: rgba(255, 244, 200, .0); box-shadow: 0 0 0 2px rgba(255, 236, 170, .0);
+    }
+
+    /* ---------- C. the interstitial: a breath of sky, then the ad ---------- */
+    .breath {
+      position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      background: linear-gradient(180deg, #f4f6ea, #b4d3bd);
+      text-align: center;
+    }
+    .breath .numeral { font-size: 13px; letter-spacing: .5em; padding-left: .5em; }
+    .breath .cname { margin: 0; font-size: 30px; font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+    .breath .cline { margin: 4px 0 0; font-size: 14px; letter-spacing: .06em; max-width: 300px; line-height: 1.5; }
+    .breath .pause { margin: 0; font-size: 14px; line-height: 1.7; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); }
+    .breath .notice { position: absolute; bottom: 64px; left: 0; right: 0; }
+    .breath .notice .sub { margin: 0; }
+    .breath .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+    .breath .dots i { width: 5px; height: 5px; transform: rotate(45deg); background: var(--ink-soft); opacity: .35; }
+    .breath .dots i:first-child { opacity: 1; }
+
+    .fakead {
+      position: absolute; inset: 0; background: #17161c; color: #e9e6f2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      font-family: system-ui, sans-serif; text-align: center;
+    }
+    .fakead .label { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; padding: 6px 12px; border: 1px dashed #8a85a0; border-radius: 6px; color: #c9c4dc; }
+    .fakead .what { font-size: 13px; color: #8f8aa6; max-width: 260px; line-height: 1.5; }
+    .fakead .count {
+      position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 13px; border: 1.5px solid #6e6985; color: #c9c4dc;
+    }
+    .fakead .slot { width: 300px; height: 300px; border-radius: 14px; background: repeating-linear-gradient(45deg, #201f27 0 12px, #1c1b22 12px 24px); display: grid; place-items: center; color: #5d5874; font-size: 12px; letter-spacing: .2em; }
+
+    /* ---------- D. Remove Ads in How to play ---------- */
+    .phone .overlay { transition: none; }
+    .phone .panel { transition: none; transform: none; }
+    .support { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; }
+    .support p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
+    .support .row { margin-top: 0; }
+    .support .perk { margin: 10px 0 0; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); line-height: 1.6; }
+    .support .restore { display: block; margin: 10px auto 0; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); }
+
+    /* ---------- E. rejected: the mistake-recharge prompt ---------- */
+    .modal-dim { position: absolute; inset: 0; background: rgba(40, 46, 50, .38); }
+    .toll {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 310px;
+      padding: 26px 24px 20px; border-radius: 26px; text-align: center; background: var(--panel-strong);
+      box-shadow: 0 30px 80px rgba(40, 20, 60, 0.25);
+    }
+    .toll h2 { font-size: 18px; margin-bottom: 8px; }
+    .toll p { margin: 0 0 6px; font-size: 14px; line-height: 1.5; }
+    .toll .meter { display: flex; gap: 5px; justify-content: center; margin: 14px 0 6px; }
+    .toll .meter i { width: 18px; height: 8px; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--line); }
+    .toll .timer { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); margin: 4px 0 14px; }
+    .toll .row { flex-direction: column; gap: 8px; }
+    .toll .row button { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+
+    <figure>
+      <div class="phone mint" id="f-gem">
+        <img class="bg" src="ads/result.jpg" alt="">
+        <button class="fill" aria-label="Fill the third gem: watch an ad">
+          <span class="halo"></span>
+          <span class="cap">fill it<em>watch an ad</em></span>
+        </button>
+      </div>
+      <figcaption><span class="tag">rewarded</span><b>A · Fill the empty gem.</b> Only after the gems have landed and the count is done; only when a gem is missing; once per stone. The empty slot itself is the offer: a soft light and two small words. Map / Replay / Next are untouched.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone mint" id="f-lantern">
+        <img class="bg" src="ads/play.jpg" alt="">
+        <span class="glowrow"></span>
+        <button class="icon-btn lantern" aria-label="Lantern: shows a row with a move">
+          <svg viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0M8 6.5h8M9 6.5 7.5 9v8.5L9 20h6l1.5-2.5V9L15 6.5M7.5 20.5h9"/><path d="M12 11.2c1.1 1.2 1.4 2.1 1.4 2.8a1.4 1.4 0 0 1-2.8 0c0-.7.3-1.6 1.4-2.8z"/></svg>
+        </button>
+        <div class="sheet-card">
+          <p>A lantern lights one row with a move.</p>
+          <p class="small">a new flame each morning</p>
+          <div class="row">
+            <button>Not now</button>
+            <button class="primary">Watch an ad</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span class="tag">rewarded</span><b>B · The hint lantern.</b> In the empty top-right HUD slot. Free flames first (a few to start, one each morning); this card only appears when the player taps an unlit lantern. No counter nags from the corner.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone mint" id="f-breath">
+        <div class="breath">
+          <p class="pause">a short ad,<br>then the map</p>
+          <div class="dots"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <figcaption><span class="tag">interstitial</span><b>C1 · The breath before.</b> On the way from a result to the map (never mid-level, never over the reveal), the screen washes into the stone's own sky for ~1.2 s and says plainly what comes next.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone" id="f-ad">
+        <div class="fakead">
+          <span class="count">5</span>
+          <span class="label">simulated ad</span>
+          <div class="slot">AD CREATIVE</div>
+          <p class="what">In the store build an AppLovin MAX interstitial plays here. Closes after 5 s.</p>
+        </div>
+      </div>
+      <figcaption><span class="tag">interstitial</span><b>C2 · The placeholder.</b> The web prototype's fake ad (ads.js): full screen, a countdown, labelled. Then the map fades back in.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone" id="f-remove">
+        <img class="bg" src="ads/map.jpg" alt="">
+        <section id="help" class="overlay show" aria-label="How to play">
+          <div class="panel narrow">
+            <h2>How to play</h2>
+            <p><b>Gems:</b> one for uncovering the shape, two for only a few slips, three for none. Marking and peeling never cost a gem, and there's no rush. On the first stones, pause and a row with a move will glow.</p>
+            <div class="toggles">
+              <button class="toggle on">Sound</button>
+              <button class="toggle on">Music</button>
+            </div>
+            <div class="support">
+              <p>Strata is free. A few quiet ads between chapters keep it growing.</p>
+              <div class="row"><button>Remove ads · $3.99</button></div>
+              <p class="perk">then the lantern and gems need no ad</p>
+              <button class="restore">restore purchase</button>
+            </div>
+            <button class="primary" data-close>Begin</button>
+            <p class="version">v0.3 · ads study</p>
+          </div>
+        </section>
+      </div>
+      <figcaption><span class="tag">IAP</span><b>D · Remove Ads.</b> Under the sound toggles in How to play. One price, forever; the opt-in gifts then come without an ad. Begin stays the only filled button.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone mint" id="f-recharge">
+        <img class="bg" src="ads/play.jpg" alt="">
+        <div class="modal-dim"></div>
+        <div class="toll">
+          <h2>Out of chisels</h2>
+          <p>You've made 10 wrong moves.</p>
+          <div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="timer">next chisel in 29:41</p>
+          <div class="row">
+            <button class="primary">Watch an ad to recharge</button>
+            <button>Wait</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span class="tag no">rejected</span><b>E · The mistake recharge (for contrast).</b> Arrives at the moment of struggle, blocks the puzzle, and turns every guess into a cost.</figcaption>
+    </figure>
+
+  </div>
+</body>
+</html>

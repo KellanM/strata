@@ -1,0 +1,10 @@
+{
+  "id": "snail",
+  "name": "Snail",
+  "chapter": "Moss Garden",
+  "palette": "Mint",
+  "skyTop": "#f4f6ea",
+  "skyBottom": "#b4d3bd",
+  "glow": "#fffbf2",
+  "under": "#678a87"
+}
