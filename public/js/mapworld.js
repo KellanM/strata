@@ -12,9 +12,10 @@
 //           (pre-rendered by tools/render-peaks.mjs into public/map-peaks/, so
 //           nothing is built at load), bands of mist on their bases, and over
 //           each chapter not yet reached a wall of mist that lifts once
-//           (setPart). The far layer drifts at 0.84 of the page through a CSS
-//           scroll-driven animation where the browser has them (and not under
-//           Reduce Motion); elsewhere it simply moves with the page.
+//           (setPart). Every layer moves with the page: the islands sit still
+//           in the world, with no parallax (Kellan, 2026-10-19). PARALLAX
+//           brings back the far layer's drift (0.84 of the page, through a CSS
+//           scroll-driven animation) where the browser has them.
 //   sky     a fixed layer for the title only: the night gradient and three
 //           pre-drawn sheets of stars, moved by transforms as the title pans
 //           (the stars a little slower: the only parallax at the title). Once
@@ -23,6 +24,7 @@
 import { PALETTES } from './palettes.js';
 
 const FAR_RATE = 0.84;
+const PARALLAX = false;   // the islands don't drift; only the title's stars have parallax
 const NIGHT = '#121731';
 // the sky, top to bottom over 1.4 screens, ending at the horizon
 const SKY_STOPS = [[0, '#121731'], [0.45, '#232a52'], [0.72, '#4c5187'], [0.88, '#bd93b8'], [0.965, '#f6cbc4'], [1, '#ffeedd']];
@@ -87,7 +89,7 @@ export class MapWorld {
     this.layers = {};
     for (const k of ['far', 'near']) { const d = document.createElement('div'); d.className = `mw-layer mw-${k}`; this.scene.appendChild(d); this.layers[k] = d; }
     const reduce = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    this.parallax = !reduce && !!globalThis.CSS?.supports?.('animation-timeline: scroll()');
+    this.parallax = PARALLAX && !reduce && !!globalThis.CSS?.supports?.('animation-timeline: scroll()');
     if (this.parallax) this.layers.far.classList.add('mw-par');
     scroller.prepend(this.scene);
     this.chunks = [];

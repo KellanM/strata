@@ -702,3 +702,5 @@ The prototype plays the first-touch, release, stone and parting hooks.
 - Sound pairing is wired to existing hooks but has not been tuned by ear.
 - The prototype's logo is a stand-in.
 - The map grew to 151 stones in 7b780f1 while this study ran. The prototype reads the live data, so it shows 151.
+
+**No island parallax (2026-10-19).** Kellan: the floating islands shouldn't have parallax. The far layer's scroll-driven drift is off (`PARALLAX = false` in mapworld.js), so every island moves with the page. The title's stars keep their slight parallax.
