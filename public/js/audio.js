@@ -22,7 +22,8 @@ const KEYS = {
   Night:  { root: 49, minor: true, timbre: 'bell' },     // C#
   Orchard: { root: 55, minor: false, timbre: 'marimba' }, // G
   Festival: { root: 47, minor: true, timbre: 'bell' },   // B
-  Teatime: { root: 48, minor: false, timbre: 'glass' },  // C
+  Teatime: { root: 48, minor: false, timbre: 'glass' },  // C (unused since Beacon Hills)
+  Beacon: { root: 48, minor: true, timbre: 'bell' },     // C minor: a signal bell on the hill
   Autumn: { root: 46, minor: false, timbre: 'wood' },    // Bb
   Deep:   { root: 44, minor: true, timbre: 'water' },    // G#
   Desert: { root: 51, minor: true, timbre: 'marimba' },  // D#

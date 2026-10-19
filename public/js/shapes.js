@@ -34,8 +34,8 @@ function voxels(key, layers) {
 export const CHAPTERS = [
   { name: 'First Light', numeral: 'I', palette: 'Dawn', blurb: 'home and morning',
     line: 'Morning finds what the stone was keeping.' },
-  { name: 'Teatime', numeral: 'II', palette: 'Teatime', blurb: 'the kitchen at four o\'clock',
-    line: 'The kettle sings, and the stone keeps time.' },
+  { name: 'Beacon Hills', numeral: 'II', palette: 'Beacon', blurb: 'a fire on the far hill',
+    line: 'A fire on the far hill, lit for you.' },
   { name: 'Moss Garden', numeral: 'III', palette: 'Mint', blurb: 'small creatures of the garden',
     line: 'Green things grow slowly inside the quiet rock.' },
   { name: 'The Orchard', numeral: 'IV', palette: 'Orchard', blurb: 'things that grow',
@@ -88,6 +88,20 @@ export const SHAPES = [
       ], 2, { R: 0xe0546b }),
     },
     {
+      // from the object gallery (teabag pal)
+      id: 'teabag-pal', name: 'Teabag Pal', from: 'cand-teabag-pal', fraction: 0.45, seed: 11,
+      story: 'Steeped once at dawn, and still smiling about it.',
+      ...voxels({ a: 0xc89c63, b: 0xe2728f, c: 0x3a3442, d: 0xfbf8f2, e: 0xe0565b }, [
+        'aaaaa aaaaa',
+        'aaaaa aabaa',
+        'aaaaa acaca',
+        'aaaaa aaaaa',
+        '.aaa. .aaa.',
+        '..d.e .....',
+        '..dde .....',
+      ]),
+    },
+    {
       // from the object gallery (candle)
       id: 'candle', from: 'cand-candle', name: 'Candle', fraction: 0.1, seed: 3,
       story: 'Lit before dawn, so the first visitor would find the way.',
@@ -99,6 +113,20 @@ export const SHAPES = [
         '..... .b.b. ..b.. .b.b. .....',
         '..... ..... ..c.. ..... .....',
         '..... ..... ..d.. ..... .....',
+      ]),
+    },
+    {
+      // from the object gallery (toaster)
+      id: 'toaster', from: 'cand-toaster', name: 'Toaster', fraction: 0.35, seed: 1,
+      story: 'Two slices waiting, warm, for whoever wakes up first.',
+      ...voxels({ a: 0x5d6670, b: 0xc9d1d9, c: 0x3a3442, d: 0xd9b48f, e: 0xb9773f }, [
+        'aaaaaa. aaaaaa. aaaaaa. aaaaaa.',
+        'bbbbbb. bbbbbb. bbbbbb. bbbbbb.',
+        'bbbbbb. bbbbbb. bbbbbbc bbbbbb.',
+        'bbbbbb. bddddb. bddddb. bbbbbb.',
+        '....... .edde.. .edde.. .......',
+        '....... .eeee.. .eeee.. .......',
+        '....... ....... ....... .......',
       ]),
     },
     {
@@ -168,97 +196,6 @@ export const SHAPES = [
       ]),
     },
     {
-      // from the object gallery (page 3: Kitten in a Box)
-      id: 'kitten-box', name: 'Kitten in a Box', from: 'cand-p3-kitten-box', fraction: 0.35, seed: 22,
-      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
-      clues: '#......#####...##..##.###..#######....##..|##########################################|#.......#####..#####.######..######.#####..#...#.',
-      story: 'The box was for the new kettle. The kettle never stood a chance.',
-      ...voxels({ a: 0xcf9f6c, b: 0xc4bed0, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442 }, [
-        'aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa',
-        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
-        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
-        '....... a.....a a.bbb.a abbbbba a.bbb.a .c...c.',
-        '....... ...b... .bbbbb. .bbbbb. .debed. .......',
-        '....... ....... ..bbb.. .bbbbb. ..bbb.. .......',
-        '....... ....... .b...b. .b...b. ....... .......',
-      ]),
-    },
-  ]),
-  // ---------------------------------------------------------------- Teatime
-  // The kitchen at four o'clock: pots, cakes and things that steam.
-  ...chapter(1, [
-    {
-      // from the object gallery (teabag pal)
-      id: 'teabag-pal', name: 'Teabag Pal', from: 'cand-teabag-pal', fraction: 0.45, seed: 11,
-      story: 'Steeped once at dawn, and still smiling about it.',
-      ...voxels({ a: 0xc89c63, b: 0xe2728f, c: 0x3a3442, d: 0xfbf8f2, e: 0xe0565b }, [
-        'aaaaa aaaaa',
-        'aaaaa aabaa',
-        'aaaaa acaca',
-        'aaaaa aaaaa',
-        '.aaa. .aaa.',
-        '..d.e .....',
-        '..dde .....',
-      ]),
-    },
-    {
-      // from the object gallery (toaster)
-      id: 'toaster', from: 'cand-toaster', name: 'Toaster', fraction: 0.35, seed: 1,
-      story: 'Two slices waiting, warm, for whoever wakes up first.',
-      ...voxels({ a: 0x5d6670, b: 0xc9d1d9, c: 0x3a3442, d: 0xd9b48f, e: 0xb9773f }, [
-        'aaaaaa. aaaaaa. aaaaaa. aaaaaa.',
-        'bbbbbb. bbbbbb. bbbbbb. bbbbbb.',
-        'bbbbbb. bbbbbb. bbbbbbc bbbbbb.',
-        'bbbbbb. bddddb. bddddb. bbbbbb.',
-        '....... .edde.. .edde.. .......',
-        '....... .eeee.. .eeee.. .......',
-        '....... ....... ....... .......',
-      ]),
-    },
-    {
-      // from the object gallery (page 6: Cake Stand)
-      id: 'cake-stand', name: 'Cake Stand', from: 'cand-p6-cake-stand', fraction: 0.05, seed: 11,
-      story: 'Three tiers, and someone has already taken the best one.',
-      ...voxels({ a: 0xe98aa6, b: 0xfbf8f2, c: 0xf6e7c8, d: 0xe9b949, e: 0x8cc36a, f: 0xd9a45a, g: 0xd9354a, h: 0xfff4dc, i: 0xf4a3c8, j: 0x9fe0d0 }, [
-        '..aaa.. .abbba. abbbbba abbbbba abbbbba .abbba. ..aaa..',
-        '....... ..ccc.. .ccccc. .ccdcc. .ccccc. ..ccc.. .......',
-        '....... ...e... ..e.c.. .e.d.e. ..c.e.. ...e... .......',
-        '....... ..aaa.. .abbba. .abdba. .abbba. ..aaa.. .......',
-        '....... ....... ..f.f.. ...d... ..f.f.. ....... .......',
-        '....... ....... ..g.h.. ...d... ..h.g.. ....... .......',
-        '....... ....... ..aaa.. ..ada.. ..aaa.. ....... .......',
-        '....... ....... ...i... ..jdi.. ...j... ....... .......',
-        '....... ....... ....... ..ddd.. ....... ....... .......',
-      ]),
-    },
-    {
-      id: 'mug', name: 'Mug', dims: [8, 6, 6], fraction: 0.3, seed: 6,
-      story: 'The keeper’s mug, half full, between one watch and the next.',
-      cell(x, y, z) {
-        const dx = x - 2.5, dz = z - 2.5, r2 = dx * dx + dz * dz;
-        if (x <= 5 && r2 <= 2.6 * 2.6 && (y === 0 || r2 >= 1.7 * 1.7)) return y === 5 ? 0xf6efe4 : 0x5b8fd6;
-        if (x <= 5 && y === 4 && r2 < 1.7 * 1.7) return 0x6b4a3a;
-        const handle = (x === 6 && (y === 1 || y === 4)) || (x === 7 && y >= 1 && y <= 4);
-        return handle && (z === 2 || z === 3) ? 0x5b8fd6 : 0;
-      },
-    },
-    {
-      // from the object gallery (page 6: Stand Mixer)
-      id: 'stand-mixer', name: 'Stand Mixer', from: 'cand-p6-stand-mixer', fraction: 0.3, seed: 16,
-      story: 'It hums the batter smooth while the oven warms.',
-      ...voxels({ a: 0x9fd8c8, b: 0xc9d1d9, c: 0xf6dfa0, d: 0xe4e9ee, e: 0x6fb8a8 }, [
-        '.aaaaaa.. aaaaaaaa. aaaaaaaa. aaaaaaaa. .aaaaaa..',
-        '......... aaa.bbb.. aaa.bbb.. aaa.bbb.. .........',
-        '.....b... aaa.bcb.. aaabcccb. aaa.bcb.. .....b...',
-        '....bbb.. aaabb.bb. aaab.d.b. aaabb.bb. ....bbb..',
-        '....bbb.. aaabb.bb. aaab.d.b. aaabb.bb. .e..bbb..',
-        '......... aaa...... aaa..d... aaa...... .........',
-        '......... ..aaad... ..aaada.a ..aaad... .........',
-        '...aa.... .aaaada.. .aaaadaaa .aaaada.. ...aa....',
-        '......... ..aaad... ..aaada.. ..aaad... .........',
-      ]),
-    },
-    {
       // from the object gallery (page 4: Fried Egg)
       id: 'fried-egg', name: 'Fried Egg', from: 'cand-p4-fried-egg', fraction: 0.65, seed: 1,
       // hints curated for the solve path, not hidden at random (docs/aha-study.md)
@@ -272,21 +209,19 @@ export const SHAPES = [
       ]),
     },
     {
-      // from the object gallery (page 4: Bunny in a Teacup)
-      id: 'bunny-teacup', name: 'Bunny in a Teacup', from: 'cand-p4-bunny-teacup', fraction: 0.65, seed: 1,
+      // from the object gallery (page 3: Kitten in a Box)
+      id: 'kitten-box', name: 'Kitten in a Box', from: 'cand-p3-kitten-box', fraction: 0.35, seed: 22,
       // hints curated for the solve path, not hidden at random (docs/aha-study.md)
-      clues: '#.#......####.....######....###..###..##.##..####.#.###.#..#.##|.####...###.#.###########################.#####..|###..#####.###.##.#############.#########.##########.#..#####..',
-      story: 'There was tea in it once. Now there is a bunny, which is better.',
-      ...voxels({ a: 0xfbf3e6, b: 0x9fcdea, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442, f: 0xf5b3c0 }, [
-        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
-        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. .......',
-        '....... ..bbb.. .b...b. .b...bb .b...b. ..bbb.. .......',
-        '....... ..bbb.. .b.c.b. .bcccbb .b.c.b. ..bbb.. .......',
-        '....... ....... ..ccc.. .dcccd. ..ece.. ....... .......',
-        '....... ....... ..ccc.. .ccccc. ..ccc.. ....... .......',
-        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
-        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
-        '....... ....... ....... ..c.c.. ....... ....... .......',
+      clues: '#......#####...##..##.###..#######....##..|##########################################|#.......#####..#####.######..######.#####..#...#.',
+      story: 'The box was for the new kettle. The kettle never stood a chance.',
+      ...voxels({ a: 0xcf9f6c, b: 0xc4bed0, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442 }, [
+        'aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa',
+        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
+        'aaaaaaa a.....a a.....a a.....a a.....a aaaaaaa',
+        '....... a.....a a.bbb.a abbbbba a.bbb.a .c...c.',
+        '....... ...b... .bbbbb. .bbbbb. .debed. .......',
+        '....... ....... ..bbb.. .bbbbb. ..bbb.. .......',
+        '....... ....... .b...b. .b...b. ....... .......',
       ]),
     },
     {
@@ -308,6 +243,128 @@ export const SHAPES = [
         const spout = (x === 7 && (y === 1 || y === 2)) || (x === 8 && y === 3);
         return handle || spout ? 0xf6efe4 : 0;
       },
+    },
+  ]),
+  // ---------------------------------------------------------------- Beacon Hills
+  // The hills above home, where a signal fire is lit for you: the road up, small and plain.
+  ...chapter(1, [
+    {
+      // from the object gallery (page 10: Thistle, P10·III-01)
+      id: 'thistle', name: 'Thistle', from: 'cand-p10-thistle', fraction: 0.15, seed: 13,
+      story: 'Where the road leaves home, a thistle nods you up the hill.',
+      ...voxels({ a: 0x6aa257, b: 0x4f8a45, c: 0xa76fc0, d: 0xc99ad8 }, [
+        '..a.. ..a.. aabaa ..a.. ..a..',
+        '..a.. ..... a.b.a ..... ..a..',
+        '..... ..... .ab.. ..... .....',
+        '..... ..... ..ba. ..... .....',
+        '..... ..b.. .bbb. ..b.. .....',
+        '..... .ccc. .ccc. .ccc. .....',
+        '..... ..d.. .ddd. ..d.. .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Beacon, P10·II-03)
+      id: 'beacon', name: 'Beacon', from: 'cand-p10-beacon', fraction: 0.5, seed: 1,
+      story: 'Far above, one fire is lit, and the next hill answers it.',
+      ...voxels({ a: 0x75708a, b: 0x9c96a8, c: 0xbdb7c8, d: 0x3f3a48, e: 0xa83a2a, f: 0xe0503a, g: 0xf28a3a, h: 0xf6c84a, i: 0xfff0b0 }, [
+        '.aaa. aaaaa aaaaa aaaaa .aaa.',
+        '..... .bbb. .bbb. .bbc. .....',
+        '..... .cbb. .bbb. .bbb. .....',
+        '..... .ddd. .ddd. .ddd. .....',
+        '.ddd. deeed deeed deeed .ddd.',
+        '..... .fgf. .ghg. .fgf. .....',
+        '..... ..g.. .ghg. ..g.. .....',
+        '..... ..... ..i.. ..... .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Pocket Compass, P10·I-03)
+      id: 'pocket-compass', name: 'Pocket Compass', from: 'cand-p10-compass', fraction: 0.25, seed: 16,
+      story: 'Dropped on the path, still warm from a pocket. It points uphill.',
+      ...voxels({ a: 0xe0b04a, b: 0xb07a3a, c: 0x2f4a7a, d: 0xf6efe4, e: 0xe0565b, f: 0x3a3442, g: 0xf6d365 }, [
+        '..aaa.. ..bbb.. .bbbbb. bbbbbbb bbbbbbb bbbbbbb .bbbbb. ..bbb..',
+        '.accca. ..aaa.. .adeda. addedda afdbdfa addcdda .adcda. ..aaa..',
+        'accgcca ....... ....... ....... ....... ....... ....... .......',
+        'acgggca ....... ....... ....... ....... ....... ....... .......',
+        'accgcca ....... ....... ....... ....... ....... ....... .......',
+        '.accca. ....... ....... ....... ....... ....... ....... .......',
+        '..aaa.. ....... ....... ....... ....... ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Hill Ram, P10·II-05)
+      id: 'hill-ram', name: 'Hill Ram', from: 'cand-p10-ram', fraction: 0.65, seed: 8,
+      story: 'He keeps the high ground, and steps aside to let you pass.',
+      ...voxels({ a: 0x9c96a8, b: 0xe0d9ca, c: 0x4a4250, d: 0xf3eee2, e: 0xd8c08a, f: 0xb89a5a, g: 0xf6efe4 }, [
+        '..aba.. .baaab. .ababa. .aabaa. ..aaa..',
+        '....... ..b.b.. ....... ..c.c.. .......',
+        '....... ..dbd.. ..ddd.. ..ccc.. ..ccc..',
+        '..dbd.. .bdddb. .ddddd. eecccee efcccfe',
+        '....... ..bdb.. ..dbd.. e.gcg.e f.gcg.f',
+        '....... ....... ....... eecccee eecccee',
+        '....... ....... ....... ..ddd.. ..ddd..',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Torchbearer Fox, P10·II-07)
+      id: 'torch-fox', name: 'Torchbearer Fox', from: 'cand-p10-torch-fox', fraction: 0.65, seed: 3,
+      story: 'It carries the fire from hill to hill, and waits for you.',
+      ...voxels({ a: 0xe8803a, b: 0xfbefe0, c: 0x8a5a3c, d: 0xe0503a, e: 0x3a3442, f: 0xf28a3a, g: 0xf6c84a }, [
+        '....... ..aaaaa ..aaa.a ..aaa.a ..b.bbb',
+        '....... ..aaa.. ..aaa.. c.aba.. .......',
+        '....... ..aaa.. ..aaa.. caaba.. .......',
+        '....... .aaaaa. .aaaaa. cbaaab. ...b...',
+        '....... .aaaaa. .aaaaa. daeaea. .......',
+        '....... ....... .a...a. f...... .......',
+        '....... ....... .e...e. g...... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Heron, P10·IV-07)
+      id: 'heron', name: 'Heron', from: 'cand-p10-heron', fraction: 0.35, seed: 1,
+      story: 'Still as a post in the hill pool, the far fires shining in it.',
+      ...voxels({ a: 0x4f93d6, b: 0x9bb86a, c: 0x4a4f5a, d: 0x8a5a3c, e: 0xa9b0bc, f: 0xe8ecf2, g: 0x3a3442, h: 0xf2c14e }, [
+        '.aaaaaa aaaaaaa aaaaaa.',
+        '.b..... b..c... .......',
+        '.b..... b..c... .......',
+        '....... d..c... .......',
+        '..eef.. ..eef.. ..eef..',
+        '..cce.. .ccce.. ..cce..',
+        '....... ....f.. .......',
+        '....... ....f.. .......',
+        '.....g. ...gffh .....g.',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Watchtower, P10·II-09)
+      id: 'watchtower', name: 'Watchtower', from: 'cand-p10-watchtower', fraction: 0.55, seed: 8,
+      story: 'Someone up here has been watching the road for you.',
+      ...voxels({ a: 0x9c96a8, b: 0x6b4a3a, c: 0x8a5a3c, d: 0x75708a, e: 0x3f3a48, f: 0xbdb7c8, g: 0xe0503a, h: 0xf28a3a, i: 0xf6c84a }, [
+        '.aaa. aaaaa aaaaa aabaa .a.a.',
+        '.aaa. a.c.a a...a a...a .a.a.',
+        '.ddd. d.c.d d...d d...d .ddd.',
+        '.aaa. a.c.a a...a a...a .aaa.',
+        '.aaa. a.c.a e...e a...a .aaa.',
+        '.ddd. d.c.d d...d d...d .ddd.',
+        '.aaa. aaaaa aaaaa aaaaa .aaa.',
+        '.f.f. f...f .ghg. f...f .f.f.',
+        '..... ..... ..i.. ..... .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 10: Pack Donkey, P10·I-08)
+      id: 'pack-donkey', name: 'Pack Donkey', from: 'cand-p10-pack-donkey', fraction: 0.65, seed: 9,
+      story: 'It knows the road to the top better than the map does.',
+      ...voxels({ a: 0x6f6a76, b: 0xa9a4ad, c: 0xd2a35e, d: 0xd9573a, e: 0xeee8e2, f: 0x5b8fd6, g: 0x3a3442 }, [
+        '......... ..a..a... ......... ..a..a... .........',
+        '......... ..b..b... ......... ..b..b... .........',
+        '..ccc.... .bbbbbb.. abbbbbb.. .bbbbbb.. ..ccc....',
+        '..ccc.... .bbbbbb.. bbbbbbb.. .bbbbbb.. ..ccc....',
+        '......... ..dddd.be ..ddddbbe ..dddd.be .........',
+        '......... ...ff..gb ...ff.abb ...ff..gb .........',
+        '......... .......b. ......... .......b. .........',
+        '......... .......a. ......... .......a. .........',
+      ]),
     },
   ]),
   // ---------------------------------------------------------------- Moss Garden
@@ -425,6 +482,24 @@ export const SHAPES = [
         'accccccca a.......a a.......a a.......a',
         'abbbbbbba ......... ......... .........',
         'ccccccccc ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 4: Bunny in a Teacup)
+      id: 'bunny-teacup', name: 'Bunny in a Teacup', from: 'cand-p4-bunny-teacup', fraction: 0.65, seed: 1,
+      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
+      clues: '#.#......####.....######....###..###..##.##..####.#.###.#..#.##|.####...###.#.###########################.#####..|###..#####.###.##.#############.#########.##########.#..#####..',
+      story: 'There was tea in it once. Now there is a bunny, which is better.',
+      ...voxels({ a: 0xfbf3e6, b: 0x9fcdea, c: 0xfbf8f2, d: 0xf59bb2, e: 0x3a3442, f: 0xf5b3c0 }, [
+        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
+        '....... ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. .......',
+        '....... ..bbb.. .b...b. .b...bb .b...b. ..bbb.. .......',
+        '....... ..bbb.. .b.c.b. .bcccbb .b.c.b. ..bbb.. .......',
+        '....... ....... ..ccc.. .dcccd. ..ece.. ....... .......',
+        '....... ....... ..ccc.. .ccccc. ..ccc.. ....... .......',
+        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
+        '....... ....... ....... ..c.c.. ..f.f.. ....... .......',
+        '....... ....... ....... ..c.c.. ....... ....... .......',
       ]),
     },
     {
@@ -869,6 +944,17 @@ export const SHAPES = [
         '....a.... ......... ......... ....a.... .baaaaab. ..aaaaa.. ...aaa...',
         '......... ......... ......... ......... bb.....bb ......... .........',
       ]),
+    },
+    {
+      id: 'mug', name: 'Mug', dims: [8, 6, 6], fraction: 0.65, seed: 5,
+      story: 'The keeper’s mug, half full, between one watch and the next.',
+      cell(x, y, z) {
+        const dx = x - 2.5, dz = z - 2.5, r2 = dx * dx + dz * dz;
+        if (x <= 5 && r2 <= 2.6 * 2.6 && (y === 0 || r2 >= 1.7 * 1.7)) return y === 5 ? 0xf6efe4 : 0x5b8fd6;
+        if (x <= 5 && y === 4 && r2 < 1.7 * 1.7) return 0x6b4a3a;
+        const handle = (x === 6 && (y === 1 || y === 4)) || (x === 7 && y >= 1 && y <= 4);
+        return handle && (z === 2 || z === 3) ? 0x5b8fd6 : 0;
+      },
     },
     {
       id: 'boat', name: 'Sailboat', dims: [8, 8, 3], fraction: 0.65, seed: 3,
@@ -1603,6 +1689,22 @@ export const SHAPES = [
         '......... ccccccccd ccccccccd ccccccccd .........',
         '......... cccccccc. ffffffff. cccccccc. .........',
         '......... ......... ...geg... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 6: Stand Mixer)
+      id: 'stand-mixer', name: 'Stand Mixer', from: 'cand-p6-stand-mixer', fraction: 0.65, seed: 18,
+      story: 'It hums the batter smooth while the oven warms.',
+      ...voxels({ a: 0x9fd8c8, b: 0xc9d1d9, c: 0xf6dfa0, d: 0xe4e9ee, e: 0x6fb8a8 }, [
+        '.aaaaaa.. aaaaaaaa. aaaaaaaa. aaaaaaaa. .aaaaaa..',
+        '......... aaa.bbb.. aaa.bbb.. aaa.bbb.. .........',
+        '.....b... aaa.bcb.. aaabcccb. aaa.bcb.. .....b...',
+        '....bbb.. aaabb.bb. aaab.d.b. aaabb.bb. ....bbb..',
+        '....bbb.. aaabb.bb. aaab.d.b. aaabb.bb. .e..bbb..',
+        '......... aaa...... aaa..d... aaa...... .........',
+        '......... ..aaad... ..aaada.a ..aaad... .........',
+        '...aa.... .aaaada.. .aaaadaaa .aaaada.. ...aa....',
+        '......... ..aaad... ..aaada.. ..aaad... .........',
       ]),
     },
     {
@@ -2347,16 +2449,19 @@ export const BONUS = [
     },
   }),
   bonus(1, {
-    // A layer cake with candles, the kitchen's best (gallery page 6: Layer Cake)
-    name: 'Layer Cake', from: 'cand-p6-layer-cake', fraction: 0.7, seed: 19,
-    story: 'Baked for a birthday nobody has told you about yet.',
-    ...voxels({ a: 0xfbf8f2, b: 0xfbe9ee, c: 0xf3cf8a, d: 0xd9354a, e: 0xfff4dc, f: 0xe0384b, g: 0x5fae6e }, [
-      '...aaa... .aaaaaaa. .aaaaaaa. aaaaaaaaa aaaaaaaaa aaaaaaaaa .aaaaaaa. .aaaaaaa. ...aaa...',
-      '......... ...bbb... ..bcccb.. .bcccccb. .bcccccb. .bccc.... ..bcc.... ...bb.... .........',
-      '......... ...bbb... ..bdddb.. .bdddddb. .bdddddb. .bddd.... ..bdd.... ...bb.... .........',
-      '......... ...bbb... ..beeeb.. .beeeeeb. .beeeeeb. .beee.... ..bee.... ...bb.... .........',
-      '......... ...bbb... ..bbbbb.. .bbbbbbb. .bbbbbbb. .bbbb.... ..bbb.... ...bb.... .........',
-      '......... ....f.... ..f...f.. ....g.... .f..f.... ......... ..f...... ....f.... .........',
+    // A stepped stone pyramid with a bronze fire bowl on top (gallery page 10: The Great Beacon,
+    // P10·II-10; provisional - Kellan picked no shrine, so it can be swapped)
+    name: 'The Great Beacon', from: 'cand-p10-great-beacon', fraction: 0.7, seed: 7,
+    story: 'The last hill. When you light it, they will see it from the sea.',
+    ...voxels({ a: 0x75708a, b: 0x9c96a8, c: 0xbdb7c8, d: 0x9a6a3a, e: 0xa83a2a, f: 0xe0503a, g: 0xf28a3a, h: 0xf6c84a, i: 0xfff0b0 }, [
+      '.aaaaa. aaaaaaa aaaaaaa aaaaaaa aaaaaaa aaaaaaa .aaaaa.',
+      '....... .bbbbb. .bbbbb. .bbbbb. .bbbbb. .bbbbb. ...c...',
+      '....... ..ccc.. .ccccc. .ccccc. .ccccc. ..ccc.. .......',
+      '....... ....... ..bbb.. ..bbb.. ..bcb.. ....... .......',
+      '....... ..ddd.. .deeed. .deeed. .deeed. ..ddd.. .......',
+      '....... ....... ..fgf.. ..ghg.. ..fgf.. ....... .......',
+      '....... ....... ...g... ..ghg.. ...g... ....... .......',
+      '....... ....... ....... ...i... ....... ....... .......',
     ]),
   }),
   bonus(2, {
@@ -2574,7 +2679,18 @@ export const ADDED_LATER = new Set([
   // their chapters got new shrines (migrate.js carries their old solves over)
   'chameleon', 'ostrich', 'hooded-falcon', 'kasbah', 'brass-lantern', 'first-seed', 'mikoshi',
   'frog', 'whale', 'paper-lantern', 'gear-train',
+  // Beacon Hills replaced Teatime as chapter II (docs/biomes-adventure.md): its
+  // eight new stones, and Teatime's stones that moved to First Light, Moss
+  // Garden, The Lagoon and Clockwork Workshop (ids kept, so solves carry over)
+  'thistle', 'pocket-compass', 'beacon', 'hill-ram', 'torch-fox', 'heron', 'pack-donkey', 'watchtower',
+  'teabag-pal', 'toaster', 'fried-egg', 'teapot', 'bunny-teacup', 'mug',
 ]);
+
+// Retired ids: their solves stay in old saves (nothing reads them now), so they
+// must never be reused for a different object or a stale save would mark the
+// new one solved. Cake Stand and the Layer Cake shrine left with Teatime and
+// live on in gallery page 6.
+export const RETIRED = new Set(['cake-stand', 'bonus-teatime']);
 
 // Every level's starting block fits its object exactly: an empty slab on an
 // edge of the block is a whole row of 0s to chisel, taps that teach nothing.

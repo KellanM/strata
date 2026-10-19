@@ -55,7 +55,17 @@ export const PALETTES = [
   },
   // The eight biomes of docs/biomes.md; skies match gallery pages 6-8.
   {
+    // Beacon Hills (chapter II since it replaced Teatime): slate hills going to
+    // ember, cool stone in the shade so the fire reads brightest, an ember mark
+    name: 'Beacon', rayGain: 0.9,
+    skyTop: 0xc3c8de, skyBottom: 0xefae8a, glow: 0xffe4c4,
+    top: 0xfbf2e8, lit: 0xf0c0a0, shade: 0x8e93b0, under: 0x565a7e,
+    paintTop: 0xffc27e, paintLit: 0xee7a4c, paintShade: 0xa8443c,
+    rays: 0xffdcb8, motes: 0xfff0de,
+  },
+  {
     // the kitchen at four o'clock: cream and biscuit, mint-green enamel
+    // (no chapter uses it since Beacon Hills replaced Teatime; kept for the gallery)
     name: 'Teatime', rayGain: 0.7,
     skyTop: 0xfbe8d6, skyBottom: 0xe2b49a, glow: 0xfff3e2,
     top: 0xfff4e6, lit: 0xf3c9a8, shade: 0xb48c8c, under: 0x7c5a66,

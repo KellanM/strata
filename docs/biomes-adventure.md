@@ -1,8 +1,11 @@
 # Chapter II: from Teatime to the first steps of the journey
 
-**Proposal, 2026-10-18. Nothing is applied:** `CHAPTERS` and the levels are
-unchanged until Kellan picks a concept and candidates. Gallery page 10 shows
-the top four concepts with 42 candidates.
+**Applied 2026-10-18: chapter II is now Beacon Hills.** Kellan picked eight
+candidates from gallery page 10, four of them from Beacon Hills, so the
+runner-up became the chapter, with all eight picks as its levels and The
+Great Beacon as a provisional shrine. Teatime's stones moved as proposed in
+the table below. What shipped is under "As built" at the end; the proposal
+is kept as written.
 
 > "The idea of tea time isn't the most captivating if the idea of this game
 > is going on a grand adventure."
@@ -396,3 +399,27 @@ Pick codes read like `P10·I-03 Pocket Compass`.
   (`shots/qa/p10-*.png`). Paired eyes, ears, horns, panniers and boots
   match. The deliberate asymmetries are boots mid-stride, a gate left open
   and a torch held in one paw.
+
+## As built (2026-10-18)
+
+Kellan's picks: P10·I-03 Pocket Compass, P10·I-08 Pack Donkey, P10·II-03
+Beacon, P10·II-05 Hill Ram, P10·II-07 Torchbearer Fox, P10·II-09 Watchtower,
+P10·III-01 Thistle and P10·IV-07 Heron. No shrine was picked.
+
+- **Chapter II, Beacon Hills** (`#c3c8de → #efae8a`, palette `Beacon`, C
+  minor, bell). Blurb "a fire on the far hill"; line "A fire on the far hill,
+  lit for you."
+- **Levels, easiest first:** Thistle 7.0, Beacon 8.0, Pocket Compass 8.0,
+  Hill Ram 9.0, Torchbearer Fox 9.4, Heron 9.5, Watchtower 10.0, Pack Donkey
+  10.0. Mean 8.87. The compass, donkey, thistle and heron are things met on
+  the road up to the beacon, and the stories are written as one climb.
+- **Shrine:** The Great Beacon (P10·II-10), D 11.5, provisional.
+- **Teatime's stones** went as in the table above. Mug was retuned to 11.0
+  and Stand Mixer to 11.5; no other level was retuned. Cake Stand and the
+  Layer Cake are retired (`RETIRED` in shapes.js).
+- **Chapter means now:** First Light 7.95 (13), Beacon Hills 8.87 (8), Moss
+  Garden 9.47 (12), The Lagoon 11.09 (13), Clockwork Workshop 11.84 (13).
+  They still rise along the map with no reordering.
+- **Saves:** ids kept, so no migration. New and moved stones are in
+  `ADDED_LATER`. Retired solves stay in storage and count nowhere. Details
+  in docs/biomes.md and `test/beacon.test.js`.

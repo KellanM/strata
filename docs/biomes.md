@@ -3,8 +3,10 @@
 **Applied 2026-10-18.** Kellan picked gallery objects for all eight biomes, and
 the map now has 15 chapters, 140 levels and 13 shrines. Gallery page 9 then
 added 11 levels and two shrines, and replaced four shrines: 151 levels and 15
-shrines, every chapter with its shrine. The proposal below is kept as
-written; "As built" records what shipped.
+shrines, every chapter with its shrine. Then **Beacon Hills replaced Teatime
+as chapter II** (gallery page 10, docs/biomes-adventure.md): 158 levels, 15
+shrines. The proposal below is kept as written; "As built" records what
+shipped.
 
 ## As built
 
@@ -14,17 +16,17 @@ place; curated `clues:` levels kept their clues).
 
 | # | Chapter | Palette | Levels | Mean D | Shrine |
 |---|---|---|---|---|---|
-| I | First Light | Dawn | 9 | 7.67 | Cottage |
-| II | Teatime | Teatime | 8 | 8.76 | Layer Cake |
-| III | Moss Garden | Mint | 11 | 9.33 | Moss Tortoise |
+| I | First Light | Dawn | 13 | 7.95 | Cottage |
+| II | Beacon Hills | Beacon | 8 | 8.87 | The Great Beacon |
+| III | Moss Garden | Mint | 12 | 9.47 | Moss Tortoise |
 | IV | The Orchard | Orchard | 10 | 10.56 | Mother Tree |
 | V | Autumn Woods | Autumn | 12 | 10.60 | Cider Press |
-| VI | The Lagoon | Lagoon | 12 | 11.10 | Sea Gate |
+| VI | The Lagoon | Lagoon | 13 | 11.09 | Sea Gate |
 | VII | The Deep | Deep | 8 | 11.15 | Black Smoker |
 | VIII | Desert Oasis | Desert | 10 | 11.25 | Keyhole Arch |
 | IX | Ember Steps | Dusk | 10 | 11.55 | Summit Shrine |
 | X | Old Stones | Stones | 9 | 11.59 | Stone Circle |
-| XI | Clockwork Workshop | Clockwork | 12 | 11.87 | Clock Tower |
+| XI | Clockwork Workshop | Clockwork | 13 | 11.84 | Clock Tower |
 | XII | Lantern Festival | Festival | 11 | 11.96 | Great Lantern Gate |
 | XIII | Frost Peaks | Frost | 9 | 12.02 | Igloo |
 | XIV | Cloud Isles | Clouds | 11 | 12.45 | Floating Isle |
@@ -48,9 +50,40 @@ place; curated `clues:` levels kept their clues).
 - The Orchard and Lantern Festival had no shrine at first; gallery page 9
   gave them one (below).
 
-### Gallery page 9 (applied 2026-10-18)
+### Beacon Hills replaces Teatime (applied 2026-10-18)
 
-The table above is as of this update.
+The table above is as of this update. Teatime ("the kitchen at four
+o'clock") did not suit a game about setting out on a grand adventure, so
+chapter II became **Beacon Hills**, "a fire on the far hill": the call to
+adventure. See docs/biomes-adventure.md for the proposal.
+
+- **Levels:** Kellan's eight page-10 picks, in play order: Thistle 7.0,
+  Beacon 8.0, Pocket Compass 8.0, Hill Ram 9.0, Torchbearer Fox 9.4, Heron
+  9.5, Watchtower 10.0, Pack Donkey 10.0 (mean 8.87), at their gallery clue
+  settings. Their stories walk one road: from the thistle where the road
+  leaves home, up past the ram and the fox carrying the fire, to the top.
+- **Shrine:** The Great Beacon (P10·II-10), D 11.5. Kellan picked no shrine,
+  so it is provisional and can be swapped.
+- **Palette `Beacon`:** sky `#c3c8de → #efae8a`, cool slate shade and an
+  ember mark; C minor with the bell timbre in `audio.js`. `Teatime` stays in
+  palettes.js, unused.
+- **Teatime's stones (ids kept):** Teabag Pal, Toaster, Fried Egg and Teapot
+  back to First Light, the Teapot as its finale (11.2); Bunny in a Teacup to
+  Moss Garden; Mug to The Lagoon, retuned 8.2 to 11.0; Stand Mixer to
+  Clockwork Workshop, retuned 9.0 to 11.5. Cake Stand and the Layer Cake
+  shrine are retired to gallery page 6; `RETIRED` in shapes.js reserves
+  their ids (`cake-stand`, `bonus-teatime`) so they are never reused.
+- **Saves:** no migration was needed, since every moved level kept its id.
+  The shrine id follows the chapter name, so it is now `bonus-beacon-hills`
+  and starts unsolved. An old `bonus-teatime` or `cake-stand` solve stays in
+  storage, and the map, journal, stars and totals only walk current stones,
+  so it is simply not counted. The eight new stones and the seven moved ones
+  are in `ADDED_LATER`, so a returning trail keeps its reach and solved stones
+  that moved further on don't open the chapters around them.
+  `test/beacon.test.js` covers an old Teatime save with the Layer Cake, two
+  mid-progress saves, a finished save and a fresh one.
+
+### Gallery page 9 (applied 2026-10-18)
 
 - **Desert Oasis, 5 to 10 levels:** Chameleon, Ostrich, Hooded Falcon, Kasbah
   Tower and Brass Lantern, at their gallery clue settings (10.6 to 11.8).
