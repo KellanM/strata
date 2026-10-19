@@ -25,7 +25,7 @@ function placeholder(kind, placement) {
         <div class="sim-slot">ad creative</div>
         <p class="sim-what">${rewarded
           ? 'In the store build an AppLovin MAX rewarded video plays here. Watch to the end for the gift.'
-          : 'In the store build an AppLovin MAX interstitial plays here. It can be closed after ${AD_SEC} s.'}</p>
+          : `In the store build an AppLovin MAX interstitial plays here. It can be closed after ${AD_SEC} s.`}</p>
         ${rewarded ? '<button class="sim-early">close early · no gift</button>' : ''}
       </div>`);
     document.body.appendChild(ad);
