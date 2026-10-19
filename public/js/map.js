@@ -307,6 +307,8 @@ export function renderMap(root, opts) {
           shrine: r.shrine ? { x: r.shrine.x - cx, z: headH + r.shrine.y } : null,
         })),
         trailX: (z) => trailX(z - headH) - cx,
+        // the stones and their labels, for keeping scenery off them (a label sits on the side toward the centre)
+        stones: nodes.filter((n) => n.kind !== 'drift').map((n) => ({ x: n.x - cx, z: headH + n.y, lbl: n.x > x0 + colW / 2 ? -1 : 1 })),
         driftTop: headH + driftTop, end: headH + height,
       });
       mark('map: world built');

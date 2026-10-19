@@ -200,6 +200,49 @@ export class MapWorld {
     return out;
   }
 
+  // a peak's box on the page: the sprite, and the mist band across its cut
+  box(r, key, x, z) {
+    const s = this.sprite(r, key);
+    if (!s) return null;
+    const top = z - s.h * s.ay, left = x - s.w * s.ax;
+    const cut = top + s.h * (1 - 0.5 * 0.55), bandH = Math.max(70, s.h * 0.5);
+    return { key, x, z, side: Math.sign(x), left, right: left + s.w, top, art: top + s.h * 0.8, bottom: Math.max(top + s.h, cut + bandH / 2) };
+  }
+  // where a peak fits in its chapter: at the edge on whichever side is free,
+  // its whole box (and its mist) inside the chapter, 40 px off the trail, clear
+  // of every stone, label and the chapter's name, not over another peak; of
+  // the places that fit, the one furthest from the peaks already there, so a
+  // chapter's five spread along its length
+  fit(r, key, placed) {
+    const s = this.sprite(r, key);
+    if (!s) return null;
+    const model = this.model, W2 = this.w / 2;
+    const stones = (model.stones ?? []).filter((n) => n.z > r.top - 80 && n.z < r.bottom + 80);
+    let best = null, bestScore = -1;
+    for (let z = r.labelZ + 60; z <= r.bottom; z += 10) {
+      for (const sd of [1, -1]) {
+        const x = sd * (key.startsWith('far') ? W2 - 40 : W2 - s.w * 0.12);
+        const b = this.box(r, key, x, z);
+        if (b.top < r.top + 8 || b.bottom > r.bottom - 8) continue;
+        if (b.top < r.labelZ + 50) continue;   // the chapter's name
+        const inner = sd > 0 ? b.left : b.right;
+        let ok = true;
+        for (let zz = b.top; zz <= b.art && ok; zz += 10) if (sd * (inner - model.trailX(zz)) < 40) ok = false;
+        for (const n of stones) {
+          if (!ok) break;
+          const lx0 = n.lbl > 0 ? n.x + 28 : n.x - 148, rects = [[n.x - 40, n.x + 40, n.z - 44, n.z + 44], [lx0, lx0 + 120, n.z - 30, n.z + 30]];
+          for (const [x0, x1, z0, z1] of rects) if (b.left < x1 && b.right > x0 && b.top < z1 && b.art > z0) ok = false;
+        }
+        for (const p of placed) if (ok && p && p.side === sd && b.top < p.art + 16 && b.art > p.top - 16) ok = false;
+        if (!ok) continue;
+        let score = Infinity;
+        for (const p of placed) if (p) score = Math.min(score, Math.abs(z - p.z) * (p.side === sd ? 1 : 1.5));
+        if (score > bestScore) { best = b; bestScore = score; }
+      }
+    }
+    return best;
+  }
+
   buildChunk(r) {
     const model = this.model, rand = rng(r.name + 'm');
     const mist = mistColour(r.base);
@@ -229,6 +272,7 @@ export class MapWorld {
       el.style.backgroundImage = `url(${s.file})`;
       el.style.backgroundSize = `${s.aw}px ${s.ah}px`;
       el.style.backgroundPosition = `${-s.x}px ${-s.y}px`;
+      el.dataset.key = key;
       place(layer, el, x, z, s.w, s.h, s.ax, s.ay, `peak ${cls}`);
       const cut = z - s.h * s.ay + s.h * (1 - FADE * 0.55);
       // soft, and never within 40 px of the trail
@@ -247,13 +291,28 @@ export class MapWorld {
       if (Math.sign(model.trailX(z)) === -side && Math.abs(model.trailX(z)) > 50) { zs = z + 60; break; }
     }
     if (sig) zs = Math.min(r.bottom - 60, Math.max(zs, r.labelZ + 90 + sig.h * sig.ay));
-    if (!r.folded) peak('far', -side * (W2 - 40), zs - 120, 'far3', 'distant');
-    if (!r.folded && r.index % 3 !== 2 && r.bottom - r.labelZ > 800) {
-      const z = Math.min(r.bottom - 160, r.labelZ + 700);
-      const x2 = model.trailX(z), sd = Math.abs(x2) > 30 ? -Math.sign(x2) : -side;
-      const lf = this.sprite(r, r.index % 2 ? 'lf2' : 'lf1');
-      if (lf) peak('near', sd * (W2 - lf.w * 0.12), z, r.index % 2 ? 'lf2' : 'lf1');
-      peak('far', -sd * (W2 - 40), z - 140, 'far4', 'distant');
+    if (r.bank) {
+      // under the mist (a chapter not yet reached, or lifting now): as it was
+      if (!r.folded) peak('far', -side * (W2 - 40), zs - 120, 'far3', 'distant');
+      if (!r.folded && r.index % 3 !== 2 && r.bottom - r.labelZ > 800) {
+        const z = Math.min(r.bottom - 160, r.labelZ + 700);
+        const x2 = model.trailX(z), sd = Math.abs(x2) > 30 ? -Math.sign(x2) : -side;
+        const lf = this.sprite(r, r.index % 2 ? 'lf2' : 'lf1');
+        if (lf) peak('near', sd * (W2 - lf.w * 0.12), z, r.index % 2 ? 'lf2' : 'lf1');
+        peak('far', -sd * (W2 - 40), z - 140, 'far4', 'distant');
+      }
+    } else {
+      // a reached chapter shows its whole range: the summit and the far peak
+      // where they always stood, then both landforms and the second far peak
+      // set along the chapter where they fit (scenery() below)
+      peak('far', -side * (W2 - 40), zs - 120, 'far3', 'distant');
+      if (sig) chunk.placed = [this.box(r, 'sig', side * (W2 - sig.w * 0.22), zs), this.box(r, 'far3', -side * (W2 - 40), zs - 120)];
+      for (const [key, layer, cls] of [['lf1', 'near', ''], ['lf2', 'near', ''], ['far4', 'far', 'distant']]) {
+        const at = this.fit(r, key, chunk.placed ?? []);
+        if (!at) continue;
+        peak(layer, at.x, at.z, key, cls);
+        (chunk.placed ??= []).push(at);
+      }
     }
     for (let z = r.top + 80; z < r.bottom; z += 260 + rand() * 120) {
       band('far', (rand() < 0.5 ? -1 : 1) * (250 + rand() * 60), z, 300, 70, 0.32, '', 6 + Math.floor(rand() * 4));

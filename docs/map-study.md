@@ -96,6 +96,56 @@ During a fling, the world gets 0 style writes from script (387 before). The gap 
 
 **Still open:** the phone's GPU and real touch momentum, and tuning the shrine bell by ear.
 
+## Round 4: First Light's summit, and every chapter's full range (2026-10-19)
+
+**Kellan:** rework First Light's red-roofed mountain to make it more beautiful, and show the approved prototype's ~5 mountains per chapter on the unlocked map. (Kellan's third ask, chapters' mountains showing in other chapters, went away once parallax was turned off. Existing peaks were not moved.)
+
+**First Light's summit** (`SIGNATURE.Dawn` in `public/proto/peaks.js`; the study is in `shots/peaks-r4/`, with the sheet at `shots/first-light-summit-sheet.png`).
+- **The old one:** a flat red slab roof on a thin stilt, a lamp on one side only, and pink noise at the foot. At thumbnail size it read as a red table on a bump.
+- **Four variants on one new mountain,** each with one idea:
+  - A: chimney smoke;
+  - B: a stair from the door down into the mist;
+  - C: a blossom tree;
+  - D: a waterfall.
+
+  The mountain itself is three rock shelves stepping down toward the front-left, with risers of 2–3 voxels and grass only on ledges wide enough to stand on. The cottage turns its white gable to the viewer, with the door and the lit window on its centre line. Every variant was rendered on the export page (the game page's own cubes state tints renders) and placed on the real map at 390×820.
+- **A fresh critic** ranked them B, A, old, C, D:
+  - smoke as still cubes reads as stray floating blocks;
+  - the tree is a second loud focal point;
+  - the cyan water is out of palette and reads as a glitch.
+- **B ships:** the home you set out from at dawn, its path starting at the door and walking down into the mist toward the trail of stones. The critic's fixes are in:
+  - a one-wide stair carved into the rock (rise 1, run 1), with the threshold at the door;
+  - a calmer terracotta roof (lit face about #d45940 on the map, was about #c8302a);
+  - a lighter door, so it is no longer the darkest value on the map;
+  - no lone grass cubes;
+  - the art moved left in its grid, so the map's edge crops rock rather than the house.
+- **Size:** the sprite is 205×244 (was 177×196). `dawn.webp` is 38 KB (was 35 KB). The other 15 atlases re-render byte-identical.
+
+**The full range on every reached chapter** (`mapworld.js`, `fit()` and `box()`):
+
+| Before | After |
+|---|---|
+| A reached chapter showed `sig` + `far3`, plus `lf1` or `lf2` + `far4` only when `index % 3 !== 2` and longer than 800 px: 4, or 2 in every third chapter (50 peaks with everything unlocked). | Every reached chapter shows all five distinct shapes in its atlas: `sig`, `lf1`, `lf2`, `far3`, `far4` (75 peaks). |
+
+- **What the atlas holds.** Each palette has seven sprites: `sig`, `lf1`, `lf2`, `far3`, `far4`, and `ghost1` and `ghost2`, which are `lf1` and `lf2` re-rendered pale for the locked wall. That makes five distinct mountains.
+- **Placement.**
+  - `sig` and `far3` stay where they always stood.
+  - `lf1`, `lf2` and `far4` are each placed at the screen edge, at the place in the chapter furthest from the peaks already there, so the five spread along its length on alternating sides.
+  - A place only counts if the peak's whole box, including its mist band, lies inside the chapter, its art stays 40 px off the trail, it clears every stone, label (map.js now passes `stones` to the world) and the chapter's name, and it doesn't sit over another peak on the same side.
+- **Unchanged:** chapters under mist (locked, folded, or lifting this session) build exactly as before.
+
+**Checks** (`shots/peaks-r4/probe.mjs` with unlock-all, a fresh save and 40 solved; `perf.mjs`):
+- Every reached chapter has 5 peaks.
+- Every added peak lies within its chapter's band: 0 outside, across all three saves.
+- Each added peak's art was tested against the real DOM rects of stones, labels and names: 0 overlaps.
+- No page errors at boot, and `npm test` passes 23 of 23.
+- **Fling** (CPU ×4, 390×820 @3x, unlock-all, 3×3000 px wheel flings, 3 runs):
+  - median frame 33.4 ms both before and after;
+  - 24.7 fps after against 26.2 before, from the 25 more sprites and mist bands;
+  - 0 script style writes to the world during the flings.
+
+  The layers, the content-visibility bands and the no-parallax setting are unchanged.
+
 ## Round 3: mist, and mountain tops (2026-10-19)
 
 **Kellan:**

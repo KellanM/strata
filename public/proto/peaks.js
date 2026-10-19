@@ -46,7 +46,7 @@ function terrain(g, { peaks = [], spurs = [], rock, rock2, steps = STEPS, floor 
 const hAt = (g, x, z) => g.hf?.[Math.round(x) + g.X * Math.round(z)] ?? g.top(Math.round(x), Math.round(z)) + 1;
 
 // ground on ledges wide enough to stand on; risers and narrow rims stay rock
-function caps(g, ground, { snow, snowFrom = Infinity, ground2 } = {}) {
+function caps(g, ground, { snow, snowFrom = Infinity, ground2, minFlat = 2 } = {}) {
   const solid = (x, y, z) => !!g.get(x, y, z);
   for (let z = 0; z < g.Z; z++) for (let y = 0; y < g.Y; y++) for (let x = 0; x < g.X; x++) {
     if (!solid(x, y, z) || solid(x, y + 1, z)) continue;
@@ -55,7 +55,7 @@ function caps(g, ground, { snow, snowFrom = Infinity, ground2 } = {}) {
     let flat = 0;
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (solid(x + dx, y, z + dz) && !solid(x + dx, y + 1, z + dz)) flat++;
     if (y >= snowFrom) { g.set(x, y, z, snow); continue; }
-    if (flat >= 2 || y <= 1) g.set(x, y, z, ground);
+    if (flat >= minFlat || (minFlat <= 2 && y <= 1)) g.set(x, y, z, ground);
   }
 }
 // no needles, posts or strays: terrain cubes above the first two layers need a
@@ -75,6 +75,31 @@ function tidy(g) {
 function put(g, x, y, z, c, lit = false) {
   x = Math.round(x); y = Math.round(y); z = Math.round(z);
   g.set(x, y, z, c, lit); (g.struct ??= new Set()).add(x + g.X * (y + g.Y * z));
+}
+// no lone ground cubes (they read as moss stuck on a cliff)
+function despeckle(g, ground, rock) {
+  for (let z = 0; z < g.Z; z++) for (let y = 0; y < g.Y; y++) for (let x = 0; x < g.X; x++) {
+    if (g.get(x, y, z) !== ground) continue;
+    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => g.get(x + dx, y, z + dz) === ground)) g.set(x, y, z, rock);
+  }
+}
+// a cottage with its gable to the front-left (+z): walls wx by wz, two high;
+// the ridge runs along z, the roof overhangs one voxel at both eaves; the
+// front gable is white with the roof as its stepped rim, the door at its foot
+// and a lit window under the ridge, both on the centre line
+function cottage(g, x0, z0, wx, wz, y, { roof = 0xe39a84, roof2 = 0xd38a74, wall = 0xfbf3e6, door = 0xb08060, lamp = 0xffd58a } = {}) {
+  for (let k = 0; k < 2; k++) for (let dz = 0; dz < wz; dz++) for (let dx = 0; dx < wx; dx++) put(g, x0 + dx, y + k, z0 + dz, wall);
+  const zf = z0 + wz - 1, xm = x0 + (wx - 1) / 2;
+  for (let c = 0; ; c++) {
+    const xa = x0 - 1 + c, xb = x0 + wx - c;
+    if (xa > xb) break;
+    for (let x = xa; x <= xb; x++) for (let z = z0; z <= zf; z++) {
+      const rim = x === xa || x === xb;
+      put(g, x, y + 2 + c, z, z === zf && !rim ? wall : rim ? roof : roof2);
+    }
+  }
+  put(g, xm, y, zf, door);
+  put(g, xm, y + 2, zf, lamp, true);
 }
 function tree(g, x, z, trunk, leaf, leaf2) {   // seated on the ground where it stands
   const y = hAt(g, x, z);
@@ -192,16 +217,22 @@ const snowy = { Frost: 6 };
 
 // each biome's signature summit: one clear landmark on an offset summit, ~12 across
 const SIGNATURE = {
-  Dawn: (B) => { // a white sun shrine on a bare offset summit, its gold disc lit
-    const g = terrain(grid(13, 12, 12), { peaks: [{ x: 5, z: 5, h: 8, r: 6.5, p: 1.1 }], spurs: [{ x0: 5, z0: 5, x1: 11, z1: 9, h0: 5, h1: 2, w: 2.8 }], ...B });
-    caps(g, B.ground, B);
-    // a 3x3 shrine, three high, a stepped roof, its gold sun disc toward the light
-    const y = hAt(g, 5, 5);
-    for (let k = 0; k < 3; k++) for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) put(g, 5 + dx, y + k, 5 + dz, 0xfbf3e6);
-    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) put(g, 5 + dx, y + 3, 5 + dz, 0xd9725e);
-    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) put(g, 5 + dx, y + 4, 5 + dz, 0xb85a4a);
-    put(g, 5, y + 1, 7, 0xffcf6a, true); put(g, 5, y + 2, 7, 0xffe39a, true);
-    tree(g, 9, 8, 0x8a5a3c, 0xf4a3b5, 0xfcd0da);
+  Dawn: (B) => { // the home you set out from: a cottage on stacked rock shelves, its window lit, a pale stair from its door down into the mist (round 4)
+    // three shelves stepping down toward the front-left, risers of two and three
+    const g = terrain(grid(13, 16, 16), {
+      peaks: [[10, 3.9], [7, 5.3], [4, 6.6]].map(([h, r], i) => ({ x: 3.5 + i * 0.4, z: 6.2 + i * 1.3, h, r, p: 0.06, n: 2.6, tip: r * 0.7 })),
+      steps: [2, 3, 2, 3], ...B,
+    });
+    const y = hAt(g, 3, 6);
+    caps(g, B.ground, { minFlat: 3 });
+    despeckle(g, B.ground, B.rock);
+    cottage(g, 2, 4, 3, 4, y);
+    // the stair: from the door's threshold, one down per step, carved into the shelves
+    for (let z = 8, h = y - 1; z < g.Z && h >= 0; z++, h--) {
+      for (let yy = h + 1; yy < g.Y; yy++) if (!g.struct?.has(3 + g.X * (yy + g.Y * z))) g.clear(3, yy, z);
+      for (let yy = 0; yy < h; yy++) if (!g.get(3, yy, z)) g.set(3, yy, z, Math.floor(yy / 3) % 2 ? B.rock2 : B.rock);
+      put(g, 3, h, z, 0xfbeee0);
+    }
     return g;
   },
   Teatime: (B) => { // a tea house on a butte: a mint roof, a window lit
@@ -354,3 +385,6 @@ export function peaksFor(p) {
     { kind: 'far', make: () => cap(fb(B, 2)) },
   ];
 }
+
+// the builders, for studies of new summits (shots/peaks-r4/variants.js)
+export { terrain, caps, tidy, put, hAt, tree };
