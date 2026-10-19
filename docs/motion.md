@@ -57,6 +57,13 @@ three.js and canvas work.
   set to opacity 0 along with a transition, any style flush in between (for
   example `getTotalLength()`) makes it animate 1 → 0 first. That was the path
   flash when the mist lifted.
+- **Nothing that scrolls is moved by script.** Anything that has to move with a
+  scroll lives in the scroller. Parallax runs as a CSS scroll-driven animation,
+  never in a scroll handler: on a phone, the main thread lags the compositor's
+  scroll badly (the map's scenery once trailed its stones at about 7 fps).
+- **Map ambience animates whole boxes.** Use `transform`, `translate` or
+  `opacity` on an element or a whole `<svg>`, never a `<g>` inside an svg. Each
+  frame of an svg-internal animation repaints and re-layerizes the map.
 - **No `body:has()` for state that changes during motion.** Set body classes in
   `frame()` instead. A `:has()` rule on body re-styles the whole document on
   every frame.

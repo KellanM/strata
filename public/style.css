@@ -232,24 +232,39 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 /* inside a chapter whose mist is lifting: created hidden, revealed by removing the class */
 .trail.in-parting { opacity: 0; }
 
-/* ---------- the map's world (mapworld.js): behind the canvas, while the title or the map is up ---------- */
-#map-world { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
+/* ---------- the map's world (mapworld.js) ----------
+   The scene is inside the map's scroller, under the stones, so it scrolls with
+   them on the compositor: no script runs while the map scrolls. The fixed
+   #map-world behind the canvas holds only the title's sky, and once the map is
+   up, the chapter's sea as the backdrop of dives and pull-backs. */
+#map-world { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: -1; overflow: hidden; pointer-events: none; display: none; background: #121731; }
 body.world-up #map-world { display: block; }
-#map-world > * { position: absolute; left: 0; top: 0; }
-.mw-sky, .mw-sea { width: 100%; height: 100%; }
-.mw-sea { overflow: hidden; }
-.mw-strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
-.mw-layer { will-change: transform; }
+.mw-sky { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+.mw-horizon { position: absolute; left: 0; right: 0; height: 1.5px; background: rgba(255, 248, 236, .9); }
+.mw-stars { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 24px - 35vh), transparent calc(100% - 24px));
+  mask-image: linear-gradient(180deg, #000 calc(100% - 24px - 35vh), transparent calc(100% - 24px)); }
+.mw-starsheet { position: absolute; left: 0; top: 0; will-change: transform; }
+/* overflow: clip, not hidden: a hidden box would be a scroll container and
+   capture the far layer's scroll timeline */
+.mw-scene { position: absolute; left: 0; top: 0; width: 100%; overflow: clip; pointer-events: none; z-index: 0; }
+.map-head, .map { position: relative; z-index: 1; }
+.mw-strip { position: absolute; inset: 0; }
+.mw-dawn { position: absolute; left: 0; top: 0; width: 100%; }
+.mw-layer { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
+.map-scroll { scroll-timeline: --map-scroll block; }
+/* the far layer falls behind the page (0.84 of its speed), driven by the scroll
+   itself where the browser supports it (mapworld.js checks), never by script */
+.mw-layer.mw-par { animation: mw-par linear both; animation-timeline: --map-scroll; }
+@keyframes mw-par { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, var(--par, 0px), 0); } }
 .mw-spr, .mw-wall { position: absolute; left: 0; top: 0; }
 .mw-spr.peak { background-repeat: no-repeat; }
 .mw-spr.ghost { opacity: .26; }
-.mw-spr.drift { animation: mw-drift var(--dur, 24s) ease-in-out var(--delay, 0s) infinite alternate; }
-@keyframes mw-drift { from { translate: -16px 0; } to { translate: 16px 0; } }
 .mw-glow { border-radius: 50%; background: radial-gradient(closest-side, var(--g), transparent); }
 /* the canvas steps aside while the map is up (the level isn't drawn under it) */
 #scene { transition: opacity .5s ease; }
 body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the level must not linger over the mist */
-@media (prefers-reduced-motion: reduce) { .mw-spr.drift { animation: none; } #scene { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #scene { transition: none; } }
 
 .map-region {
   position: absolute; transform: translateY(-50%);
@@ -263,8 +278,11 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .map-region .r-sub { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: .62; }
 .on-dark { color: #eef0ff; }
 
+/* the map is filed into bands down the page (map.js): off screen, a band is
+   neither painted nor re-layerized while something else on the map animates */
+.map-band { position: absolute; left: 0; width: 100%; pointer-events: none; content-visibility: auto; }
 .map-node {
-  position: absolute; width: 72px; height: 72px; margin: -36px 0 0 -36px;
+  position: absolute; pointer-events: auto; width: 72px; height: 72px; margin: -36px 0 0 -36px;
   display: grid; place-items: center; color: var(--ink);
   transition: transform .35s cubic-bezier(.2,.9,.3,1.4);
 }
@@ -387,10 +405,14 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .trail.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: trail-draw var(--d, 1.4s) ease-in-out var(--delay, 1.5s) forwards; }
 @keyframes trail-draw { to { stroke-dashoffset: 0; } }
 .trail.spur { stroke-dasharray: 0.1 6; stroke-opacity: .35; stroke-width: 1.8; }
+.trail.spur.walked { stroke-dasharray: none; stroke-opacity: .3; stroke-width: 1.6; }
 
 /* the chapter shrine: optional, off the trail, opened by stars */
-.map-node.bonus .shrine-gem .gem { transform-origin: 50px 40px; animation: gem-float 4s ease-in-out infinite; }
-@keyframes gem-float { 50% { transform: translateY(-4px); } }
+.map-node .shrine-gem { display: block; position: relative; }
+.map-node .shrine-gem svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* only a shrine waiting to be entered floats its gem (an SVG animation repaints every frame) */
+.map-node.bonus.open .shrine-gem .gem { animation: gem-float 4s ease-in-out infinite; }
+@keyframes gem-float { 50% { translate: 0 -2.4px; } }
 .map-node.bonus.locked .cube { opacity: .45; filter: grayscale(.6); }
 .map-node.bonus.open .halo { opacity: .8; animation: breathe 3.2s ease-in-out infinite; }
 .map-node.bonus .n { letter-spacing: 0; }
@@ -400,12 +422,12 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
   position: absolute; left: -19px; top: -52px; width: 38px; height: 53px; pointer-events: none; z-index: 1;
   will-change: transform;
 }
-.companion svg { width: 100%; height: 100%; display: block; overflow: visible; stroke: none; }
+.companion svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; stroke: none; }
 .companion.flip svg { transform: scaleX(-1); }
 .companion .head { animation: comp-bob 2.8s ease-in-out infinite; }
 .companion.walking .head { animation: none; }
 .companion .eye { transform-box: fill-box; transform-origin: center; animation: comp-blink 5s infinite; }
-@keyframes comp-bob { 50% { transform: translateY(-1.6px); } }
+@keyframes comp-bob { 50% { translate: 0 -1.5px; } }
 @keyframes comp-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 
 /* map -> level */
@@ -437,7 +459,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #menu.leaving .map-scroll { transform: scale(1.08); opacity: 0; transition: transform .4s cubic-bezier(.4,0,.6,1), opacity .3s ease-in; }
 
 @media (prefers-reduced-motion: reduce) {
-  .companion .head, .companion .eye, .map-air .wisp, .map-air .mote, .map-node.bonus .shrine-gem .gem { animation: none; }
+  .companion .head, .companion .eye, .map-air .wisp, .map-air .mote, .map-node.bonus .shrine-gem .gem, .map-node.bonus.open .shrine-gem .gem { animation: none; }
   .map-air .mote { opacity: .6; }
 }
 
@@ -730,6 +752,7 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 #title .tap svg { width: 18px; height: 18px; margin-left: -.42em; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
   animation: title-nudge 1.6s ease-in-out 1.8s infinite; }
 #title .tap.nudge svg { animation: title-nudge .45s ease-in-out 2; }
+#title:not(.show) .tap, #title:not(.show) .tap svg { animation: none; }   /* not ticking under the map */
 @keyframes title-nudge { 50% { translate: 0 -6px; } }
 @keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
 @keyframes title-fade { from { opacity: 0; } }
@@ -805,9 +828,9 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 
 /* the companion carries a small gold light */
 .companion { top: -54px; height: 57px; }
-.companion .lamp { animation: lamp 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.companion .lamp { animation: lamp 3.6s ease-in-out infinite; }
 .companion.walking .lamp { animation: none; }
-@keyframes lamp { 50% { transform: translateY(-2.5px); } }
+@keyframes lamp { 50% { translate: 0 -2.4px; } }
 
 /* a shrine's card: the chapter card, in gold */
 #chapter-card.shrine { background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, #fff2d2 92%, transparent) 0%, color-mix(in srgb, var(--sky) 72%, transparent) 55%, color-mix(in srgb, var(--sky) 28%, transparent) 100%); }

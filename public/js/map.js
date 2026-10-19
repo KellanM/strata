@@ -26,6 +26,7 @@ const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
 // the next. false: every chapter keeps its full length under cloud.
 export const FOLD_LATER_CHAPTERS = true;
 const FOLDED_H = 300;
+const BAND = 1000, BAND_PAD = 420;   // the map's paint bands (content-visibility), px
 // a short chapter asks for fewer: two stars a stone at most
 const shrineStars = (r) => Math.min(SHRINE_STARS, r.items.length * 2);
 // developer switch (hidden panel): every stone and shrine open
@@ -67,16 +68,22 @@ function cube(top, left, right, size = 44) {
 const GOLD = { top: 0xfff2c2, lit: 0xf3c95a, shade: 0xc98d2e, under: 0x8a5a1c };
 function shrine(p, state, size = 56) {
   const g = state === 'locked' ? p : GOLD;
-  return `<svg class="cube shrine-gem" viewBox="0 0 100 120" style="width:${size}px;height:${size * 1.2}px" aria-hidden="true">
-    <path d="M42 112L50 108L58 112L50 116Z" fill="${hex(p.top)}"/>
-    <path d="M44 111L50 76L50 116Z" fill="${hex(p.lit)}"/><path d="M56 111L50 76L50 116Z" fill="${hex(p.shade)}"/>
-    <g class="gem">
+  // the gem is its own <svg> over the spire's, so its float moves a whole box
+  // the compositor can carry: an animated <g> inside one svg repainted the map's
+  // whole layer every frame
+  const box = `viewBox="0 0 100 120" aria-hidden="true"`;
+  return `<span class="cube shrine-gem" style="width:${size}px;height:${size * 1.2}px">
+    <svg ${box}>
+      <path d="M42 112L50 108L58 112L50 116Z" fill="${hex(p.top)}"/>
+      <path d="M44 111L50 76L50 116Z" fill="${hex(p.lit)}"/><path d="M56 111L50 76L50 116Z" fill="${hex(p.shade)}"/>
+    </svg>
+    <svg class="gem" ${box}>
       <path d="M50 14L68 42L50 51Z" fill="${hex(g.top)}"/>
       <path d="M50 14L32 42L50 51Z" fill="${hex(g.lit)}"/>
       <path d="M32 42L50 51L50 70Z" fill="${hex(g.shade)}"/>
       <path d="M68 42L50 51L50 70Z" fill="${hex(g.under)}"/>
-    </g>
-  </svg>`;
+    </svg>
+  </span>`;
 }
 
 // The companion: a little Totem built like everything else in the world (two
@@ -102,12 +109,13 @@ function companion(p) {
   const at = (a, b) => [wx + (sx - wx) * a, wy + (sy - wy) * a + head.H * b];
   const eye = [at(0.36, 0.3), at(0.56, 0.3), at(0.56, 0.62), at(0.36, 0.62)]
     .map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L');
-  return `<svg viewBox="0 0 40 60" aria-hidden="true">
+  // three stacked svgs (body, head, lamp), so the head's bob and the lamp's
+  // sway move whole boxes on the compositor instead of repainting the map
+  const box = `viewBox="0 0 40 60" aria-hidden="true"`;
+  return `<svg ${box}>
     <ellipse class="shadow" cx="20" cy="53.5" rx="12" ry="3.6" fill="${hex(p.under)}" fill-opacity=".2"/>
     ${base.svg}
-    <g class="head">${head.svg}<path class="eye" d="M${eye}Z" fill="${hex(p.under)}"/></g>
-    <g class="lamp"><circle cx="31" cy="9" r="7" fill="#ffe7a1" fill-opacity=".35"/><path d="M31 4.6L34 9L31 13.4L28 9Z" fill="#ffe7a1"/><path d="M31 4.6L34 9L31 9Z" fill="#fff6d8"/></g>
-  </svg>`;
+  </svg><svg class="head" ${box}>${head.svg}<path class="eye" d="M${eye}Z" fill="${hex(p.under)}"/></svg><svg class="lamp" ${box}><circle cx="31" cy="9" r="7" fill="#ffe7a1" fill-opacity=".35"/><path d="M31 4.6L34 9L31 13.4L28 9Z" fill="#ffe7a1"/><path d="M31 4.6L34 9L31 9Z" fill="#fff6d8"/></svg>`;
 }
 
 // Catmull-Rom segment between p1 and p2 as a cubic bezier.
@@ -315,6 +323,8 @@ export function renderMap(root, opts) {
   const segD = (i, move = true) => segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1], move);
   const draws = [];
   let markup = '';
+  const parts = [];   // { html, y0, y1 }: every path, to be filed into a band
+  const extent = (...ys) => [Math.min(...ys), Math.max(...ys)];
   for (let i = 0; i < pts.length - 1; i++) {
     const a = trail[i], b = trail[i + 1];
     // nothing under the mist: a chapter not yet reached shows no trail
@@ -328,19 +338,49 @@ export function renderMap(root, opts) {
     const id = b.entry?.shape.id ?? b.kind;
     const fresh = walked && celebrate && lit && !lit.has(id);
     if (fresh) draws.push({ i, id });
-    markup += `<path d="${segD(i)}" class="trail${walked ? ' walked' : ''}${fresh ? ' draw' : ''}${hide}" stroke="${hex(b.palette.under)}"/>`;
+    const [p0, p3] = [pts[i - 1] ?? pts[i], pts[i + 2] ?? pts[i + 1]];
+    const [y0, y1] = extent(a.y, b.y, a.y + (b.y - p0[1]) / 6, b.y - (p3[1] - a.y) / 6);
+    parts.push({ y0, y1, html: `<path d="${segD(i)}" data-seg="${a.entry?.shape.id ?? a.kind}>${id}" class="trail${walked ? ' walked' : ''}${fresh ? ' draw' : ''}${hide}" stroke="${hex(b.palette.under)}"/>` });
   }
   // a faint spur from each chapter's last stone to its shrine
   for (const r of regions) {
     if (!r.shrine || !r.last || !r.reached) continue;
     const a = r.last, s = r.shrine;
-    markup += `<path d="M${a.x},${a.y}Q${(a.x + s.x) / 2},${s.y} ${s.x},${s.y}" class="trail spur${r.parting ? ' in-parting' : ''}" stroke="${hex(a.palette.under)}"/>`;
+    // one path, dotted until the shrine is kept, then solid: same d either way
+    parts.push({ y0: Math.min(a.y, s.y), y1: Math.max(a.y, s.y), html: `<path d="M${a.x},${a.y}Q${(a.x + s.x) / 2},${s.y} ${s.x},${s.y}" data-seg="${a.entry?.shape.id}>${s.entry.shape.id}" class="trail spur${s.state === 'solved' ? ' walked' : ''}${r.parting ? ' in-parting' : ''}" stroke="${hex(a.palette.under)}"/>` });
   }
-  svg.innerHTML = markup;
 
   // ---- DOM: names and stones
   root.innerHTML = '';
   root.appendChild(svg);
+  // Stones and trail are filed into bands down the page, each with
+  // content-visibility: auto, so the browser skips painting (and re-layerizing)
+  // every band off screen. A path that won't fit its band stays in the page-wide svg.
+  const bands = new Map();
+  const bandFor = (y) => {
+    const i = Math.max(0, Math.floor(y / BAND));
+    let g = bands.get(i);
+    if (!g) {
+      const top = i * BAND - BAND_PAD, h = BAND + 2 * BAND_PAD;
+      const el = document.createElement('div');
+      el.className = 'map-band';
+      el.style.top = `${top}px`; el.style.height = `${h}px`;
+      const bs = document.createElementNS(NS, 'svg');
+      bs.setAttribute('class', 'map-svg');
+      bs.setAttribute('width', fullW); bs.setAttribute('height', h);
+      bs.setAttribute('viewBox', `0 ${top} ${fullW} ${h}`);   // page coordinates, unchanged
+      bs.style.width = `${fullW}px`; bs.style.height = `${h}px`;
+      el.appendChild(bs);
+      g = { el, svg: bs, top, h, markup: '' };
+      bands.set(i, g);
+    }
+    return g;
+  };
+  for (const part of parts) {
+    const g = bandFor(part.y0);
+    if (part.y0 >= g.top && part.y1 <= g.top + g.h) g.markup += part.html; else markup += part.html;
+  }
+  svg.innerHTML = markup;
   for (const r of regions) {
     const el = document.createElement('div');
     const dark = lum(r.base.skyTop) < 0.45;
@@ -371,8 +411,10 @@ export function renderMap(root, opts) {
     const dark = lum(n.sky.skyTop) < 0.45;
     b.className = `map-node ${n.kind} ${n.state}${side}${dark ? ' on-dark' : ''}` + (n.region?.parting ? ' veiled-in' : '');
     if (n.entry) b.dataset.id = n.entry.shape.id;
+    const band = bandFor(n.y);
     b.style.left = `${n.x}px`;
-    b.style.top = `${n.y}px`;
+    b.style.top = `${n.y - band.top}px`;
+    b.dataset.y = n.y;
     b.style.setProperty('--glow', hex(p.glow));
     let num = '', name = '', meta = '', art = cube(hex(p.top), hex(p.lit), hex(p.shade), n.kind === 'drift' ? 38 : 46);
     if (n.kind === 'learn') {
@@ -417,9 +459,15 @@ export function renderMap(root, opts) {
     b.innerHTML = `<span class="halo"></span><span class="ring"></span>${art}
       ${n.state === 'solved' && n.kind === 'learn' ? '<span class="mark" aria-hidden="true"></span>' : ''}
       <span class="label">${num ? `<span class="n">${num}</span>` : ''}<span class="nm">${esc(name)}</span><span class="mt">${meta}</span></span>`;
-    root.appendChild(b);
+    band.el.appendChild(b);
     n.el = b;
     if (n.state === 'current' && !current) current = n;
+  }
+
+  for (const g of [...bands.keys()].sort((a, b) => a - b).map((k) => bands.get(k))) {
+    g.svg.innerHTML = g.markup;
+    g.el.prepend(g.svg);
+    root.appendChild(g.el);
   }
 
   if (newlySeen.length) { newlySeen.forEach((id) => seenObjects.add(id)); saveSet('strata.map.objects', seenObjects); }
@@ -439,7 +487,7 @@ export function renderMap(root, opts) {
 
   // ---- the gold draws on as the companion walks; then a newly reached chapter's cloud parts
   const drawStart = 0.55, drawDur = walk ?? 0.9;
-  svg.querySelectorAll('.trail.draw').forEach((path) => {
+  root.querySelectorAll('.trail.draw').forEach((path) => {
     const len = path.getTotalLength?.() ?? 200;
     path.style.setProperty('--len', (len + 2).toFixed(1));
     path.style.setProperty('--d', `${(drawDur / motionRate).toFixed(2)}s`);
@@ -475,7 +523,7 @@ function partCloud(opts, regions, delay, root) {
     const step = () => {
       const k = Math.min(1, (performance.now() - t0) / dur);
       opts.world.setPart(r.index, k);   // linear: the world staggers each billow by its distance from the trail
-      for (const el of stones) if (el.classList.contains('veiled-in') && k > 0.2 + 0.55 * ((parseFloat(el.style.top) - r.top) / span)) el.classList.remove('veiled-in');
+      for (const el of stones) if (el.classList.contains('veiled-in') && k > 0.2 + 0.55 * ((parseFloat(el.dataset.y) - r.top) / span)) el.classList.remove('veiled-in');
       if (k < 1) requestAnimationFrame(step);
       else { for (const el of stones) el.classList.remove('veiled-in'); mark(`map: ${r.name} clear`); opts.onParted?.(r); }
     };

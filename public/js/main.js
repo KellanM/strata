@@ -80,10 +80,9 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 // own parts (0.5 s) and the level isn't drawn at all; it fades back in only
 // once the level it shows is the right one (a dive builds it under the veil).
 // Declared before the first draw() at boot.
-const mapWorld = new MapWorld($('#map-world'));
+const mapWorld = new MapWorld($('#map-world'), $('#menu .map-scroll'));
 const menuEl = $('#menu');
 const titleEl = $('#title');
-const mapScroller = $('#menu .map-scroll');
 let titleU = 0;               // the title pan, 0 (stars) .. 1 (the map at its top)
 let mapUpSince = -1;          // scene time the map covered the level (-1: it doesn't)
 migrateSaves();   // once, before the save is read: old shrine solves move to their levels
@@ -1177,6 +1176,7 @@ function openMenu({ instant = false } = {}) {
     menu.classList.remove('instant');
     return;
   }
+  mapWorld.backdrop(game?.entry?.palette);
   show('#menu', true);
   renderMenu(true, true);
   if (reduceMotion || wasOpen) return;
@@ -1242,6 +1242,7 @@ function diveInto(el, palette, start) {
     v.style.setProperty('--vy', `${r.top + r.height / 2}px`);
   }
   veilGlow.style.background = palette.gild ? '#ffdc8c' : hexOf(palette.glow);   // a shrine's portal opens in gold
+  mapWorld.backdrop(palette);   // the world swells away with the stones: its chapter's sea stays behind
   menu.classList.remove('arriving', 'settling', 'leaving');
   void veil.offsetWidth;   // commit the closed diamond at the stone first, so it opens from there
   for (const v of [veil, veilGlow]) v.classList.add('open', 'in');
@@ -1434,7 +1435,7 @@ function frame() {
   document.body.classList.toggle('map-up', mapUp);
   document.body.classList.toggle('title-up', onTitle);   // style.css: plain classes, never body:has(), which re-styled every element each frame
   document.body.classList.toggle('menu-open', menuEl.classList.contains('show'));
-  if (worldUp) mapWorld.setView(onTitle ? titleU : 1, onTitle ? 0 : mapScroller.scrollTop);
+  if (worldUp) mapWorld.setView(onTitle ? titleU : 1);   // the title's sky only: the map's scroll moves its world natively
   const t = now();
   if (mapUp) { if (mapUpSince < 0) mapUpSince = t; } else mapUpSince = -1;
   if (!(mapUp && t - mapUpSince > 0.6)) draw();

@@ -1,19 +1,35 @@
 // The map's world (docs/map-study.md): a night sky over a dawn horizon at the
 // top of the page, then a sea of mist with each chapter's voxel mountain tops
-// rising out of it. Flat layers behind the game's canvas; map.js lays the
-// stones out in the map's scroller and this follows its scroll.
+// rising out of it.
 //
-//   sky     a 2D canvas: the gradient and the horizon move with the page, the
-//           stars a little slower (the only parallax at the title)
-//   sea     the colour script of the mist, one long gradient
-//   layers  far / near / front, sliding at 0.84 / 1 / 1.12 of the page:
-//           mountain tops (pre-rendered by tools/render-peaks.mjs into
-//           public/map-peaks/, so nothing is built at load), bands of mist on
-//           their bases, and over each chapter not yet reached a wall of mist
-//           that lifts once (setPart).
+// The world lives inside the map's own scroller (.mw-scene, behind the stones),
+// so the browser moves it with the stones on the compositor: nothing in here
+// runs while the map scrolls. (It used to be a fixed layer moved by script on
+// every scroll, and on a phone it trailed the stones at ~7 fps.)
+//
+//   scene   in the scroller: the dawn at the top, the colour script of the
+//           mist (one long gradient), and two layers of scenery: mountain tops
+//           (pre-rendered by tools/render-peaks.mjs into public/map-peaks/, so
+//           nothing is built at load), bands of mist on their bases, and over
+//           each chapter not yet reached a wall of mist that lifts once
+//           (setPart). The far layer drifts at 0.84 of the page through a CSS
+//           scroll-driven animation where the browser has them (and not under
+//           Reduce Motion); elsewhere it simply moves with the page.
+//   sky     a fixed layer for the title only: the night gradient and three
+//           pre-drawn sheets of stars, moved by transforms as the title pans
+//           (the stars a little slower: the only parallax at the title). Once
+//           the map is up it's hidden, and its root shows the chapter's sea
+//           as the backdrop of the dive and the pull-back.
 import { PALETTES } from './palettes.js';
 
-const RATES = { far: 0.84, near: 1, front: 1.12 };
+const FAR_RATE = 0.84;
+const NIGHT = '#121731';
+// the sky, top to bottom over 1.4 screens, ending at the horizon
+const SKY_STOPS = [[0, '#121731'], [0.45, '#232a52'], [0.72, '#4c5187'], [0.88, '#bd93b8'], [0.965, '#f6cbc4'], [1, '#ffeedd']];
+const skyGradient = (Hs) => `linear-gradient(180deg, ${SKY_STOPS.map(([k, c]) => `${c} ${(k * Hs).toFixed(1)}px`).join(', ')})`;
+const HORIZON = 'rgba(255, 248, 236, .9)';
+const DAWN_SEA = '#fbe6dc';
+const DAWN = 60;   // the horizon sits this far below the top of the map's page
 
 // ---- colour, in plain hex (no three.js here)
 const ch = (h, s) => (h >> s) & 255;
@@ -46,21 +62,36 @@ function rng(seed) {
 }
 
 export class MapWorld {
-  constructor(root) {
-    this.root = root;
-    this.w = 390; this.h = 844; this.dpr = 1; this.u = 0; this.s = 0;
-    this.sky = document.createElement('canvas'); this.sky.className = 'mw-sky';
-    this.sea = document.createElement('div'); this.sea.className = 'mw-sea';
+  constructor(root, scroller) {
+    this.root = root; this.scroller = scroller;
+    this.w = 390; this.h = 844; this.dpr = 1; this.u = -1;
+    this.backCol = null;
+    // the title's sky (fixed)
+    this.sky = document.createElement('div'); this.sky.className = 'mw-sky';
+    this.skyLine = document.createElement('div'); this.skyLine.className = 'mw-horizon';
+    this.starWrap = document.createElement('div'); this.starWrap.className = 'mw-stars';
+    this.sky.append(this.starWrap, this.skyLine);
+    root.appendChild(this.sky);
+    const rand = rng('stars');
+    // three depths of stars; the title's pan moves them by only 88-96%
+    this.stars = [[700, 0.9, 0.88, 0.55], [260, 1.3, 0.92, 0.8], [50, 1.9, 0.96, 1]].map(([n, r, rate, a]) => {
+      const c = document.createElement('canvas'); c.className = 'mw-starsheet';
+      this.starWrap.appendChild(c);
+      return { r, rate, a, c, pts: Array.from({ length: n }, () => [rand(), rand() * 1.15, rand()]) };
+    });
+    // the map's world (in the scroller, under the stones)
+    this.scene = document.createElement('div'); this.scene.className = 'mw-scene'; this.scene.setAttribute('aria-hidden', 'true');
     this.seaStrip = document.createElement('div'); this.seaStrip.className = 'mw-strip';
-    this.sea.appendChild(this.seaStrip);
-    root.append(this.sea, this.sky);
+    this.dawn = document.createElement('div'); this.dawn.className = 'mw-dawn';
+    this.scene.append(this.seaStrip, this.dawn);
     this.layers = {};
-    for (const k of ['far', 'near', 'front']) { const d = document.createElement('div'); d.className = `mw-layer mw-${k}`; root.appendChild(d); this.layers[k] = d; }
+    for (const k of ['far', 'near']) { const d = document.createElement('div'); d.className = `mw-layer mw-${k}`; this.scene.appendChild(d); this.layers[k] = d; }
+    const reduce = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    this.parallax = !reduce && !!globalThis.CSS?.supports?.('animation-timeline: scroll()');
+    if (this.parallax) this.layers.far.classList.add('mw-par');
+    scroller.prepend(this.scene);
     this.chunks = [];
     this.ribbons = new Map();
-    const rand = rng('stars');
-    // three depths of stars; the page moves them by only 88-96%
-    this.stars = [[700, 0.9, 0.88, 0.55], [260, 1.3, 0.92, 0.8], [50, 1.9, 0.96, 1]].map(([n, r, rate, a]) => ({ r, rate, a, pts: Array.from({ length: n }, () => [rand(), rand() * 1.15, rand()]) }));
     this.atlas = null;
     this.atlasReady = fetch('map-peaks/peaks.json').then((r) => (r.ok ? r.json() : null)).then((j) => { this.atlas = j; }).catch(() => {});
   }
@@ -68,8 +99,33 @@ export class MapWorld {
   setSize(w, h, dpr) {
     if (w === this.w && h === this.h && dpr === this.dpr) return;
     this.w = w; this.h = h; this.dpr = dpr;
-    this.sky.width = Math.round(w * dpr); this.sky.height = Math.round(h * dpr);
-    this.skyDirty = true;
+    this.layoutSky();
+    if (this.model) this.layoutScene();
+    const u = this.u; this.u = -1; this.setView(Math.max(0, u));
+  }
+
+  // the title's sky: 1.4 screens of gradient down to the horizon, the dawn sea
+  // below it; the stars drawn once per size onto three sheets
+  layoutSky() {
+    const { w, h } = this, Hs = h * 1.4, d = Math.min(2, this.dpr);
+    this.Hs = Hs;
+    this.sky.style.height = `${Hs + h + DAWN}px`;
+    this.sky.style.background = `${skyGradient(Hs)} 0 0 / 100% ${Hs.toFixed(1)}px no-repeat, linear-gradient(180deg, ${DAWN_SEA}, ${this.firstSea ?? '#f3dcd4'}) 0 ${Hs.toFixed(1)}px / 100% ${h}px no-repeat, ${this.firstSea ?? '#f3dcd4'}`;
+    this.skyLine.style.top = `${(Hs - 1).toFixed(1)}px`;
+    this.starWrap.style.height = `${Hs}px`;
+    for (const L of this.stars) {
+      L.c.width = Math.round(w * d); L.c.height = Math.round(Hs * d);
+      L.c.style.width = `${w}px`; L.c.style.height = `${Hs}px`;
+      const g = L.c.getContext('2d');
+      g.setTransform(d, 0, 0, d, 0, 0);
+      g.fillStyle = '#eef0ff';
+      for (const [x, y, k] of L.pts) {
+        const sy = y * h + Hs - h - DAWN;   // where it sits in the sky with the title at rest
+        if (sy < -4 || sy > Hs) continue;
+        g.globalAlpha = L.a * (0.5 + 0.5 * k);
+        g.fillRect(x * w, sy, L.r, L.r);
+      }
+    }
   }
 
   // ---------------------------------------------------------------- a map layout
@@ -84,17 +140,35 @@ export class MapWorld {
     this.chunks = [];
     // the colour script, one long gradient on the page's own clock
     const { regions } = model;
-    const stops = [`${rgba(seaColour(regions[0].base))} 0px`];
+    this.firstSea = rgba(seaColour(regions[0].base));
+    const stops = [`${this.firstSea} 0px`];
     for (const r of regions) {
       const c = rgba(seaColour(r.base));
       stops.push(`${c} ${(r.top + 120).toFixed(0)}px`, `${c} ${Math.max(r.top + 121, r.bottom - 120).toFixed(0)}px`);
     }
-    stops.push(`${rgba(seaColour(regions[regions.length - 1].base))} ${model.end + 2000}px`);
-    this.seaStrip.style.height = `${model.end + 2000}px`;
+    stops.push(`${rgba(seaColour(regions[regions.length - 1].base))} ${model.end}px`);
     this.seaStrip.style.background = `linear-gradient(180deg, ${stops.join(', ')})`;
     for (const r of regions) this.buildChunk(r);
-    this.lastKey = null;
-    this.setView(this.u, this.s, true);
+    this.layoutSky();
+    this.layoutScene();
+    if (!this.backCol) this.root.style.backgroundColor = this.firstSea;
+  }
+  // the scene is exactly as tall as the map's page; the dawn at its top carries
+  // on the title's sky (the last DAWN px of it, the horizon, the dawn sea)
+  layoutScene() {
+    const { h } = this, Hs = h * 1.4;
+    this.scene.style.height = `${this.model.end}px`;
+    this.dawn.style.height = `${DAWN + h}px`;
+    this.dawn.style.background = `linear-gradient(${HORIZON}, ${HORIZON}) 0 ${DAWN - 1}px / 100% 1.5px no-repeat, ${skyGradient(Hs)} 0 ${(DAWN - Hs).toFixed(1)}px / 100% ${Hs.toFixed(1)}px no-repeat, linear-gradient(180deg, ${DAWN_SEA}, ${this.firstSea}) 0 ${DAWN}px / 100% ${h}px no-repeat`;
+    // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
+    const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
+    this.layers.far.style.setProperty('--par', `${(range * (1 - FAR_RATE)).toFixed(1)}px`);
+  }
+  // what shows behind the map while it dives into a level or pulls back from one
+  backdrop(p) {
+    if (!p || typeof p.skyTop !== 'number') return;
+    this.backCol = rgba(seaColour(p));
+    if (this.u >= 1) this.root.style.backgroundColor = this.backCol;
   }
 
   sprite(r, key) {
@@ -127,7 +201,7 @@ export class MapWorld {
   buildChunk(r) {
     const model = this.model, rand = rng(r.name + 'm');
     const mist = mistColour(r.base);
-    const chunk = { r, z0: r.top - 500, z1: r.bottom + 500, els: [], on: true };
+    const chunk = { r, els: [] };
     const W2 = this.w / 2;
     const FADE = 0.5;
     const place = (layer, el, x, z, w, h, ax, ay, cls) => {
@@ -137,7 +211,9 @@ export class MapWorld {
       this.layers[layer].appendChild(el); chunk.els.push(el);
       return el;
     };
-    const drift = (el) => { el.classList.add('drift'); el.style.setProperty('--dur', `${(18 + rand() * 16).toFixed(1)}s`); el.style.setProperty('--delay', `${(-rand() * 20).toFixed(1)}s`); return el; };
+    // the mist holds still: ~100 drifting ribbons cost a style pass and a layer each, every frame
+    // of a scroll. (Two draws kept so the scenery's random stream, and its layout, is unchanged.)
+    const drift = (el) => { rand(); rand(); return el; };
     const band = (layer, x, z, w, h, alpha, cls, seed) => {
       const rb = this.ribbon(mist, seed, Math.round(w), Math.round(h), alpha);
       const img = new Image(); img.alt = ''; img.src = rb.url;
@@ -236,52 +312,22 @@ export class MapWorld {
     }
   }
 
-  // u: the title pan, 0 (stars) .. 1 (the map at its top); s: the map's scroll
-  setView(u, s, force = false) {
-    const key = `${u.toFixed(4)}|${s.toFixed(1)}`;
-    if (!force && key === this.lastKey) return;
-    this.lastKey = key;
-    this.u = u; this.s = s;
-    const off = (1 - u) * window.innerHeight;   // as the map's sheet slides (main.js setScroll)
-    for (const [k, el] of Object.entries(this.layers)) el.style.transform = `translate3d(${this.w / 2}px, ${((off - s) * RATES[k]).toFixed(1)}px, 0)`;
-    this.seaStrip.style.transform = `translate3d(0, ${(off - s).toFixed(1)}px, 0)`;
-    const top = s - off - 400, bot = s - off + this.h + 400;
-    for (const c of this.chunks) {
-      const on = c.z1 > top && c.z0 < bot;
-      if (on !== c.on) { c.on = on; for (const el of c.els) el.style.display = on ? '' : 'none'; }
+  // u: the title pan, 0 (stars) .. 1 (the map at its top). The map's own
+  // scroll needs nothing from here.
+  setView(u) {
+    u = Math.min(1, Math.max(0, u));
+    if (u === this.u) return;
+    const was = this.u;
+    this.u = u;
+    if (u >= 1) {
+      if (was < 1) { this.sky.style.display = 'none'; this.root.style.backgroundColor = this.backCol ?? this.firstSea ?? NIGHT; }
+      return;
     }
-    // the sky is the top of the page: its horizon moves with it
-    const horizon = this.h + 60 - this.h * u - s;
-    this.sky.style.display = horizon > -10 ? '' : 'none';
-    if (horizon > -10) this.drawSky(horizon);
-  }
-  drawSky(horizon) {
-    const g = this.sky.getContext('2d'), d = this.dpr, w = this.w, h = this.h;
-    g.setTransform(d, 0, 0, d, 0, 0);
-    g.clearRect(0, 0, w, h);
-    const hy = Math.min(h, horizon);
-    const grad = g.createLinearGradient(0, horizon - h * 1.4, 0, horizon);
-    grad.addColorStop(0, '#121731'); grad.addColorStop(0.45, '#232a52'); grad.addColorStop(0.72, '#4c5187');
-    grad.addColorStop(0.88, '#bd93b8'); grad.addColorStop(0.965, '#f6cbc4'); grad.addColorStop(1, '#ffeedd');
-    g.fillStyle = grad; g.fillRect(0, 0, w, hy);
-    const travel = (this.h + 60) - horizon;
-    g.fillStyle = '#eef0ff';
-    for (const L of this.stars) {
-      for (const [x, y, k] of L.pts) {
-        const sy = y * h - travel * L.rate;
-        if (sy < -4 || sy > hy - 24) continue;
-        g.globalAlpha = L.a * Math.min(1, (hy - 24 - sy) / (h * 0.35)) * (0.5 + 0.5 * k);
-        g.fillRect(x * w, sy, L.r, L.r);
-      }
-    }
-    g.globalAlpha = 1;
-    if (horizon < h) {
-      const first = this.model ? seaColour(this.model.regions[0].base) : 0xf3dcd4;
-      const sea = g.createLinearGradient(0, hy, 0, h);
-      sea.addColorStop(0, '#fbe6dc'); sea.addColorStop(1, rgba(first));
-      g.fillStyle = sea; g.fillRect(0, hy, w, h - hy);
-      g.fillStyle = 'rgba(255, 248, 236, .9)'; g.fillRect(0, hy - 1, w, 1.5);
-    }
+    if (was >= 1 || was < 0) { this.sky.style.display = ''; this.root.style.backgroundColor = NIGHT; }
+    const { h } = this;
+    const horizon = h + DAWN - h * u;   // as the map's page slides up (main.js setScroll)
+    this.sky.style.transform = `translate3d(0, ${(horizon - this.Hs).toFixed(1)}px, 0)`;
+    for (const L of this.stars) L.c.style.transform = `translate3d(0, ${(h * u * (1 - L.rate)).toFixed(1)}px, 0)`;
   }
 }
 

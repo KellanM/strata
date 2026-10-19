@@ -63,6 +63,37 @@ A fresh critic reviewed the integrated build before it shipped. Fixes from that 
 - The return scroll put the just-solved stone under the corner buttons.
 - The shrine card wrapped and was sharp for only about 0.3 s. It is now "✦ The Shrine of ✦ / First Light", it is held longer, and it is sharp sooner.
 
+**Phone fix 1: the scenery trailed the stones.** On Kellan's iPhone, the stones and trail scrolled at full rate but the peaks and mist moved at about 7 fps.
+
+*Cause:* the world was a fixed layer moved by `setView()` from script on every scroll, while the stones scrolled natively on the compositor. On the phone the main thread was free only about 7 times a second.
+
+*Fix:*
+- **The world moved into the scroller.** It is now `.mw-scene`, the first child of `.map-scroll`, under the stones, so the browser scrolls it with them and nothing runs during a scroll.
+- **Far-peak parallax (0.84) is a CSS scroll-driven animation** (`animation-timeline: --map-scroll`). It is used only where `CSS.supports` reports it, and never under Reduce Motion; elsewhere the far peaks move with the page.
+- **The fixed `#map-world` is now only the title's sky.** It holds a gradient plus three pre-drawn star sheets, moved by transforms during the pan, with no canvas redraw per frame.
+- **The dawn and horizon** at the top of the scene continue that sky, so the seam doesn't show.
+
+**Phone fix 2: main-thread cost during a scroll** (traced at CPU ×4, `paint-who.mjs`, `perf-ab.mjs`). Any per-frame repaint re-layerized the whole map (about 3,700 nodes). The repaints came from:
+- about 100 drifting mist ribbons (now still);
+- SVG-internal animations: the shrine gem's float and the companion's bob and lamp. Each now animates its own `<svg>` box, and only unclaimed shrines float.
+- the title's swipe hint, which kept animating under the map.
+
+The map's stones and trail are now filed into 1000 px bands with `content-visibility: auto` (`.map-band`, each with its own svg in page coordinates). Off-screen bands are neither painted nor layerized.
+
+**Frame rates** (rAF at CPU ×4, 390×844 @3x, every stone solved):
+
+| | Map fling | Title pan |
+|---|---|---|
+| Before | 9–10 fps | 21–25 fps |
+| After | 22–27 fps | 40–52 fps |
+
+During a fling, the world gets 0 style writes from script (387 before). The gap between a near peak and a stone moves 0 px; before, it jumped up to 211 px between frames. The far layer's offset is exactly 0.16 of the scroll (`par-check.mjs`).
+
+**The dotted trail.**
+- Dotted and solid stretches are the same `<path>`: the same `segment()` data, and only the dash style differs. The shrine spur also turns solid once its shrine is kept.
+- `trail-geom.mjs` compares every segment's `d` across 17 saves (walking, mist-lifts, folding): 0 changes.
+- `trail-overlay-*.png` draws every path twice, red dotted over cyan solid, across chapter boundaries. The two coincide.
+
 **Still open:** the phone's GPU and real touch momentum, and tuning the shrine bell by ear.
 
 ## Round 3: mist, and mountain tops (2026-10-19)
