@@ -13,6 +13,7 @@ import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
 import { rate as motionRate, after, mark, reveal, devFlags, ease, DUR, BEAT } from './motion.js';
+import { migrateSaves } from './migrate.js';
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -70,6 +71,7 @@ const clock0 = performance.now();
 const now = () => ((performance.now() - clock0) / 1000) * motionRate;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+migrateSaves();   // once, before the save is read: old shrine solves move to their levels
 const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 
 // ---------------------------------------------------------------- puzzles

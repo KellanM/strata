@@ -1,8 +1,10 @@
 # New biomes: applied
 
 **Applied 2026-10-18.** Kellan picked gallery objects for all eight biomes, and
-the map now has 15 chapters, 140 levels and 13 shrines. The proposal below is
-kept as written; "As built" records what shipped.
+the map now has 15 chapters, 140 levels and 13 shrines. Gallery page 9 then
+added 11 levels and two shrines, and replaced four shrines: 151 levels and 15
+shrines, every chapter with its shrine. The proposal below is kept as
+written; "As built" records what shipped.
 
 ## As built
 
@@ -14,16 +16,16 @@ place; curated `clues:` levels kept their clues).
 |---|---|---|---|---|---|
 | I | First Light | Dawn | 9 | 7.67 | Cottage |
 | II | Teatime | Teatime | 8 | 8.76 | Layer Cake |
-| III | Moss Garden | Mint | 10 | 9.03 | Frog |
-| IV | The Orchard | Orchard | 9 | 10.34 | none yet |
+| III | Moss Garden | Mint | 11 | 9.33 | Moss Tortoise |
+| IV | The Orchard | Orchard | 10 | 10.56 | Mother Tree |
 | V | Autumn Woods | Autumn | 12 | 10.60 | Cider Press |
-| VI | The Lagoon | Lagoon | 11 | 10.93 | Whale |
+| VI | The Lagoon | Lagoon | 12 | 11.10 | Sea Gate |
 | VII | The Deep | Deep | 8 | 11.15 | Black Smoker |
-| VIII | Desert Oasis | Desert | 5 | 11.30 | Keyhole Arch |
-| IX | Ember Steps | Dusk | 9 | 11.42 | Paper Lantern |
+| VIII | Desert Oasis | Desert | 10 | 11.25 | Keyhole Arch |
+| IX | Ember Steps | Dusk | 10 | 11.55 | Summit Shrine |
 | X | Old Stones | Stones | 9 | 11.59 | Stone Circle |
-| XI | Clockwork Workshop | Clockwork | 11 | 11.77 | Gear Train |
-| XII | Lantern Festival | Festival | 10 | 11.88 | none yet |
+| XI | Clockwork Workshop | Clockwork | 12 | 11.87 | Clock Tower |
+| XII | Lantern Festival | Festival | 11 | 11.96 | Great Lantern Gate |
 | XIII | Frost Peaks | Frost | 9 | 12.02 | Igloo |
 | XIV | Cloud Isles | Clouds | 11 | 12.45 | Floating Isle |
 | XV | Starfall | Night | 9 | 12.71 | Crescent Moon |
@@ -43,8 +45,36 @@ place; curated `clues:` levels kept their clues).
   behind it open, and a moved level that now sits further on stays solved
   without unlocking the chapters around it. Fresh saves behave exactly as
   before.
-- The Orchard and Lantern Festival still have no shrine (none was proposed);
-  a pick for each would complete the set.
+- The Orchard and Lantern Festival had no shrine at first; gallery page 9
+  gave them one (below).
+
+### Gallery page 9 (applied 2026-10-18)
+
+The table above is as of this update.
+
+- **Desert Oasis, 5 to 10 levels:** Chameleon, Ostrich, Hooded Falcon, Kasbah
+  Tower and Brass Lantern, at their gallery clue settings (10.6 to 11.8).
+- **New shrines:** Mother Tree (The Orchard) and Great Lantern Gate (Lantern
+  Festival). Their runners-up became levels: The First Seed is the Orchard's
+  last level (retuned to 12.6, just above Wisteria Bonsai), and Mikoshi sits
+  late in Lantern Festival (12.8). Neither needed the swap fallback.
+- **Replaced shrines:** Moss Tortoise, Sea Gate, Summit Shrine and Clock Tower
+  replace the Frog, the Whale, the Paper Lantern and the Gear Train. Each old
+  shrine is now a regular level in its chapter with an id of its own (`frog`,
+  `whale`, `paper-lantern`, `gear-train`), retuned to fit the ramp and keep the
+  chapter means rising: Frog 12.4 (last in Moss Garden), Whale 12.9 (last in
+  The Lagoon), Paper Lantern 12.7 (before Spiral Stair), Gear Train 13.0
+  (before Armillary Sphere). No other level was retuned.
+- **Saves:** a shrine's id comes from its chapter (`bonus-<chapter>`), so it
+  stayed while the object changed. `public/js/migrate.js` runs once before
+  the save is read (flag `strata.migrated.shrines-p9`): an old shrine solve
+  (time, mistakes, stars, score) moves to the level's new id, the shrine is
+  cleared so the new one waits unsolved, and the map's seen-objects list and
+  companion stone follow the object. Running it again changes nothing.
+- **Trail:** all 11 page-9 levels are in `ADDED_LATER`, so a returning
+  player's trail keeps its reach and the new stones behind it open.
+  `test/migrate.test.js` covers an old Frog/Whale shrine save, a mid-progress
+  save, a finished save and a fresh one.
 
 ## The proposal
 
