@@ -454,3 +454,5 @@ Playtesters struggled to parse the hints. The worst was "A 3 in a row of three: 
 - **Stay within the 18-word limit** (test/puzzle.test.js).
 
 Level 1's card changed from "Each number counts the object's cubes in the row running in from its face" to "Numbers now sit on three faces. Each counts the object's cubes in its row: across, down or back."
+
+**Wall teaches the hold (2026-10-19).** After the Mark button, a new hint asks the player to switch back to Chisel and hold a cube to mark it (it waits for the mark). The last hint sums it up: "Tap to chisel, hold to mark, no switching needed." A mouse has no hold, so a hint's optional `mouse` text says right-click instead (`hintText` in main.js, shown when the pointer is fine and can hover). Checked with a real 700 ms touch hold on a touch phone viewport, and with a right-click on desktop (`shots/tutorial/hold.mjs`, `highlight.mjs full`).

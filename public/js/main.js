@@ -676,6 +676,10 @@ function resetCoaching(entry, quiet) {
   }
 }
 
+// a mouse has no hold: its other tool is a right-click, so a hint may say so
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const hintText = (h) => (finePointer && h?.mouse) || h?.text;
+
 function currentHint() {
   return tutorial && game?.entry.lesson ? TUTORIAL[tutorial.step].hints[tutorial.hint] : null;
 }
@@ -730,7 +734,7 @@ function renderCoach(override) {
   // a solved lesson's object has the stage to itself (its name is over it)
   if ((!lesson && !coachCard) || (lesson && game.solved)) { coach.classList.remove('show'); applyCues(); return; }
   const h = currentHint();
-  const text = override || (lesson ? (tutorial.open ? h?.text : '') : coachCard.text) || '';
+  const text = override || (lesson ? (tutorial.open ? hintText(h) : '') : coachCard.text) || '';
   const was = $('#coach-text').textContent, wasShown = coach.classList.contains('show');
   $('#coach-text').textContent = text;
   $('#coach-dots').innerHTML = lesson ? TUTORIAL.map((_, k) =>

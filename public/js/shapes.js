@@ -2758,6 +2758,7 @@ export function buildCells(shape) {
 //   pulse: [x, y, z]  /  focus: [[x, y, z], ...]   the cube(s) to act on
 //   line: [axis, x, y, z]  /  lines: [line, ...]   the row(s) a number counts
 //   pulseHandle / pulseTool: 'paint' | 'break'   point at a control
+// `mouse`: the words for a mouse, where a hold is a right-click (main.js hintText).
 // `nudge` (seconds): if the player pauses that long, a row with a move glows.
 // `name` is the form the lesson's stone hides: unknown ("?") until it is
 // uncovered, then named over it, as in a level.
@@ -2803,7 +2804,12 @@ export const TUTORIAL = [
     cell: (x, y) => (y === 0 ? (x % 2 ? MOSS : 0xa89c8e) : 0),   // dry stone, moss between
     hints: [
       { text: 'All 4 cubes in this row belong. Pick Mark below, then tap one to protect it.', line: [0, 0, 0, 0], pulseTool: 'paint', until: 'paint' },
-      { text: 'Marked cubes can’t be chiselled by mistake. Switch back to Chisel and clear the 0 row.', line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
+      { text: 'Marked cubes can’t be chiselled. Now switch back to Chisel and hold a cube here to mark it.',
+        mouse: 'Marked cubes can’t be chiselled. Now switch back to Chisel and right-click a cube here to mark it.',
+        line: [0, 0, 0, 0], pulseTool: 'break', until: 'paint' },
+      { text: 'Tap to chisel, hold to mark, no switching needed. Now clear the 0 row.',
+        mouse: 'Click to chisel, right-click to mark, no switching needed. Now clear the 0 row.',
+        line: [0, 0, 1, 0], pulseTool: 'break', until: 'solved' },
     ],
   },
   {

@@ -128,7 +128,7 @@ test('tutorial lessons are solvable with exactly the clues they show', async () 
     assert.equal(lesson.hints.at(-1)?.until, 'solved', `${lesson.id}: the last hint must last until it is solved`);
     for (const h of lesson.hints) {
       assert.ok(events.has(h.until), `${lesson.id}: unknown event ${h.until}`);
-      assert.ok(h.text.split(/\s+/).length <= 18, `${lesson.id}: hint too long: ${h.text}`);
+      for (const t of [h.text, h.mouse].filter(Boolean)) assert.ok(t.split(/\s+/).length <= 18, `${lesson.id}: hint too long: ${t}`);
       // what a hint outlines (cubes.js focus) must lie on the block
       const lines = [h.line, ...(h.lines ?? [])].filter(Boolean);
       for (const l of lines) assert.ok([0, 1, 2].includes(l[0]), `${lesson.id}: a hint line needs an axis 0-2`);
