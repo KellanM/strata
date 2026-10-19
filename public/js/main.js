@@ -987,19 +987,82 @@ function endPointer(e, cancelled) {
     resultFinish();
   } else if (!cancelled && !press.moved && !press.done) {
     const i = pick(press.x, press.y);
-    if (i < 0) {
+    const which = press.button === 2 || press.shift ? otherTool() : tool;
+    if (rowClearTap(press.x, press.y, which)) { /* the second tap of a double-tap on a shown 0: the row goes */ }
+    else if (i < 0) {
       const t = now();
       if (t - lastEmptyTap < 0.35) { resetView(); lastEmptyTap = -1; } else lastEmptyTap = t;
     } else {
-      act(i, press.button === 2 || press.shift ? otherTool() : tool);
+      const face = which === 'break' ? tappedLine(i) : null;
+      act(i, which);
+      lastChiselTap = face && { ...face, t: now(), x: press.x, y: press.y };
     }
   }
   press = null;
 }
+
+// Double-tap a 0 to clear its row. Every face shows the clue of the line
+// running straight in from it; if the tapped face's clue is shown and is 0,
+// a second tap on the same spot (within DOUBLE_TAP and DOUBLE_TAP_PX) chisels the rest of the line, front to back,
+// one cube after another. Each goes through act(), so undo, the save, the
+// tutorial and the win all see ordinary chisels. Hidden or non-zero clues:
+// the second tap is just a tap. A 0 line has no cube of the object, so this
+// can never cause a slip.
+const DOUBLE_TAP = 0.35, DOUBLE_TAP_PX = 30;
+const ROW_CLEAR_STEP = 0.085;   // seconds between the first two cubes of the cascade (the one tuning dial)
+const ROW_CLEAR_EASE = 0.93;    // each later gap is this much shorter, so the run gathers pace
+let lastChiselTap = null;       // { line, axis, side, i, t, x, y }: the last chiselling tap, for a double-tap
+let rowClearAt = -9;            // scene time of the last row clear (the browser's own dblclick must not reset the view)
+
+// the face of cube i the last pick met (lastTouch), and the line straight in from it
+function tappedLine(i) {
+  if (lastTouch?.i !== i) return null;
+  const d = lastTouch.point.clone().sub(cellWorld(i)).toArray();
+  const axis = d.reduce((b, v, a) => (Math.abs(v) > Math.abs(d[b]) ? a : b), 0);
+  return { line: game.puzzle.lineOf(i, axis), axis, side: d[axis] >= 0 ? 1 : -1, i };
+}
+
+function rowClearTap(x, y, which) {
+  const prev = lastChiselTap;
+  lastChiselTap = null;
+  if (!prev || !game || game.solved || which !== 'break') return false;
+  if (now() - prev.t > DOUBLE_TAP || Math.hypot(x - prev.x, y - prev.y) > DOUBLE_TAP_PX) return false;
+  const { line, axis, side } = prev;
+  if (line.hidden || line.count !== 0) return false;
+  // the same spot is the same line: with its first cube gone, the ray there may
+  // pass through the hole onto a neighbour, which is still this double-tap
+  clearRow(line, axis, side, prev.i);
+  return true;
+}
+
+function clearRow(line, axis, side, from) {
+  const g = game, p = g.puzzle;
+  const at = p.coords(from)[axis];
+  // front to back: from the tapped face inward, then anything left behind it
+  const key = (c) => { const k = (at - p.coords(c)[axis]) * side; return k >= 0 ? k : 1000 - k; };
+  const cells = [...line.cells].filter((c) => !g.broken[c] && !g.painted[c] && inPeel(c)).sort((a, b) => key(a) - key(b));
+  rowClearAt = now();
+  mark(`row clear: ${cells.length} cubes`);
+  if (!cells.length) return;
+  // a ripple runs ahead through the row at the cascade's pace
+  if (!reduceMotion) cubes.ripple(p.coords(from), now(), 1.3, 1 / ROW_CLEAR_STEP);
+  let delay = 0, gap = ROW_CLEAR_STEP;
+  cells.forEach((c, k) => {
+    const go = () => {
+      if (game !== g || g.solved || g.broken[c] || g.painted[c]) return;   // finished, left or marked meanwhile
+      lastTouch = null;   // its pieces fly from its open sides
+      act(c, 'break');
+    };
+    if (reduceMotion || k === 0) go();
+    else after(delay, go);
+    if (k > 0) gap = Math.max(0.045, gap * ROW_CLEAR_EASE);
+    delay += gap;
+  });
+}
 canvas.addEventListener('pointerup', (e) => endPointer(e, false));
 canvas.addEventListener('pointercancel', (e) => endPointer(e, true));
 canvas.addEventListener('pointerleave', () => cubes.uniforms.uHover.value.set(-99, -99, -99));
-canvas.addEventListener('dblclick', (e) => { if (pick(e.clientX, e.clientY) < 0) resetView(); });
+canvas.addEventListener('dblclick', (e) => { if (now() - rowClearAt > 0.6 && pick(e.clientX, e.clientY) < 0) resetView(); });
 
 let rotateFrom = null;
 controls.addEventListener('start', () => { rotateFrom = camera.position.clone(); viewAnim = null; });

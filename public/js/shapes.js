@@ -2786,7 +2786,9 @@ export const TUTORIAL = [
     cell: (x, y) => (y === 0 ? [TEAL, 0x5fb0a8, TEAL][x] : 0),
     hints: [
       { text: 'The number beside a row says how many of its cubes belong to the shape.', line: [0, 0, 0, 0], until: 'break' },
-      { text: 'This row says 0, so none of it belongs. Chisel every cube in it.', line: [0, 0, 1, 0], until: 'solved' },
+      { text: 'This row says 0, so none of it belongs. Double-tap the 0 to clear it all.',
+        mouse: 'This row says 0, so none of it belongs. Double-click the 0 to clear it all.',
+        line: [0, 0, 1, 0], until: 'solved' },
     ],
   },
   {
