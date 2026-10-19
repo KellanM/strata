@@ -531,6 +531,16 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 - [ ] An A/B test (MAX's ad-unit A/B, or our own flag) between the default caps and a lighter variant, measuring D1/D7 retention, session length, ad ARPDAU and Remove Ads conversion.
 - [ ] Review mining in the first month for "ad", "ads" and "paid".
 
+## Kellan's decisions (2026-10-19)
+
+- **Gem fill: rejected.** "Feels pay to win." Gems keep meaning a clean hand, so no gem can be bought or watched for.
+- **Remove Ads:** $3.99, framed as support: "Strata is free. Remove ads and support it."
+- **Lantern flames are earned by play:** +1 each morning, +1 for a level's first flawless solve, +1 the first time a chapter is completed; start 3, cap 5.
+- **Interstitials between levels:** yes, at the caps as built.
+- **Shrines can be opened with an ad,** once the trail has reached their chapter (reversing the study's "no").
+- **A paid "clear all 0 rows" item: not sold.** It became a free gesture, double-tap a 0.
+- Still open: 4 (an A/B of a tighter interstitial ceiling), 6 (Kids positioning) and 7 (a premium route).
+
 ## Open questions for Kellan
 
 1. **Should filled gems count as real gems?** They count towards shrines in the proposal. Alternatives:
