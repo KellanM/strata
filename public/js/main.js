@@ -1204,6 +1204,19 @@ window.addEventListener('keydown', (e) => {
   if (viewOpen()) closeView(); else closeJournal();
 }, true);
 $('#help [data-close]').addEventListener('click', () => show('#help', false));
+// How to play's pages; a mouse reads "right-click" where a finger reads "hold"
+const helpTabs = [...document.querySelectorAll('#help [role="tab"]')];
+function helpTab(k) {
+  $('#help .tabs').dataset.tab = k;
+  helpTabs.forEach((t, i) => {
+    t.setAttribute('aria-selected', i === k);
+    const page = $('#' + t.getAttribute('aria-controls'));
+    if (i === k && page.hidden) { page.classList.remove('in'); void page.offsetWidth; page.classList.add('in'); }
+    page.hidden = i !== k;
+  });
+}
+helpTabs.forEach((t, i) => t.addEventListener('click', () => helpTab(i)));
+if (finePointer) for (const dt of document.querySelectorAll('#help [data-mouse]')) dt.textContent = dt.dataset.mouse;
 $('#coach-skip').addEventListener('click', finishTutorial);
 function goNext() {
   clearResult();

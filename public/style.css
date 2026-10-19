@@ -153,6 +153,46 @@ h2 { font-size: 22px; letter-spacing: .32em; margin-bottom: 14px; }
 .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 button.primary { background: var(--ink); color: var(--sky); box-shadow: none; padding: 12px 24px; border-radius: 999px; letter-spacing: .24em; text-transform: uppercase; font-size: 13px; }
 #help .primary { display: block; margin: 20px auto 0; }
+#help .panel { padding-top: 30px; }
+#help h2 { text-align: center; padding-left: .32em; margin-bottom: 18px; }
+
+/* How to play's three pages: Rules, Touch, Settings. A pill like the tools,
+   its highlight sliding between them; the pages share one height so the panel
+   never jumps as you switch */
+.tabs { position: relative; display: flex; padding: 4px; border-radius: 999px; margin: 0 auto 20px; max-width: 320px;
+  background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.tabs::before { content: ""; position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: calc(100% - 8px);
+  border-radius: 999px; background: var(--panel-strong); box-shadow: 0 2px 10px rgba(40, 20, 60, 0.1);
+  transition: transform .45s var(--ease-out); }
+.tabs[data-tab="1"]::before { transform: translateX(100%); }
+.tabs[data-tab="2"]::before { transform: translateX(200%); }
+.tabs button { flex: 1; position: relative; z-index: 1; padding: 10px 0; border-radius: 999px; background: none; box-shadow: none;
+  font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); transition: color .3s; }
+.tabs button[aria-selected="true"] { color: var(--ink); }
+.help-pages { display: grid; }
+.help-pages > .help-page { grid-area: 1 / 1; }
+.help-pages > .help-page[hidden] { display: block; visibility: hidden; }
+.help-page.in { animation: page-in .45s var(--ease-out) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .help-page.in { animation: none; } .tabs::before { transition: none; } }
+
+.help-page .lead { margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
+.help-page .aside { margin: 16px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.legend, .gestures { margin: 0; display: grid; }
+.legend { grid-template-columns: 44px 1fr; gap: 12px 12px; align-items: center; }
+.legend dt { display: grid; place-items: center; }
+.legend dd, .gestures dd { margin: 0; font-size: 14px; line-height: 1.45; }
+.glyph.plain { border-color: transparent; font-size: 15px; }
+.glyph.slip { border-color: transparent; font-size: 15px; }
+.gems { font-size: 10px; letter-spacing: .1em; color: var(--ink); white-space: nowrap; }
+.gestures { grid-template-columns: minmax(0, 54%) 1fr; }
+.gestures dt, .gestures dd { padding: 10px 0; border-top: 1px solid var(--line); }
+.gestures dt:first-of-type, .gestures dt:first-of-type + dd { border-top: 0; padding-top: 2px; }
+.gestures dt { font-weight: 700; font-size: 14px; padding-right: 12px; }
+.gestures dd { color: var(--ink-soft); }
+#help-more .toggles { margin-top: 4px; }
+#help-more .home-tip { margin-top: 18px; }
+#help-more .home-tip p { font-size: 13px; line-height: 1.55; }
 
 .glyph { display: inline-grid; place-items: center; width: 24px; height: 24px; font-size: 13px; border: 1.5px solid currentColor; margin: 0 2px; }
 .glyph.circle { border-radius: 50%; }
