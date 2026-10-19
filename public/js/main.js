@@ -11,6 +11,7 @@ import { Cubes } from './cubes.js';
 import { Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
+import { MapWorld } from './mapworld.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
 import { rate as motionRate, after, mark, reveal, devFlags, ease, DUR, BEAT } from './motion.js';
 import { migrateSaves } from './migrate.js';
@@ -20,10 +21,11 @@ THREE.ColorManagement.enabled = false;
 
 const $ = (s) => document.querySelector(s);
 const canvas = $('#scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.autoClear = false;
+renderer.setClearColor(0x000000, 0);   // clear to transparent: the title's logo stands on the map's world behind
 
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
@@ -71,6 +73,19 @@ const clock0 = performance.now();
 const now = () => ((performance.now() - clock0) / 1000) * motionRate;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// The map's world (mapworld.js, docs/map-study.md): flat layers behind this
+// canvas. At the title the canvas draws only the logo (and its light) over the
+// world's night sky. While the map is up the canvas fades out with the map's
+// own parts (0.5 s) and the level isn't drawn at all; it fades back in only
+// once the level it shows is the right one (a dive builds it under the veil).
+// Declared before the first draw() at boot.
+const mapWorld = new MapWorld($('#map-world'));
+const menuEl = $('#menu');
+const titleEl = $('#title');
+const mapScroller = $('#menu .map-scroll');
+let titleU = 0;               // the title pan, 0 (stars) .. 1 (the map at its top)
+let mapUpSince = -1;          // scene time the map covered the level (-1: it doesn't)
 migrateSaves();   // once, before the save is read: old shrine solves move to their levels
 const solvedStore = JSON.parse(localStorage.getItem('strata.solved') || '{}');
 
@@ -138,7 +153,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   controls.update();
 
   // a lesson's object is a mystery until it's uncovered, as a level's is
-  $('#pz-name').textContent = entry.lesson ? '?' : solvedStore[shape.id] ? shape.name : `No. ${entry.number ?? '—'}`;
+  $('#pz-name').textContent = entry.lesson ? '?' : solvedStore[shape.id] ? shape.name : entry.bonus ? '✦ Shrine' : `No. ${entry.number ?? '—'}`;
   $('#pz-meta').textContent = entry.lesson
     ? `lesson ${entry.lesson} of ${TUTORIAL.length}`
     : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
@@ -148,8 +163,11 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   renderCoach();
   // the first step into a chapter: its card is held on its own sky first, and
   // the block assembles as it leaves
-  const hold = !quiet && !entry.lesson && chapterUnseen(entry) && !reduceMotion ? DUR.ceremony : 0;
-  maybeChapterCard(entry, hold ? (introDelay + hold) * 1000 / motionRate : 0);
+  // a shrine always has its card held: "✦ The Shrine of …", with its bells
+  const atShrine = !quiet && !!entry.bonus;
+  const hold = !quiet && !entry.lesson && (atShrine || chapterUnseen(entry)) && !reduceMotion ? DUR.ceremony * (atShrine ? 1.6 : 1) : 0;
+  if (atShrine) { shrineCard(entry, hold ? (introDelay + hold) * 1000 / motionRate : 0); sound.shrine(introDelay); }
+  else maybeChapterCard(entry, hold ? (introDelay + hold) * 1000 / motionRate : 0);
 
   // the block assembles itself: cubes drop into place from the base up, then a
   // soft wave runs through the finished stone; taps wait until it's whole
@@ -189,11 +207,28 @@ function maybeChapterCard(entry, holdMs = 0) {
     if (seen.includes(ch.name)) return;
     seen.push(ch.name);
     localStorage.setItem('strata.chapters', JSON.stringify(seen));
+    chapterCard.classList.remove('shrine');
     chapterCard.querySelector('.numeral').textContent = ch.numeral;
     chapterCard.querySelector('.cname').textContent = ch.name;
     chapterCard.querySelector('.cline').textContent = ch.line;
     chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
     chapterCard.classList.add('show');
+    clearTimeout(chapterCardTimer);
+    chapterCardTimer = setTimeout(() => chapterCard.classList.remove('show'), holdMs ? holdMs + 150 : 2900);
+  }, 60);
+}
+// A shrine's card, every time you step into one: the same card in gold
+function shrineCard(entry, holdMs = 0) {
+  const ch = CHAPTERS.find((c) => c.name === entry.shape.chapter);
+  setTimeout(() => {
+    if (game?.entry !== entry || $('#menu').classList.contains('show')) return;
+    chapterCard.classList.add('shrine');
+    chapterCard.querySelector('.numeral').textContent = '✦ The Shrine of ✦';
+    chapterCard.querySelector('.cname').textContent = ch?.name ?? entry.shape.chapter;
+    chapterCard.querySelector('.cline').textContent = 'Kept for those who earned its light.';
+    chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
+    chapterCard.classList.add('show');
+    mark('shrine: card');
     clearTimeout(chapterCardTimer);
     chapterCardTimer = setTimeout(() => chapterCard.classList.remove('show'), holdMs ? holdMs + 150 : 2900);
   }, 60);
@@ -1113,6 +1148,10 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
     onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0)),
     onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
     onPlay: (entry, el) => diveInto(el, entry.palette, () => startPuzzle(entry)),
+    world: mapWorld,
+    // a chapter's cloud parts: the music moves into its key, with a sweep; a bell as it clears
+    onPart: (r) => { sound.setKey(r.base.name); sound.peel(); },
+    onParted: () => sound.stone(3),
   });
   // stones and region names fade and rise in as they come into view (not on a
   // quiet re-layout, which would make the whole map blink)
@@ -1202,7 +1241,7 @@ function diveInto(el, palette, start) {
     v.style.setProperty('--vx', `${r.left + r.width / 2}px`);
     v.style.setProperty('--vy', `${r.top + r.height / 2}px`);
   }
-  veilGlow.style.background = hexOf(palette.glow);
+  veilGlow.style.background = palette.gild ? '#ffdc8c' : hexOf(palette.glow);   // a shrine's portal opens in gold
   menu.classList.remove('arriving', 'settling', 'leaving');
   void veil.offsetWidth;   // commit the closed diamond at the stone first, so it opens from there
   for (const v of [veil, veilGlow]) v.classList.add('open', 'in');
@@ -1256,6 +1295,7 @@ function resize() {
   camera.updateProjectionMatrix();
   const px = renderer.getPixelRatio();
   rays.setSize(w * px, h * px);
+  mapWorld.setSize(w, h, px);
   background.uniforms.uAspect.value = aspect;
 }
 
@@ -1348,6 +1388,10 @@ function draw() {
   background.uniforms.uCenter.value.set(cx, cy);
   motes.uniforms.uCenter.value.set(cx, cy);
 
+  // the title (until it has finished gliding away): no sky of our own, the
+  // logo and its light stand on the map's world behind the canvas
+  const onTitle = titleEl.classList.contains('show');
+
   // 1) silhouette -> outward rays
   if (game) {
     rays.render(renderer, () => {
@@ -1370,12 +1414,30 @@ function draw() {
 
   // 2) scene, 3) rays + vignette on top
   renderer.setRenderTarget(null);
+  renderer.setClearColor(0x000000, 0);   // the rays' mask pass leaves an opaque black clear behind
   renderer.clear();
+  // (the dust motes blend for an opaque sky; on the title the world's stars take their place)
+  background.mesh.visible = motes.points.visible = !onTitle;
   renderer.render(scene, camera);
+  background.mesh.visible = motes.points.visible = true;
   if (game) rays.composite(renderer);
 }
+// The world and the canvas: the world shows with the title or the map; the
+// canvas fades out while the map is up (diving included: until the new level
+// is built under the veil, the canvas only holds the old one), and the level
+// stops drawing once it's hidden.
 function frame() {
-  draw();
+  const onTitle = titleEl.classList.contains('show');
+  const mapUp = !onTitle && menuEl.classList.contains('show');
+  const worldUp = onTitle || menuEl.classList.contains('show');
+  document.body.classList.toggle('world-up', worldUp);
+  document.body.classList.toggle('map-up', mapUp);
+  document.body.classList.toggle('title-up', onTitle);   // style.css: plain classes, never body:has(), which re-styled every element each frame
+  document.body.classList.toggle('menu-open', menuEl.classList.contains('show'));
+  if (worldUp) mapWorld.setView(onTitle ? titleU : 1, onTitle ? 0 : mapScroller.scrollTop);
+  const t = now();
+  if (mapUp) { if (mapUpSince < 0) mapUpSince = t; } else mapUpSince = -1;
+  if (!(mapUp && t - mapUpSince > 0.6)) draw();
   requestAnimationFrame(frame);
 }
 
@@ -1551,8 +1613,10 @@ after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const toMap = () => !!localStorage.getItem('strata.tutorial');
 const mapSheet = () => $('#menu .map-scroll');
+const DESCENT = { first: 1.5, again: 0.8 };   // seconds for a whole descent (decision 2, docs/map-study.md)
 function setScroll(k) {
   pull.k = k;
+  titleU = Math.min(1, Math.max(0, k / window.innerHeight));
   const H = window.innerHeight;
   titleScreen.style.translate = `0 ${-k}px`;
   const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -1600,7 +1664,17 @@ function finishPull() {
   mark('title: to ' + (toMap() ? 'map' : 'lesson'));
   sound.peel();
   const H = window.innerHeight;
-  scrollTo(H, 0.5, ease.glide, () => {
+  // the descent: about 1.5 s, lingering at the horizon (world.js); quicker if
+  // this session has already seen it (an update reload). The lesson path keeps
+  // the short glide: it isn't going to the map.
+  const seen = sessionStorage.getItem('strata.descended') === '1';
+  sessionStorage.setItem('strata.descended', '1');
+  const left = 1 - pull.k / H;
+  const seconds = !toMap() ? 0.5 : reduceMotion ? 0.01 : (seen ? DESCENT.again : DESCENT.first) * (0.35 + 0.65 * left);
+  scrollTo(H, seconds, toMap() ? ease.out : ease.glide, () => {
+    // the logo has scrolled away: hide the canvas outright before its view offset
+    // resets, or the logo pops back to the centre while the canvas fades out
+    if (toMap()) { canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; }); }
     titleScreen.classList.remove('show');
     titleScreen.style.cssText = '';
     camera.clearViewOffset();

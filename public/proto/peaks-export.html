@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <title>Strata · peaks export (tools/render-peaks.mjs)</title>
+  <script type="importmap">{ "imports": { "three": "../vendor/three/build/three.module.min.js" } }</script>
+</head>
+<body>
+  <!-- Renders every palette's mountain tops with the game's block shader and packs
+       them into one atlas per palette. Driven by tools/render-peaks.mjs. -->
+  <script type="module">
+    import { PALETTES } from '../js/palettes.js';
+    import { seaColour, mistColour } from '../js/mapworld.js';
+    import { renderVoxels } from './voxels.js';
+    import { peaksFor } from './peaks.js';
+    const lum = (h) => (0.2126 * ((h >> 16) & 255) + 0.7152 * ((h >> 8) & 255) + 0.0722 * (h & 255)) / 255;
+    const DPR = 2;
+    const load = (url) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.src = url; });
+    window.exportPeaks = async () => {
+      const out = {};
+      for (const p of PALETTES) {
+        const list = peaksFor(p), haze = seaColour(p), mist = mistColour(p);
+        const far = lum(p.skyTop) < 0.35 ? 0.35 : 0.5;
+        const want = [['sig', 0, 10, 0], ['lf1', 1, 7.5, 0], ['lf2', 2, 7.5, 0], ['far3', 3, 4.5, far], ['far4', 4, 4.5, far], ['ghost1', 1, 6, 0.2], ['ghost2', 2, 6, 0.2]];
+        const parts = [];
+        for (const [key, i, ppv, tint] of want) {
+          const r = renderVoxels(list[i % list.length].make(), p, { haze, ppv, fade: 0.5, tint: tint ? { color: mist, amount: tint } : null, dpr: DPR });
+          parts.push({ key, r, img: await load(r.url) });
+        }
+        // one row, 2 px apart
+        const W = parts.reduce((s, q) => s + q.r.w + 2, 0), H = Math.max(...parts.map((q) => q.r.h));
+        const c = document.createElement('canvas'); c.width = W * DPR; c.height = H * DPR;
+        const g = c.getContext('2d');
+        const sprites = {};
+        let x = 0;
+        for (const q of parts) {
+          g.drawImage(q.img, x * DPR, 0);
+          sprites[q.key] = { x, y: 0, w: q.r.w, h: q.r.h, ax: +q.r.ax.toFixed(4), ay: +q.r.ay.toFixed(4) };
+          x += q.r.w + 2;
+        }
+        out[p.name] = { w: W, h: H, sprites, data: c.toDataURL('image/webp', 0.9) };
+      }
+      return out;
+    };
+    document.body.dataset.ready = '1';
+  </script>
+</body>
+</html>

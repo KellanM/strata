@@ -46,9 +46,9 @@ content.id = 'content';
 if (flow) { overlay.hidden = true; spacer.appendChild(content); spacer.classList.add('flow'); }
 let layer = buildLayer(flow ? content : track, map, { onTap });
 let trailHTML = '';
-function layoutFlow(drawFrom = null) {
+function layoutFlow(drawFrom = null, hidden = null) {
   if (!flow) return;
-  trailHTML = trailSVG(map, W(), drawFrom);
+  trailHTML = trailSVG(map, W(), drawFrom, hidden);
   content.insertAdjacentHTML('afterbegin', trailHTML);
   content.querySelectorAll('.p-trail').forEach((s, i) => { if (i > 0) s.remove(); });
   placeFlow(layer, W());
@@ -238,16 +238,22 @@ async function unlockNext() {
   const wasOpen = new Set(map.trail.filter((n) => n.state !== 'locked').map((n) => n.entry?.shape.id ?? n.kind));
   map = next;
   layer = buildLayer(flow ? content : track, map, { onTap });
-  // today's trail draws itself on to the stones that just opened
-  layoutFlow(new Set(map.trail.filter((n) => n.state !== 'locked' && !wasOpen.has(n.entry?.shape.id ?? n.kind))));
+  // A newly reached chapter's stones and trail are hidden from the moment they
+  // exist, before anything reads layout (layoutFlow measures paths, which
+  // forces a style flush): hiding them after that flush let a transition run
+  // from full opacity down to 0 - the flash. The fade is armed a frame later.
   for (const it of layer.items) {
     if (it.node === undefined) continue;
     if (it.node.entry?.shape.id === cur.entry.shape.id) it.el.classList.add('fresh');
-    if (wakeSet.has(it.node.region)) { it.el.style.opacity = '0'; it.el.style.transition = 'opacity .9s ease'; }
+    if (wakeSet.has(it.node.region)) it.el.style.opacity = '0';
   }
-  // the trail inside a chapter whose cloud is about to part waits for it
+  // today's trail draws itself on to the stones that just opened
+  layoutFlow(new Set(map.trail.filter((n) => n.state !== 'locked' && !wasOpen.has(n.entry?.shape.id ?? n.kind))), new Set(woke.map((r) => r.index)));
   const hidden = [...content.querySelectorAll('.trail')].filter((p) => woke.some((r) => String(r.index) === p.dataset.r));
-  for (const p of hidden) { p.style.opacity = '0'; p.style.transition = 'opacity .9s ease'; }
+  requestAnimationFrame(() => {
+    for (const it of layer.items) if (it.node && wakeSet.has(it.node.region)) it.el.style.transition = 'opacity .9s ease';
+    for (const p of hidden) p.style.transition = 'opacity .9s ease';
+  });
   layer.hero.x = prevHero.x; layer.hero.z = prevHero.z;
   layer.hero.walking = true;
   dir.rebuildPath(map);

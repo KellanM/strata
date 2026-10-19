@@ -194,6 +194,7 @@ const fragmentShader = /* glsl */ `
   uniform float uBreath;   // 0..1: the outline's breath, on the music's beat (held under Reduce Motion)
   uniform float uFocusDim; // 0..1: while something is outlined, the rest of the stone rests in tinted shade
   uniform float uGhost;    // tutorial: the hidden object shows faintly through the stone (0 = not at all)
+  uniform float uGild;     // a shrine: gold on the edge lines (0 = none)
   uniform vec2 uLight;     // xz direction of the key light
   uniform vec3 cTop, cLit, cShade, cUnder;
   uniform vec3 pTop, pLit, pShade;
@@ -257,6 +258,9 @@ const fragmentShader = /* glsl */ `
     float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
     float edge = 1.0 - smoothstep(0.0, 0.04, e);
     base = mix(base, base * (wn.y > 0.5 ? 1.07 : 0.9), edge);
+    // a shrine's stone is gilded: only that thin rim turns gold, so the faces
+    // (and their clues) stay as they are
+    base = mix(base, wn.y > 0.5 ? vec3(1.0, 0.87, 0.52) : vec3(0.88, 0.67, 0.3), edge * 0.6 * uGild);
 
     // vertical gradient: bases sink into haze
     base = mix(cHaze, base, 0.78 + 0.22 * smoothstep(0.0, 0.85, vHeight));
@@ -352,7 +356,7 @@ export class Cubes {
       uHover: { value: new THREE.Vector3(-99, -99, -99) },
       uFocusDur: { value: new THREE.Vector2(0.5, 0.33) },
       uBreath: { value: 0.6 }, uFocusDim: { value: 0 },
-      uGhost: { value: 0 },
+      uGhost: { value: 0 }, uGild: { value: 0 },
       uLight: { value: new THREE.Vector2(-0.45, 0.9).normalize() },
       uRip: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, 0, -99)) },
       uRipParam: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector2(0, 1)) },
@@ -374,6 +378,7 @@ export class Cubes {
     u.cShade.value.setHex(p.shade); u.cUnder.value.setHex(p.under);
     u.pTop.value.setHex(p.paintTop); u.pLit.value.setHex(p.paintLit); u.pShade.value.setHex(p.paintShade);
     u.cHaze.value.setHex(p.skyBottom); u.cGlow.value.setHex(p.rays);
+    u.uGild.value = p.gild ?? 0;
     // the outline on pale stone: the glow's own hue, deepened until it reads against cream
     const hsl = new THREE.Color(p.glow).getHSL({});
     u.cFocus.value.setHSL(hsl.h, 0.8, 0.56);

@@ -64,7 +64,7 @@ function segment(p0, p1, p2, p3) {
   const c2 = [p2[0] - (p3[0] - p1[0]) * t, p2[1] - (p3[1] - p1[1]) * t];
   return `M${p1[0].toFixed(1)},${p1[1].toFixed(1)}C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
 }
-export function trailSVG(map, W, drawFrom = null) {
+export function trailSVG(map, W, drawFrom = null, hidden = null) {
   const cx = W / 2, t = map.trail, pts = t.map((n) => [cx + n.x, n.z]);
   let m = '';
   for (let i = 0; i < t.length - 1; i++) {
@@ -72,7 +72,9 @@ export function trailSVG(map, W, drawFrom = null) {
     if (b.region && !b.region.reached) continue;
     const walked = b.state !== 'locked' && a.state === 'solved';
     const draw = drawFrom && drawFrom.has(b) ? ' draw' : '';
-    m += `<path d="${segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1])}" class="trail${walked ? ' walked' : ''}${draw}" data-r="${b.region?.index ?? ''}" stroke="${hex(b.palette.under)}"/>`;
+    // a chapter about to be revealed: its trail is created hidden (never shown first)
+    const hide = hidden && b.region && hidden.has(b.region.index) ? ' style="opacity:0"' : '';
+    m += `<path d="${segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1])}" class="trail${walked ? ' walked' : ''}${draw}" data-r="${b.region?.index ?? ''}" stroke="${hex(b.palette.under)}"${hide}/>`;
   }
   for (const r of map.regions) {
     if (!r.shrine || !r.reached) continue;

@@ -456,6 +456,14 @@ class Sound {
     this.pluckString(this.degree(index % 10, this.key.root + 24), { gain: 0.3, decay: 0.7 });
   }
 
+  // entering a shrine: three slow bells rising (root, fifth, octave), quiet and
+  // long, on the bed's grid
+  shrine(delay = 0) {
+    if (!this.ctx) return;
+    const t0 = this.nextSixteenth() + delay, base = this.key.root + 24;
+    [0, 7, 12].forEach((s, k) => this.fmBell(base + s, { at: t0 + k * 2 * SIXTEENTH, gain: 0.07, decay: 2.6, index: 1.6 }));
+  }
+
   // the finale: resolve home, a bell run in 16ths, then an open add9 chord
   win() {
     if (!this.ctx) return;

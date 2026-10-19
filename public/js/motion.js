@@ -27,7 +27,7 @@ export const BEAT = 60 / 72;
 const DEV_SLOW = 'strata.dev.slowmo', DEV_LOG = 'strata.dev.motionlog';
 export const slowMotion = localStorage.getItem(DEV_SLOW) === '1';
 export const rate = slowMotion ? 0.25 : 1;
-export const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+export const reduceMotion = !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;   // node tests import map.js, which imports this
 
 // cubic-bezier as a function of progress k (0..1), like CSS
 function bezier([x1, y1, x2, y2]) {
@@ -43,7 +43,7 @@ function bezier([x1, y1, x2, y2]) {
 export const ease = Object.fromEntries(Object.entries(EASE).map(([k, v]) => [k, bezier(v)]));
 
 // tokens into CSS
-{
+if (globalThis.document) {
   const root = document.documentElement.style;
   for (const [k, v] of Object.entries(EASE)) root.setProperty(`--ease-${k}`, `cubic-bezier(${v.join(',')})`);
   for (const [k, v] of Object.entries(DUR)) root.setProperty(`--dur-${k}`, `${v}s`);

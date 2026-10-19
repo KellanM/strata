@@ -1,22 +1,31 @@
-// The puzzle map: a trail that descends through the strata. Each chapter is a
-// layer of rock with a wavy upper edge, and the background drifts through each
-// puzzle's palette, so moving down the trail moves through the colour script.
-// The map is a world that answers progress: solved stones become the objects
-// they hid, mist lifts from a chapter as its stones are uncovered (with a
-// one-off awakening when the last one falls), a small companion walks the trail
-// to wherever you are, and each chapter keeps an optional shrine for its stars.
-// Plain DOM + SVG so it stays light over the live scene.
+// The puzzle map: a trail across a sea of mist (docs/map-study.md). The world
+// itself (the sky, the mist, each chapter's mountain tops, the walls of mist
+// over chapters not yet reached) is mapworld.js, in flat layers behind the
+// page; this file lays the map out and builds its DOM in the map's scroller:
+// the stones, the chapter names, the trail, the shrines and the companion.
+// Stones and trail live in the same page, so they always sit on each other.
+//
+// The map answers progress: solved stones become the objects they hid, the
+// trail draws on to stones as they open, a chapter's mist lifts once when the
+// trail first reaches it, the companion walks to wherever you are, and each
+// chapter keeps an optional shrine, lit once its stars are earned.
 
 import { recordStars } from './score.js';
 import { renderThumb } from './thumbs.js';
 import { PALETTES, variant } from './palettes.js';
 import * as Shapes from './shapes.js';
+import { after, mark, DUR, ease, rate as motionRate } from './motion.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const STEP = 116;          // vertical distance between nodes
-const REGION_GAP = 92;     // room for a chapter label
+const STEP = 116;          // vertical distance between stones
+const GAP = 190;           // a chapter boundary: room for the cloud's edge and the name
 const COL = 420;           // max width of the trail column
 const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
+// Chapters past the next one still under cloud are folded into a short stretch
+// (name, signature peak, shrine light) and open to full length when they become
+// the next. false: every chapter keeps its full length under cloud.
+export const FOLD_LATER_CHAPTERS = true;
+const FOLDED_H = 300;
 // a short chapter asks for fewer: two stars a stone at most
 const shrineStars = (r) => Math.min(SHRINE_STARS, r.items.length * 2);
 // developer switch (hidden panel): every stone and shrine open
@@ -30,9 +39,10 @@ const lum = (h) => {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-// small persisted sets: which objects / chapters the map has already celebrated
+// small persisted sets: what the map has already celebrated
 function seenSet(key) {
-  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); } catch { return new Set(); }
+  const raw = localStorage.getItem(key);
+  try { return raw === null ? null : new Set(JSON.parse(raw)); } catch { return new Set(); }
 }
 function saveSet(key, set) { localStorage.setItem(key, JSON.stringify([...set])); }
 
@@ -53,28 +63,28 @@ function cube(top, left, right, size = 44) {
   </svg>`;
 }
 
-// A chapter shrine: a faceted gem hovering over a low plinth.
-function shrine(p, size = 44) {
-  return `<svg class="cube shrine-gem" viewBox="0 0 100 100" style="width:${size}px;height:${size}px" aria-hidden="true">
-    <path d="M30 80L50 70L70 80L50 90Z" fill="${hex(p.top)}"/>
-    <path d="M30 80L50 90V95L30 85Z" fill="${hex(p.lit)}"/>
-    <path d="M70 80L50 90V95L70 85Z" fill="${hex(p.shade)}"/>
+// A chapter shrine: a faceted gem over a slim spire; gold once its stars open it.
+const GOLD = { top: 0xfff2c2, lit: 0xf3c95a, shade: 0xc98d2e, under: 0x8a5a1c };
+function shrine(p, state, size = 56) {
+  const g = state === 'locked' ? p : GOLD;
+  return `<svg class="cube shrine-gem" viewBox="0 0 100 120" style="width:${size}px;height:${size * 1.2}px" aria-hidden="true">
+    <path d="M42 112L50 108L58 112L50 116Z" fill="${hex(p.top)}"/>
+    <path d="M44 111L50 76L50 116Z" fill="${hex(p.lit)}"/><path d="M56 111L50 76L50 116Z" fill="${hex(p.shade)}"/>
     <g class="gem">
-      <path d="M50 12L66 38L50 46Z" fill="${hex(p.glow)}"/>
-      <path d="M50 12L34 38L50 46Z" fill="${hex(p.lit)}"/>
-      <path d="M34 38L50 46L50 64Z" fill="${hex(p.shade)}"/>
-      <path d="M66 38L50 46L50 64Z" fill="${hex(p.under)}"/>
+      <path d="M50 14L68 42L50 51Z" fill="${hex(g.top)}"/>
+      <path d="M50 14L32 42L50 51Z" fill="${hex(g.lit)}"/>
+      <path d="M32 42L50 51L50 70Z" fill="${hex(g.shade)}"/>
+      <path d="M68 42L50 51L50 70Z" fill="${hex(g.under)}"/>
     </g>
   </svg>`;
 }
 
-// The companion: a little Totem built like everything else in the world, two
-// isometric blocks in the same projection as the stones and the puzzle (a
-// smaller head on a deeper base), coloured from the chapter's stone, with one
-// eye carved flat into the head's lit face.
+// The companion: a little Totem built like everything else in the world (two
+// isometric blocks, one eye carved into the head's lit face), carrying a small
+// gold light: the gold of the trail it walks.
 const ISO_X = Math.cos(Math.PI / 6);
 function isoBlock(cx, topY, e, H, top, left, right) {
-  const hw = ISO_X * e / 2, hh = e / 4;                 // same proportions as cube()
+  const hw = ISO_X * e / 2, hh = e / 4;
   const N = [cx, topY - hh], E = [cx + hw, topY], S = [cx, topY + hh], W = [cx - hw, topY];
   const d = (pts) => 'M' + pts.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L') + 'Z';
   const down = ([x, y]) => [x, y + H];
@@ -85,21 +95,18 @@ function isoBlock(cx, topY, e, H, top, left, right) {
     W, S, H,
   };
 }
-
 function companion(p) {
-  const base = isoBlock(20, 37, 22, 11, hex(p.lit), hex(p.shade), hex(p.under));
-  const head = isoBlock(20, 25, 15, 9.5, hex(p.top), hex(p.lit), hex(p.shade));
-  // the eye: a small parallelogram lying in the head's left (lit) face
+  const base = isoBlock(20, 41, 22, 11, hex(p.lit), hex(p.shade), hex(p.under));
+  const head = isoBlock(20, 29, 15, 9.5, hex(p.top), hex(p.lit), hex(p.shade));
   const [wx, wy] = head.W, [sx, sy] = head.S;
-  const ux = (sx - wx), uy = (sy - wy);                 // along the face
-  const at = (a, b) => [wx + ux * a, wy + uy * a + head.H * b];
+  const at = (a, b) => [wx + (sx - wx) * a, wy + (sy - wy) * a + head.H * b];
   const eye = [at(0.36, 0.3), at(0.56, 0.3), at(0.56, 0.62), at(0.36, 0.62)]
     .map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L');
-  const sw = ISO_X * 15, sh = 6.2;                       // shadow: a flat iso diamond on the ground
-  return `<svg viewBox="0 0 40 56" aria-hidden="true">
-    <path class="shadow" d="M20 ${49 - sh}L${20 + sw} 49L20 ${49 + sh}L${20 - sw} 49Z" fill="${hex(p.under)}" fill-opacity=".22"/>
+  return `<svg viewBox="0 0 40 60" aria-hidden="true">
+    <ellipse class="shadow" cx="20" cy="53.5" rx="12" ry="3.6" fill="${hex(p.under)}" fill-opacity=".2"/>
     ${base.svg}
     <g class="head">${head.svg}<path class="eye" d="M${eye}Z" fill="${hex(p.under)}"/></g>
+    <g class="lamp"><circle cx="31" cy="9" r="7" fill="#ffe7a1" fill-opacity=".35"/><path d="M31 4.6L34 9L31 13.4L28 9Z" fill="#ffe7a1"/><path d="M31 4.6L34 9L31 9Z" fill="#fff6d8"/></g>
   </svg>`;
 }
 
@@ -139,16 +146,29 @@ export function bonusFor(chapter) {
   return (Shapes.BONUS ?? []).find((b) => b.chapter === chapter) ?? null;
 }
 
+// A shrine's level: its chapter's palette at midday, with gold in its light
+// (the rays, the glow behind the block and the dive) and gilded edges.
 export function bonusEntry(shape) {
   const base = PALETTES.find((p) => p.name === shape.palette) ?? PALETTES[0];
-  return { shape, palette: variant(base, 0.5, hashId(shape.id) % 1000), number: '✦', bonus: true };
+  const v = variant(base, 0.5, hashId(shape.id) % 1000);
+  const mix = (a, b, t) => {
+    const c = (h, s) => (h >> s) & 255;
+    return [16, 8, 0].reduce((o, s) => o | (Math.round(c(a, s) + (c(b, s) - c(a, s)) * t) << s), 0);
+  };
+  const palette = { ...v, glow: mix(v.glow, 0xffd98a, 0.45), rays: mix(v.rays, 0xffd27a, 0.6), gild: 1 };
+  return { shape, palette, number: '✦', bonus: true };
 }
+
+// The map's layout key: the world is rebuilt only when this changes
+let worldKey = '';
+let drawSeq = 0;
 
 /**
  * Renders the map into `root`.
  * opts: { entries, solved, learned, lessons, drift: number[], driftPalette,
  *         onPlay(entry, el), onLearn(el), onDrift(n, el), fmt(seconds), scroll: bool,
- *         celebrate: bool (play one-off reveals; false for passive re-renders) }
+ *         celebrate: bool (play one-off reveals; false for passive re-renders),
+ *         world: MapWorld, onPart(region), onParted(region) }
  */
 export function renderMap(root, opts) {
   const { entries, solved, learned, lessons, drift, driftPalette } = opts;
@@ -158,85 +178,132 @@ export function renderMap(root, opts) {
   const colW = Math.min(COL, fullW - 24);
   const x0 = (fullW - colW) / 2;
   const { first, open } = progress(entries, solved);
-  // a chapter is reached once one of its unsolved stones is open, or all are solved
-  const reached = (r) => r.items.every((e) => solved[e.shape.id]) || r.items.some((e) => !solved[e.shape.id] && open[entries.indexOf(e)]);
-  const seenObjects = seenSet('strata.map.objects');
-  const seenChapters = seenSet('strata.map.chapters');
+  const seenObjects = seenSet('strata.map.objects') ?? new Set();
+  const seenChapters = seenSet('strata.map.chapters') ?? new Set();
+  // chapters whose cloud has parted, and stones the gold has reached; the first
+  // time this map runs, everything already reached counts as seen (no fanfare)
+  const parted = seenSet('strata.map.parted');
+  const lit = seenSet('strata.map.lit');
 
-  // ---- layout: Learn, then chapters in array order, then Drift
+  // ---- chapters, in the order of the level set (data, never a fixed list)
   const regions = [];
   for (const e of entries) {
     const name = e.shape.chapter ?? 'The Quarry';
     let r = regions[regions.length - 1];
-    if (!r || r.name !== name) regions.push((r = { name, items: [] }));
+    if (!r || r.name !== name) {
+      const ch = Shapes.CHAPTERS?.find((c) => c.name === name);
+      regions.push((r = { name, numeral: ch?.numeral ?? String(regions.length + 1), items: [], index: regions.length,
+        base: PALETTES.find((p) => p.name === (ch?.palette ?? e.shape.palette)) ?? e.palette }));
+    }
     r.items.push(e);
   }
-
-  const nodes = [];         // { kind, x, y, palette, entry?, n?, state }
-  const labels = [];        // { y, top, text, sub, palette, region? }
-  let k = 0, y = 70;
-  const place = () => x0 + colW * (0.5 + 0.28 * Math.sin(k * 0.92 + 0.5));
-
-  const learnPal = regions[0]?.items[0].palette ?? driftPalette;
-  nodes.push({ kind: 'learn', x: place(), y, palette: learnPal, sky: learnPal, state: learned ? 'solved' : 'current' });
-  k++; y += STEP * 0.9;
-
-  regions.forEach((r, ri) => {
+  for (const r of regions) {
     r.stars = r.items.reduce((n, e) => n + recordStars(e.shape, solved[e.shape.id]), 0);
     r.solvedCount = r.items.filter((e) => solved[e.shape.id]).length;
-    r.fraction = r.solvedCount / r.items.length;
     r.complete = r.solvedCount === r.items.length;
+    // a chapter is reached once one of its unsolved stones is open, or all are solved
+    r.reached = r.complete || r.items.some((e) => !solved[e.shape.id] && open[entries.indexOf(e)]);
     r.awaken = r.complete && celebrate && !seenChapters.has(r.name);
-    y += REGION_GAP * 0.35;
-    labels.push({ y, top: y - REGION_GAP * 0.35, text: r.name, sub: `${Shapes.CHAPTERS?.find((c) => c.name === r.name)?.numeral ?? ri + 1} · ${r.stars} / ${r.items.length * 3} ★`, palette: r.items[0].palette, region: r });
-    y += REGION_GAP * 0.65;
-    for (const e of r.items) {
-      const i = entries.indexOf(e);
-      const state = solved[e.shape.id] ? 'solved' : !open[i] ? 'locked' : i === first && learned ? 'current' : 'open';
-      const n = { kind: 'puzzle', x: place(), y, palette: e.palette, sky: r.items[0].palette, entry: e, state };
-      nodes.push(n);
-      r.last = n;
-      k++; y += STEP;
+  }
+  const nextLocked = regions.find((r) => !r.reached);
+  for (const r of regions) {
+    r.folded = FOLD_LATER_CHAPTERS && !r.reached && r !== nextLocked;
+    r.parting = r.reached && !!parted && !parted.has(r.name) && celebrate;
+  }
+
+  // ---- layout (y down the map, x across the page)
+  const nodes = [];         // { kind, x, y, palette, entry?, n?, state, region? }
+  const trail = [];         // learn + the stones that are laid out, in order
+  let k = 0, y = 70;
+  const place = () => x0 + colW * (0.5 + 0.28 * Math.sin(k * 0.92 + 0.5));
+  const learnPal = regions[0]?.items[0].palette ?? driftPalette;
+  const learn = { kind: 'learn', x: place(), y, palette: learnPal, sky: learnPal, state: learned ? 'solved' : 'current' };
+  nodes.push(learn); trail.push(learn);
+  k++; y += STEP * 0.9;
+
+  regions.forEach((r) => {
+    r.top = y;
+    r.nodes = [];
+    if (r.folded) {
+      // a short stretch of cloud: the name, its peak, its shrine's light
+      r.labelY = y + 96;
+      k += r.items.length;
+      y += FOLDED_H;
+    } else {
+      y += GAP * 0.42;
+      r.labelY = y;
+      y += GAP * 0.58;
+      for (const e of r.items) {
+        const i = entries.indexOf(e);
+        const state = solved[e.shape.id] ? 'solved' : !open[i] ? 'locked' : i === first && learned ? 'current' : 'open';
+        const n = { kind: 'puzzle', x: place(), y, palette: e.palette, sky: r.items[0].palette, entry: e, state, region: r };
+        nodes.push(n); trail.push(n); r.nodes.push(n);
+        r.last = n;
+        k++; y += STEP;
+      }
     }
-    // the shrine sits off the trail, on the far side from the chapter's last stone
     const b = bonusFor(r.name);
     if (b) {
       const entry = bonusEntry(b);
-      const leftSide = r.last.x > x0 + colW / 2;
+      const need = shrineStars(r);
+      const leftSide = r.last ? r.last.x > x0 + colW / 2 : (k % 2 === 0);
       r.shrine = {
-        kind: 'bonus', x: x0 + colW * (leftSide ? 0.16 : 0.84), y: r.last.y + STEP * 0.5,
-        palette: entry.palette, sky: r.items[0].palette, entry, region: r,
+        kind: 'bonus', x: x0 + colW * (leftSide ? 0.14 : 0.86), y: r.folded ? r.labelY + 120 : r.last.y + STEP * 0.62,
+        palette: entry.palette, sky: r.items[0].palette, entry, region: r, need,
         // stars open it, once the trail has reached the chapter (stars from
         // stones that moved here when the map grew don't open it from afar)
-        state: solved[b.id] ? 'solved' : devUnlock() || (r.stars >= shrineStars(r) && reached(r)) ? 'open' : 'locked',
+        state: solved[b.id] ? 'solved' : devUnlock() || (r.stars >= need && r.reached) ? 'open' : 'locked',
       };
       nodes.push(r.shrine);
+      if (!r.folded) y += STEP * 0.35;
     }
+    r.bottom = y;
   });
 
-  y += REGION_GAP * 0.35 - STEP * 0.4;
-  labels.push({ y, top: y - REGION_GAP * 0.35, text: 'Drift', sub: 'endless · carved at random', palette: driftPalette, drift: true });
-  y += REGION_GAP * 0.75;
+  const driftTop = y;
+  y += GAP * 0.42;
+  const driftLabelY = y;
+  y += GAP * 0.58;
   const allSolved = first < 0;
   drift.forEach((n, j) => {
     nodes.push({ kind: 'drift', x: x0 + colW * (0.5 + (j - 1) * 0.3), y: y + (j === 1 ? 26 : 0), palette: driftPalette, sky: driftPalette, n, state: allSolved && j === 0 ? 'current' : 'open' });
   });
-  k++;
-  const height = y + 150;
-
-  // ---- background: each chapter carries its own sky, blended across the seams
-  const stops = [];
-  labels.forEach((l, li) => {
-    const top = li === 0 ? 0 : l.top + 30;
-    const bottom = (labels[li + 1]?.top ?? height) - 30;
-    l.bottom = labels[li + 1]?.top ?? height;
-    stops.push(`${hex(l.palette.skyTop)} ${((top / height) * 100).toFixed(2)}%`);
-    stops.push(`${hex(l.palette.skyBottom)} ${((bottom / height) * 100).toFixed(2)}%`);
-  });
+  const height = y + 190;
   root.style.height = `${height}px`;
-  root.style.setProperty('--map-bg', `linear-gradient(180deg, ${stops.join(', ')})`);
 
-  // ---- svg: strata layers, the mist over them, and the trail
+  // the trail's x at a depth (for keeping names and scenery off it)
+  const trailX = (yy) => {
+    if (yy <= trail[0].y) return trail[0].x;
+    for (let i = 0; i < trail.length - 1; i++) {
+      const a = trail[i], b = trail[i + 1];
+      if (yy >= a.y && yy <= b.y) return a.x + (b.x - a.x) * ((yy - a.y) / Math.max(1, b.y - a.y));
+    }
+    return trail[trail.length - 1].x;
+  };
+  for (const r of regions) r.labelSide = trailX(r.labelY) > x0 + colW / 2 ? -1 : 1;
+
+  // ---- the world for this layout (rebuilt only when the layout changes)
+  const headH = root.offsetTop;
+  if (opts.world) {
+    const key = [fullW, headH, height, ...regions.map((r) => `${r.name}:${r.top}:${r.bottom}:${r.reached ? 1 : 0}${r.parting ? 'p' : ''}${r.shrine ? Math.round(r.shrine.x) : ''}`)].join('|');
+    if (key !== worldKey) {
+      worldKey = key;
+      const cx = fullW / 2;
+      opts.world.build({
+        regions: regions.map((r) => ({
+          index: r.index, name: r.name, base: r.base, folded: r.folded, reached: r.reached,
+          bank: !r.reached || r.parting,
+          top: headH + r.top, bottom: headH + r.bottom, labelZ: headH + r.labelY, labelSide: r.labelSide,
+          shrine: r.shrine ? { x: r.shrine.x - cx, z: headH + r.shrine.y } : null,
+        })),
+        trailX: (z) => trailX(z - headH) - cx,
+        driftTop: headH + driftTop, end: headH + height,
+      });
+      mark('map: world built');
+    }
+  }
+
+  // ---- svg: the trail
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'map-svg');
   svg.setAttribute('width', fullW);
@@ -244,111 +311,69 @@ export function renderMap(root, opts) {
   svg.setAttribute('viewBox', `0 0 ${fullW} ${height}`);
   svg.style.width = `${fullW}px`;
   svg.style.height = `${height}px`;
-  let markup = '';
-  // each chapter is a band of sediment between two soft wavy edges;
-  // alternate bands are lifted slightly so the layers read
-  const waves = labels.map((l, li) => {
-    const amp = 10 + (li % 3) * 4, ph = li * 1.7, w = [];
-    for (let x = 0; x <= fullW + 20; x += 20) {
-      w.push([x, l.top + Math.sin(x / 90 + ph) * amp + Math.sin(x / 37 + ph * 2) * amp * 0.25]);
-    }
-    return w;
-  });
-  const fmtPts = (w) => w.map(([x, yy]) => `${x},${yy.toFixed(1)}`).join('L');
-  labels.forEach((l, li) => {
-    const next = waves[li + 1] ?? [[fullW + 20, height], [0, height]];
-    const lower = waves[li + 1] ? [...next].reverse() : next;
-    const dark = lum(l.palette.skyTop) < 0.45;
-    const a = (li % 2 ? 0.07 : 0.17) * (dark ? 0.6 : 1);
-    const band = `M${fmtPts(waves[li])}L${fmtPts(lower)}Z`;
-    markup += `<path d="${band}" fill="${dark ? '#0b0f24' : '#fff'}" fill-opacity="${a}"/>`;
-    // mist: thick over untouched chapters, thinning as their stones are uncovered
-    const r = l.region;
-    if (r && (r.fraction < 1 || r.awaken)) {
-      const mist = dark ? '#3b3f5c' : '#e9e5ec';
-      const op = r.awaken ? 0 : (1 - r.fraction) * 0.5;
-      markup += `<path d="${band}" class="mist${r.awaken ? ' clearing' : ''}" fill="${mist}" style="--mist:${op.toFixed(3)}" fill-opacity="${op.toFixed(3)}"/>`;
-    }
-    markup += `<path d="M${fmtPts(waves[li])}" fill="none" stroke="${hex(l.palette.under)}" stroke-opacity=".25" stroke-width="1.2"/>`;
-  });
-
-  // trail through learn + puzzles, trailing off into the drift layer
-  const trail = nodes.filter((n) => n.kind === 'learn' || n.kind === 'puzzle');
   const pts = trail.map((n) => [n.x, n.y]);
   const segD = (i, move = true) => segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1], move);
+  const draws = [];
+  let markup = '';
   for (let i = 0; i < pts.length - 1; i++) {
-    const reached = trail[i + 1].state !== 'locked' && trail[i].state === 'solved';
-    const col = hex(trail[i + 1].palette.under);
-    // the step out of a chapter that just woke draws itself in
-    const draws = reached && trail[i].entry && regions.find((r) => r.last === trail[i])?.awaken;
-    markup += `<path d="${segD(i)}" class="trail${reached ? ' walked' : ''}${draws ? ' draw' : ''}" stroke="${col}"/>`;
+    const a = trail[i], b = trail[i + 1];
+    // nothing under the mist: a chapter not yet reached shows no trail
+    if (b.region && !b.region.reached) continue;
+    // inside a chapter whose mist is about to lift, the trail is created hidden
+    // (class in-parting) and appears as it clears: never shown first, then hidden
+    const hide = b.region?.parting ? ' in-parting' : '';   // including the stretch that leads into it
+    // today's trail: dotted, solid where walked, in the colour of the stone it leads to;
+    // a stretch walked for the first time draws itself on
+    const walked = b.state !== 'locked' && a.state === 'solved';
+    const id = b.entry?.shape.id ?? b.kind;
+    const fresh = walked && celebrate && lit && !lit.has(id);
+    if (fresh) draws.push({ i, id });
+    markup += `<path d="${segD(i)}" class="trail${walked ? ' walked' : ''}${fresh ? ' draw' : ''}${hide}" stroke="${hex(b.palette.under)}"/>`;
   }
-  const last = pts[pts.length - 1], end = labels[labels.length - 1].top - 6;
-  const cxm = x0 + colW / 2;
-  markup += `<path d="M${last[0]},${last[1]}Q${last[0]},${(last[1] + end) / 2} ${cxm},${end}" class="trail tail" stroke="${hex(trail[trail.length - 1].palette.under)}"/>`;
   // a faint spur from each chapter's last stone to its shrine
   for (const r of regions) {
-    if (!r.shrine) continue;
+    if (!r.shrine || !r.last || !r.reached) continue;
     const a = r.last, s = r.shrine;
-    markup += `<path d="M${a.x},${a.y}Q${(a.x + s.x) / 2},${s.y} ${s.x},${s.y}" class="trail spur" stroke="${hex(a.palette.under)}"/>`;
+    markup += `<path d="M${a.x},${a.y}Q${(a.x + s.x) / 2},${s.y} ${s.x},${s.y}" class="trail spur${r.parting ? ' in-parting' : ''}" stroke="${hex(a.palette.under)}"/>`;
   }
   svg.innerHTML = markup;
 
-  // ---- DOM: atmosphere, labels and node buttons
+  // ---- DOM: names and stones
   root.innerHTML = '';
   root.appendChild(svg);
-
-  for (const l of labels) {
-    const r = l.region;
-    if (!r) continue;
-    const dark = lum(l.palette.skyTop) < 0.45;
-    const band = document.createElement('div');
-    band.className = 'map-air' + (r.awaken ? ' awaken' : '') + (dark ? ' on-dark' : '');
-    band.style.top = `${l.top}px`;
-    band.style.height = `${l.bottom - l.top}px`;
-    band.style.setProperty('--glow', hex(l.palette.glow));
-    let air = '';
-    // wisps of mist drift where the chapter is still hidden
-    const wisps = r.awaken ? 3 : Math.round((1 - r.fraction) * 3);
-    for (let w = 0; w < wisps; w++) {
-      air += `<i class="wisp" style="top:${18 + w * 27}%;left:${(w * 37) % 70}%;--d:${16 + w * 5}s;--o:${r.awaken ? 0.5 : (0.25 + 0.35 * (1 - r.fraction)).toFixed(2)}"></i>`;
-    }
-    // light returns as motes: one for each stone uncovered
-    const motes = r.awaken ? 14 : r.solvedCount + (r.complete ? 4 : 0);
-    for (let m = 0; m < motes; m++) {
-      const h = hashId(`${r.name}${m}`);
-      air += `<i class="mote" style="left:${(h % 92) + 4}%;top:${((h >> 8) % 80) + 10}%;--d:${3 + (h % 5)}s;--delay:${(h >> 4) % 4}s"></i>`;
-    }
-    if (r.awaken) air += '<i class="sweep"></i>';
-    band.innerHTML = air;
-    root.appendChild(band);
-  }
-
-  for (const l of labels) {
-    // set the chapter title on whichever side the trail isn't crossing
-    const above = trail.filter((n) => n.y < l.y).pop(), below = trail.find((n) => n.y > l.y);
-    const cross = below ? (above.x + below.x) / 2 : x0 + colW / 2;
+  for (const r of regions) {
     const el = document.createElement('div');
-    const left = cross > x0 + colW / 2;
-    el.className = `map-region ${left ? 'at-left' : 'at-right'}` + (lum(l.palette.skyTop) < 0.45 ? ' on-dark' : '') + (l.region?.awaken ? ' awaken' : '');
-    el.style.top = `${l.y}px`;
+    const dark = lum(r.base.skyTop) < 0.45;
+    const left = r.labelSide < 0;
+    el.className = `map-region ${left ? 'at-left' : 'at-right'}${dark ? ' on-dark' : ''}${r.reached ? '' : ' veiled'}${r.awaken ? ' awaken' : ''}`;
+    el.style.top = `${r.labelY}px`;
     el.style.setProperty('--edge', `${x0 + 8}px`);
-    el.innerHTML = `<span class="r-name">${esc(l.text)}</span><span class="r-sub">${esc(l.sub)}</span>`;
+    el.innerHTML = `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub">${r.stars} / ${r.items.length * 3} ★</span>`;
+    root.appendChild(el);
+    r.el = el;
+  }
+  {
+    const el = document.createElement('div');
+    el.className = 'map-region at-centre on-dark';
+    el.style.top = `${driftLabelY}px`;
+    el.innerHTML = '<span class="r-name">Drift</span><span class="r-sub">endless · carved at random</span>';
     root.appendChild(el);
   }
 
   let current = null;
   const newlySeen = [];
   for (const n of nodes) {
+    // stones of a chapter under cloud aren't there yet (its shrine's light is)
+    if (n.kind === 'puzzle' && !n.region.reached) continue;
     const p = n.palette;
     const b = document.createElement('button');
     const side = n.kind === 'drift' ? '' : n.x > x0 + colW / 2 ? ' lbl-left' : ' lbl-right';
-    b.className = `map-node ${n.kind} ${n.state}${side}` + (lum(n.sky.skyTop) < 0.45 ? ' on-dark' : '');
+    const dark = lum(n.sky.skyTop) < 0.45;
+    b.className = `map-node ${n.kind} ${n.state}${side}${dark ? ' on-dark' : ''}` + (n.region?.parting ? ' veiled-in' : '');
     if (n.entry) b.dataset.id = n.entry.shape.id;
     b.style.left = `${n.x}px`;
     b.style.top = `${n.y}px`;
     b.style.setProperty('--glow', hex(p.glow));
-    b.style.setProperty('--sky', hex(n.sky.skyBottom));
     let num = '', name = '', meta = '', art = cube(hex(p.top), hex(p.lit), hex(p.shade), n.kind === 'drift' ? 38 : 46);
     if (n.kind === 'learn') {
       num = '00'; name = 'Learn'; meta = `${lessons} lessons`;
@@ -366,7 +391,8 @@ export function renderMap(root, opts) {
       if (isBonus) {
         name = s ? shape.name : 'Shrine';
         meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${shrineStars(n.region)} ★` : 'open';
-        if (!s) art = shrine(p);
+        if (!s) art = shrine(n.region.base, n.state);
+        if (!n.region.reached) b.classList.add('far');
       } else {
         name = s ? shape.name : n.state === 'locked' ? '' : '???';
         meta = s ? starRow(recordStars(shape, s)) : '';
@@ -396,37 +422,74 @@ export function renderMap(root, opts) {
     if (n.state === 'current' && !current) current = n;
   }
 
-  // the step out of an awakened chapter draws itself along its own length
-  svg.querySelectorAll('.trail.draw').forEach((path) => {
-    const len = path.getTotalLength?.() ?? 200;
-    path.style.setProperty('--len', len.toFixed(1));
-  });
-
   if (newlySeen.length) { newlySeen.forEach((id) => seenObjects.add(id)); saveSet('strata.map.objects', seenObjects); }
   const woke = regions.filter((r) => r.awaken);
   if (woke.length) { woke.forEach((r) => seenChapters.add(r.name)); saveSet('strata.map.chapters', seenChapters); }
+  // the first run marks what is already there as seen; a passive render saves nothing
+  const goldIds = trail.filter((n, i) => i > 0 && n.state !== 'locked').map((n) => n.entry?.shape.id ?? n.kind);
+  if (!lit || celebrate) saveSet('strata.map.lit', new Set([...(lit ?? []), ...goldIds]));
+  const reachedNames = regions.filter((r) => r.reached).map((r) => r.name);
+  if (!parted || celebrate) saveSet('strata.map.parted', new Set([...(parted ?? []), ...reachedNames]));
 
   // ---- the companion keeps you company at the newest stone
   const home = current
     ?? [...trail].reverse().find((n) => n.state === 'solved' && n.kind === 'puzzle')
     ?? trail[0];
-  placeCompanion(root, svg, trail, pts, segD, home, celebrate);
+  const walk = placeCompanion(root, svg, trail, pts, segD, home, celebrate);
 
-  // ---- open on the current node, or on a chapter that has just woken
+  // ---- the gold draws on as the companion walks; then a newly reached chapter's cloud parts
+  const drawStart = 0.55, drawDur = walk ?? 0.9;
+  svg.querySelectorAll('.trail.draw').forEach((path) => {
+    const len = path.getTotalLength?.() ?? 200;
+    path.style.setProperty('--len', (len + 2).toFixed(1));
+    path.style.setProperty('--d', `${(drawDur / motionRate).toFixed(2)}s`);
+    path.style.setProperty('--delay', `${(drawStart / motionRate).toFixed(2)}s`);
+  });
+  if (draws.length) mark(`map: gold draws on (${draws.length})`);
+  const partingRegions = regions.filter((r) => r.parting);
+  if (partingRegions.length && opts.world) partCloud(opts, partingRegions, drawStart + drawDur + 0.25, root);
+
+  // ---- open on the current stone, a chapter whose cloud parts, or one that has just woken
   if (opts.scroll !== false && scroller) {
-    const target = woke.length ? { y: woke[0].last.y + STEP * 0.35 } : current ?? nodes[0];
-    const headH = root.offsetTop;
+    const target = partingRegions.length ? { y: partingRegions[0].top - scroller.clientHeight * 0.08 }
+      : woke.length && woke[0].last ? { y: woke[0].last.y + STEP * 0.35 } : current ?? nodes[0];
     scroller.scrollTop = Math.max(0, headH + target.y - scroller.clientHeight * 0.45);
   }
-  return { current };
+  return { current, parting: partingRegions.map((r) => r.name) };
+}
+
+// The cloud over a newly reached chapter parts from the trail outward; its
+// stones appear as it clears, and its name wakes. Once per chapter.
+function partCloud(opts, regions, delay, root) {
+  for (const r of regions) opts.world.setPart(r.index, 0);
+  after(delay, () => regions.forEach((r, j) => after(j * DUR.ceremony, () => {
+    if (!root.isConnected) return;
+    mark(`map: cloud parts over ${r.name}`);
+    opts.onPart?.(r);
+    r.el?.classList.add('waking');
+    const stones = r.nodes.map((n) => n.el).filter(Boolean);
+    if (r.shrine?.el) stones.push(r.shrine.el);
+    const span = Math.max(1, r.bottom - r.top);
+    after(DUR.ceremony * 0.5, () => root.querySelectorAll('.in-parting').forEach((p) => p.classList.remove('in-parting')));
+    const t0 = performance.now(), dur = DUR.ceremony * 2 * 1000 / motionRate;
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / dur);
+      opts.world.setPart(r.index, k);   // linear: the world staggers each billow by its distance from the trail
+      for (const el of stones) if (el.classList.contains('veiled-in') && k > 0.2 + 0.55 * ((parseFloat(el.style.top) - r.top) / span)) el.classList.remove('veiled-in');
+      if (k < 1) requestAnimationFrame(step);
+      else { for (const el of stones) el.classList.remove('veiled-in'); mark(`map: ${r.name} clear`); opts.onParted?.(r); }
+    };
+    requestAnimationFrame(step);
+  })));
 }
 
 // Sits beside `home`, on the side away from its label. If it was last seen
-// further back along the trail, it walks there first.
+// further back along the trail, it walks there first. Returns the walk's
+// length in seconds (or null when it doesn't walk).
 function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
   const key = (n) => (n.entry ? n.entry.shape.id : n.kind);
   const to = trail.indexOf(home);
-  if (to < 0) return;
+  if (to < 0) return null;
   const el = document.createElement('div');
   el.className = 'companion';
   el.innerHTML = companion(home.sky);
@@ -442,7 +505,7 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
   if (celebrate || !prevKey) localStorage.setItem('strata.map.companion', key(home));
   const from = trail.findIndex((n) => key(n) === prevKey);
   const [hx, hy] = side(home);
-  if (!celebrate || from < 0 || from >= to) { put([hx, hy], hx < home.x); return; }
+  if (!celebrate || from < 0 || from >= to) { put([hx, hy], hx < home.x); return null; }
 
   // walk the trail from the old stone to the new one, hopping as it goes
   const path = document.createElementNS(NS, 'path');
@@ -457,11 +520,11 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
   const start = side(trail[from]);
   put(start, start[0] < trail[from].x);
   el.classList.add('walking');
-  const t0 = performance.now() + 550;
+  const t0 = performance.now() + 550 / motionRate;
   let lastX = start[0];
   const tick = (now) => {
     if (!el.isConnected) return;
-    const k = Math.max(0, Math.min(1, (now - t0) / dur));
+    const k = Math.max(0, Math.min(1, (now - t0) / (dur / motionRate)));
     const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     let pos;
     if (k <= 0) pos = start;
@@ -478,6 +541,7 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
     else { el.classList.remove('walking'); put([hx, hy], hx < home.x); path.remove(); }
   };
   requestAnimationFrame(tick);
+  return dur / 1000;
 }
 
 const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg>';

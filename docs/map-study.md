@@ -1,6 +1,6 @@
 # Map study: a sea of cloud, from the stars down
 
-Date: 2026-10-18. Phase 1: the study and a working prototype. The game itself is unchanged.
+Date: 2026-10-18. Phase 1 was the study and a working prototype. Phase 2 (below) shipped direction B in the game.
 Read this, `docs/study-record.md` (the Monument Valley look), `docs/motion-study.md` and `docs/motion.md` (motion tokens and rules) before redoing any of this.
 
 **Prototype:** `public/proto/map.html`, at https://kellanm.github.io/strata/proto/map.html. Open the ≡ button for:
@@ -14,6 +14,56 @@ Read this, `docs/study-record.md` (the Monument Valley look), `docs/motion-study
 The best way to see the ceremony is `?s=threshold&map=1`, then *Solve the next stone*.
 
 The prototype reads the game's real `SHAPES`, `CHAPTERS`, `BONUS`, palettes, `progress()`, `bonusFor()`, `recordStars()` and `renderThumb()`. It never writes the game's save. The build deploys `proto/` but leaves it out of the offline cache (`tools/build.mjs`), exactly as it does `gallery/`.
+
+## Phase 2: in the game
+
+Kellan approved direction B with mist and voxel mountain tops. It is now the game's map and title.
+
+**How it's built:**
+- **`public/js/mapworld.js`** is the world. It is a fixed `#map-world` layer behind the WebGL canvas, which now has a transparent clear. The world holds:
+  - the sky canvas (night, stars, the horizon);
+  - the sea gradient strip;
+  - three peak layers at rates 0.84 / 1 / 1.12;
+  - the mist ribbons;
+  - each locked chapter's veil wall.
+
+  `setView(u, s)` follows the title pan (`u`) and the map's scroll (`s`). `setPart(i, k)` lifts a chapter's veil.
+- **The peaks are pre-rendered.** `node tools/render-peaks.mjs` (with the dev server on 5203) renders every palette's voxel sprites in Chrome through `proto/peaks-export.html`. It uses the game's own block shader (`proto/voxels.js`). The output is one WebP atlas per palette plus `peaks.json`, written to `public/map-peaks/` (about 0.5 MB). The map loads them as images and never builds voxels at runtime. Re-run the tool after changing `proto/peaks.js` or a palette.
+- **map.js** still owns the stones, the trail (today's design), the names, `progress()` and the unlock rules. It hands the world a layout model (`opts.world.build`).
+- **The title** is the real logo over the world's night sky. The canvas hides its background and motes there. The title and logo move with the page; only the stars parallax.
+- **The descent** lasts 1.5 s, or 0.8 s when it is repeated in the same session (`DESCENT` in main.js, sessionStorage `strata.descended`).
+- **While the map is up** (`body.map-up`), the canvas fades out and stops drawing after 0.6 s. It only comes back once `start()` has rebuilt the level under the veil. This is still "cover before you swap".
+- **Decisions:** chapters after the next one fold into a short stretch of mist (`FOLD_LATER_CHAPTERS`). The shrine treatment in the level is the restrained one: gilded block edges (`uGild`), a held title card, a gold portal and a three-note bell (`sound.shrine`).
+
+**The path flash (Kellan's video).** When the mist lifted, the new path showed at full opacity, dimmed, and then drew in.
+- *Cause:* the new trail segments and stones were inserted visible. Measuring the trail (`getTotalLength`) flushed style, which committed opacity 1. Then opacity 0 and the transition were set together, so the browser animated 1 → 0 before the reveal.
+- *Fix:* the segments and stones are created hidden (`in-parting` / `veiled-in`), and the transition is armed a frame later.
+- *Check:* `shots/map-study/ceremony.mjs` traces every element's opacity each frame and found 25 elements, 0 flashes. The prototype got the same fix: `proto-flash.mjs` went from 25 flashes to 0.
+
+**Performance.** At CPU ×4, 390×844 @3x, with every stone solved (pooled over 3 runs, `phase2-perf.json`):
+
+| | Title pan | Map scroll |
+|---|---|---|
+| Before | 14–16 fps | 7 fps |
+| Now | 21–25 fps | 9–10 fps |
+
+The map scroll's cost is the stones' DOM, the same as before. Hiding the stones gives 56 fps.
+
+One trap was found and removed: a `body:has(#menu.show)` rule re-styled all ~3900 elements on every frame of the pan, which dropped it to 5 fps. Rules like that are now plain body classes (`title-up`, `menu-open`, `map-up`, `world-up`) set in `frame()`.
+
+**QA:** `shots/map-study/`:
+- `phase2-flow-*.png` and `video/phase2-full-flow.mp4`: title → swipe → map → level → win → back with the mist lifting → shrine;
+- `phase2-misc-*.png`: fresh player, journal, dev panel and unlock, Reduce Motion, gallery;
+- `oldlevel.mjs`: 0 frames of the old level during the pull-back and dive.
+
+A fresh critic reviewed the integrated build before it shipped. Fixes from that review:
+- At the end of the descent the logo popped back to the centre. The canvas now hides before its view offset clears (`logo-pop.mjs`: 0 visible frames).
+- The won level lingered over the mist. The canvas now fades out in 0.28 s, and `#win` hides with the map.
+- The trail into a chapter whose mist hasn't lifted showed early. It is now created hidden too.
+- The return scroll put the just-solved stone under the corner buttons.
+- The shrine card wrapped and was sharp for only about 0.3 s. It is now "✦ The Shrine of ✦ / First Light", it is held longer, and it is sharp sooner.
+
+**Still open:** the phone's GPU and real touch momentum, and tuning the shrine bell by ear.
 
 ## Round 3: mist, and mountain tops (2026-10-19)
 

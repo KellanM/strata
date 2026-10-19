@@ -195,10 +195,12 @@ const SIGNATURE = {
   Dawn: (B) => { // a white sun shrine on a bare offset summit, its gold disc lit
     const g = terrain(grid(13, 12, 12), { peaks: [{ x: 5, z: 5, h: 8, r: 6.5, p: 1.1 }], spurs: [{ x0: 5, z0: 5, x1: 11, z1: 9, h0: 5, h1: 2, w: 2.8 }], ...B });
     caps(g, B.ground, B);
+    // a 3x3 shrine, three high, a stepped roof, its gold sun disc toward the light
     const y = hAt(g, 5, 5);
-    for (const [dx, dz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { put(g, 5 + dx, y, 5 + dz, 0xfbf3e6); put(g, 5 + dx, y + 1, 5 + dz, 0xfbf3e6); }
-    put(g, 5, y + 2, 5, 0xfbf3e6); put(g, 6, y + 2, 6, 0xfbf3e6); put(g, 5, y + 2, 6, 0xfbf3e6); put(g, 6, y + 2, 5, 0xfbf3e6);
-    put(g, 6, y + 1, 7, 0xffcf6a, true);
+    for (let k = 0; k < 3; k++) for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) put(g, 5 + dx, y + k, 5 + dz, 0xfbf3e6);
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) put(g, 5 + dx, y + 3, 5 + dz, 0xd9725e);
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) put(g, 5 + dx, y + 4, 5 + dz, 0xb85a4a);
+    put(g, 5, y + 1, 7, 0xffcf6a, true); put(g, 5, y + 2, 7, 0xffe39a, true);
     tree(g, 9, 8, 0x8a5a3c, 0xf4a3b5, 0xfcd0da);
     return g;
   },

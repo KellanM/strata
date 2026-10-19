@@ -216,29 +216,40 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   scrollbar-width: none; touch-action: pan-y;
 }
 .map-scroll::-webkit-scrollbar { display: none; }
-/* the trail floats over the live scene: a veil of the palettes, slightly see-through.
-   Its own fixed layer, not part of the scroller: when the scroller zooms (open,
-   dive) a backdrop inside it would scroll away with the content and pop back after */
-.map-backdrop {
-  position: fixed; inset: 0;
-  background: color-mix(in srgb, var(--sky) 55%, transparent);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; }   /* clear of the corner buttons */
+/* the map's world (mapworld.js) is its own fixed layers behind the canvas: no veil, no blur */
+.map-backdrop { position: fixed; inset: 0; background: none; pointer-events: none; }
+/* the map keeps its own ink: names sit on each chapter's cloud, not on the level's sky */
+#menu .map-scroll { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); color: var(--ink); }
+.map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; text-shadow: 0 0 14px rgba(255, 250, 244, .8); }   /* clear of the corner buttons */
 .map-head .sub { margin: 10px 0 0; }
 #map-progress { margin-top: 4px; letter-spacing: .26em; }
 
 .map { position: relative; width: 100%; }
-.map::before {
-  content: ""; position: absolute; inset: -40px 0 0; z-index: -1;
-  background: var(--map-bg); opacity: .82;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 120px);
-  mask-image: linear-gradient(180deg, transparent 0, #000 120px);
-}
 .map-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; stroke: none; }
-.trail { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; stroke-opacity: .55; }
+.trail { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; stroke-opacity: .55; transition: opacity .9s var(--ease-fade); }
 .trail.walked { stroke-dasharray: none; stroke-width: 2.2; stroke-opacity: .45; }
 .trail.tail { stroke-opacity: .3; }
+/* inside a chapter whose mist is lifting: created hidden, revealed by removing the class */
+.trail.in-parting { opacity: 0; }
+
+/* ---------- the map's world (mapworld.js): behind the canvas, while the title or the map is up ---------- */
+#map-world { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: -1; overflow: hidden; pointer-events: none; display: none; }
+body.world-up #map-world { display: block; }
+#map-world > * { position: absolute; left: 0; top: 0; }
+.mw-sky, .mw-sea { width: 100%; height: 100%; }
+.mw-sea { overflow: hidden; }
+.mw-strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.mw-layer { will-change: transform; }
+.mw-spr, .mw-wall { position: absolute; left: 0; top: 0; }
+.mw-spr.peak { background-repeat: no-repeat; }
+.mw-spr.ghost { opacity: .26; }
+.mw-spr.drift { animation: mw-drift var(--dur, 24s) ease-in-out var(--delay, 0s) infinite alternate; }
+@keyframes mw-drift { from { translate: -16px 0; } to { translate: 16px 0; } }
+.mw-glow { border-radius: 50%; background: radial-gradient(closest-side, var(--g), transparent); }
+/* the canvas steps aside while the map is up (the level isn't drawn under it) */
+#scene { transition: opacity .5s ease; }
+body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the level must not linger over the mist */
+@media (prefers-reduced-motion: reduce) { .mw-spr.drift { animation: none; } #scene { transition: none; } }
 
 .map-region {
   position: absolute; transform: translateY(-50%);
@@ -373,7 +384,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 @keyframes sweep { to { left: 100%; } }
 .map-region.awaken .r-name { animation: name-wake 1.6s 1s ease both; }
 @keyframes name-wake { 40% { text-shadow: 0 0 18px var(--glow, #fff); letter-spacing: .5em; } }
-.trail.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: trail-draw 1.4s 1.5s ease-in-out forwards; }
+.trail.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: trail-draw var(--d, 1.4s) ease-in-out var(--delay, 1.5s) forwards; }
 @keyframes trail-draw { to { stroke-dashoffset: 0; } }
 .trail.spur { stroke-dasharray: 0.1 6; stroke-opacity: .35; stroke-width: 1.8; }
 
@@ -706,7 +717,7 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 
 /* ---------- title: the first screen of a launch (literal curves: it shows before motion.js loads) ---------- */
 #title { position: fixed; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center;
-  padding: calc(17vh + var(--safe-t)) 20px calc(9vh + var(--safe-b)); color: var(--ink); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  padding: calc(17vh + var(--safe-t)) 20px calc(9vh + var(--safe-b)); color: #eef0ff; text-shadow: 0 0 22px rgba(150, 170, 255, .3); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   opacity: 0; pointer-events: none; -webkit-tap-highlight-color: transparent;
   transition: opacity .42s cubic-bezier(.55,0,.75,.2), translate .42s cubic-bezier(.55,0,.75,.2); }
 #title.show { opacity: 1; pointer-events: auto; }
@@ -735,7 +746,82 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
   -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh);
   mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh); }
 /* behind the title the block is only a backdrop */
-body:has(#title.show) .hud { opacity: 0; pointer-events: none; }
+body.title-up .hud { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   #title h1, #title .sub, #title .tap, #title .tap svg { animation: none; }
+}
+
+/* ---------- the map over a sea of cloud (map.js, world.js; docs/map-study.md) ---------- */
+/* the world is opaque, so the level's own UI steps out while the map is up
+   (the old veil used to cover it) */
+/* body classes set each frame by main.js frame(): a body:has(#menu.show) here
+   re-styled the whole document on every frame of the title pan (5 fps at CPU x4) */
+body.menu-open :is(.hud, #actions, #win-title, #win, #coach) { opacity: 0 !important; pointer-events: none !important; }
+body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; }
+/* names sit on the cloud: a soft halo of their own sky keeps them readable */
+.map-region { text-shadow: 0 0 14px rgba(255, 250, 244, .75); }
+.map-region.on-dark { text-shadow: 0 0 14px rgba(10, 12, 30, .55); }
+.map-region .r-num { font-size: 10px; letter-spacing: .4em; opacity: .7; }
+.map-region.at-right .r-num { margin-right: -.4em; }
+.map-region.at-centre { left: 50%; transform: translate(-50%, -50%); align-items: center; text-align: center; }
+.map-region.veiled .r-name { opacity: .85; }
+.map-region.waking .r-name { animation: name-wake 1.8s ease both; }
+.map-node { transition: transform .35s cubic-bezier(.2,.9,.3,1.4), opacity .9s var(--ease-fade); }
+.map-node .label { text-shadow: 0 0 10px rgba(255, 250, 244, .85); }
+.map-node.on-dark .label { text-shadow: 0 0 10px rgba(10, 12, 30, .6); }
+/* each stone rests on a soft patch of light on the cloud */
+.map-node::before { content: ""; position: absolute; left: 50%; top: 64%; width: 58px; height: 18px; margin-left: -29px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); }
+.map-node.on-dark::before { background: radial-gradient(closest-side, rgba(190, 210, 255, .2), rgba(190, 210, 255, 0)); }
+/* the next stone: one gold ring that breathes; nothing else about it moves */
+.map-node.current .ring { border-color: #e9b949; }
+.map-node.current .halo { animation: none; opacity: .6; }
+.map-node.current .cube { animation: none; }
+.stars-mini i.on svg { fill: #e9b949; stroke: #e9b949; }
+/* a chapter whose cloud is parting: its stones appear as it clears */
+.map-node.veiled-in { opacity: 0; pointer-events: none; }
+
+/* shrines: a gem on a slim spire, with its own light. Open (its stars earned):
+   a warm gold halo and a column of light, the only thing that breathes besides
+   the next stone. Locked: pale. Solved: calm and cool. */
+.map-node.bonus { width: 84px; height: 84px; margin: -42px 0 0 -42px; }
+.map-node.bonus::before { display: none; }
+.map-node.bonus .halo { inset: -30px; opacity: 1;
+  background: radial-gradient(closest-side, rgba(255, 226, 150, .78), rgba(255, 215, 122, .3) 45%, rgba(255, 215, 122, 0)); animation: breathe 3.2s ease-in-out infinite; }
+.map-node.bonus::after { content: ""; position: absolute; left: 50%; bottom: 52%; width: 46px; height: 220px; margin-left: -23px; pointer-events: none; z-index: -1;
+  background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 214, 120, .6), rgba(255, 214, 120, 0) 72%); }
+.map-node.bonus.locked .halo { background: radial-gradient(closest-side, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); animation: none; }
+.map-node.bonus.locked::after { height: 150px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 255, 255, .38), rgba(255, 255, 255, 0) 72%); }
+.map-node.bonus.solved .halo { background: radial-gradient(closest-side, rgba(205, 225, 255, .55), rgba(205, 225, 255, 0)); animation: none; }
+.map-node.bonus.solved::after { height: 120px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(215, 232, 255, .4), rgba(215, 232, 255, 0) 72%); }
+.map-node.bonus .n { color: #e9b949; opacity: 1; font-size: 12px; }
+.map-node.bonus.open .nm { font-weight: 600; letter-spacing: .3em; }
+.map-node.bonus.open .mt { color: #a8741a; opacity: 1; }
+.map-node.bonus.on-dark.open .mt { color: #ffe7a1; }
+.map-node.bonus .cube { filter: drop-shadow(0 4px 8px rgba(120, 80, 20, .25)); }
+.map-node.bonus.locked .cube { opacity: .7; filter: none; }
+.map-node.bonus .obj { width: 56px; height: 56px; }
+.map-node.bonus.far .label { opacity: .75; }
+
+/* the companion carries a small gold light */
+.companion { top: -54px; height: 57px; }
+.companion .lamp { animation: lamp 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.companion.walking .lamp { animation: none; }
+@keyframes lamp { 50% { transform: translateY(-2.5px); } }
+
+/* a shrine's card: the chapter card, in gold */
+#chapter-card.shrine { background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, #fff2d2 92%, transparent) 0%, color-mix(in srgb, var(--sky) 72%, transparent) 55%, color-mix(in srgb, var(--sky) 28%, transparent) 100%); }
+#chapter-card.shrine .numeral { color: #a8741a; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+#chapter-card.shrine .cname { color: #3e3020; font-size: clamp(20px, 6vw, 34px); }
+#chapter-card.shrine .cline { color: #5a4630; }
+/* held longer than a chapter's card, and sharp sooner: it reads before the block comes */
+#chapter-card.shrine.show { animation-duration: 3.4s; }
+#chapter-card.shrine.show .numeral { animation: card-rise .6s ease .1s both; }
+#chapter-card.shrine.show .cname { animation: card-rise .6s ease .25s both; }
+#chapter-card.shrine.show .cline { animation: card-rise .6s ease .55s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node.bonus .halo, .map-node.bonus.open .halo, .companion .lamp, .trail.draw { animation: none; }
+  .trail.draw { stroke-dashoffset: 0; }
+  .map-node, .trail { transition: none; }
 }

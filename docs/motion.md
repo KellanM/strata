@@ -51,6 +51,15 @@ three.js and canvas work.
   the level-start assembly finishes it at once and counts.
 - **Reduce Motion skips the animation, not the change.** Every effect checks
   `reduceMotion`.
+- **Create hidden, then arm the transition.** An element that will fade in is
+  created with its hidden class already on (`veiled-in`, `in-parting`), and its
+  transition is armed a frame later. If an element is inserted visible and then
+  set to opacity 0 along with a transition, any style flush in between (for
+  example `getTotalLength()`) makes it animate 1 → 0 first. That was the path
+  flash when the mist lifted.
+- **No `body:has()` for state that changes during motion.** Set body classes in
+  `frame()` instead. A `:has()` rule on body re-styles the whole document on
+  every frame.
 
 ## Developer tools (developer panel)
 
@@ -69,6 +78,10 @@ three.js and canvas work.
 - **Map transitions** (the portal, pull-back and dissolve): `openMenu`, `closeMenu`
   and `diveInto` in main.js, with styles under `/* map -> level */` in
   style.css.
+- **The map's world** (sky, mist, peaks; `docs/map-study.md`, Phase 2): mapworld.js.
+  - **The descent** from the title: `DESCENT` in main.js, 1.5 s, or 0.8 s again in the same session.
+  - **The mist lift:** `partCloud()` in map.js tweens `world.setPart` over `DUR.ceremony * 2` and reveals the hidden stones and trail.
+  - **The canvas** fades out under the map (`body.map-up #scene`) and stops drawing after 0.6 s.
 - **In-scene motion:**
   - the block assembly is in the `uIntro` shader in cubes.js;
   - the handles' pop is in handles.js `amount()`;
