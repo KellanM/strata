@@ -53,6 +53,71 @@ export const PALETTES = [
     paintTop: 0xffd58a, paintLit: 0xeb9e4e, paintShade: 0xa7653f,
     rays: 0xc9d6ff, motes: 0xdfe6ff,
   },
+  // The eight biomes of docs/biomes.md; skies match gallery pages 6-8.
+  {
+    // the kitchen at four o'clock: cream and biscuit, mint-green enamel
+    name: 'Teatime', rayGain: 0.7,
+    skyTop: 0xfbe8d6, skyBottom: 0xe2b49a, glow: 0xfff3e2,
+    top: 0xfff4e6, lit: 0xf3c9a8, shade: 0xb48c8c, under: 0x7c5a66,
+    paintTop: 0xa8dcc8, paintLit: 0x6fb8a4, paintShade: 0x45807c,
+    rays: 0xffeed8, motes: 0xfff8ee,
+  },
+  {
+    // leaf fall and woodsmoke: amber sky, russet stone, a cool moss mark
+    name: 'Autumn', rayGain: 0.8,
+    skyTop: 0xf6d2a2, skyBottom: 0xb8654a, glow: 0xffe9c4,
+    top: 0xfdecd2, lit: 0xf0b383, shade: 0x9a6a5c, under: 0x5e3f45,
+    paintTop: 0x9fd4b8, paintLit: 0x5ea88a, paintShade: 0x3a7064,
+    rays: 0xffdcb0, motes: 0xffe6c6,
+  },
+  {
+    // the sea below the sea: navy to teal, cyan glow, amber lamps
+    name: 'Deep', rayGain: 1.1,
+    skyTop: 0x0d2a3f, skyBottom: 0x1f6f7a, glow: 0x7ff3e6,
+    top: 0xdff3ee, lit: 0x8fd0c8, shade: 0x4a8590, under: 0x24506a,
+    paintTop: 0xffe08a, paintLit: 0xf2b04a, paintShade: 0xb06a3a,
+    rays: 0x9ff6ec, motes: 0xc8fff6,
+  },
+  {
+    // heat shimmer: sand-gold sky, terracotta shade, oasis-water mark
+    name: 'Desert', rayGain: 0.85,
+    skyTop: 0xfde7b8, skyBottom: 0xe59a5c, glow: 0xfff4d0,
+    top: 0xfff1d8, lit: 0xf6c48e, shade: 0xc27f62, under: 0x8a4f4a,
+    paintTop: 0x8fe0dc, paintLit: 0x45b4b8, paintShade: 0x2a7a8c,
+    rays: 0xfff0c8, motes: 0xfff8e4,
+  },
+  {
+    // old stones in the mist: grey-green sky, lichen-gold mark
+    name: 'Stones', rayGain: 0.5,
+    skyTop: 0xdfe6dc, skyBottom: 0x8fa59a, glow: 0xf8fbf2,
+    top: 0xf4f2ea, lit: 0xd8d0c0, shade: 0x8a9a92, under: 0x5a6a68,
+    paintTop: 0xf2d27a, paintLit: 0xd2a64a, paintShade: 0x8f7040,
+    rays: 0xf2f6ea, motes: 0xffffff,
+  },
+  {
+    // the workshop by lamplight: dark wood to brass, teal enamel mark
+    name: 'Clockwork', rayGain: 1.05,
+    skyTop: 0x3b2a1e, skyBottom: 0xc98b4a, glow: 0xffd28a,
+    top: 0xfbe6c4, lit: 0xe0a868, shade: 0x7a5038, under: 0x3e2a22,
+    paintTop: 0x9fe0d0, paintLit: 0x4fb3a9, paintShade: 0x2f7a78,
+    rays: 0xffcf8f, motes: 0xffe2b0,
+  },
+  {
+    // thin air and deep snow: white to ice blue, a warm mitten-red mark
+    name: 'Frost', rayGain: 0.55,
+    skyTop: 0xeef4fb, skyBottom: 0xa9c3dd, glow: 0xffffff,
+    top: 0xffffff, lit: 0xdde8f4, shade: 0x8fa6c4, under: 0x5b6f92,
+    paintTop: 0xffb0a0, paintLit: 0xe86a5e, paintShade: 0xa8424e,
+    rays: 0xf4f8ff, motes: 0xffffff,
+  },
+  {
+    // above the weather: pale periwinkle, peach light, a sunny mark
+    name: 'Clouds', rayGain: 0.65,
+    skyTop: 0xe3efff, skyBottom: 0xb8c8f2, glow: 0xfffdf4,
+    top: 0xfffaf2, lit: 0xf6d6c4, shade: 0x9aa6d6, under: 0x6a73a8,
+    paintTop: 0xffd98a, paintLit: 0xf2a95a, paintShade: 0xb8704a,
+    rays: 0xfff8ea, motes: 0xffffff,
+  },
 ];
 
 // Each level gets its own moment inside its chapter's colour script: the day

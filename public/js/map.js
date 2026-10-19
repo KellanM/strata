@@ -17,9 +17,10 @@ const STEP = 116;          // vertical distance between nodes
 const REGION_GAP = 92;     // room for a chapter label
 const COL = 420;           // max width of the trail column
 const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
+// a short chapter asks for fewer: two stars a stone at most
+const shrineStars = (r) => Math.min(SHRINE_STARS, r.items.length * 2);
 // developer switch (hidden panel): every stone and shrine open
 const devUnlock = () => localStorage.getItem('strata.dev.unlock') === '1';
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 const hex = (h) => '#' + h.toString(16).padStart(6, '0');
 const lum = (h) => {
@@ -110,12 +111,24 @@ function segment(p0, p1, p2, p3, move = true) {
   return `${move ? `M${p1[0]},${p1[1]}` : ''}C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]}`;
 }
 
-// Unlock rule: solved, the first unsolved, or within two of the furthest solved.
+// Unlock rule: solved, the first unsolved, or within two of the furthest solved
+// stone reached along the trail. "Reached" walks the trail in order and steps
+// onto the next solved stone only if at most one unsolved stone lies between
+// (the old "within two"), so a solved stone sitting further on by itself (a
+// level that moved chapters when the map grew) stays solved but doesn't open
+// the trail around it. Stones added since (Shapes.ADDED_LATER) don't count as
+// gaps, so a returning player keeps the trail they had walked and the new
+// stones behind it open. For a save made on an unchanged trail this is the
+// same as the furthest solved stone.
 export function progress(entries, solved) {
-  let furthest = -1, first = -1;
+  const later = Shapes.ADDED_LATER ?? new Set();
+  let furthest = -1, first = -1, gap = 0;
   entries.forEach((e, i) => {
-    if (solved[e.shape.id]) furthest = i;
-    else if (first < 0) first = i;
+    if (solved[e.shape.id]) { if (gap <= 1) { furthest = i; gap = 0; } }
+    else {
+      if (first < 0) first = i;
+      if (!later.has(e.shape.id)) gap++;
+    }
   });
   const open = entries.map((e, i) => devUnlock() || !!solved[e.shape.id] || i === first || i <= furthest + 2);
   return { furthest, first, open };
@@ -145,6 +158,8 @@ export function renderMap(root, opts) {
   const colW = Math.min(COL, fullW - 24);
   const x0 = (fullW - colW) / 2;
   const { first, open } = progress(entries, solved);
+  // a chapter is reached once one of its unsolved stones is open, or all are solved
+  const reached = (r) => r.items.every((e) => solved[e.shape.id]) || r.items.some((e) => !solved[e.shape.id] && open[entries.indexOf(e)]);
   const seenObjects = seenSet('strata.map.objects');
   const seenChapters = seenSet('strata.map.chapters');
 
@@ -173,7 +188,7 @@ export function renderMap(root, opts) {
     r.complete = r.solvedCount === r.items.length;
     r.awaken = r.complete && celebrate && !seenChapters.has(r.name);
     y += REGION_GAP * 0.35;
-    labels.push({ y, top: y - REGION_GAP * 0.35, text: r.name, sub: `${ROMAN[ri] ?? ri + 1} · ${r.stars} / ${r.items.length * 3} ★`, palette: r.items[0].palette, region: r });
+    labels.push({ y, top: y - REGION_GAP * 0.35, text: r.name, sub: `${Shapes.CHAPTERS?.find((c) => c.name === r.name)?.numeral ?? ri + 1} · ${r.stars} / ${r.items.length * 3} ★`, palette: r.items[0].palette, region: r });
     y += REGION_GAP * 0.65;
     for (const e of r.items) {
       const i = entries.indexOf(e);
@@ -191,7 +206,9 @@ export function renderMap(root, opts) {
       r.shrine = {
         kind: 'bonus', x: x0 + colW * (leftSide ? 0.16 : 0.84), y: r.last.y + STEP * 0.5,
         palette: entry.palette, sky: r.items[0].palette, entry, region: r,
-        state: solved[b.id] ? 'solved' : devUnlock() || r.stars >= SHRINE_STARS ? 'open' : 'locked',
+        // stars open it, once the trail has reached the chapter (stars from
+        // stones that moved here when the map grew don't open it from afar)
+        state: solved[b.id] ? 'solved' : devUnlock() || (r.stars >= shrineStars(r) && reached(r)) ? 'open' : 'locked',
       };
       nodes.push(r.shrine);
     }
@@ -348,7 +365,7 @@ export function renderMap(root, opts) {
       num = isBonus ? '✦' : String(number).padStart(2, '0');
       if (isBonus) {
         name = s ? shape.name : 'Shrine';
-        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${SHRINE_STARS} ★` : 'open';
+        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${shrineStars(n.region)} ★` : 'open';
         if (!s) art = shrine(p);
       } else {
         name = s ? shape.name : n.state === 'locked' ? '' : '???';
@@ -361,7 +378,7 @@ export function renderMap(root, opts) {
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
       b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +
-        (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${SHRINE_STARS} stars` : ', locked') : ''));
+        (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} stars` : ', locked') : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
         b.addEventListener('click', () => {

@@ -43,10 +43,10 @@ const PARAM = new URLSearchParams(location.search).get('page');
 const LIVE = PARAM === 'live';
 const PAGE = LIVE ? 0 : Math.max(1, Number(PARAM) || 1);
 const PAGES = 8;
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
 // sections: chapter themes on the idea pages, the game's chapters on Live
 let SECTIONS = LIVE
-  ? CHAPTERS.map((c, i) => ({ key: c.name, numeral: ROMAN[i] ?? String(i + 1), name: c.name, chapter: c.blurb ?? '', palette: c.palette }))
+  ? CHAPTERS.map((c, i) => ({ key: c.name, numeral: c.numeral ?? ROMAN[i] ?? String(i + 1), name: c.name, chapter: c.blurb ?? '', palette: c.palette }))
   : THEMES;
 const numberOf = (t, k) => LIVE
   ? (lists[t.key][k].bonus ? `✦ ${t.numeral}` : `L-${String(SHAPES.indexOf(lists[t.key][k]) + 1).padStart(2, '0')}`)

@@ -1,6 +1,6 @@
 # Level design
 
-The 67 puzzles in `public/js/shapes.js` are grouped into seven chapters (`CHAPTERS`; see "Seven regions" below). Each chapter has its own palette. Array order is play order.
+The puzzles in `public/js/shapes.js` are grouped into chapters (`CHAPTERS`; fifteen since docs/biomes.md was applied, see "Seven regions" below for the earlier split). Each chapter has its own palette. Array order is play order.
 
 ## What makes a 3D nonogram satisfying
 

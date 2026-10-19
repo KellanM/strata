@@ -1,9 +1,57 @@
-# New biomes: proposal (not applied)
+# New biomes: applied
+
+**Applied 2026-10-18.** Kellan picked gallery objects for all eight biomes, and
+the map now has 15 chapters, 140 levels and 13 shrines. The proposal below is
+kept as written; "As built" records what shipped.
+
+## As built
+
+Map order is the suggested journey, unchanged: the chapter means rise without
+a swap (the moved levels were retuned with `tools/retune.mjs` to fit their new
+place; curated `clues:` levels kept their clues).
+
+| # | Chapter | Palette | Levels | Mean D | Shrine |
+|---|---|---|---|---|---|
+| I | First Light | Dawn | 9 | 7.67 | Cottage |
+| II | Teatime | Teatime | 8 | 8.76 | Layer Cake |
+| III | Moss Garden | Mint | 10 | 9.03 | Frog |
+| IV | The Orchard | Orchard | 9 | 10.34 | none yet |
+| V | Autumn Woods | Autumn | 12 | 10.60 | Cider Press |
+| VI | The Lagoon | Lagoon | 11 | 10.93 | Whale |
+| VII | The Deep | Deep | 8 | 11.15 | Black Smoker |
+| VIII | Desert Oasis | Desert | 5 | 11.30 | Keyhole Arch |
+| IX | Ember Steps | Dusk | 9 | 11.42 | Paper Lantern |
+| X | Old Stones | Stones | 9 | 11.59 | Stone Circle |
+| XI | Clockwork Workshop | Clockwork | 11 | 11.77 | Gear Train |
+| XII | Lantern Festival | Festival | 10 | 11.88 | none yet |
+| XIII | Frost Peaks | Frost | 9 | 12.02 | Igloo |
+| XIV | Cloud Isles | Clouds | 11 | 12.45 | Floating Isle |
+| XV | Starfall | Night | 9 | 12.71 | Crescent Moon |
+
+- **Moved, ids kept** (so solved state carries over): every level in the
+  "Moves in from today" column below, as listed. All of them existed.
+- **New from the gallery:** 46 picks from pages 6-8; one per biome became its
+  shrine (the strongest finale of the set), the other 38 are levels.
+- **Palettes:** eight new ones in `public/js/palettes.js`, skies from the
+  gallery `sections.json`; each has a key and timbre in `public/js/audio.js`.
+- **Shrines** open at 12 stars, or two stars a stone in a short chapter
+  (Desert Oasis: 10), once the trail has reached the chapter.
+- **Returning players:** the unlock rule (`progress()` in `public/js/map.js`)
+  walks the trail and only extends it through solved stones that are at most
+  one unsolved stone apart; the 38 new levels (`ADDED_LATER` in shapes.js)
+  don't count as gaps. So a save keeps the trail it had walked, the new stones
+  behind it open, and a moved level that now sits further on stays solved
+  without unlocking the chapters around it. Fresh saves behave exactly as
+  before.
+- The Orchard and Lantern Festival still have no shrine (none was proposed);
+  a pick for each would complete the set.
+
+## The proposal
 
 With 102 levels in 7 chapters the map has grown lopsided: Starfall has 20,
 The Lagoon 19 and First Light 16, while Lantern Festival has 10. This proposes
 eight new biomes. Some take levels from today's crowded chapters, and gallery
-pages 6–8 fill the rest. **Nothing here changes the game until Kellan picks.**
+pages 6–8 fill the rest.
 
 Each biome has a colour script (sky top → bottom), a one-line mood, what
 moves into it from today's levels, and the gap the new gallery fills.
