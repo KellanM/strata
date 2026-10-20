@@ -350,3 +350,65 @@ The title's own STRATA and hint fade out as the CTA comes in, so nothing doubles
   - TAP / PEEL / REVEAL stay at 16% rather than Saturday's 80%, for the safe zone.
 
 **Sound.** The build adds a limiter after loudnorm. The first render of this revision peaked at −0.3 dBTP.
+
+# v4: the flagship ad (2026-10-19)
+
+**Brief (Kellan, verbatim):** "Ok just take our research on the best practices for mobile ad design and apply it to making a new ad using the best parts of our existing ad. Instead of koala please show the sloth level. And we want the sound effects associated with the rolling numbers in the library reveal. We want this to be incredibly enticing showing the best parts of our app."
+
+**Output:** `tools/trailer/timeline-v4.mjs` produces `trailer/strata-trailer-v4.mp4` (21.4 s), plus `-silent`, `poster-v4.png` and `contact-sheet-v4.png`. The v3 cuts are untouched.
+
+**Length: 21 s.**
+- Liftoff/Vungle's puzzle-genre optimum is about 22 s with an App Store end card.
+- The 4.8 s settle rule fixes the arithmetic. A 15 s ad holds only two full reveals and no room for the mechanic and the wall. 21 s holds two full reveals, TAP / PEEL, four settled objects, the wall and the CTA.
+- Longer (Block Blast's 54–63 s top cuts) would dilute a premium, calm product. A 15 s cut stays the Reels / TikTok variant (v3ad).
+
+**What I took from the research:**
+- **Payoff and tension in the first second.** Color Block Jam cuts just before the solution, and Royal Match opens on the King in peril. So v4 opens on the Dragon Head's stone with one cube left, "ONE TAP / LEFT…" from the first frame, and the last tap at 0.85 s. 63% of top auction ads have text in the first frame (Segwise, secondary).
+- **Words carry it muted.** Every beat has a big bold caption: ONE TAP LEFT, TAP, PEEL, REVEAL, COLLECT THEM ALL, then 100+ PUZZLES.
+- **Mechanic, then variety, then volume.** This is Lieu's order: the mechanic first, layers after, cosmetics past halfway. Here that is one readable deduction (a 0 row, double-tapped away), then COLLECT THEM ALL, then the wall.
+- **A separate end card with a store CTA:** Smadex's roughly 3× IPM finding, and the Block Blast / Color Block Jam end cards viewed in Meta Ad Library.
+- **Touch rings on every tap:** Unity's guidance, and Color Block Jam's hand.
+
+**What I took from v3 and Saturday's ad:**
+- Saturday's caption style, wall, and PLAY NOW card with both badges.
+- The Dragon Head's "one tap left…" (Saturday's ending, now the opening).
+- v3's verified real taps, blur cuts and settled-objects montage.
+- Kellan's end: the map, the pull up to the title, then a blur under the CTA.
+- The rule that every reveal lands.
+
+**Changed for v4:**
+- **The Sloth replaces the Koala** for TAP / PEEL / REVEAL.
+  - Its stone is 9×9×3 and a 9-cube row is double-tapped away. All its taps hit.
+  - Its reveal settles facing you 13.16 s in, as a beige sloth under a green-topped branch.
+  - It reads at phone size, but it is the palest hero: cream on the Orchard's cream sky.
+- **The rolling number has its own sound** (`H.countRoll`). The game already has one: the result card's score count-up (`main.js showResult`) calls `sound.tick(k)` every 75 ms, which climbs the scale, and `tickDone()`, a bell, on the final number. v4 uses that same voice, louder for the ad mix: a short sine on the scale degrees climbing from the key's root + 36, with a 6 ms bright noise click.
+  - **One tick per number change**, scheduled on the audio clock at the frame that number first shows. They come every frame while the count rolls fast and thin out as it eases in.
+  - **The landing:** the frame 100+ first shows gets the game's `tickDone` bell (louder), a fifth above, and a soft low body.
+  - **Sync, measured in the final WAV** (4.5–6.5 kHz band-pass onsets against the frames each number changes on): all 25 ticks sit within 2–8 ms of their frame, under a frame. The landing bell is within 2 ms of the 100+ frame. The first ticks, under the cut's whoosh, needed a local threshold to separate.
+- **Captions match Saturday's weight more closely** (`heavy`): a hairline stroke on the bold face, lines at 54 px, verbs at 76 px.
+- **The montage hides the whole name card while COLLECT THEM ALL is up** (`noName`), so nothing stacks above the caption. This addresses v3's review.
+- **Montage heroes, alternating skies:** Maneki-neko (crimson), Anglerfish (teal), Windmill (lavender), Pumpkin (peach).
+
+**Beats (21.4 s):**
+- **0.0–5.8 Hook.** "ONE TAP / LEFT…" from frame one over the Dragon Head's last cube. The tap at 0.85 s gives a flash and a whirl; it settles facing you at 5.62 s, and its first gem chimes at 4.95 s.
+- **5.77–6.87 TAP** on the Sloth: three taps, then a 9-cube double-tap cascade.
+- **6.87–7.97 PEEL:** four layers.
+- **7.97–13.3 REVEAL.** Taps at 8.15 and 8.39 s; the Sloth settles at 13.16 s.
+- **13.31–17.11 COLLECT THEM ALL:** four settled objects, 0.95 s each, as gems 2 and 3 land with chimes.
+- **17.11–18.56 Wall.** The count rolls 0+ to 100+ in 1.1 s with its ticks; 100+ lands at about 18.07 s with the bell; PUZZLES underneath.
+- **18.56 The map;** the pull at 18.66–18.89 s brings the title down.
+- **19.18–21.4 CTA:** STRATA, the gem, PLAY NOW, both badges.
+
+**Checks:**
+- Every tap hits its cube (7), with 0 mistakes and no page errors.
+- Caption boxes: within y 16–58.4% and x 21.1–80.5%. The end card is Saturday's, with its wide badge row as before.
+- Loudness: −14.0 LUFS integrated, true peak −1.4 dB.
+- Reveal frames: the Dragon Head at 5.2 / 5.62 s and the Sloth at 12.7 / 13.15 s show the same resting pose, facing you.
+
+**Weak spots:**
+- The Sloth is pale (cream on cream) and smaller in frame than the Koala.
+- TAP / PEEL is still about 2.2 s of stone.
+- Each full reveal holds about 4.8 s, so the middle of the ad is slower than the montage.
+- Only the hook and the Sloth are full reveals.
+- PLAY NOW and the store badges point to stores that don't list Strata yet (`docs/ad-hooks-study.md`).
+- Nobody has listened with sound. The tick sync was measured, not heard.

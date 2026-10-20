@@ -51,6 +51,13 @@ export function pageHelpers(cfg) {
     'body.tr-cta #title h1, body.tr-cta #title .tap { opacity: 0 !important; transition: opacity .25s linear !important; }',
     // under COLLECT / THEM ALL, the settled object's one-line story steps aside (its name stays), so the words don't collide
     'body.tr-nostory #win-title .story { opacity: 0 !important; }',
+    // v4: the whole name card steps aside under COLLECT / THEM ALL (v3's review: the name stacked on the caption)
+    'body.tr-noname #win-title { opacity: 0 !important; transition: opacity .15s linear !important; }',
+    // v4: Saturday's weight - heavier and a touch bigger than v3's (a hairline stroke thickens the bold face)
+    '.tr-cap.heavy { -webkit-text-stroke: .035em currentColor; }',
+    '.tr-cap.heavy.say { font-size: 54px; letter-spacing: .13em; padding-left: .13em; }',
+    '.tr-cap.heavy.verb { font-size: 76px; letter-spacing: .12em; padding-left: .12em; }',
+    '.tr-cap.heavy.gold .c { -webkit-text-stroke: 0; }',
     // Saturday's 100+ wall: a dark plum field of object tiles, tilted a touch, drifting down
     '#tr-wall { position: fixed; inset: 0; z-index: 38; overflow: hidden; opacity: 0; transition: opacity .2s linear;',
     '  background: radial-gradient(ellipse 80% 60% at 50% 45%, #3f2340, #2a1631 60%, #1d1023); }',
@@ -164,6 +171,35 @@ export function pageHelpers(cfg) {
       if (k < 1) requestAnimationFrame(tick);
     };
     tick();
+  };
+
+  // v4: the same count, with the game's own score-tick voice under it (main.js showResult ->
+  // sound.tick / tickDone, louder for the ad's mix). Each tick is scheduled on the audio
+  // clock at the frame its number first shows (frame n of the count shows v(n + 1), so
+  // v(n) is on screen from n - 1 frames after the action); a tick only when the number
+  // changes, so they run fast while it rolls and thin out as it lands; a bell and a soft
+  // body land the 100+.
+  H.countRoll = (to, secs, cls) => {
+    H.count(to, secs, cls);
+    if (!audio || !audio.sound.ctx) return;
+    const s = audio.sound, t0 = s.now, F = 1 / 30;
+    const v = (n) => Math.round(to * (1 - Math.pow(1 - Math.min(1, n * F / secs), 3)));
+    let k = 0, last = v(0), lastAt = t0;
+    for (let n = 1; n * F <= secs + F; n++) {
+      const x = v(n);
+      if (x === last) continue;
+      last = x;
+      const at = lastAt = t0 + Math.max(0, (n - 1) * F);
+      if (x === to) break;                 // the landing gets the bell, not a tick
+      s.tone(s.degree(Math.min(k, 14), s.key.root + 36), { at, type: 'sine', gain: 0.075, decay: 0.035, detune: k % 2 ? 5 : -5 });
+      s.noise({ at, dur: 0.006, gain: 0.05, freq: 5200, q: 2 });
+      k++;
+    }
+    const land = lastAt;                   // the frame 100+ first shows
+    s.fmBell(s.key.root + 48, { at: land, gain: 0.16, decay: 1.6, index: 2 });
+    s.fmBell(s.key.root + 36 + 7, { at: land + 0.04, gain: 0.08, decay: 1.4 });
+    s.tone(s.key.root + 12, { at: land, type: 'sine', gain: 0.2, decay: 0.26, partial: 2, partialGain: 0.2 });
+    window.__rollTicks = k;
   };
 
   // ---- cuts
@@ -418,6 +454,7 @@ export function pageHelpers(cfg) {
     touch(x, y);
     pointer('pointerdown', x, y, t); pointer('pointerup', x, y, t);
   };
+  H.noName = (on) => { document.body.classList.toggle('tr-noname', !!on); };
   H.noStory = (on) => { document.body.classList.toggle('tr-nostory', !!on); };
   H.noTag = () => { document.body.classList.add('tr-notag'); };
   H.endCard = () => { document.body.classList.add('tr-cta'); end.classList.add('on'); setTimeout(H.measureEnd, 1200); };

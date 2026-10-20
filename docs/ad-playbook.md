@@ -50,9 +50,13 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
 - The first gem lands 4.1 s after the tap, then one more each beat (0.83 s). Shots of settled objects that start about 4.85 s after their win catch gems 2 and 3 landing.
 
 **Hero objects** (survey: `tools/trailer/survey.mjs`):
-- Kellan's picks: Maneki-neko, Dragon Head, Kokeshi, Origami Fox, Windmill, Pumpkin, Koala, Moss Tortoise.
-- Also strong at phone size: Armillary Sphere (gold), Anglerfish (teal sky), Mikoshi, Tin Carousel, Clock Tower, Great Lantern Gate, Ringed Planet.
-- Lantern Festival objects all share the crimson sky, so alternate skies in a montage.
+- **The v4 picks:**
+  - **Hook:** the Dragon Head. It has the strongest silhouette and turns to face you; open on its last cube.
+  - **The mechanic:** the Sloth (Kellan's choice over the Koala). It reads, but it is the palest: cream on the Orchard's cream.
+  - **Montage:** Maneki-neko (crimson), Anglerfish (teal), Windmill (lavender), Pumpkin (peach). Every one is a different sky.
+- **Kellan's named favourites:** Maneki-neko, Dragon Head, Kokeshi, Origami Fox, Windmill, Pumpkin, Sloth, Koala, Moss Tortoise.
+- **Also strong at phone size:** Armillary Sphere (gold), Anglerfish (teal sky), Mikoshi, Tin Carousel, Clock Tower, Great Lantern Gate, Ringed Planet.
+- Lantern Festival objects all share the crimson sky, so never put two of them next to each other in a montage.
 
 **Best moments:**
 - the last tap: flash, leap, whirl, colour, name. Let it land;
@@ -68,14 +72,15 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
 - peel, unless you already know the game;
 - the map's pale First Light header.
 
-**Captions** (Saturday's style):
-- The game's typeface, uppercase, bold 700.
-- Tracking .15em; white `#fffaf3` with a dark plum glow.
-- 44 px for lines, broken in two with `|` ("WHAT'S / INSIDE?", "COLLECT / THEM ALL", "ONE TAP / LEFT…"); 72 px for verbs (TAP, PEEL, and REVEAL in gold). Sizes are at 540 wide (×2 in the output).
-- Letters blur and rise in, 34 ms apart.
-- At most about 62% of the width when centred.
-- Saturday put TAP / PEEL / REVEAL at about 80% of the height, which platform UI covers, so v3 keeps them at 16%.
+**Captions** (Saturday's style; v4's `heavy` weight is the current spec):
+- The game's typeface, uppercase, bold 700, with a hairline stroke (`heavy`) to match Saturday's weight.
+- Tracking .13em; white `#fffaf3` with a dark plum glow.
+- 54 px for lines, broken in two with `|` ("ONE TAP / LEFT…", "COLLECT / THEM ALL"); 76 px for verbs (TAP, PEEL, and REVEAL in gold). Sizes are at 540 wide (×2 in the output).
+- Letters blur and rise in, 34 ms apart. The hook's caption starts on frame one.
+- At most about 62% of the width when centred: "REVEAL" at 76 px is the widest that fits.
+- Saturday put TAP / PEEL / REVEAL at about 80% of the height, which platform UI covers; v3 and v4 keep them at 16%.
 - Hold a caption through a flash; clear it before the object's name settles in.
+- Under COLLECT THEM ALL, hide the game's name card (`noName`) so nothing stacks above the caption.
 
 **Safe zones** (1080×1920, combined TikTok, Reels and Shorts):
 - Keep text inside y 15–64.5% and x 11–82%.
@@ -98,9 +103,21 @@ Everything sits about 3.5% higher than in the reference, to keep the visible bad
 - Cut on taps and gems. The bed has no beat.
 - Montage shots of settled objects are muted, with a chime on each gem as it lands.
 
+**The rolling-number sound** (the wall's 100+; `H.countRoll` in `v3-page.mjs`). This is the game's own count-up voice: `sound.tick(k)` and `tickDone()`, the result card's score count-up in `main.js showResult`. Recipe:
+1. **Ticks.** For each frame n of the count where the shown number changes, play one tick on the audio clock at `t0 + (n − 1)/30` s. Frame n of the count shows v(n + 1), so the tick lands on the frame its number first appears.
+   - Voice: a sine on scale degree k (climbing, capped at 14) from the key's root + 36; gain 0.075 and decay 35 ms, louder than in-game for the ad mix, with ±5 cent alternating detune.
+   - Add a 6 ms noise click at 5.2 kHz.
+2. **Pace.** One tick per change means they run every frame while the count rolls fast, then thin out as it eases in. Never a fixed-rate slot-machine rattle.
+3. **The landing,** on the frame 100+ first shows:
+   - `tickDone`'s bell (an FM bell at root + 48), gain 0.16;
+   - a bell a fifth up, 40 ms later;
+   - a soft sine body two octaves down.
+4. **Keep sfx on through the wall,** so the bell rings on into the next cut.
+5. **Check it.** Band-pass the final WAV at 4–7 kHz and compare the click onsets with the frames the number changes on. v4 measured all 25 ticks within 8 ms (under a frame).
+
 ## 3. Making a new cut with `tools/trailer`
 
-1. **Copy a timeline.** Copy `timeline-v3.mjs` (a trailer) or `timeline-v3ad.mjs` (an ad, with `OPENINGS` a/b/c) to `timeline-<name>.mjs`. Shared pieces are in `v3-common.mjs` (`SETTLE`, `storage`, `blurCut`); page helpers are in `v3-page.mjs`.
+1. **Copy a timeline.** Copy `timeline-v4.mjs` (the flagship ad), `timeline-v3.mjs` (a trailer) or `timeline-v3ad.mjs` (a 15 s ad, with `OPENINGS` a/b/c) to `timeline-<name>.mjs`. Shared pieces are in `v3-common.mjs` (`SETTLE`, `storage`, `blurCut`); page helpers are in `v3-page.mjs`.
 2. **Write the beats.** A timeline exports:
    - `FPS`, `SIZE`, `DURATION`, `POSTER`, `AUDIO_LEAD`, `LUFS`, `SHEET_FPS`;
    - `storage()`, the save to start from;
@@ -163,6 +180,10 @@ Everything sits about 3.5% higher than in the reference, to keep the visible bad
 4. **v3, revised.** Every reveal lands (3 in the trailer, 2 in the ad); no flash jumps.
    - The v1 end card and a v1-style map-trail wall were tried here, then **rejected**: "the previous video" meant Saturday's ad, now in `trailer/reference/`.
 5. **v3, matched to the reference.** Saturday's wall, CTA and caption style; the map-to-title end sequence.
+6. **v4, the flagship ad (21.4 s, `timeline-v4.mjs`).**
+   - The order: the Dragon Head's "one tap left…" as the hook; TAP / PEEL / REVEAL on the Sloth; COLLECT THEM ALL; the wall; the end sequence.
+   - Changes: the rolling-number ticks, heavier captions, and the name card hidden under COLLECT.
+   - Length: 21 s, near the puzzle optimum of about 22 s. The 4.8 s rule leaves a 15 s ad room for only two reveals and nothing else.
 
 ## 5. Open questions and A/B ideas (once real ad data exists)
 
