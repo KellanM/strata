@@ -7,3 +7,9 @@ trailer/*.webm
 trailer/*.wav
 trailer/frames/
 trailer/reference/*.mp4
+
+trailer/v2/work/
+trailer/ads/work/
+trailer/v5/work/
+trailer/v5/*.mp4
+trailer/v2/*.mp4
