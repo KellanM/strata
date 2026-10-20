@@ -13,6 +13,9 @@ export const SOLVED = ['steps', 'heart', 'candle', 'toaster', 'key', 'bed', 'cha
   'snail-cottage', 'snail', 'hatching-chick', 'moth', 'cat', 'beehive', 'apple', 'cactus', 'tulip', 'mushroom', 'bonsai',
   'flip-flops', 'fish', 'starfish', 'penguin', 'jellyfish', 'boat', 'crab'];
 
+// the game now opens on its title: step off it onto the map before t = 0 (as v2 does)
+export const PREROLL = [['enterMap', [], 2.4]];
+
 export function buildTimeline() {
   const T = [];
   const at = (t, act, ...args) => T.push({ t, act, args });
@@ -105,7 +108,7 @@ export const PAGE_HELPERS = String.raw`
   // overlays: captions, colour dips, end card
   const style = document.createElement('style');
   style.textContent = [
-    '.hud, #install, #actions, #coach, #press-ring, #map-close, #map-help, #map-journal { display: none !important; }',
+    '.hud, #install, #actions, #coach, #press-ring, #map-close, #map-help, #map-journal, #lantern { display: none !important; }',
     '#tr-dip { position: fixed; inset: 0; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .15s linear; }',
     '#tr-cap { position: fixed; left: 0; right: 0; top: 71%; z-index: 40; text-align: center; pointer-events: none;',
     'font: 500 17px/1.45 "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif;',
@@ -169,6 +172,7 @@ export const PAGE_HELPERS = String.raw`
   H.solve = () => { for (const i of visibleOrder()) strata.act(i, 'break'); };
   H.peel = (axis, n) => { if (strata.peel.axis !== axis) strata.setPeelAxis(axis, 1); strata.setPeeled(n); };
   H.map = () => { $('#menu-btn').click(); };
+  H.enterMap = () => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); };
   H.mapScroll = (f) => { const s = $('.map-scroll'); if (s) s.scrollTop = f * Math.min(1400, s.scrollHeight - s.clientHeight); };
   H.sfx = (on) => { if (audio) audio.sound.setSfx(on); };
   H.chime = (k) => {

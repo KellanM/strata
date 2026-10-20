@@ -99,3 +99,122 @@ See the parent report. Nobody has tested it with an audience, and I have not lis
   - the title's tagline is probably as faint on a real launch as it was in capture.
 - v1's timeline predates the title screen and is not re-rendered here. It now needs a title-dismissing `PREROLL` like v2's.
 - No audience test. Nobody has listened to v2: sync and loudness were measured, not heard.
+
+# v3 (2026-10-19)
+
+The distilled, reusable guide is now [ad-playbook.md](ad-playbook.md). This log stays the dated record.
+
+**Brief.** Kellan rejected v2: one slow journey that reads as a mechanics walkthrough. v3 goes back to Saturday's v1 as the base and makes it "a lot more compelling":
+- keep its structure: a hook on a final tap and a reveal; TAP / PEEL / REVEAL; a fast blur-cut montage of the best objects; rotating shapes; the wall; animated text; an end card with App Store and Google Play badges and no tagline;
+- use what is new since: the map world, the double-tap row cascade, the title's sky, shrines, the Koala and Moss Tortoise;
+- deliver two cuts, a ~28 s trailer and a 15 s ad, plus two alternative 3 s openings for the ad.
+
+Saturday's revisions only lived on a deleted branch. I rebuilt them from `timeline.mjs` and Kellan's notes:
+- a 15 s ad that ends on the Dragon Head: "one tap left…", the final tap, the head turns to face you, the gems chime, then a 2.5 s end card;
+- TAP / PEEL / REVEAL at about 1.25 s per word;
+- the wall;
+- a montage of 6 reveals in the trailer and 4 in the ad.
+
+**Outputs:**
+- `trailer/strata-trailer-v3.mp4` (28.4 s);
+- `trailer/strata-trailer-v3ad.mp4` (15 s, opening a);
+- `-v3ad-b.mp4` and `-v3ad-c.mp4` (openings b and c);
+- for each cut: `-silent`, a poster and a 2 fps contact sheet.
+
+The mp4s are gitignored, as in v2.
+
+## Sources (what was actually inspected)
+
+- **Text research.** These are written claims, not viewed ads:
+  - Derek Lieu's trailer posts. His points: say what the video is about in the first 1 to 2 s; captions; build the mechanic, then layers; cut by feel, about 2 frames.
+  - Apple's App Store preview guidelines and badge rules.
+  - Google Play's badge rules.
+  - Platform safe zones, via Socialync.
+  - Smadex via AppTweak: an end card that differs from the last frame got about 3× the IPM.
+  - AppLovin: most players watch muted; captions gave +64% D0 ROAS, for a sleep app.
+  - Liftoff/Vungle, via GameDev Reports: puzzle ads perform best at about 22 s with an App Store end card.
+
+  URLs are in the playbook.
+- **Real ads, sampled muted frame by frame from Meta Ad Library** (no login; a subagent took the samples). I looked at two of the frame sheets myself, `.playwright-mcp/bb20.png` and `cbj.png`, which are gitignored:
+  - **Block Blast, 4127189990777035, 19.9 s.** The board is mid-game at 0 s. There is no text in the whole ad, only the score and "Combo 8 / 9" at 16 to 17 s. The separate end card at 18 to 20 s has the logo, a search bar typing "BLOCK BLAST", and both badges.
+  - **"Color block Jam" page, 955285320353998, 37 s.** A "NO TIMER!" bar stays across the top for the whole ad, with a hand pointer on every move. The end card is an overlay on the blurred last frame: icon, search bar, both badges.
+  - **Described from the subagent's samples (not viewed by me):**
+    - Royal Match 3119331334938178 (60 s): the King is in peril by 1 s, and the CTA is "Choose the next level!".
+    - Nonogram.com 1824481918711949 (30 s): a persistent two-line challenge caption and a level ladder of ticks (1x1 ✓ … 5x5 ✗).
+    - Gem Nonogram 1712554213189639 (19 s).
+    - A 10 s Color Block Jam loop with no end card.
+  - Most of Block Blast's highest-impression ads run 54 to 63 s.
+- **Could not view:**
+  - TikTok Creative Center Top Ads (login wall after 4 ads);
+  - Liftoff's video-length and end-card report (form-gated);
+  - Liftoff's Creative Index (images only);
+  - Unity's and ironSource's pages (search summaries only);
+  - Sensor Tower, MobileAction and AppAgent breakdowns.
+
+  No ad was heard: everything above is muted.
+
+## Mechanisms applied
+
+1. **Motion and a question by 0.5 s.** None of the viewed ads opened on a logo, and all were moving at 0 s.
+   - The trailer and ad open on the Maneki-neko's stone, already carved down to one row of 0 and a last cube.
+   - "WHAT'S INSIDE?" builds in letter by letter from 0.1 s.
+   - A real double-tap runs the row away at 0.35 s. The last tap at 1.35 s gives the flash, whirl and name.
+
+   This is a deduction you can read (a 0 means the row goes) leading into a payoff, which matches Meowdoku's "show one solvable step".
+2. **Touch rings on every tap.** Unity recommends touch indicators, and Color Block Jam keeps its hand on screen. Each ring is drawn where the synthetic pointer lands. The game's own `pick()` decides which cube breaks; the trailer checks it first with the same voxel walk and logs the result. In all four cuts, every tap hit its cube and there were 0 mistakes.
+3. **Words carry it muted.** A muted viewer sees, in order:
+   - "what's inside?" / TAP / PEEL / REVEAL / "every stone hides something";
+   - "fifteen worlds above the clouds" / 150+ PUZZLES / "one tap left…";
+   - free to play / search STRATA / badges.
+
+   Captions use the game's typeface: uppercase, semibold, 29 to 50 px at 540 wide (58 to 100 px in the 1080 output). Letters blur and rise in with a 34 ms stagger and leave upward. This follows the brief's "the text should animate as well", and "puzzles" plus a 0 → 150 count-up turns the content volume into motion.
+4. **More rewards than mechanics.** The trailer has 10 reveals in 28 s: Maneki-neko, Koala, the six in the montage, the Moss Tortoise and the Dragon Head. It also has the gems twice, the shrine card, the mist parting and the wall. Mechanics get about 2.6 s (TAP and PEEL).
+   - In the montage, each shot is a last tap. Inside the win's white flash the picture jumps about 1.25 s ahead, to the object landing in its colours with its name typing in. At 1.1 s a shot, the reward is on screen for most of each shot, not just the stone.
+   - This is a time cut hidden in the flash, not faked play. Every frame is the game rendering its own state.
+5. **Blur cuts.** The game's layers blur at 14 px, scale up 7% and brighten over 0.1 s. The new shot is set up underneath the blur, then sharpens over 0.18 s. Captions, rings and the end card sit outside the blur. The audio pass adds a soft noise sweep, the engine's own `noise()`.
+6. **A separate end card, different from the last shot** (Smadex). The ascent is the real pull-down at the map's top, where the night sky comes down over the map. The end card is then the game's own title with its evolving god rays, minus its tagline and "swipe up".
+   - Added on top: "free to play", a store search bar typing STRATA (the Block Blast and Color Block Jam pattern), the unmodified official App Store and Google Play badges side by side, and the trademark lines.
+   - The logo stone is drawn at zoom 0.74 so that all of this sits above it, inside the safe box.
+7. **Safe zones.** The combined TikTok, Reels and Shorts safe box is y 15–64.5% and x 11–82% (Shorts reserves its right 192 px). Every caption box and the end card are measured in-page and logged. All are inside the box: the extremes are y 17–58.4% and x 20.6–81.9%.
+   - The game's own object name and story sit at about 4 to 14% from the top, inside TikTok's top bar. That is game UI and was left alone.
+8. **Sound.** The sound is the game's own: chisels, cascades, the win, `star()` for each gem, the bed and the shrine bells. The trailer-only extras are played on the engine's own voices: the cut whoosh and the final chord, `fmBell` as in v1 and v2.
+   - Where the picture jumps, real-time sound can't follow. So the audio pass releases the game's result timers with its own tap-to-finish and plays `sound.star(k)` at the times the picture shows the gems landing. The gem chimes land on the gems.
+   - Loudness is mastered to −14 LUFS (social feeds), not v1/v2's −16. Measured (trailer / ad a / b / c): −14.2 / −14.9 / −14.4 / −14.5 LUFS integrated, peak −1.5 to −1.7 dBFS.
+   - Chisel onsets in the first build arrived 30 to 48 ms after their actions. `AUDIO_LEAD` is now 0.08 s, and Lieu's "a couple of frames late looks in sync" applies.
+9. **150+, not 100+.** There are 158 stones (`SHAPES.length`) plus 15 shrines. "150+" is true and a third bigger, and the count-up lands on it. `WALL_COUNT` reads it from the code: the count rounded down to a fifty.
+
+## Experiments and what they showed
+
+- **Survey** (`tools/trailer/survey.mjs`): 56 objects and shrines, each solved and grabbed at its reveal pose on one sheet.
+  - By colour and silhouette at phone size, the strongest picks after the six Kellan named are: Armillary Sphere (gold), Mikoshi, Anglerfish (teal sky), Tin Carousel, Clock Tower, Great Lantern Gate and Ringed Planet.
+  - Lantern Festival objects all share the crimson sky, so the montage alternates skies: peach, crimson, teal, crimson, lavender, gold.
+- **Draft 1:**
+  - the Koala's second final tap missed, because a tap landed while the canvas was still scaled by the blur (pick() reads the canvas box). Taps now go through the canvas box;
+  - a single tap 23 px from the last one became an accidental double-tap cascade, so taps now keep 40+ px apart;
+  - the title → descent → map shot landed on First Light's plain pink header, and the mist never parted on it;
+  - the shrine shot spent 1.5 s on blur.
+- **Draft 2:**
+  - parting only runs when the map opens from play (`renderMenu(…, celebrate)`), and the companion's walk delays it by 750 ms a stone. The save now puts the companion one stone before the first stone still open when the map is shown (the Dragon Head), with Autumn Woods unparted, and the map is opened from the last montage solve, as v2 did. The title's descent itself was dropped. Only its reverse, the ascent into the end card, is shown;
+  - the map world after the descent was flat. Autumn Woods' peaks rising out of the cloud read better;
+  - the shrine card had been skipped, because a shrine needs the map's own entry, which has the `bonus` flag. It is now reached by tapping the node.
+- **Draft 3:**
+  - centred captions wider than about 62% clip the safe box. "Every stone hides something" and "uncover what's hidden" were split into two lines;
+  - the end card's badges sat at 68%, in the bottom 35% that platform UI covers. They moved above the stone.
+- **Ad:** "one tap left…" was on for only 0.65 s. The montage tightened to 0.95 s a shot, so the line now holds 1.1 s and leaves with the flash. The Dragon's three gems land at 10.55, 11.38 and 12.22 s, before the 2.5 s end card.
+
+## Results and honest limits
+
+- **Against v1:** v3 is clearly denser and more rewarding. v1 had 2 full reveals plus a montage of 4 already-solved objects. v3 has 10 reveals in 28 s, each shown from its last tap, plus the world, a shrine, a turntable and the wall, with captions you can read muted.
+- **Against v2:** the same new content (Koala, Moss Tortoise, the map, a shrine, the ascent), but cut as rewards rather than walked through.
+- **Weak spots:**
+  - TAP and PEEL are still stone-coloured mechanics, about 2.6 s of them. Peel reads only if you already know the game.
+  - The map shot is the palest in the trailer, and the mist parting is subtle at phone size.
+  - The shrine takes 3.5 s and its card is quiet.
+  - In the montage, the win's bell run doesn't jump with the picture, so the sound is real but the bell run is a beat behind the image (the gem chimes are synced).
+  - The montage line stacks just under each object's name.
+  - The end card's badges promise stores the game isn't in yet.
+  - With badges and a Google mention, these cuts can't be App Store previews. A preview needs a cut without them (Apple 2.3.7 / 2.3.10).
+- **Not done:**
+  - no audience or ad-network test;
+  - **nobody has listened to v3 with sound.** Sync and loudness were measured, not heard.
+- v1's timeline now has a `PREROLL` off the title and renders again against the current game (`TRAILER` unset).

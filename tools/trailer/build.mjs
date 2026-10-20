@@ -1,12 +1,12 @@
 // Assembles the trailer: the frame-stepped picture + the real-time sound, with
-// gentle fades and loudness for phones (≈ −16 LUFS). Also writes a silent
+// gentle fades and loudness for phones (≈ −16 LUFS; a timeline may set LUFS). Also writes a silent
 // autoplay cut, a poster frame and a 1 fps contact sheet for review.
 //
 //   TRAILER=v2 node tools/trailer/build.mjs      (TRAILER unset: v1's file names)
 import { execFileSync } from 'node:child_process';
 import { T, OUT } from './lib.mjs';
 
-const { DURATION, POSTER = 16.8, AUDIO_LEAD: LEAD = 0.16 } = T;
+const { DURATION, POSTER = 16.8, AUDIO_LEAD: LEAD = 0.16, LUFS = -16, SHEET_FPS = 1 } = T;
 const run = (args) => execFileSync('ffmpeg', ['-y', '-v', 'error', ...args], { stdio: 'inherit' });
 const D = DURATION.toFixed(2);
 const fadeOut = (DURATION - 1.8).toFixed(2);
@@ -21,7 +21,7 @@ const f = {
 
 // sound: decode, trim to length, fade, normalise
 run(['-ss', AUDIO_LEAD, '-i', f.audio, '-t', D, '-af',
-  `afade=t=in:st=0:d=0.25,afade=t=out:st=${fadeOut}:d=1.8,loudnorm=I=-16:TP=-1.5:LRA=11`,
+  `afade=t=in:st=0:d=0.25,afade=t=out:st=${fadeOut}:d=1.8,loudnorm=I=${LUFS}:TP=-1.5:LRA=11`,
   '-ar', '48000', '-ac', '2', f.wav]);
 
 // picture + sound
@@ -36,7 +36,7 @@ run(['-i', f.mp4, '-an', '-c:v', 'copy', '-movflags', '+faststart', f.silent]);
 // poster: the payoff frame
 run(['-ss', String(POSTER), '-i', f.video, '-frames:v', '1', f.poster]);
 
-// review sheet: one frame a second
-const cols = Math.ceil(DURATION / 3);
-run(['-i', f.mp4, '-vf', `fps=1,scale=216:384,tile=${cols}x3`, '-frames:v', '1', f.sheet]);
+// review sheet: one frame a second (a timeline may ask for more)
+const rows = 3 * SHEET_FPS, cols = Math.ceil(DURATION * SHEET_FPS / rows);
+run(['-i', f.mp4, '-vf', `fps=${SHEET_FPS},scale=216:384,tile=${cols}x${rows}`, '-frames:v', '1', f.sheet]);
 console.log('built', f.mp4);

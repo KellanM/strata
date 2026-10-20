@@ -56,7 +56,7 @@ await withLock(async () => {
     }
     ff.stdin.end();
     await new Promise((r) => ff.on('close', r));
-    const info = await page.evaluate(() => ({ rows: window.__rows, progress: document.querySelector('#map-progress')?.textContent, log: document.querySelector('#motion-log')?.innerText, menu: document.querySelector('#menu').className, scroll: document.querySelector('#menu .map-scroll')?.scrollTop, title: document.querySelector('#title').className }));
+    const info = await page.evaluate(() => ({ rows: window.__rows, preps: window.__preps, taps: window.__taps, caps: window.__caps, progress: document.querySelector('#map-progress')?.textContent, log: document.querySelector('#motion-log')?.innerText, menu: document.querySelector('#menu').className, scroll: document.querySelector('#menu .map-scroll')?.scrollTop, title: document.querySelector('#title').className }));
     console.log('video done', OUTFILE, JSON.stringify(info), errors.length ? 'ERRORS: ' + errors.join(' | ') : 'no page errors');
   } finally {
     await browser.close();
