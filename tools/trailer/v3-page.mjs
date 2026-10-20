@@ -1,5 +1,5 @@
 // Trailer v3's page helpers. pageHelpers is stringified and injected into both
-// capture passes, so it must not reach outside itself. cfg: {}.
+// capture passes, so it must not reach outside itself. cfg: { badges }.
 export function pageHelpers(cfg) {
   const $ = (s) => document.querySelector(s);
   const H = (window.__trailer = {});
@@ -23,16 +23,19 @@ export function pageHelpers(cfg) {
     '  transition: opacity .32s ease-out, filter .42s ease-out, transform .55s cubic-bezier(.2,.9,.25,1.15); transition-delay: calc(var(--k) * 34ms); }',
     '.tr-cap.on .c { opacity: 1; filter: none; transform: none; }',
     '.tr-cap.out .c { opacity: 0; filter: blur(9px); transform: translateY(-.35em) scale(.96); transition-duration: .22s, .22s, .26s; transition-delay: calc(var(--k) * 12ms); }',
-    '.tr-cap.verb { font-weight: 600; font-size: 50px; letter-spacing: .32em; padding-left: .32em; }',
-    '.tr-cap.line { font-weight: 600; font-size: 21px; letter-spacing: .26em; padding-left: .26em; line-height: 1.5; }',
-    '.tr-cap.big { font-weight: 600; font-size: 92px; letter-spacing: .04em; line-height: 1; }',
-    '.tr-cap.say { font-weight: 600; font-size: 29px; letter-spacing: .13em; padding-left: .13em; line-height: 1.3; }',
-    '.tr-cap.ink { color: #43355e; text-shadow: 0 0 22px rgba(255,250,240,.95), 0 0 6px rgba(255,250,240,.7); }',
-    '.tr-cap.light { color: #fffaf2; text-shadow: 0 2px 18px rgba(30,16,40,.55), 0 0 4px rgba(30,16,40,.4); }',
-    '.tr-cap.big.light { text-shadow: 0 4px 30px rgba(30,16,40,.6), 0 0 6px rgba(30,16,40,.45); }',
+    // Saturday's ad (trailer/reference/saturday-ad-15s.mp4): bold, wide-tracked, white with a dark glow; REVEAL in gold
+    '.tr-cap .ln { display: block; }',
+    '.tr-cap.verb { font-weight: 700; font-size: 72px; letter-spacing: .14em; padding-left: .14em; line-height: 1.1; }',
+    '.tr-cap.say { font-weight: 700; font-size: 50px; letter-spacing: .15em; padding-left: .15em; line-height: 1.32; }',
+    '.tr-cap.ink, .tr-cap.light { color: #fffaf3; text-shadow: 0 3px 18px rgba(42,14,34,.72), 0 0 3px rgba(42,14,34,.55), 0 0 34px rgba(42,14,34,.35); }',
+    '.tr-cap.gold { text-shadow: none; filter: drop-shadow(0 0 2px rgba(42,14,34,.6)) drop-shadow(0 3px 12px rgba(42,14,34,.65)); }',
+    '.tr-cap.gold .c { background: linear-gradient(180deg, #fff1bd 0%, #ffd36d 48%, #eaa53b 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }',
+    // the wall's count: big gold numerals with a +, and PUZZLES under them
+    '.tr-cap.num { top: 33%; font-weight: 700; font-size: 140px; letter-spacing: .02em; line-height: 1; animation: trNumIn .35s ease-out both; }',
+    '@keyframes trNumIn { from { opacity: 0; filter: blur(10px); } }',
+    '.tr-cap.numsub { top: 51.2%; font-weight: 700; font-size: 42px; letter-spacing: .3em; padding-left: .3em; color: #fffaf3; text-shadow: 0 2px 14px rgba(20,8,24,.7); }',
     // where on screen: all inside the safe box shared by TikTok, Reels and Shorts (y 15%-64.5%, x 11%-81%)
-    '.tr-cap.cl1 { top: 49%; } .tr-cap.cl2 { top: 53%; } .tr-cap.cl1, .tr-cap.cl2 { font-size: 26px; }',
-    '.tr-cap.low { top: 59%; } .tr-cap.mid { top: 44%; } .tr-cap.mid2 { top: 54.5%; } .tr-cap.up { top: 17%; } .tr-cap.up2 { top: 21%; }',
+    '.tr-cap.low { top: 56%; } .tr-cap.up { top: 16%; }',
     // a finger: where a tap lands, a ring blooms; a drag carries a soft dot
     '.tr-touch { position: fixed; z-index: 45; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%;',
     '  border: 3px solid rgba(255,255,255,.97); background: radial-gradient(circle, rgba(255,255,255,.7), rgba(255,255,255,.18) 58%, rgba(255,255,255,0) 70%);',
@@ -42,17 +45,44 @@ export function pageHelpers(cfg) {
     '  border: 3px solid rgba(255,255,255,.95); background: radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,.3) 60%, rgba(255,255,255,0) 72%);',
     '  box-shadow: 0 0 18px rgba(255,255,255,.7), 0 0 0 1px rgba(50,36,72,.28); }',
     '#tr-finger.on { opacity: 1; }',
-    // v1's end card, exactly (timeline.mjs), the CTA and all; only its tagline line is left out (Kellan, brief 2: no tagline)
-    '#tr-end { position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0; transition: opacity .9s ease;',
-    'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;',
-    'background: radial-gradient(ellipse at 50% 46%, rgba(255,246,236,.9), rgba(247,220,203,.97) 58%, #e9c9cf 100%);',
-    'color: #4a3d63; font-family: "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif; }',
+    // no tagline anywhere (brief 2): not under the title, not in the map's head
+    '#title .sub, #menu .map-head p.sub:not(#map-progress) { display: none !important; }',
+    // the end: the title's own words and hint go as the CTA comes in over its blurred sky
+    'body.tr-cta #title h1, body.tr-cta #title .tap { opacity: 0 !important; transition: opacity .25s linear !important; }',
+    // under COLLECT / THEM ALL, the settled object's one-line story steps aside (its name stays), so the words don't collide
+    'body.tr-nostory #win-title .story { opacity: 0 !important; }',
+    // Saturday's 100+ wall: a dark plum field of object tiles, tilted a touch, drifting down
+    '#tr-wall { position: fixed; inset: 0; z-index: 38; overflow: hidden; opacity: 0; transition: opacity .2s linear;',
+    '  background: radial-gradient(ellipse 80% 60% at 50% 45%, #3f2340, #2a1631 60%, #1d1023); }',
+    '#tr-wall.on { opacity: 1; }',
+    '#tr-wall .grid { position: absolute; left: -64px; top: -260px; width: 680px; display: grid; grid-template-columns: repeat(5, 116px); gap: 12px; transform: rotate(-3deg); }',
+    '#tr-wall.on .grid { animation: trWallDrift 3s linear both; }',
+    '@keyframes trWallDrift { from { translate: 0 0; } to { translate: 0 34px; } }',
+    '#tr-wall .tile { width: 116px; height: 116px; border-radius: 18px; background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 4px 10px rgba(0,0,0,.18); display: grid; place-items: center; }',
+    '#tr-wall .tile img { width: 104px; height: 104px; }',
+    '#tr-wall::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 55% at 50% 45%, rgba(29,16,35,0), rgba(18,8,22,.32)); }',
+    // Saturday's end card: a warm plum veil over the blurred scene; STRATA, the gem, PLAY NOW, the badges
+    '#tr-end { position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0; transition: opacity .45s ease;',
+    '  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);',
+    // (Kellan: the end starts on the map, scrolls up to the title, which blurs under the CTA - not the reference's plum stone)
+    '  background: radial-gradient(ellipse 75% 50% at 50% 45%, rgba(40,24,62,.18), rgba(24,14,40,.42) 62%, rgba(14,8,26,.62)); }',
     '#tr-end.on { opacity: 1; }',
-    '#tr-end h1 { margin: 0; font-weight: 500; font-size: 46px; letter-spacing: .5em; padding-left: .5em; }',
-    '#tr-end .line { font-size: 13px; letter-spacing: .34em; text-transform: uppercase; opacity: .85; }',
-    '#tr-end .gem { width: 14px; height: 19px; margin: 6px 0 2px; }',
-    '#tr-end .cta { margin-top: 26px; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; opacity: .8; }',
-    '#tr-end .url { font-size: 13px; letter-spacing: .16em; opacity: .9; }',
+    '#tr-end > * { position: absolute; left: 0; right: 0; text-align: center; }',
+    '#tr-end h1 { top: 30.4%; margin: 0; font-family: ' + FONT + '; font-weight: 400; font-size: 58px; line-height: 1; letter-spacing: .42em; padding-left: .42em; color: #fff; text-shadow: 0 2px 14px rgba(20,8,24,.35); }',
+    '#tr-end h1 span { display: inline-block; opacity: 0; filter: blur(8px); transition: opacity .35s ease-out, filter .45s ease-out; transition-delay: calc(.12s + var(--k) * 60ms); }',
+    '#tr-end.on h1 span { opacity: 1; filter: none; }',
+    '#tr-end .gem { top: 41.6%; width: 14px; height: 20px; margin: 0 auto; opacity: 0; transition: opacity .3s .55s; }',
+    '#tr-end.on .gem { opacity: 1; }',
+    '#tr-end .play { top: 46.8%; left: 50%; right: auto; width: 336px; height: 80px; margin-left: -168px; border-radius: 40px; box-sizing: border-box;',
+    '  background: linear-gradient(180deg, #fee8a4, #f7c867 55%, #f1b24c); box-shadow: 0 0 0 2.5px rgba(255,236,206,.42), 0 8px 26px rgba(20,6,20,.35);',
+    '  display: grid; place-items: center; font: 700 26px/1 ' + FONT + '; letter-spacing: .32em; padding-left: .32em; color: #3b2142;',
+    '  opacity: 0; filter: blur(10px); transform: scale(.94); transition: opacity .35s ease-out .62s, filter .4s ease-out .62s, transform .5s cubic-bezier(.2,.9,.25,1.2) .62s; }',
+    '#tr-end.on .play { opacity: 1; filter: none; transform: none; }',
+    '#tr-end .row { top: 57.3%; display: flex; justify-content: center; align-items: center; gap: 22px; opacity: 0; filter: blur(8px); transition: opacity .35s ease-out .86s, filter .4s ease-out .86s; }',
+    '#tr-end.on .row { opacity: 1; filter: none; }',
+    '#tr-end .apple { height: 64px; display: block; }',
+    // the Play badge's artwork carries its own clear space: the badge itself is 168/250 of the image
+    '#tr-end .google { height: 95.2px; display: block; margin: -15.6px -18.2px; }',
     // v1's caption, exactly (font, tracking, ink, its fade and rise), for the 100+ puzzles wall
     '#tr-cap1 { position: fixed; left: 0; right: 0; top: 71%; z-index: 40; text-align: center; pointer-events: none;',
     'font: 500 17px/1.45 "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif;',
@@ -74,9 +104,11 @@ export function pageHelpers(cfg) {
   const shade = el('tr-shade');
   H.shade = (on) => shade.classList.toggle('on', !!on);
   const end = el('tr-end');
-  end.innerHTML = '<h1>STRATA</h1>'
+  end.innerHTML = '<h1>' + [...'STRATA'].map((ch, k) => '<span style="--k:' + k + '">' + ch + '</span>').join('') + '</h1>'
     + '<svg class="gem" viewBox="0 0 12 16"><path d="M6 0 0 8l6 8z" fill="#fff2c2"/><path d="M6 0l6 8-6 8z" fill="#e9b949"/></svg>'
-    + '<div class="cta">free · plays in your browser</div><div class="url">kellanm.github.io/strata</div>';
+    + '<div class="play">PLAY NOW</div>'
+    + '<div class="row"><img class="apple" src="' + cfg.badges.apple + '"><img class="google" src="' + cfg.badges.google + '"></div>';
+  const wall = el('tr-wall');
   const cap1 = el('tr-cap1');
 
   // every caption's laid-out box (untransformed), in % of the frame, for the safe-zone check
@@ -89,8 +121,8 @@ export function pageHelpers(cfg) {
     (window.__caps = window.__caps || []).push(box);
   };
   H.measureEnd = () => {
-    const r = [...end.children].map((e) => { const rg = document.createRange(); rg.selectNodeContents(e); const b = e.tagName === 'svg' ? e.getBoundingClientRect() : rg.getBoundingClientRect(); return b; });
-    (window.__caps = window.__caps || []).push({ text: 'END CARD (v1)', x0: +(Math.min(...r.map((q) => q.left)) / innerWidth * 100).toFixed(1), x1: +(Math.max(...r.map((q) => q.right)) / innerWidth * 100).toFixed(1),
+    const r = [...end.querySelectorAll('h1 span, .gem, .play, img')].map((e) => e.getBoundingClientRect());
+    (window.__caps = window.__caps || []).push({ text: 'END CARD (Saturday)', x0: +(Math.min(...r.map((q) => q.left)) / innerWidth * 100).toFixed(1), x1: +(Math.max(...r.map((q) => q.right)) / innerWidth * 100).toFixed(1),
       y0: +(Math.min(...r.map((q) => q.top)) / innerHeight * 100).toFixed(1), y1: +(Math.max(...r.map((q) => q.bottom)) / innerHeight * 100).toFixed(1) });
   };
   // v1's caption (the wall's): one line that fades and rises in
@@ -109,7 +141,8 @@ export function pageHelpers(cfg) {
     const c = document.createElement('div');
     c.className = 'tr tr-cap ' + cls;
     let k = 0;
-    c.innerHTML = String(text).split(' ').map((w) => '<span class="w">' + [...w].map((ch) => '<span class="c" style="--k:' + (k++) + '">' + ch + '</span>').join('') + '</span>').join('<span class="c" style="--k:0">&nbsp;</span>');
+    // '|' breaks a line, as Saturday's two-line captions
+    c.innerHTML = String(text).split('|').map((line) => '<span class="ln">' + line.split(' ').map((w) => '<span class="w">' + [...w].map((ch) => '<span class="c" style="--k:' + (k++) + '">' + ch + '</span>').join('') + '</span>').join('<span class="c" style="--k:0">&nbsp;</span>') + '</span>').join('');
     document.body.appendChild(c);
     void c.offsetWidth;
     c.classList.add('on');
@@ -120,13 +153,13 @@ export function pageHelpers(cfg) {
   H.cap = (text, cls) => setCap('a', text, cls);
   H.cap2 = (text, cls) => setCap('b', text, cls);
   H.capClear = () => { setCap('a', null); setCap('b', null); };
-  // a number that counts up to `to`, then gains its + (the wall)
+  // a number that counts up to `to`, with its + all the way (the wall: 21+, 50+ ... 100+)
   H.count = (to, secs, cls) => {
     const c = setCap('a', '0', cls), t0 = performance.now();
     const tick = () => {
       const k = Math.min(1, (performance.now() - t0) / (secs * 1000));
       const n = Math.round(to * (1 - Math.pow(1 - k, 3)));
-      const s = n + (k >= 1 ? '+' : '');
+      const s = n + '+';
       if (c.dataset.s !== s) { c.dataset.s = s; c.innerHTML = [...s].map((ch) => '<span class="c" style="--k:0">' + ch + '</span>').join(''); }
       if (k < 1) requestAnimationFrame(tick);
     };
@@ -385,8 +418,23 @@ export function pageHelpers(cfg) {
     touch(x, y);
     pointer('pointerdown', x, y, t); pointer('pointerup', x, y, t);
   };
+  H.noStory = (on) => { document.body.classList.toggle('tr-nostory', !!on); };
   H.noTag = () => { document.body.classList.add('tr-notag'); };
-  H.endCard = () => { end.classList.add('on'); H.measureEnd(); };
+  H.endCard = () => { document.body.classList.add('tr-cta'); end.classList.add('on'); setTimeout(H.measureEnd, 1200); };
+  // the wall's tiles: every object's own map thumbnail (thumbs.js), in a fixed shuffle
+  H.wallBuild = async () => {
+    const { renderThumb } = await import('./js/thumbs.js');
+    const entries = strata.journalEntries();
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const pick = entries.map((e) => [rnd(), e]).sort((a, b) => a[0] - b[0]).map((x) => x[1]).slice(0, 50);
+    const urls = await Promise.all(pick.map((e) => Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 }))));
+    wall.innerHTML = '<div class="grid">' + urls.map((u) => '<div class="tile"><img src="' + u + '"></div>').join('') + '</div>';
+    await Promise.all([...wall.querySelectorAll('img')].map((i) => i.decode().catch(() => {})));
+  };
+  H.wall = (on) => {
+    if (on) { const g = wall.querySelector('.grid'); if (g) { g.style.animation = 'none'; void g.offsetWidth; g.style.animation = ''; } }
+    wall.classList.toggle('on', !!on);
+  };
   H.focusNode = (id) => {
     const e = document.querySelector('.map-node[data-id="' + id + '"]'), s = sheet();
     if (!e || !s) return;

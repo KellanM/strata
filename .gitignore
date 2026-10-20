@@ -6,3 +6,4 @@ trailer/*.mp4
 trailer/*.webm
 trailer/*.wav
 trailer/frames/
+trailer/reference/*.mp4

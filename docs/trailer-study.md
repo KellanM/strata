@@ -298,3 +298,55 @@ So it is rebuilt in v1's own language: v1's map-trail scroll (`mapScroll`, as `t
 - In the ad, "one tap left…" is on screen for 0.6 s before the tap, then holds through the flash.
 - The Dragon Head's finger turn ends close to, but not exactly on, its resting pose.
 - Nobody has listened to it with sound.
+
+## Revision 2: matched to Saturday's ad (2026-10-19)
+
+**The reference.** Kellan uploaded Saturday's revised 15 s ad as `trailer/reference/saturday-ad-15s.mp4`, with its sheet `saturday-ad-15s-sheet.png`. The mp4 is gitignored. This is "the previous video", so **revision 1's v1 end card and v1-style map-trail wall were wrong**: v1 never had the wall; Saturday's ad did.
+
+I studied the reference frame by frame at full rate (10 fps samples around the wall and the end card, and full-resolution stills).
+- **Its wall** (8.0–9.9 s):
+  - The scene blurs to plum.
+  - A dark plum field of rounded object tiles fades in, tilted about −3° and drifting slowly down.
+  - A gold count runs 21+, 50+, 70+, 81+, 88+, 93+, 96+, 98+, 99+ and lands on 100+ at about 9.0 s: an ease-out of about 0.9 s, with the "+" the whole way.
+  - "PUZZLES", bold white with wide tracking, blurs in letter by letter under it.
+- **Its end card** (12.2 s on):
+  - The scene blurs under a warm plum veil.
+  - STRATA's letters blur in one by one (wide-spaced, regular weight), then the gem.
+  - The gold "PLAY NOW" pill blurs and scales in.
+  - Then the App Store and Google Play badges, side by side.
+- **Its captions:** bold, wide-tracked, white with a dark glow, in two lines ("WHAT'S / INSIDE?", "COLLECT / THEM ALL", "ONE TAP / LEFT…"), big single verbs, and REVEAL in gold.
+- **It differs from v3 in two ways:**
+  - its montage cuts mid-whirl, which is not copied;
+  - it ends on "one tap left…" without the reveal.
+- **Recipe search.** No code for the tiles, count or PLAY NOW card survives: `timeline.mjs`, tools and git history only have the CTA wording, in `docs/ad-hooks-study.md`, which also mentions the deleted worktree's `trailer/v2/contact/ad-*.png`. So all three are rebuilt to match the frames.
+  - The tiles are each object's own map thumbnail (`thumbs.js renderThumb`), in a fixed shuffle. The order doesn't match Saturday's.
+
+**Kellan's addition: the end sequence.**
+1. Cut to the map.
+2. The real pull-down at its top brings the night sky and the title down.
+3. The title blurs: a backdrop blur and a light dark veil, in place of the reference's plum stone.
+4. The reference CTA comes in over it.
+
+The title's own STRATA and hint fade out as the CTA comes in, so nothing doubles up. There is no tagline anywhere: the title's and the map head's are hidden.
+
+**Timing:**
+- **Trailer (30.0 s):**
+  - wall from 17.9 to 20.05 s;
+  - Dragon Head: tap at 20.3 s, settled at 25.07 s, finger turn to 26.18 s;
+  - map at 26.43 s, pull from 26.61 to 26.98 s;
+  - CTA from 27.43 s.
+- **Ad (15 s):**
+  - wall from 5.92 to 6.92 s;
+  - "one tap left…" from 6.97 s, tap at 7.47 s, settled at 12.24 s;
+  - map at 12.33 s, pull from 12.43 to 12.66 s;
+  - CTA from 12.95 s.
+
+**Comparison.** `trailer/reference/compare-v3.png` puts reference frames (top) beside v3 (bottom): the hook caption, TAP, COLLECT and REVEAL, the wall mid-count and landed, and the CTA.
+- The wall and the CTA match in layout, colour and motion.
+- **Known differences:**
+  - the tiles are a different shuffle;
+  - the CTA sits about 3.5% higher, to keep the badges above 64.5%;
+  - the background behind the CTA is the blurred title sky (Kellan's call);
+  - TAP / PEEL / REVEAL stay at 16% rather than Saturday's 80%, for the safe zone.
+
+**Sound.** The build adds a limiter after loudnorm. The first render of this revision peaked at −0.3 dBTP.

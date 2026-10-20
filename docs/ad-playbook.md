@@ -8,11 +8,27 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
   - Every reveal plays until the object has turned all the way to face the viewer and stopped. That takes **4.8 s after the winning tap**, measured with `tools/trailer/settle.mjs` from the finale's own state (within 1.5° of rest and turning under 2°/s, at 4.77 s for every object tested). At 2 s, 68° of turn is still left; at 3 s, 16°.
   - Never jump forward inside the flash, and never speed the animation up.
   - To save time, show fewer reveals, or show objects that are already settled (gems landing).
-- **The end card is v1's** (`timeline.mjs`): STRATA, the gem, "free · plays in your browser", kellanm.github.io/strata, on v1's warm gradient. Left out: its tagline line, because brief 2 says no tagline, and the store badges. Whether to reinstate either is a question for Kellan; see section 5.
-- **The wall is v1's "100+ puzzles"**: wording "100+ puzzles", in v1's caption style. It must not be reworded (not "150+"), restyled or replaced with something else.
-  - The Saturday revision that first built the wall is lost, so the current wall is a reconstruction in v1's own language: v1's map-trail scroll, with v1's caption set inside the safe box.
+- **The reference is Saturday's revised 15 s ad**: `trailer/reference/saturday-ad-15s.mp4`. The mp4 is gitignored and kept locally; its 2 fps sheet `saturday-ad-15s-sheet.png` is committed. This is "the previous video" Kellan means. Study it frame by frame before changing the wall, the end card or the caption style.
+- **The wall is Saturday's** (reference, about 8–10 s):
+  - a dark plum field of object tiles: rounded squares holding the objects' own thumbnails, tilted a touch and drifting down;
+  - a big gold count that runs up with its "+" the whole way (21+, 50+ … 100+) in about 0.9 s;
+  - "PUZZLES" in bold, wide-tracked white underneath.
+
+  It ends on "100+ PUZZLES". It is approved: don't reword it (not "150+") or restyle it.
+- **The end sequence** (Kellan, approved):
+  1. Cut to the map.
+  2. A finger pulls down at its top, and the game's own ascent brings the night sky and the title down.
+  3. The title blurs.
+  4. Over the blur comes Saturday's CTA: "STRATA" wide-spaced with its small gem, the gold "PLAY NOW" pill, and the App Store and Google Play badges side by side.
+
+  The title's own words fade as the CTA comes in, so nothing doubles up. Keep the map-to-title move even in a 15 s ad; shorten it, don't drop it.
+- **Captions in Saturday's style**: bold, wide-tracked, white with a dark glow, 44 px lines and 72 px verbs at 540 wide, with REVEAL in gold.
+- **Wrong turns not to repeat:**
+  - the v1 end card ("free · plays in your browser");
+  - a v1-style wall (the map trail with v1's small caption). That rebuild was wrong: v1 never had the wall; Saturday's ad did;
+  - v3's first journal count-up to 150+.
 - **Real gameplay only.** Time can be cut between shots, under a blur, but never inside a reveal. Play is never faked.
-- **No tagline on the title card.**
+- **No tagline anywhere**: not on the title, not in the map's head, not on the end card.
 
 ## 1. Principles (with evidence)
 
@@ -52,19 +68,29 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
 - peel, unless you already know the game;
 - the map's pale First Light header.
 
-**Captions:**
-- The game's typeface, uppercase.
-- v3 beat captions: semibold, 29 px for lines and 50 px for verbs at 540 wide (×2 in the output). The letters blur and rise in, 34 ms apart.
-- The wall uses v1's own caption: 500 weight, 17 px, .34em tracking, ink `#4a3d63` with a cream glow, a fade and rise.
+**Captions** (Saturday's style):
+- The game's typeface, uppercase, bold 700.
+- Tracking .15em; white `#fffaf3` with a dark plum glow.
+- 44 px for lines, broken in two with `|` ("WHAT'S / INSIDE?", "COLLECT / THEM ALL", "ONE TAP / LEFT…"); 72 px for verbs (TAP, PEEL, and REVEAL in gold). Sizes are at 540 wide (×2 in the output).
+- Letters blur and rise in, 34 ms apart.
 - At most about 62% of the width when centred.
-- Hold a caption through a flash, but clear it before the object's name settles in at about +1.1 s.
+- Saturday put TAP / PEEL / REVEAL at about 80% of the height, which platform UI covers, so v3 keeps them at 16%.
+- Hold a caption through a flash; clear it before the object's name settles in.
 
 **Safe zones** (1080×1920, combined TikTok, Reels and Shorts):
 - Keep text inside y 15–64.5% and x 11–82%.
-- v1's caption positions (64.5% and 71%) fall outside that box; v3 sets v1's caption at 57%.
+- Saturday's verbs (about 80%) and v1's captions (64.5% and 71%) fall outside that box; v3 keeps every caption inside it.
 - The game's object names sit at 4–14%. That is game UI, so leave it.
 
-**End card:** v1's (see the decisions above). It fades in over 0.9 s, on top of the settled final object. Hold it 3 s in the trailer and 2.5 s in the ad. The official badge artwork is kept in `tools/trailer/badges/` in case Kellan wants badges back. Unused for now.
+**End card** (the end sequence above): the CTA layout follows the reference at 540 wide:
+- STRATA: 58 px, weight 400, .42em tracking, at 30%;
+- the gem at 42%;
+- PLAY NOW: a gold pill, 336×80, at 47%;
+- the badges: 64 px tall, 22 px apart, at 57%.
+
+Everything sits about 3.5% higher than in the reference, to keep the visible badges above 64.5%. The badge row's width (about 10–90%) is the reference's own and runs past Shorts' right margin, which is a known trade-off. Hold it 2.6 s in the trailer and about 2 s in the ad. The badge artwork is in `tools/trailer/badges/`, official and unmodified.
+
+**Store honesty:** `docs/ad-hooks-study.md` notes that PLAY NOW and store badges pointing at stores that don't list Strata yet would breach Google's "unavailable offers" rule. Fine for previewing; check before running paid ads.
 
 **Sound:**
 - Master to −14 LUFS integrated, true peak −1.5 dB.
@@ -127,17 +153,16 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
      - a 15 s ad ending on the Dragon Head;
      - a slower TAP / PEEL / REVEAL.
 
-   The revised branch is lost.
+   The revised branch is lost, but Saturday's 15 s ad itself survives as `trailer/reference/saturday-ad-15s.mp4`.
 2. **v2 (fcf3b40), 29.7 s.** One continuous journey. **Rejected:** slow, and it read as a mechanics walkthrough. Continuity alone isn't compelling.
 3. **v3, first cut (71dcd80).**
    - What it had: 10 reveals in 28 s, a jump inside each flash, kinetic captions, a 0 → 150+ journal wall, and a title-screen end card with badges.
    - **Rejected parts:**
      - objects were cut mid-whirl (68° still to turn at 2 s);
-     - the end card and the wall had to go back to v1's.
-4. **v3, revised.**
-   - Every reveal lands: the trailer has three full reveals plus four settled objects; the ad has two.
-   - v1's end card and v1's "100+ puzzles" wall.
-   - No flash jumps, which also fixed the bells drifting off the picture.
+     - the end card and the wall had to go back to "the previous video".
+4. **v3, revised.** Every reveal lands (3 in the trailer, 2 in the ad); no flash jumps.
+   - The v1 end card and a v1-style map-trail wall were tried here, then **rejected**: "the previous video" meant Saturday's ad, now in `trailer/reference/`.
+5. **v3, matched to the reference.** Saturday's wall, CTA and caption style; the map-to-title end sequence.
 
 ## 5. Open questions and A/B ideas (once real ad data exists)
 
@@ -147,8 +172,7 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
   - **c**: tension.
 
   Compare their 3 s hold rates.
-- **For Kellan:** should the end card regain v1's tagline line, or gain the store badges, once the game is in stores?
-- **The lost wall:** if Kellan remembers a different 100+ wall from Saturday (a grid, say, rather than the trail), rebuild it to that.
+- **Saturday's ad ended on "one tap left…"** without the reveal, a cliffhanger. v3 lands the reveal instead. Worth testing both.
 - **A persistent caption for the whole ad**, against beat captions.
 - **A calm claim** ("no timers") against curiosity ("what's inside?").
 - **A long cut** of 45–60 s, which has room for more full reveals.

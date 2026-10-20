@@ -1,5 +1,6 @@
 // Assembles the trailer: the frame-stepped picture + the real-time sound, with
-// gentle fades and loudness for phones (≈ −16 LUFS; a timeline may set LUFS). Also writes a silent
+// gentle fades and loudness for phones (≈ −16 LUFS; a timeline may set LUFS), with a
+// limiter after it, as loudnorm can let a peak through (v3's trailer hit −0.3 dB). Also writes a silent
 // autoplay cut, a poster frame and a 1 fps contact sheet for review.
 //
 //   TRAILER=v2 node tools/trailer/build.mjs      (TRAILER unset: v1's file names)
@@ -21,7 +22,7 @@ const f = {
 
 // sound: decode, trim to length, fade, normalise
 run(['-ss', AUDIO_LEAD, '-i', f.audio, '-t', D, '-af',
-  `afade=t=in:st=0:d=0.25,afade=t=out:st=${fadeOut}:d=1.8,loudnorm=I=${LUFS}:TP=-1.5:LRA=11`,
+  `afade=t=in:st=0:d=0.25,afade=t=out:st=${fadeOut}:d=1.8,loudnorm=I=${LUFS}:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false`,
   '-ar', '48000', '-ac', '2', f.wav]);
 
 // picture + sound

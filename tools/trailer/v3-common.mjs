@@ -74,4 +74,8 @@ export function blurCut(tl, t, setup, { ff = 0.8, out = 0.1, inn = 0.18, whoosh 
 }
 
 import { pageHelpers } from './v3-page.mjs';
-export const PAGE_HELPERS = '(' + pageHelpers.toString() + ')({});';
+// the official store badges (unmodified; tools/trailer/badges) for the end card
+import { readFileSync } from 'node:fs';
+const b64 = (f) => readFileSync(new URL('./badges/' + f, import.meta.url)).toString('base64');
+const BADGES = { apple: 'data:image/svg+xml;base64,' + b64('app-store.svg'), google: 'data:image/png;base64,' + b64('google-play.png') };
+export const PAGE_HELPERS = '(' + pageHelpers.toString() + ')(' + JSON.stringify({ badges: BADGES }) + ');';
