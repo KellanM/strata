@@ -1224,8 +1224,17 @@ function goNext() {
   const idx = list.findIndex((e) => e.shape.id === game.shape.id);
   if (game.entry.lesson) washInto(list[0].palette, () => startPuzzle(list[0]));
   else if (game.entry.bonus) { $('#actions').classList.remove('show'); resultToMap(); }   // shrines lead back to the map
-  else if (idx >= 0) { const next = list[(idx + 1) % list.length]; washInto(next.palette, () => startPuzzle(next)); }
+  else if (idx >= 0) {
+    const next = list[(idx + 1) % list.length];
+    // the last stone of a chapter: the first time, go to the map to watch the next one's cloud part
+    if (next.shape.chapter !== game.shape.chapter && !unveiled(next.shape.chapter)) { $('#actions').classList.remove('show'); resultToMap(); }
+    else washInto(next.palette, () => startPuzzle(next));
+  }
   else startRandom(game.shape.dims[0]);
+}
+
+function unveiled(chapter) {
+  try { return (JSON.parse(localStorage.getItem('strata.map.parted')) ?? [chapter]).includes(chapter); } catch { return true; }
 }
 
 // Level -> next level: the screen washes into the next level's sky (not black,

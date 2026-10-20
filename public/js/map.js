@@ -493,10 +493,13 @@ export function renderMap(root, opts) {
   const home = current
     ?? [...trail].reverse().find((n) => n.state === 'solved' && n.kind === 'puzzle')
     ?? trail[0];
-  const walk = placeCompanion(root, svg, trail, pts, segD, home, celebrate);
+  // a newly reached chapter's cloud parts first; then the companion walks over into it
+  const partingRegions = regions.filter((r) => r.parting);
+  const partAt = 0.9, walkAt = partingRegions.length && opts.world ? partAt + DUR.ceremony * 1.7 : 0.55;
+  const walk = placeCompanion(root, svg, trail, pts, segD, home, celebrate, walkAt);
 
-  // ---- the gold draws on as the companion walks; then a newly reached chapter's cloud parts
-  const drawStart = 0.55, drawDur = walk ?? 0.9;
+  // ---- the gold draws on as the companion walks
+  const drawStart = walkAt, drawDur = walk ?? 0.9;
   root.querySelectorAll('.trail.draw').forEach((path) => {
     const len = path.getTotalLength?.() ?? 200;
     path.style.setProperty('--len', (len + 2).toFixed(1));
@@ -504,8 +507,7 @@ export function renderMap(root, opts) {
     path.style.setProperty('--delay', `${(drawStart / motionRate).toFixed(2)}s`);
   });
   if (draws.length) mark(`map: gold draws on (${draws.length})`);
-  const partingRegions = regions.filter((r) => r.parting);
-  if (partingRegions.length && opts.world) partCloud(opts, partingRegions, drawStart + drawDur + 0.25, root);
+  if (partingRegions.length && opts.world) partCloud(opts, partingRegions, partAt, root);
 
   // ---- open on the current stone, a chapter whose cloud parts, or one that has just woken
   if (opts.scroll !== false && scroller) {
@@ -544,7 +546,7 @@ function partCloud(opts, regions, delay, root) {
 // Sits beside `home`, on the side away from its label. If it was last seen
 // further back along the trail, it walks there first. Returns the walk's
 // length in seconds (or null when it doesn't walk).
-function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
+function placeCompanion(root, svg, trail, pts, segD, home, celebrate, delay = 0.55) {
   const key = (n) => (n.entry ? n.entry.shape.id : n.kind);
   const to = trail.indexOf(home);
   if (to < 0) return null;
@@ -578,7 +580,7 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate) {
   const start = side(trail[from]);
   put(start, start[0] < trail[from].x);
   el.classList.add('walking');
-  const t0 = performance.now() + 550 / motionRate;
+  const t0 = performance.now() + delay * 1000 / motionRate;
   let lastX = start[0];
   const tick = (now) => {
     if (!el.isConnected) return;
