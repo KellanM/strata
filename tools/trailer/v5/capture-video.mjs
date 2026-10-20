@@ -25,7 +25,7 @@ const URL = BASE;
 // the playwright headless shell (build 1243) unless QA_CHROME says otherwise
 export const CHROME = SYS_CHROME;
 export const resolveCut = (name) => CUTS[name]();
-const { actions, duration, size: VIEW = SIZE, mode: MODE = 'full' } = resolveCut(CUT);
+const { actions, duration, size: VIEW = SIZE, mode: MODE = 'full' } = resolveCut(CUTS[CUT] ? CUT : 'trailer');   // (imported by a tool: argv isn't a cut)
 
 export const VIRTUAL_TIME = `(() => {
   let vt = 0, st = 0;

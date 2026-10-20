@@ -75,7 +75,7 @@ function hook(s, end) {
   turn(Math.max(back, 2.2), end - 0.08, -1.5, 0.12, 0.3, 0.72);
 }
 
-function triplet(s, o) {
+function triplet(s, o, reveal = { id: 'koinobori', zoom: 1.15 }) {
   const { at, vat, cut } = s;
   // each word holds L = 1.25 s: the slam lands sharp by ~+0.25 s and stays clear
   // until the next whip starts blurring at L − 0.15, so ~0.85 s fully legible,
@@ -95,7 +95,7 @@ function triplet(s, o) {
   at(o + L + 0.47, 'peel', 0, 2);
   at(o + L + 0.72, 'peel', 0, 3);
   cut(o + 2 * L, 1, false, 0.22, null);
-  at(o + 2 * L, 'level', 'koinobori', 1.15, { left: 1 });
+  at(o + 2 * L, 'level', reveal.id, reveal.zoom, { left: 1 });
   vat(o + 2 * L, 'ff', 0.8);
   at(o + 2 * L + 0.1, 'tap');
   s.reveal(o + 2 * L + 0.1);
@@ -104,6 +104,8 @@ function triplet(s, o) {
   return o + 3 * L;
 }
 const TRIPLET_BEAT = 1.25;
+// v5b: the ad's REVEAL scene, from The Deep (env DEEP='{"id":..,"zoom":..}' to audition)
+const DEEP = { id: 'seahorse', zoom: 1.3, ...JSON.parse(process.env.DEEP ?? '{}') };
 // v5: today's win whirls onto the map thumbnail's pose, and 2.1 s in it is still
 // turning; a camera offset so these land facing us (radians, trailer-side)
 const FACE = { windmill: -0.9, sloth: -1.4, ...JSON.parse(process.env.FACE ?? '{}') };
@@ -220,7 +222,9 @@ export function ad() {
   const s = script();
   const { at, vat, aat, cue } = s;
   hook(s, 2.6);
-  const M = triplet(s, 2.6);             // 6.35
+  // v5b (Kellan: "a scene from the deep world ... the color scheme there is amazing"):
+  // the REVEAL beat opens on the Deep's teal sea, and the Seahorse lands orange on it
+  const M = triplet(s, 2.6, { id: DEEP.id, zoom: DEEP.zoom });   // 6.35
   montage(s, M, ['windmill', 'pumpkin', 'origami-fox', 'sloth'], 8.0 - M, 0.84);
   hundred(s, 8.0, 2.0);                  // the 100+ wall keeps its length and timing
 

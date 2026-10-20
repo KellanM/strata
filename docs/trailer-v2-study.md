@@ -232,3 +232,33 @@ shown.
 
 **Limits:** review was by contact sheets and measurements. Nobody has listened
 to v5 with sound or watched it on a phone.
+
+### v5b: a scene from The Deep in the ad (Kellan's note)
+Kellan: "Can we add a scene from the deep world in the ad? The color scheme
+there is amazing and would be a good contrast."
+
+- **What:** the ad's REVEAL scene (2.6 + 2 × 1.25 = 5.1 s, 1.25 s long) now
+  opens on The Deep's teal sea. Its glowing aqua block takes the final tap,
+  the flash and impact hit, the gold REVEAL sits on the teal, and the
+  **Seahorse** lands orange on it (zoom 1.3).
+- **Why there:** it comes straight after PEEL's warm amber sky, so the
+  cut is the ad's biggest colour change.
+- **What was cut:** the Koinobori, from the ad only. A montage slot (the
+  coordinator's first suggestion) is 0.31–0.37 s and mostly whip blur, which
+  is why the Sloth read weakly there; The Deep's palette needs a held beat to
+  land. The Sloth keeps its montage slot.
+- **Unchanged:** timing, the slot's sfx (no whoosh on the REVEAL cut; the
+  flash and impact carry it, as in v2), and every other beat.
+- **Casting:** `tools/trailer/v5/survey.mjs` renders each Deep stone
+  mid-solve and revealed. The Seahorse (orange on teal, complementary, a clear
+  silhouette) won over the Jellyfish (pink). The Baby Shark and Manta are blue
+  on teal, so they contrast least.
+- **Checks:**
+  - 15.00 s exactly.
+  - 16 of 16 taps break visible cubes; the Seahorse tap breaks on its frame
+    (`contact/taps-ad-seahorse.png`).
+  - −15.0 LUFS, TP −1.9 dBFS.
+  - Sheet around the beat: `contact/ad-deep-reveal.png`.
+- **The trailer:** unchanged. It shares the same `triplet`, so the same scene
+  would drop in with one argument at `triplet(s, 3.1)`, but it wasn't asked
+  for.
