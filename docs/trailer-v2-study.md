@@ -262,3 +262,19 @@ there is amazing and would be a good contrast."
 - **The trailer:** unchanged. It shares the same `triplet`, so the same scene
   would drop in with one argument at `triplet(s, 3.1)`, but it wasn't asked
   for.
+- **Trailer too (Kellan: yes).** `triplet(s, 3.1, DEEP)` puts the same
+  Seahorse REVEAL in the 25 s cut, replacing the Koinobori. Every timing is the
+  same and the cut is 25.00 s. There the teal sits between two warm beats:
+  PEEL's amber, and the amber sky of the Origami Fox's assembly.
+- **Facing camera, both cuts.** Over the beat's last 0.4 s the camera drifts
+  −0.6 rad (`DEEP.turn`), after the win's own framing has finished, so the
+  Seahorse ends three-quarter to camera rather than side-on. No timing moves.
+- **Checks:**
+  - Trailer: 20 of 20 taps break visible cubes; −15.0 LUFS, TP −1.7 dBFS.
+  - Ad: 16 of 16 taps; −15.0 LUFS, TP −1.9 dBFS.
+  - Sheets: `contact/trailer-deep-reveal.png`, `taps-trailer-seahorse.png`.
+- **True peak varies by take.** The first trailer take measured TP −0.3 dBFS
+  at 22.0 s. That take's real-time final chord stacked onto the end card's
+  boom, between samples, and AAC added about 1 dB. A second take measured
+  −1.7. If it recurs, re-record the audio pass, or the build could limit on
+  an oversampled signal.

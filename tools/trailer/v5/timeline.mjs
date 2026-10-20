@@ -101,11 +101,17 @@ function triplet(s, o, reveal = { id: 'koinobori', zoom: 1.15 }) {
   s.reveal(o + 2 * L + 0.1);
   s.rush(o + 2 * L + 0.2, o + 2 * L + 0.8, 1.9);
   at(o + 2 * L + 0.12, 'text', ['REVEAL'], 0.74, 92, 'gold', true);
+  // v5b: a slow camera drift over the beat's last 0.4 s (the win's own framing
+  // is done by then), turning the revealed object toward us; no timing moves
+  if (reveal.turn) {
+    const f0 = Math.round((2 * L + 0.84) * FPS), f1 = Math.round(3 * L * FPS);
+    for (let f = f0; f < f1; f++) at(o + f / FPS, 'orbit', reveal.turn / (f1 - f0), 0);
+  }
   return o + 3 * L;
 }
 const TRIPLET_BEAT = 1.25;
 // v5b: the ad's REVEAL scene, from The Deep (env DEEP='{"id":..,"zoom":..}' to audition)
-const DEEP = { id: 'seahorse', zoom: 1.3, ...JSON.parse(process.env.DEEP ?? '{}') };
+const DEEP = { id: 'seahorse', zoom: 1.3, turn: -0.6, ...JSON.parse(process.env.DEEP ?? '{}') };
 // v5: today's win whirls onto the map thumbnail's pose, and 2.1 s in it is still
 // turning; a camera offset so these land facing us (radians, trailer-side)
 const FACE = { windmill: -0.9, sloth: -1.4, ...JSON.parse(process.env.FACE ?? '{}') };
@@ -168,7 +174,7 @@ export function trailer() {
   const s = script();
   const { at, vat, aat, cue, cut, reveal, turn, slowmo } = s;
   hook(s, 3.1);
-  const F = triplet(s, 3.1);             // 6.85
+  const F = triplet(s, 3.1, DEEP);       // 6.85  (v5b: the Deep's Seahorse REVEAL, as in the ad)
 
   // F: the block assembles itself, then gives up its secret
   cut(F, -1, false, 0.3, { pitch: 0.7, len: 1.25, gain: 0.85, q: 1 });
@@ -224,7 +230,7 @@ export function ad() {
   hook(s, 2.6);
   // v5b (Kellan: "a scene from the deep world ... the color scheme there is amazing"):
   // the REVEAL beat opens on the Deep's teal sea, and the Seahorse lands orange on it
-  const M = triplet(s, 2.6, { id: DEEP.id, zoom: DEEP.zoom });   // 6.35
+  const M = triplet(s, 2.6, DEEP);   // 6.35
   montage(s, M, ['windmill', 'pumpkin', 'origami-fox', 'sloth'], 8.0 - M, 0.84);
   hundred(s, 8.0, 2.0);                  // the 100+ wall keeps its length and timing
 
