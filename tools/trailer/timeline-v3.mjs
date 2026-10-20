@@ -1,29 +1,29 @@
-// Trailer v3 (~28 s): Saturday's v1 structure, made denser and more rewarding
-// (docs/trailer-study.md, v3). Hook on a final tap and a reveal; TAP / PEEL /
-// REVEAL on one stone; a blur-cut montage of six reveals; the world (the title's
-// god rays, the descent through the sky onto the map, the mist parting); a
-// shrine; a finger turning the Dragon Head; the wall of 150+; the end card on
-// the game's own title with the store badges.
+// Trailer v3 (~29.5 s): Saturday's v1 structure, made denser and more rewarding
+// (docs/trailer-study.md, v3, and its revision). Every reveal plays until the
+// object has turned to face you and stopped (SETTLE, measured with settle.mjs):
+// the hook's Maneki-neko, TAP / PEEL / REVEAL on the Koala, a montage of four
+// solved objects as their last gems land, v1's 100+ puzzles wall (the map's
+// trail), the Dragon Head uncovered and turned in a finger, and v1's end card.
 //
 // Same contract as the other timelines: `at` both passes, `vat` video only
 // (fast-forwards hidden under cuts), `aat` audio only. PREROLL runs before t = 0.
-import { makeTimeline, blurCut, storage as save, PAGE_HELPERS as HELPERS, WALL_COUNT } from './v3-common.mjs';
+import { makeTimeline, blurCut, storage as save, PAGE_HELPERS as HELPERS, SETTLE } from './v3-common.mjs';
 
 export const FPS = 30;
 export const SIZE = { width: 540, height: 960, scale: 2 };   // → 1080×1920
-export const DURATION = 28.5;
-export const POSTER = 22.2;
+export const POSTER = 25.4;
 // chisel onsets in the first build sat 30-48 ms after their actions (the picture shows an
 // action on the next frame): the sound is advanced a little more than v2's
 export const AUDIO_LEAD = 0.08;
 export const SHEET_FPS = 2;
 export const LUFS = -14;          // social feeds' common target (docs/trailer-study.md, v3)
 export const PAGE_HELPERS = HELPERS;
+const BEAT = 60 / 72, GEMS_AT = 4.1;   // main.js showResult: the first gem 4.1 s after the win, then one a beat
 
 // the objects this cut uncovers (unsolved in the save)
-const HOOK = 'maneki-neko', TPR = 'koala', SHRINE = 'bonus-moss-garden', TURN = 'dragon-head';
-const MONTAGE = ['pumpkin', 'kokeshi', 'anglerfish', 'origami-fox', 'windmill', 'armillary'];
-export const REVEALS = [HOOK, TPR, SHRINE, TURN, ...MONTAGE];
+const HOOK = 'maneki-neko', TPR = 'koala', TURN = 'dragon-head';
+const MONTAGE = ['pumpkin', 'kokeshi', 'windmill', 'origami-fox'];
+export const REVEALS = [HOOK, TPR, TURN, ...MONTAGE];
 export const storage = () => save(REVEALS, TURN);   // at the map, the Dragon Head is the first stone still open
 // before t = 0: off the title, and the hook's stone set up (its assembly and the
 // silent chisels play out here, before the sound pass starts recording)
@@ -34,93 +34,72 @@ export function buildTimeline() {
   const { at, vat, aat } = tl;
 
   // 0.0 HOOK: the Maneki-neko's stone down to one row of 0 and a last cube.
-  // A double-tap runs the row away, the last tap lands, and it's uncovered.
-  at(0.12, 'cap', 'what’s inside?', 'say light up');
-  at(0.35, 'rowTap');
-  at(0.5, 'rowTap2');
-  at(1.3, 'cap', null);
-  at(1.35, 'tap');                      // the last cube: flash, whirl, colour, name
+  // A double-tap runs the row away; the last tap; it whirls round to face you and settles.
+  at(0.1, 'cap', 'what’s inside?', 'say light up');
+  at(0.3, 'rowTap');
+  at(0.45, 'rowTap2');
+  const hookWin = 1.05;
+  at(hookWin, 'tap');
+  at(1.95, 'cap', null);                   // through the flash, gone before its name settles in
 
-  // 3.4 TAP / PEEL / REVEAL: one stone, the Koala, three verbs, 1.25 s each
-  blurCut(tl, 3.4, (c) => { at(c, 'level', TPR, 1.0); });
-  at(3.45, 'cap', 'tap', 'verb ink up');
-  aat(3.6, 'sfx', true);
-  [3.65, 3.82, 3.99, 4.16].forEach((s) => at(s, 'tap'));
-  at(4.3, 'rowTap');
-  at(4.44, 'rowTap2');
-  blurCut(tl, 4.75, (c) => { at(c, 'prep', 0, 0, 0.45); }, { ff: 0.6 });
-  at(4.77, 'cap', 'peel', 'verb ink up');
-  aat(4.85, 'sfx', true);
-  at(4.95, 'peel', 0, 1);
-  at(5.2, 'peel', 0, 2);
-  at(5.45, 'peel', 0, 3);
-  at(5.7, 'peel', 0, 4);
-  blurCut(tl, 6.0, (c) => { at(c, 'peel', 0, 0); at(c, 'prep', 2); }, { ff: 0.6 });
-  at(6.02, 'cap', 'reveal', 'verb ink up');
-  aat(6.2, 'sfx', true);
-  at(6.25, 'tap');
-  at(6.5, 'tap');                       // the Koala: flash, and in it on to the landing, named
-  vat(6.68, 'ff', 1.2);
-  at(6.95, 'cap', null);                // before the Koala's own name settles under it
+  // TAP / PEEL / REVEAL: one stone, the Koala; TAP and PEEL 1.25 s each, REVEAL until it lands
+  let c = hookWin + SETTLE + 0.15;         // 6.0: the blur starts after it has stopped
+  blurCut(tl, c, (s) => { at(s, 'level', TPR, 1.0); });
+  at(c + 0.05, 'cap', 'tap', 'verb ink up');
+  aat(c + 0.2, 'sfx', true);
+  [0.25, 0.42, 0.59, 0.76].forEach((d) => at(c + d, 'tap'));
+  at(c + 0.9, 'rowTap');
+  at(c + 1.04, 'rowTap2');
+  c += 1.25;                               // 7.25
+  blurCut(tl, c, (s) => { at(s, 'prep', 0, 0, 0.45); }, { ff: 0.6 });
+  at(c + 0.02, 'cap', 'peel', 'verb ink up');
+  aat(c + 0.1, 'sfx', true);
+  [0.2, 0.45, 0.7, 0.95].forEach((d, k) => at(c + d, 'peel', 0, k + 1));
+  c += 1.25;                               // 8.5
+  blurCut(tl, c, (s) => { at(s, 'peel', 0, 0); at(s, 'prep', 2); }, { ff: 0.6 });
+  at(c + 0.02, 'cap', 'reveal', 'verb ink up');
+  aat(c + 0.15, 'sfx', true);
+  at(c + 0.2, 'tap');
+  const koalaWin = c + 0.45;
+  at(koalaWin, 'tap');                     // the Koala
+  at(c + 1.15, 'cap', null);               // before its own name settles in under the word
 
-  // 7.9 MONTAGE: six reveals, 1.1 s each. The last tap, and in its flash the
-  // picture jumps on to the object landing in its colours, named.
+  // MONTAGE: four more, already uncovered and settled, facing you, as their
+  // last gems land (v1's montage): one second each, a chime on each gem
+  c = koalaWin + SETTLE + 0.15;            // 13.95
+  // (no caption here: each settled object's own name and line are already on screen, where a caption would sit)
   MONTAGE.forEach((id, k) => {
-    const c = 7.9 + k * 1.1;
-    blurCut(tl, c, (s) => { at(s, 'level', id, 1.0); at(s, 'prep', 1); });
-    aat(c + 0.16, 'sfx', true);
-    at(c + 0.2, 'tap');
-    vat(c + 0.36, 'ff', 1.25);          // inside the flash: on to the landing
+    const t = c + k * 1.0, ff = SETTLE + 0.05;
+    blurCut(tl, t, (s) => { at(s, 'level', id, 1.0); at(s, 'prep', 0); }, { ff });
+    [1, 2].forEach((g) => { const when = t + GEMS_AT + g * BEAT - ff; if (when < t + 1.0) aat(when, 'gem', g); });
   });
+  c += MONTAGE.length * 1.0;               // 17.95
 
-  at(8.05, 'cap', 'every stone', 'say light up');
-  at(8.25, 'cap2', 'hides something', 'say light up2');
-  at(11.0, 'capClear');
+  // THE WALL: v1's map trail, everything found, rolling past; 100+ puzzles (v1's caption)
+  blurCut(tl, c, (s) => { at(s, 'mapTop'); at(s, 'mapScroll', 0); }, { ff: 0.4 });   // the map's own sounds stay muted
+  for (let k = 0; k <= 60; k++) at(c + 0.05 + k / 30, 'mapScroll', k / 60);
+  at(c + 0.15, 'capV1', '100+ puzzles', 'ink safe');
+  at(c + 2.0, 'capV1', null);
+  c += 2.15;                               // 20.1
 
-  // 14.5 THE WORLD: the map pulls back out of the last stone; above the sea of
-  // clouds the gold trail draws on and the mist over Cloud Isles parts
-  blurCut(tl, 14.5, (c) => { at(c, 'map'); }, { ff: 1.9 });
-  aat(14.6, 'sfx', true);
-  at(14.75, 'cap', 'fifteen worlds', 'say ink cl1');
-  at(15.0, 'cap2', 'above the clouds', 'say ink cl2');
-  at(17.0, 'capClear');
+  // THE DRAGON HEAD: its last tap; it whirls round to face you and settles; its
+  // gems land; a finger turns it to look, and lets it come back
+  blurCut(tl, c, (s) => { at(s, 'level', TURN, 1.0); at(s, 'prep', 1); }, { ff: 0.6 });
+  aat(c + 0.22, 'sfx', true);
+  const dragonWin = c + 0.25;
+  at(dragonWin, 'tap');
+  const d0 = dragonWin + SETTLE + 0.05;
+  at(d0, 'dragStart', 330, 470);
+  for (let f = 1; f <= 20; f++) at(d0 + f / 30, 'dragTo', 330 - 150 * Math.sin(f / 20 * Math.PI / 2), 470);
+  for (let f = 1; f <= 20; f++) at(d0 + (20 + f) / 30, 'dragTo', 180 + 150 * (1 - Math.cos(f / 20 * Math.PI / 2)), 470);
+  at(d0 + 41 / 30, 'dragEnd', 330, 470);
 
-  // 17.2 THE SHRINE: its card held on its own sky with its bells ("✦ The Shrine of
-  // ✦ Moss Garden"), the gilded block assembling; the last tap; the Moss Tortoise
-  blurCut(tl, 17.2, (c) => { at(c, 'map'); at(c, 'focusNode', SHRINE); at(c, 'tapNode', SHRINE); }, { ff: 1.0 });
-  aat(17.2, 'sfx', true);
-  blurCut(tl, 18.0, () => {}, { ff: 0.95, whoosh: false });   // on to the gilded block assembling
-  aat(18.05, 'sfx', true);
-  blurCut(tl, 19.0, (c) => { at(c, 'prep', 1); }, { ff: 0.3 });
-  aat(19.15, 'sfx', true);
-  at(19.2, 'tap');
-  vat(19.38, 'ff', 1.25);
-
-  // 20.7 TURN IT: the Dragon Head, uncovered; a finger turns it round
-  blurCut(tl, 20.7, (c) => { at(c, 'level', TURN, 1.0); at(c, 'prep', 0); }, { ff: 3.3 });
-  aat(20.75, 'sfx', true);
-  // its gems land at 4.1 s + a beat each after the win (main.js showResult): 21.5, 22.33
-  aat(20.7 + 2.0, 'finishResult');
-  [0, 1].forEach((k) => aat(20.7 + 4.1 + k * 60 / 72 - 3.3, 'star', k));
-  at(20.95, 'dragStart', 380, 480);
-  for (let f = 1; f <= 36; f++) at(20.95 + f / 30, 'dragTo', 380 - 200 * (1 - Math.pow(1 - f / 36, 2)), 480 + 18 * Math.sin(f / 36 * Math.PI));
-  at(22.2, 'dragEnd', 180, 480);
-
-  // 22.7 THE WALL: the journal, everything found, rushing past; 150+
-  blurCut(tl, 22.7, (c) => { at(c, 'map'); at(c, 'journal'); }, { ff: 0.5 });
-  for (let f = 0; f <= 60; f++) { const k = f / 60; at(22.72 + f / 30, 'journalScroll', Math.round(2800 * k * k * (3 - 2 * k))); }
-  at(22.75, 'shade', true);
-  at(22.8, 'count', WALL_COUNT, 0.9, 'big light mid');
-  at(23.5, 'cap2', 'puzzles', 'say light mid2');
-
-  // 24.7 HOME: at the top of the map a finger pulls down; the night sky and
-  // the title come down over it (the reverse of the descent)
-  blurCut(tl, 24.7, (c) => { at(c, 'capClear'); at(c, 'shade', false); at(c, 'mapTop'); }, { ff: 0.2 });
-  at(24.9, 'pullStart');
-  for (let f = 1; f <= 10; f++) at(24.9 + f / 30, 'pullMove', Math.round(440 * (1 - Math.pow(1 - f / 10, 2))));
-  at(25.27, 'pullEnd');
-  at(25.3, 'endTitle');
-  aat(25.6, 'finalChord');
-  at(25.9, 'endCard');
+  // END CARD: v1's, as it was (STRATA, the gem, free · plays in your browser, the address)
+  const end = d0 + 41 / 30 + 0.35;
+  at(end, 'endCard');
+  aat(end + 0.15, 'finalChord');
   return tl.done();
 }
+
+// the end card holds 3 s, as long as v1's did after its fade
+export const DURATION = +(buildTimeline().find((a) => a.act === 'endCard').t + 3.0).toFixed(2);

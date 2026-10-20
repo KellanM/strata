@@ -218,3 +218,83 @@ The mp4s are gitignored, as in v2.
   - no audience or ad-network test;
   - **nobody has listened to v3 with sound.** Sync and loudness were measured, not heard.
 - v1's timeline now has a `PREROLL` off the title and renders again against the current game (`TRAILER` unset).
+
+## Revision after Kellan's review (2026-10-19)
+
+**What Kellan said:**
+- "These aren't the best as the objects don't finish rotating towards the user and finish their animation."
+- "Can we please use the end card cta from the previous video? Same goes for the 150+ puzzles section."
+
+The coordinator's reading of this: every reveal lands; v1's end card; v1's "100+ puzzles" wall, untouched.
+
+**The lesson: let reveals land fully; never cut mid-rotation.** I measured it with `tools/trailer/settle.mjs`, which samples the finale's own state every frame (`game.win.angle` and the mesh's lift).
+- Every object tested reaches rest at **4.77 s after the winning tap**: Maneki-neko, Koala, Pumpkin, Kokeshi, Anglerfish, Origami Fox, Windmill, Armillary Sphere, the Moss Garden shrine and Dragon Head. Rest means within 1.5° and turning slower than 2°/s.
+- Still left to turn: 68° at 2 s, 16° at 3 s, 4° at 4 s.
+- v3's first cut jumped 1.25 s inside the flash and cut at about 1.1 s. That put each object on screen while it was still whirling through roughly 70° to 140°: Kellan saw exactly that.
+- `SETTLE = 4.8` now lives in `v3-common.mjs`. No beat leaves a reveal before `win + SETTLE`, and no flash jumps remain. Without the jumps, the win's bell run also stays in step with the picture (the drift flagged above is gone).
+
+**v1's end card**, as `timeline.mjs` had it: STRATA, the gem, "free · plays in your browser", kellanm.github.io/strata, on v1's warm gradient with its 0.9 s fade.
+- One deliberate difference: v1's tagline line ("peel the stone · find the shape") is left out, because brief 2 says "remove the tagline from the title card". It is a one-line change if Kellan wants it back.
+- The store badges and the search bar are gone. The badge artwork stays in `tools/trailer/badges/`, unused.
+
+**The "100+ puzzles" wall.** No copy of Saturday's wall survives:
+- not in the 4179a05 timeline;
+- not in the local v1 mp4 (it has no wall: its last beats are "seven quiet worlds to uncover" and the map scroll);
+- not among git's unreachable objects or stashes;
+- not in any session transcript.
+
+So it is rebuilt in v1's own language: v1's map-trail scroll (`mapScroll`, as `timeline.mjs` had it), with "100+ puzzles" in v1's caption style (17 px, .34em tracking, ink with a glow, fade and rise). v1's own caption sat at 64.5% or 71%, which is in the bottom 35% that platform UI covers, so it is set at 57%. The count-up, the journal and "150+" are gone. If Kellan remembers a different wall from Saturday, it needs rebuilding to that.
+
+**Time.** With 4.8 s per reveal, there are fewer reveals:
+- the trailer has 3 full reveals (Maneki-neko, Koala, Dragon Head) plus v1's kind of montage: 4 objects already settled, as their last gems land with a chime;
+- the ad has 2 (Maneki-neko, Dragon Head);
+- cut: the map's mist parting, the shrine with the Moss Tortoise, and the 6- and 4-object flash-jump montages;
+- the montage caption went too: settled objects show their own name and line in the place it would sit.
+
+**Trailer beats (29.9 s):**
+- **0–6.0, hook.**
+  - "what's inside?" at 0.1 s.
+  - Double-tap at 0.3 / 0.45 s, and the 8-cube row cascades.
+  - The last tap at 1.05 s, then the Maneki-neko whirls, colours and is named.
+  - It settles facing you at 5.82 s; the first gem lands at 5.15 s.
+- **6.0–7.25, TAP** on the Koala: 4 taps, then a 9-cube double-tap cascade.
+- **7.25–8.5, PEEL:** 4 layers.
+- **8.5–13.9, REVEAL.** The last taps at 8.7 / 8.95 s; the Koala settles at 13.72 s and its first gem lands at 13.05 s.
+- **13.9–17.9, montage.** Pumpkin, Kokeshi, Windmill and Origami Fox, already settled; gems 2 and 3 land in each, with chimes.
+- **17.9–20.05, wall:** v1's map trail with "100+ PUZZLES".
+- **20.05–26.87, Dragon Head.**
+  - The last tap at 20.3 s; it settles facing you at 25.07 s.
+  - Its gems land at 24.4, 25.23 and 26.07 s.
+  - A finger turns it to look (25.15 to 26.52 s) and lets it come back to face you.
+- **26.87–29.87:** v1's end card.
+
+**Ad beats (15 s), the same for openings a, b and c after the hook:**
+- **0–5.9, hook.** It settles at 5.77 s.
+  - **a:** "what's inside?", the row cascade, then the last tap at 1.0 s.
+  - **b:** the last tap at 0.03 s, "uncover / what's hidden", and all three gems land by 5.8 s.
+  - **c:** "one more tap…", then the tap at 1.0 s.
+- **5.9–6.97, wall:** "100+ PUZZLES".
+- **6.97–7.67, Dragon Head's last cube**, with "one tap left…" held through the flash until 8.57 s. The last tap is at 7.67 s.
+- **7.67–12.52, the head whirls round to face you** and settles at 12.44 s. Its first gem lands with its chime at 11.77 s.
+- **12.52–15.0:** v1's end card.
+
+**Checks:**
+- **Frames.** I looked at the frames just before every cut that follows a reveal: hook at 5.5 / 5.87 s, Koala at 13.0 / 13.77 s, Dragon at 24.5 / 25.12 / 26.85 s, and the ad's hooks (all three openings) at 4.6 / 5.4 s and its Dragon at 11.6 / 12.45 s. In each, the object faces the camera in the same pose in both frames: it has stopped.
+- **Taps:** every one hits its cube (10 in the trailer, 3 / 2 / 2 in the ads), with 0 mistakes and no page errors.
+- **Caption boxes:** all inside the safe box. "100+ puzzles" sits at 57.9–60.1% by 33.7–66.3%; v1's end card at 40.7–59.4% by 24.7–79.5%.
+- **Loudness:**
+
+  | Cut | Integrated | True peak |
+  |---|---|---|
+  | Trailer | −14.5 LUFS | −1.5 dB |
+  | Ad, opening a | −14.4 LUFS | −1.5 dB |
+  | Ad, opening b | −13.6 LUFS | −1.6 dB |
+  | Ad, opening c | −13.7 LUFS | −1.2 dB |
+
+**Weak spots now:**
+- Only three full reveals in the trailer and two in the ad. This is the price of letting them land.
+- TAP and PEEL are still the least rewarding 2.5 s.
+- v1's small caption is hard to read over the busy map trail at phone size, and it brushes the trail's labels.
+- In the ad, "one tap left…" is on screen for 0.6 s before the tap, then holds through the flash.
+- The Dragon Head's finger turn ends close to, but not exactly on, its resting pose.
+- Nobody has listened to it with sound.

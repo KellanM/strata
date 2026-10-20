@@ -7,7 +7,6 @@
 // voxel walk before tapping), with a touch ring drawn where the finger lands.
 // Blocks are set up off-screen (under a cut) by chiselling everything but the
 // cubes the shot needs; the game sees ordinary chisels.
-import { readFileSync } from 'node:fs';
 
 const S = await import('../../public/js/shapes.js');
 export const COUNTS = {
@@ -15,8 +14,9 @@ export const COUNTS = {
   chapters: S.CHAPTERS.length,
   shrines: S.BONUS.filter((b) => !S.RETIRED.has(b.id)).length,
 };
-// the wall's number: rounded down to a fifty (158 stones -> "150+")
-export const WALL_COUNT = Math.floor(COUNTS.stones / 50) * 50;
+// the settle time of a reveal, measured (tools/trailer/settle.mjs): after the winning
+// tap the object has turned to face you and stopped (within 1.5°, under 2°/s) at 4.77 s
+export const SETTLE = 4.8;
 
 const SOLVED_STATS = { time: 80, mistakes: 0, stars: 3, score: 1500 };
 // the save: nearly everything uncovered (the journal is a full wall), except
@@ -47,13 +47,6 @@ export function storage(reveals, walkTo) {
   };
 }
 
-// the official store badges (unmodified; tools/trailer/badges)
-const b64 = (f) => readFileSync(new URL('./badges/' + f, import.meta.url)).toString('base64');
-const BADGES = {
-  apple: 'data:image/svg+xml;base64,' + b64('app-store.svg'),
-  google: 'data:image/png;base64,' + b64('google-play.png'),
-};
-
 // ------------------------------------------------------------------ beats
 // Each builder pushes actions onto the timeline from t0 and returns when it ends.
 // `at`: both passes; `vat`: the frame-stepped video only; `aat`: the real-time audio only.
@@ -81,4 +74,4 @@ export function blurCut(tl, t, setup, { ff = 0.8, out = 0.1, inn = 0.18, whoosh 
 }
 
 import { pageHelpers } from './v3-page.mjs';
-export const PAGE_HELPERS = '(' + pageHelpers.toString() + ')(' + JSON.stringify({ badges: BADGES }) + ');';
+export const PAGE_HELPERS = '(' + pageHelpers.toString() + ')({});';

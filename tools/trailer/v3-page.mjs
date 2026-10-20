@@ -1,5 +1,5 @@
 // Trailer v3's page helpers. pageHelpers is stringified and injected into both
-// capture passes, so it must not reach outside itself. cfg: { badges }.
+// capture passes, so it must not reach outside itself. cfg: {}.
 export function pageHelpers(cfg) {
   const $ = (s) => document.querySelector(s);
   const H = (window.__trailer = {});
@@ -42,25 +42,27 @@ export function pageHelpers(cfg) {
     '  border: 3px solid rgba(255,255,255,.95); background: radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,.3) 60%, rgba(255,255,255,0) 72%);',
     '  box-shadow: 0 0 18px rgba(255,255,255,.7), 0 0 0 1px rgba(50,36,72,.28); }',
     '#tr-finger.on { opacity: 1; }',
-    // the end card: on the game's own title, its tagline and "swipe up" away; the badges under the stone
-    'body.tr-end #title .tap, body.tr-end #title .sub, body.tr-notag #title .sub { display: none !important; }',
-    '#tr-end { position: fixed; left: 0; right: 0; top: 23%; z-index: 40; text-align: center; font-family: ' + FONT + '; color: #f6f1ff; }',
-    '#tr-end .cta { font-size: 13px; font-weight: 600; letter-spacing: .34em; padding-left: .34em; text-transform: uppercase; margin-bottom: 10px; }',
-    '#tr-end .search { display: flex; align-items: center; gap: 9px; width: 214px; height: 38px; margin: 0 auto 12px; padding: 0 16px; box-sizing: border-box; border-radius: 19px;',
-    '  background: rgba(255,255,255,.94); box-shadow: 0 6px 22px rgba(20,12,40,.35); color: #3a2d55; font: 600 16px/1 ' + FONT + '; letter-spacing: .14em; text-transform: uppercase; }',
-    '#tr-end .search svg { width: 17px; height: 17px; fill: none; stroke: #6d5f8c; stroke-width: 2.4; stroke-linecap: round; flex: none; }',
-    '#tr-end .search .caret { width: 2px; height: 18px; background: #6d5f8c; margin-left: -6px; animation: trCaret 1s steps(1) infinite; }',
-    '@keyframes trCaret { 50% { opacity: 0; } }',
-    '#tr-end .search { opacity: 0; transform: translateY(14px) scale(.96); transition: opacity .45s ease-out, transform .6s cubic-bezier(.2,.9,.25,1); transition-delay: .08s; }',
-    '#tr-end.on .search { opacity: 1; transform: none; }',
-    '#tr-end .row { display: flex; justify-content: center; align-items: center; gap: 16px; }',
-    '#tr-end .apple { height: 48px; display: block; }',
-    // the Play badge's artwork carries its own clear space: the badge itself is 168/250 of the image
-    '#tr-end .google { height: 71.4px; display: block; margin: -11.7px -13.1px; }',
-    '#tr-end .cta, #tr-end .row { opacity: 0; transform: translateY(14px); transition: opacity .5s ease-out, transform .7s cubic-bezier(.2,.9,.25,1); }',
-    '#tr-end.on .cta { opacity: .92; transform: none; } #tr-end.on .row { opacity: 1; transform: none; transition-delay: .18s; }',
-    '#tr-legal { position: fixed; left: 0; right: 0; bottom: 14px; z-index: 40; text-align: center; font: 500 6.5px/1.5 ' + FONT + '; color: rgba(240,236,255,.5); opacity: 0; transition: opacity .5s; }',
-    '#tr-legal.on { opacity: 1; }',
+    // v1's end card, exactly (timeline.mjs), the CTA and all; only its tagline line is left out (Kellan, brief 2: no tagline)
+    '#tr-end { position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0; transition: opacity .9s ease;',
+    'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;',
+    'background: radial-gradient(ellipse at 50% 46%, rgba(255,246,236,.9), rgba(247,220,203,.97) 58%, #e9c9cf 100%);',
+    'color: #4a3d63; font-family: "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif; }',
+    '#tr-end.on { opacity: 1; }',
+    '#tr-end h1 { margin: 0; font-weight: 500; font-size: 46px; letter-spacing: .5em; padding-left: .5em; }',
+    '#tr-end .line { font-size: 13px; letter-spacing: .34em; text-transform: uppercase; opacity: .85; }',
+    '#tr-end .gem { width: 14px; height: 19px; margin: 6px 0 2px; }',
+    '#tr-end .cta { margin-top: 26px; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; opacity: .8; }',
+    '#tr-end .url { font-size: 13px; letter-spacing: .16em; opacity: .9; }',
+    // v1's caption, exactly (font, tracking, ink, its fade and rise), for the 100+ puzzles wall
+    '#tr-cap1 { position: fixed; left: 0; right: 0; top: 71%; z-index: 40; text-align: center; pointer-events: none;',
+    'font: 500 17px/1.45 "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif;',
+    'letter-spacing: .34em; text-transform: uppercase; padding: 0 24px;',
+    'opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .7s cubic-bezier(.2,.8,.2,1); }',
+    '#tr-cap1.on { opacity: 1; transform: none; }',
+    '#tr-cap1.ink { color: #4a3d63; text-shadow: 0 0 18px rgba(255,250,240,.9); }',
+    '#tr-cap1.high { top: 64.5%; }',
+    // ...but inside the platforms' safe box (v1's 64.5% and 71% sit in the bottom 35% that their UI covers)
+    '#tr-cap1.safe { top: 57%; }',
     // a soft shade behind a big line over a busy picture (the wall)
     '#tr-shade { position: fixed; inset: 0; z-index: 39; opacity: 0; transition: opacity .3s ease; background: radial-gradient(ellipse 70% 30% at 50% 50%, rgba(36,24,52,.55), rgba(36,24,52,.18) 70%, rgba(36,24,52,0)); }',
     '#tr-shade.on { opacity: 1; }',
@@ -72,12 +74,10 @@ export function pageHelpers(cfg) {
   const shade = el('tr-shade');
   H.shade = (on) => shade.classList.toggle('on', !!on);
   const end = el('tr-end');
-  // the end card: where to find it - a store search typing the name, and the badges
-  end.innerHTML = '<div class="cta">free to play</div>'
-    + '<div class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span class="q"></span><i class="caret"></i></div>'
-    + '<div class="row"><img class="apple" src="' + cfg.badges.apple + '"><img class="google" src="' + cfg.badges.google + '"></div>';
-  const legal = el('tr-legal');
-  legal.innerHTML = 'Apple and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries.<br>Google Play and the Google Play logo are trademarks of Google LLC.';
+  end.innerHTML = '<h1>STRATA</h1>'
+    + '<svg class="gem" viewBox="0 0 12 16"><path d="M6 0 0 8l6 8z" fill="#fff2c2"/><path d="M6 0l6 8-6 8z" fill="#e9b949"/></svg>'
+    + '<div class="cta">free · plays in your browser</div><div class="url">kellanm.github.io/strata</div>';
+  const cap1 = el('tr-cap1');
 
   // every caption's laid-out box (untransformed), in % of the frame, for the safe-zone check
   const measure = (c, text) => {
@@ -89,10 +89,16 @@ export function pageHelpers(cfg) {
     (window.__caps = window.__caps || []).push(box);
   };
   H.measureEnd = () => {
-    const rg = document.createRange(); rg.selectNodeContents(document.querySelector('#tr-end .cta'));
-    const r = [rg.getBoundingClientRect(), ...[...document.querySelectorAll('#tr-end img, #tr-end .search')].map((e) => e.getBoundingClientRect())];
-    (window.__caps = window.__caps || []).push({ text: 'END CARD (cta + badges)', x0: +(Math.min(...r.map((q) => q.left)) / innerWidth * 100).toFixed(1), x1: +(Math.max(...r.map((q) => q.right)) / innerWidth * 100).toFixed(1),
+    const r = [...end.children].map((e) => { const rg = document.createRange(); rg.selectNodeContents(e); const b = e.tagName === 'svg' ? e.getBoundingClientRect() : rg.getBoundingClientRect(); return b; });
+    (window.__caps = window.__caps || []).push({ text: 'END CARD (v1)', x0: +(Math.min(...r.map((q) => q.left)) / innerWidth * 100).toFixed(1), x1: +(Math.max(...r.map((q) => q.right)) / innerWidth * 100).toFixed(1),
       y0: +(Math.min(...r.map((q) => q.top)) / innerHeight * 100).toFixed(1), y1: +(Math.max(...r.map((q) => q.bottom)) / innerHeight * 100).toFixed(1) });
+  };
+  // v1's caption (the wall's): one line that fades and rises in
+  H.capV1 = (text, tone) => {
+    if (!text) { cap1.classList.remove('on'); return; }
+    cap1.textContent = text; cap1.className = 'tr ' + tone; void cap1.offsetWidth; cap1.classList.add('on');
+    const rg = document.createRange(); rg.selectNodeContents(cap1); const b = rg.getBoundingClientRect();
+    (window.__caps = window.__caps || []).push({ text, x0: +(b.left / innerWidth * 100).toFixed(1), x1: +(b.right / innerWidth * 100).toFixed(1), y0: +(b.top / innerHeight * 100).toFixed(1), y1: +(b.bottom / innerHeight * 100).toFixed(1) });
   };
   // ---- captions (two slots: a main line, and a second line under it)
   const slots = { a: [], b: [] };
@@ -379,15 +385,8 @@ export function pageHelpers(cfg) {
     touch(x, y);
     pointer('pointerdown', x, y, t); pointer('pointerup', x, y, t);
   };
-  // the end card's title: the logo stone drawn a little smaller, to make room above it
-  H.endTitle = () => { document.body.classList.add('tr-end'); const cam = strata.camera; cam.zoom = 0.74; cam.updateProjectionMatrix(); };
   H.noTag = () => { document.body.classList.add('tr-notag'); };
-  H.endCard = () => {
-    end.classList.add('on'); legal.classList.add('on');
-    const q = end.querySelector('.q'), word = 'Strata';
-    [...word].forEach((ch, k) => setTimeout(() => { q.textContent = word.slice(0, k + 1); }, 420 + k * 95));
-    setTimeout(H.measureEnd, 1200);
-  };
+  H.endCard = () => { end.classList.add('on'); H.measureEnd(); };
   H.focusNode = (id) => {
     const e = document.querySelector('.map-node[data-id="' + id + '"]'), s = sheet();
     if (!e || !s) return;
@@ -401,6 +400,8 @@ export function pageHelpers(cfg) {
     touch(r.left + r.width / 2, r.top + r.height / 2);
     e.click();
   };
+  // v1's map scroll: a fraction of the way down the trail (as timeline.mjs)
+  H.mapScroll = (f) => { const s = sheet(); if (s) s.scrollTop = f * Math.min(1400, s.scrollHeight - s.clientHeight); };
   H.mapScrollBy = (px) => { const s = sheet(); if (s) s.scrollTop += px; };
   H.journal = () => { $('#map-journal').click(); };
   H.journalScroll = (y) => { const s = $('#journal .jr-scroll'); if (s) s.scrollTop = y; };
@@ -412,6 +413,12 @@ export function pageHelpers(cfg) {
   // picture's times instead, and the result's later timers are let go by the
   // game's own tap-to-finish on a solved stone (audio pass only)
   H.finishResult = () => { const x = innerWidth / 2, y = innerHeight * 0.5; pointer('pointerdown', x, y); pointer('pointerup', x, y); };
+  // a gem's own chime (sound.star's notes), on the music bus, for shots whose game sound is muted
+  H.gem = (k) => {
+    if (!audio || !audio.sound.ctx) return;
+    const s = audio.sound, midi = s.key.root + 36 + [0, s.mode.third, 7][k % 3];
+    s.fmBell(midi, { dest: s.music, gain: 0.45, decay: 1.5 });
+  };
   H.star = (k) => { if (audio && audio.sound.ctx) audio.sound.star(k); };
   H.whoosh = () => {
     if (!audio || !audio.sound.ctx) return;
