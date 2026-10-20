@@ -7,7 +7,7 @@
 import { execFileSync } from 'node:child_process';
 import { T, OUT } from './lib.mjs';
 
-const { DURATION, POSTER = 16.8, AUDIO_LEAD: LEAD = 0.16, LUFS = -16, SHEET_FPS = 1 } = T;
+const { DURATION, POSTER = 16.8, AUDIO_LEAD: LEAD = 0.16, LUFS = -16, SHEET_FPS = 1, FADE_OUT = 0.6 } = T;
 const run = (args) => execFileSync('ffmpeg', ['-y', '-v', 'error', ...args], { stdio: 'inherit' });
 const D = DURATION.toFixed(2);
 const fadeOut = (DURATION - 1.8).toFixed(2);
@@ -27,7 +27,7 @@ run(['-ss', AUDIO_LEAD, '-i', f.audio, '-t', D, '-af',
 
 // picture + sound
 run(['-i', f.video, '-i', f.wav, '-t', D,
-  '-vf', `fade=t=out:st=${(DURATION - 0.6).toFixed(2)}:d=0.6`,
+  '-vf', FADE_OUT ? `fade=t=out:st=${(DURATION - FADE_OUT).toFixed(2)}:d=${FADE_OUT}` : 'null',   // a timeline may hold its last frame (FADE_OUT = 0)
   '-c:v', 'libx264', '-profile:v', 'high', '-preset', 'slow', '-crf', '21', '-pix_fmt', 'yuv420p', '-r', '30',
   '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', '-shortest', f.mp4]);
 

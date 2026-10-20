@@ -93,7 +93,27 @@ Read this before making any Strata ad or trailer. It is the distilled, living gu
 - PLAY NOW: a gold pill, 336×80, at 47%;
 - the badges: 64 px tall, 22 px apart, at 57%.
 
-Everything sits about 3.5% higher than in the reference, to keep the visible badges above 64.5%. The badge row's width (about 10–90%) is the reference's own and runs past Shorts' right margin, which is a known trade-off. Hold it 2.6 s in the trailer and about 2 s in the ad. The badge artwork is in `tools/trailer/badges/`, official and unmodified.
+Everything sits about 3.5% higher than in the reference, to keep the visible badges above 64.5%. The badge row's width (about 10–90%) is the reference's own and runs past Shorts' right margin, which is a known trade-off. The badge artwork is in `tools/trailer/badges/`, official and unmodified.
+
+**Make it alive** (Kellan on v4: "dry and lifeless … the background darkened and the play now button pulsed"). Use v4b's `#tr-live` (`H.endCardLive`). These timings were measured from Saturday's card at 30 fps; see trailer-study.md, v4b.
+
+| From the card's start | What happens |
+|---|---|
+| 0–0.4 s | **Darken.** The scene goes about 60% darker (edges about 67%, a vignette) and blurs. A second vignette keeps the edges sinking for about 1.2 s more. Aim for edge luma of about 25 on a 0–255 scale. |
+| +0.3 s | **STRATA** blurs in letter by letter. |
+| +0.55 s | **The gem.** |
+| +0.73 s | **PLAY NOW pops** from about 114–117% with a blur, settling to 100% in about 0.3 s. It overshoots down from big rather than growing from small. |
+| +1.03 s | **The badges.** |
+| from +1.1 s | **The pulse:** PLAY NOW breathes 1.00 ↔ 1.06, sine-eased, every 1.1 s. Its glow and a warm bloom behind it breathe with it. Never faster or bigger: that's where it turns into a casino ad. |
+| — | **Hold:** at least 3 s on the CTA (the research suggests 2.5–3 s), to the last frame with no fade to black (`FADE_OUT = 0`). |
+
+- **The sting:** a low swell, the arpeggio (`finalChord`), and a soft lift with a bell as PLAY NOW lands. These are Saturday's three sounds, played on the game's engine voices.
+- **Calm life, from the end-card research** (13 Meta Ad Library end cards, and Liftoff's "calmer beat busier, +36%"):
+  - keep a hero alive behind the card (the logo stone turning slowly under the blur);
+  - fewer than 20 slow motes;
+  - a shine across the button every 2.2 s, taking about 0.5 s;
+  - at most one soft ring of light from the button.
+- **Never:** a tapping hand, coin rain, "!" or red "DOWNLOAD NOW", ratings you can't back up, or a whoosh on every element.
 
 **Store honesty:** `docs/ad-hooks-study.md` notes that PLAY NOW and store badges pointing at stores that don't list Strata yet would breach Google's "unavailable offers" rule. Fine for previewing; check before running paid ads.
 
@@ -184,6 +204,9 @@ Everything sits about 3.5% higher than in the reference, to keep the visible bad
    - The order: the Dragon Head's "one tap left…" as the hook; TAP / PEEL / REVEAL on the Sloth; COLLECT THEM ALL; the wall; the end sequence.
    - Changes: the rolling-number ticks, heavier captions, and the name card hidden under COLLECT.
    - Length: 21 s, near the puzzle optimum of about 22 s. The 4.8 s rule leaves a 15 s ad room for only two reveals and nothing else.
+7. **v4b (22.1 s, `timeline-v4b.mjs`).** v4 with a living end card, kept for an A/B against v4.
+   - Kellan called v4's card "dry and lifeless", and it was. Measured against Saturday's: v4's edges stayed light, its button was static, and it faded to black.
+   - v4b restores Saturday's measured darkening, pop and 1.1 s pulse, and adds the calm extras the research supports.
 
 ## 5. Open questions and A/B ideas (once real ad data exists)
 

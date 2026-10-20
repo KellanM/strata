@@ -58,6 +58,52 @@ export function pageHelpers(cfg) {
     '.tr-cap.heavy.say { font-size: 54px; letter-spacing: .13em; padding-left: .13em; }',
     '.tr-cap.heavy.verb { font-size: 76px; letter-spacing: .12em; padding-left: .12em; }',
     '.tr-cap.heavy.gold .c { -webkit-text-stroke: 0; }',
+    // v4b's living end card (#tr-live): Saturday's darkening and PLAY NOW pulse, measured from
+    // trailer/reference/saturday-ad-15s.mp4 (docs/trailer-study.md, v4b), plus slow light
+    '#tr-live { position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0; transition: opacity .42s cubic-bezier(.3,.7,.4,1);',
+    '  -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px);',
+    '  background: radial-gradient(ellipse 70% 46% at 50% 44%, rgba(46,24,58,.24), rgba(24,13,36,.62) 60%, rgba(14,8,22,.80)); }',
+    '#tr-live.on { opacity: 1; }',
+    // a second, slower vignette: the edges keep sinking for a beat after the card is up
+    '#tr-live .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 62% 40% at 50% 46%, rgba(0,0,0,0) 55%, rgba(8,4,14,.32)); opacity: 0; transition: opacity 1.2s ease-out .3s; }',
+    '#tr-live.on .vig { opacity: 1; }',
+    // a warm bloom behind the button that breathes with it
+    '#tr-live .bloom { position: absolute; left: 50%; top: 51%; width: 520px; height: 260px; margin: -130px 0 0 -260px; border-radius: 50%;',
+    '  background: radial-gradient(ellipse, rgba(255,206,120,.30), rgba(255,190,110,.10) 45%, rgba(255,190,110,0) 70%); opacity: 0; transition: opacity .6s ease-out .7s; }',
+    '#tr-live.on .bloom { opacity: 1; animation: trBloom 1.1s ease-in-out 1.1s infinite; }',
+    '@keyframes trBloom { 0%, 100% { transform: scale(1); opacity: .75; } 50% { transform: scale(1.12); opacity: 1; } }',
+    '#tr-live > .el { position: absolute; left: 0; right: 0; text-align: center; }',
+    '#tr-live h1 { top: 30.4%; margin: 0; font-family: ' + FONT + '; font-weight: 400; font-size: 58px; line-height: 1; letter-spacing: .42em; padding-left: .42em; color: #fff; text-shadow: 0 2px 16px rgba(20,8,24,.5), 0 0 30px rgba(255,220,170,.18); }',
+    '#tr-live h1 span { display: inline-block; opacity: 0; filter: blur(8px); transform: translateY(6px); transition: opacity .3s ease-out, filter .4s ease-out, transform .5s cubic-bezier(.2,.8,.3,1); transition-delay: calc(.3s + var(--k) * 55ms); }',
+    '#tr-live.on h1 span { opacity: 1; filter: none; transform: none; }',
+    '#tr-live .gem { top: 41.6%; width: 14px; height: 20px; margin: 0 auto; opacity: 0; transform: scale(.6); transition: opacity .25s .55s, transform .45s cubic-bezier(.2,.9,.3,1.4) .55s; filter: drop-shadow(0 0 6px rgba(255,214,130,.8)); }',
+    '#tr-live.on .gem { opacity: 1; transform: none; }',
+    // PLAY NOW: pops in from 114% (Saturday: 117% -> 100% over ~0.3 s), then breathes 100% <-> 106% every 1.1 s, its glow with it, and a slow shine crosses it
+    '#tr-live .play { top: 46.8%; left: 50%; right: auto; width: 336px; height: 80px; margin-left: -168px; opacity: 0; filter: blur(8px); transform: scale(1.14);',
+    '  transition: opacity .22s ease-out .73s, filter .3s ease-out .73s, transform .34s cubic-bezier(.2,.8,.3,1) .73s; }',
+    '#tr-live.on .play { opacity: 1; filter: none; transform: none; }',
+    '#tr-live .pill { width: 100%; height: 100%; border-radius: 40px; box-sizing: border-box; position: relative; overflow: hidden;',
+    '  background: linear-gradient(180deg, #fee8a4, #f7c867 55%, #f1b24c); box-shadow: 0 0 0 2.5px rgba(255,236,206,.42), 0 8px 26px rgba(20,6,20,.35), 0 0 22px rgba(255,206,120,.30);',
+    '  display: grid; place-items: center; font: 700 26px/1 ' + FONT + '; letter-spacing: .32em; padding-left: .32em; color: #3b2142; }',
+    '#tr-live.on .pill { animation: trPulse 1.1s ease-in-out 1.1s infinite; }',
+    '@keyframes trPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 2.5px rgba(255,236,206,.42), 0 8px 26px rgba(20,6,20,.35), 0 0 22px rgba(255,206,120,.30); }',
+    '  50% { transform: scale(1.06); box-shadow: 0 0 0 2.5px rgba(255,240,214,.6), 0 10px 30px rgba(20,6,20,.35), 0 0 44px rgba(255,212,130,.62); } }',
+    '#tr-live .pill::after { content: ""; position: absolute; top: -20%; bottom: -20%; width: 38%; left: -45%; transform: skewX(-18deg);',
+    '  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0)); opacity: 0; }',
+    '#tr-live.on .pill::after { animation: trShine 2.2s ease-in-out 1.45s infinite; }',
+    '@keyframes trShine { 0% { left: -45%; opacity: 0; } 3% { opacity: 1; } 23% { left: 115%; opacity: 1; } 24%, 100% { left: 115%; opacity: 0; } }',
+    // one soft ring of light from the button, once (the calm stand-in for the casual ads' tapping hand)
+    '#tr-live .ripple { position: absolute; inset: 0; border-radius: 40px; box-shadow: 0 0 0 2px rgba(255,230,170,.75), 0 0 18px rgba(255,214,130,.5); opacity: 0; }',
+    '#tr-live.on .ripple { animation: trRipple 1.1s cubic-bezier(.2,.7,.3,1) 1.25s 1 both; }',
+    '@keyframes trRipple { 0% { opacity: 0; transform: scale(1); } 15% { opacity: .9; } 100% { opacity: 0; transform: scale(1.32, 1.6); } }',
+    '#tr-live .row { top: 57.3%; display: flex; justify-content: center; align-items: center; gap: 22px; opacity: 0; filter: blur(8px); transform: translateY(10px); transition: opacity .3s ease-out 1.03s, filter .35s ease-out 1.03s, transform .45s cubic-bezier(.2,.8,.3,1) 1.03s; }',
+    '#tr-live.on .row { opacity: 1; filter: none; transform: none; }',
+    '#tr-live .apple { height: 64px; display: block; }',
+    '#tr-live .google { height: 95.2px; display: block; margin: -15.6px -18.2px; }',
+    // dust motes rising through the light (the game's own motes, made visible over the veil)
+    '#tr-live .mote { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; background: radial-gradient(circle, rgba(255,240,200,.95), rgba(255,220,150,0) 70%);',
+    '  left: var(--x); top: var(--y); opacity: 0; animation: trMote var(--d) linear var(--w) infinite; }',
+    '@keyframes trMote { 0% { opacity: 0; transform: translate(0, 0); } 20% { opacity: var(--o); } 80% { opacity: var(--o); } 100% { opacity: 0; transform: translate(var(--dx), -70px); } }',
     // Saturday's 100+ wall: a dark plum field of object tiles, tilted a touch, drifting down
     '#tr-wall { position: fixed; inset: 0; z-index: 38; overflow: hidden; opacity: 0; transition: opacity .2s linear;',
     '  background: radial-gradient(ellipse 80% 60% at 50% 45%, #3f2340, #2a1631 60%, #1d1023); }',
@@ -116,6 +162,15 @@ export function pageHelpers(cfg) {
     + '<div class="play">PLAY NOW</div>'
     + '<div class="row"><img class="apple" src="' + cfg.badges.apple + '"><img class="google" src="' + cfg.badges.google + '"></div>';
   const wall = el('tr-wall');
+  // v4b's living end card
+  const live = el('tr-live');
+  let seedM = 11; const rm = () => (seedM = (seedM * 16807) % 2147483647) / 2147483647;
+  live.innerHTML = '<div class="vig"></div><div class="bloom"></div>'
+    + Array.from({ length: 18 }, () => '<i class="mote" style="--x:' + (6 + rm() * 88).toFixed(1) + '%;--y:' + (12 + rm() * 80).toFixed(1) + '%;--s:' + (2 + rm() * 3.5).toFixed(1) + 'px;--d:' + (3.2 + rm() * 2.6).toFixed(2) + 's;--w:' + (-rm() * 4).toFixed(2) + 's;--o:' + (0.35 + rm() * 0.5).toFixed(2) + ';--dx:' + ((rm() - 0.5) * 30).toFixed(0) + 'px"></i>').join('')
+    + '<h1 class="el">' + [...'STRATA'].map((ch, k) => '<span style="--k:' + k + '">' + ch + '</span>').join('') + '</h1>'
+    + '<svg class="el gem" viewBox="0 0 12 16"><path d="M6 0 0 8l6 8z" fill="#fff2c2"/><path d="M6 0l6 8-6 8z" fill="#e9b949"/></svg>'
+    + '<div class="el play"><div class="ripple"></div><div class="pill">PLAY NOW</div></div>'
+    + '<div class="el row"><img class="apple" src="' + cfg.badges.apple + '"><img class="google" src="' + cfg.badges.google + '"></div>';
   const cap1 = el('tr-cap1');
 
   // every caption's laid-out box (untransformed), in % of the frame, for the safe-zone check
@@ -458,6 +513,39 @@ export function pageHelpers(cfg) {
   H.noStory = (on) => { document.body.classList.toggle('tr-nostory', !!on); };
   H.noTag = () => { document.body.classList.add('tr-notag'); };
   H.endCard = () => { document.body.classList.add('tr-cta'); end.classList.add('on'); setTimeout(H.measureEnd, 1200); };
+  // v4b: the living end card; behind it the title's logo stone turns slowly (a view rotation,
+  // as the trailer's level zoom is: nothing in play changes)
+  H.endCardLive = () => {
+    document.body.classList.add('tr-cta');
+    live.classList.add('on');
+    const mesh = strata.cubes.mesh, t0 = performance.now(), r0 = mesh.rotation.y;
+    const turn = () => { if (!live.classList.contains('on')) return; mesh.rotation.y = r0 + 0.32 * (performance.now() - t0) / 1000; requestAnimationFrame(turn); };
+    requestAnimationFrame(turn);
+    setTimeout(() => {
+      const r = [...live.querySelectorAll('h1 span, .gem, .pill, img')].map((e) => e.getBoundingClientRect());
+      (window.__caps = window.__caps || []).push({ text: 'END CARD (v4b live)', x0: +(Math.min(...r.map((q) => q.left)) / innerWidth * 100).toFixed(1), x1: +(Math.max(...r.map((q) => q.right)) / innerWidth * 100).toFixed(1),
+        y0: +(Math.min(...r.map((q) => q.top)) / innerHeight * 100).toFixed(1), y1: +(Math.max(...r.map((q) => q.bottom)) / innerHeight * 100).toFixed(1) });
+    }, 1300);
+  };
+  // v4b's sting, on the game's own voices (Saturday's ending did the same three things:
+  // a rising arpeggio, a low swell under the card, and a lift as PLAY NOW pops)
+  H.stingSwell = () => {
+    if (!audio || !audio.sound.ctx) return;
+    const s = audio.sound, r = s.key.root;
+    s.tone(r, { dest: s.music, type: 'sine', attack: 0.45, decay: 2.6, gain: 0.5, partial: 2, partialGain: 0.25 });
+    s.tone(r + 7, { dest: s.music, type: 'sine', attack: 0.6, decay: 2.4, gain: 0.22 });
+  };
+  H.stingPop = () => {
+    if (!audio || !audio.sound.ctx) return;
+    const s = audio.sound, r = s.key.root;
+    s.tone(r + 31, { dest: s.music, type: 'sine', attack: 0.006, decay: 0.3, gain: 0.22, glideFrom: -700, glideTime: 0.1 });
+    s.fmBell(r + 43, { dest: s.music, at: s.now + 0.06, gain: 0.18, decay: 1.4, index: 1.8 });
+  };
+  H.stingShine = () => {
+    if (!audio || !audio.sound.ctx) return;
+    const s = audio.sound;
+    s.fmBell(s.key.root + 55, { dest: s.music, gain: 0.05, decay: 0.9, index: 1.2 });
+  };
   // the wall's tiles: every object's own map thumbnail (thumbs.js), in a fixed shuffle
   H.wallBuild = async () => {
     const { renderThumb } = await import('./js/thumbs.js');

@@ -412,3 +412,94 @@ The title's own STRATA and hint fade out as the CTA comes in, so nothing doubles
 - Only the hook and the Sloth are full reveals.
 - PLAY NOW and the store badges point to stores that don't list Strata yet (`docs/ad-hooks-study.md`).
 - Nobody has listened with sound. The tick sync was measured, not heard.
+
+# v4b: a living end card (2026-10-19)
+
+**Brief (Kellan, verbatim):** "Much better but I think the version we originally had did a great job at the end screen with the CTA. Right now it feels dry and lifeless. i think the background darkened and the play now button pulsed. We want to design this like the most effective top of the funnel. Do more creative-study research and come up with a new variation based on the best references."
+
+**Output:** `timeline-v4b.mjs` produces `trailer/strata-trailer-v4b.mp4` (22.1 s). v4 is untouched, for an A/B. Only the ending changes; v4b imports v4's timeline and swaps the end card.
+
+## Saturday's end card, measured
+
+The source is `trailer/reference/saturday-ad-15s.mp4`, 11.8–15.0 s, all 30 fps frames. I measured mean luma in fixed regions (a top band, the bottom-left corner, the centre), the width of the yellow pill mask, and the light just outside the pill. I also took a spectrogram of the audio.
+
+| Time | What happens |
+|---|---|
+| 12.00–12.40 (0.4 s, ease-out) | **The background darkens.** The top band goes from luma 69 to 28 (−60%) and the corners from 70 to 23 (−67%, so it acts as a vignette). The scene blurs underneath. |
+| 12.30–12.67 | STRATA's letters blur in, one after another. |
+| 12.53–12.70 | The gem fades in. |
+| 12.73–13.03 | **PLAY NOW pops** in at about 117% width, blurred, and settles to 100% in about 0.3 s. It overshoots down from big rather than up from small. |
+| 13.03–13.17 | The badges blur and fade in. |
+| From 13.1 | **The pulse:** pill width 663 to 703 px (scale 1.00 to 1.06), sinusoidal, period about 1.1 s (troughs at 13.17 and 14.30 s, peaks at 13.80 and 14.86 s). The light just outside the pill rises and falls with it (luma 165 to 182), so the glow breathes. The pill's own fill is constant (luma 206): no shimmer and no shine. |
+| — | No particles were detected. |
+| 15.0 | It holds to the last frame; there is no fade out. |
+
+- **Sound:** a rising arpeggio starts at the cut, six bell notes about 70 ms apart, with long tails. A low swell sits under the whole card. Two short upward glides mark PLAY NOW landing at about 12.75 s.
+- **What v4 lost,** measured the same way at 30 fps:
+  - its corners only dropped to luma about 64 (Saturday's: 23), because the dawn-pink bottom of the title sky stays light;
+  - its pill is static at 671 px, with no pulse and no glow breathing;
+  - its pill grows in from 94% instead of popping down from 117%;
+  - there is no swell and no lift under the button, only the arpeggio;
+  - it fades to black over its last 0.6 s, so the card is on screen only about 1.7 s at full strength.
+
+## End-card research
+
+A subagent sampled the last 4 s of 13 active ads in Meta Ad Library at 4 fps, muted. The sheets are in `.playwright-mcp/endcard-*.png`; I looked at `endcard-royal-2.png` myself.
+- **The ads sampled:** Royal Kingdom, Block Blast, Candy Crush, Gardenscapes, Two Dots and Color Block Jam.
+- **Lengths:** cards run 1.5–3.5 s.
+- **Handoff:** a hard cut or a cross-dissolve of 0.25 s or less.
+- **Motion lives in the content, not the button.** Royal Kingdom's hex grid of live levels keeps panning behind its button, with gold sparkles and a hand that taps once; Block Blast types its name into a search bar; others show live thumbnails or a candy rain.
+- **No social proof:** none showed ratings.
+- **The pulse can't be confirmed:** no visible button pulse turned up at 4 fps, but 4 fps can't resolve one under ±3% or faster than about 2 Hz.
+- **Sound:** no ad was heard.
+
+Published numbers:
+- **Smadex:** an end card that differs from the last frame gives 3× IPM [published data].
+- **Moloco:** a second end card lifted IPM 7–14% [published data].
+- **LifeStreet:** an end card gave +17% clicks; a "burst" CTA animation showed an observed (not controlled) +18% [published data].
+- **Liftoff (Me2Zen):** a calmer animation beat a raining-coin one by +36% clicks. Busier is not automatically better [published data].
+- **Unity:** never redirect to the store on the first touch [published data].
+- **Could not view:** Ad Library had no active US video ads for Monument Valley, Sky, Woodoku, Wordscapes or Netflix Games. There were no AppLovin or Liftoff end-card numbers, and no published A/B test of pulse amplitude or of a hand pointer.
+
+The research's synthesis for a calm card suggested a smaller pulse (1.00–1.03, 1.4–1.8 s), a shine sweep, slow motes (under 20), a hero kept alive behind, no tapping hand, and a held final frame. Kellan, though, named Saturday's pulse as what he liked. **The measured Saturday pulse (1.00–1.06 every 1.1 s) wins.** The research supplies the extras.
+
+## What v4b does
+
+The approved map → title entry is kept. The CTA then arrives as Saturday's did, at Saturday's timings:
+- **Darkening:** the veil darkens the scene in about 0.4 s, and a second vignette keeps the edges sinking for about 1.2 s more. Measured: the top band ends at luma 17.5 and the corners at 27 (Saturday: 28 and 23).
+- **Entrances:** STRATA's letters blur and rise in from +0.3 s, and the gem pops at +0.55 s.
+- **PLAY NOW:** it pops from 114% with a blur over 0.34 s at +0.73 s. The badges come in at +1.03 s.
+- **The pulse:** from +1.1 s the pill breathes 1.00 to 1.06 every 1.1 s, sine-eased, with its outer glow and a warm bloom behind it breathing in step. Measured: 671 to 713–715 px (+6.3%), period 1.1 s, matching Saturday.
+- **Calm life, from the research:**
+  - a white shine crosses the pill in about 0.5 s every 2.2 s;
+  - one soft ring of light spreads from the button at +1.25 s, once, in place of the casual ads' tapping hand;
+  - 18 dust motes rise slowly;
+  - the title's logo stone turns slowly behind the blur (0.32 rad/s), which keeps a hero alive. This is a view rotation only; nothing in play changes.
+- **Sting,** on the game's own engine voices:
+  - a low swell (the key's root plus a fifth, 0.45 s attack, about 2.5 s decay);
+  - the arpeggio (`finalChord`);
+  - a lift as PLAY NOW lands (a sine gliding up a fifth, then a bell);
+  - a faint high glint on the first shine.
+- **Hold:** 3.0 s, by Segwise's ≥3 s CTA benchmark (v4 held 2.3 s), held to the last frame with no fade. `build.mjs` now takes `FADE_OUT`.
+
+## No v4c
+
+The research didn't point to a clearly better order: cut, then brand, then button, then badges is common to Saturday and the sampled ads. So I rendered no alternative. The obvious next test is the casual pattern of keeping the gameplay hero, the Dragon Head, alive behind the card instead of the title. But Kellan approved the map → title entry, so that is left as an A/B idea.
+
+## Checks
+
+- Every tap hits its cube (7), with 0 mistakes and no page errors.
+- The end card spans y 30.4–66.7%; the badge row is 10–92% wide, the reference's own size, as before.
+- Loudness: −13.9 LUFS, true peak −1.2 dB.
+
+**Comparison:**
+- `trailer/reference/compare-endcards-v4b.png` shows Saturday, v4 and v4b at matching moments after the card starts (+0.2, +0.5, +0.9, +1.3, +1.8 and +2.1 s).
+- `trailer/endcard-v4b.gif` is a 3.7 s clip of the v4b ending.
+
+## Weak spots
+
+- **Colour.** v4b's background is the night title sky (cool navy), not Saturday's warm plum over the blurred stone. The title-sky entry is Kellan's approved decision, so v4b keeps it. It reads cooler than Saturday's card.
+- **The turning stone** is soft under the blur and reads as moving light, not as an object.
+- **The shine and the ring of light** are my additions from the research; Saturday's card had neither.
+- **The badge row** still runs past Shorts' right margin.
+- **Nobody has listened with sound.** The sting is measured in the spectrogram, not heard.
