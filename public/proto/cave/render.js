@@ -20,10 +20,10 @@ const voxelVert = /* glsl */ `
   attribute vec4 aC1;
   attribute vec4 aC2;
   attribute vec4 aT;       // t1 t2 dz1 dz2
-  attribute vec2 aE;       // emission after t1 (cools), live emission (loose tiles)
+  attribute vec3 aE;       // emission after t1 (cools), live emission (loose tiles), edge strength
   uniform float uTime, uDepth;
   varying vec3 vWorld, vN, vCol;
-  varying float vMetal, vEmit, vTw;
+  varying float vMetal, vEmit, vTw, vEdge;
   varying vec2 vTilt, vUv;
   float h1(float n) { return fract(sin(n) * 43758.5453); }
   void main() {
@@ -34,7 +34,7 @@ const voxelVert = /* glsl */ `
     vCol = c.rgb; vMetal = c.a;
     vEmit = aE.x * s1 * (1.0 - s2) * (0.25 + 0.75 * exp(-max(uTime - aT.x, 0.0) * 0.9)) + aE.y;
     vec3 w = vec3(aPos.x + position.x, aPos.y + position.y, aPos.z + dz + (position.z - 0.5) * uDepth);
-    vWorld = w; vN = normal; vUv = uv;
+    vWorld = w; vN = normal; vUv = uv; vEdge = aE.z;
     // per-voxel constants worked out here: hashing an interpolated varying stripes
     vTilt = (vec2(h1(aPos.w * 91.7), h1(aPos.w * 13.1)) - 0.5) * 1.1;
     vTw = pow(0.5 + 0.5 * sin(uTime * (1.1 + aPos.w * 2.3) + aPos.w * 60.0), 28.0);
@@ -47,7 +47,7 @@ const voxelFrag = /* glsl */ `
   uniform vec3 uAmb;
   uniform float uTime, uExposure;
   varying vec3 vWorld, vN, vCol;
-  varying float vMetal, vEmit, vTw;
+  varying float vMetal, vEmit, vTw, vEdge;
   varying vec2 vTilt, vUv;
   void light(vec3 P, vec3 col, float R, vec3 n, vec3 nf, vec3 V, inout vec3 diff, inout vec3 spec) {
     vec3 L = P - vWorld; float d = length(L); L /= d;
@@ -74,7 +74,8 @@ const voxelFrag = /* glsl */ `
     col += vMetal * (diff * vCol * 0.9 + spec * (vCol * 2.6 + 0.15) + vTw * lum * vCol * 2.0);
     // each voxel's edges catch a little less light: the grid reads, like the game's creases
     vec2 e = min(vUv, 1.0 - vUv);
-    col *= 0.7 + 0.3 * smoothstep(0.0, 0.1, min(e.x, e.y));
+    // only where the rock actually steps: flat stretches don't read as tiles
+    col *= 1.0 - vEdge * 0.32 * (1.0 - smoothstep(0.0, 0.12, min(e.x, e.y)));
     col += vEmit * vec3(1.0, 0.55, 0.2);
     col = 1.0 - exp(-col * uExposure);
     gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
@@ -113,7 +114,7 @@ export function wallMeshes(chunks, material) {
     const g = voxelGeometry();
     const ia = (arr, n) => new THREE.InstancedBufferAttribute(arr, n);
     g.setAttribute('aPos', ia(c.aPos, 4)); g.setAttribute('aC0', ia(c.aC0, 4)); g.setAttribute('aC1', ia(c.aC1, 4));
-    g.setAttribute('aC2', ia(c.aC2, 4)); g.setAttribute('aT', ia(c.aT, 4)); g.setAttribute('aE', ia(c.aE, 2));
+    g.setAttribute('aC2', ia(c.aC2, 4)); g.setAttribute('aT', ia(c.aT, 4)); g.setAttribute('aE', ia(c.aE, 3));
     g.instanceCount = c.n;
     const cx = (c.x0 + c.x1 - 1) / 2, cy = 52;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, 0), Math.hypot((c.x1 - c.x0) / 2 + 1, 54, 4));
@@ -126,7 +127,9 @@ export class Tiles {
   constructor(count, material) {
     const g = voxelGeometry();
     this.aPos = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4).setUsage(THREE.DynamicDrawUsage);
-    this.aE = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2).setUsage(THREE.DynamicDrawUsage);
+    const e = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) e[i * 3 + 2] = 1;
+    this.aE = new THREE.InstancedBufferAttribute(e, 3).setUsage(THREE.DynamicDrawUsage);
     const gold = new THREE.Color(0xf0c050);
     const c = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) c.set([gold.r * (0.92 + 0.16 * Math.random()), gold.g, gold.b, 1], i * 4);
@@ -142,7 +145,7 @@ export class Tiles {
   }
   set(i, x, y, z, rnd, emit) {
     this.aPos.array.set([x, y, z, rnd], i * 4);
-    this.aE.array[i * 2 + 1] = emit;
+    this.aE.array[i * 3 + 1] = emit;
   }
   commit() { this.aPos.needsUpdate = true; this.aE.needsUpdate = true; }
 }
@@ -295,5 +298,73 @@ export class Finish {
     this.scene = new THREE.Scene();
     this.scene.add(m);
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  }
+}
+
+// ---------------------------------------------------------------- the Gloam's tendrils
+// Each is a ribbon drawn along its path: a light-eating dark body, a sickly cold
+// rim, barbs along its length and a hooked tip. One draw call for all of them.
+export class Ribbons {
+  constructor(maxRibbons, samples) {
+    this.max = maxRibbons; this.S = samples;
+    const nv = maxRibbons * samples * 2;
+    this.pos = new Float32Array(nv * 3);
+    this.uvs = new Float32Array(nv * 4);   // along (0..1), across (-1..1), path s, alpha
+    const index = [];
+    for (let r = 0; r < maxRibbons; r++) for (let i = 0; i < samples - 1; i++) {
+      const a = (r * samples + i) * 2;
+      index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+    const g = new THREE.BufferGeometry();
+    this.aPos = new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage);
+    this.aUv = new THREE.BufferAttribute(this.uvs, 4).setUsage(THREE.DynamicDrawUsage);
+    g.setAttribute('position', this.aPos); g.setAttribute('aRib', this.aUv);
+    g.setIndex(index);
+    this.geo = g;
+    this.uniforms = { uTime: { value: 0 } };
+    this.mesh = new THREE.Mesh(g, new THREE.ShaderMaterial({
+      uniforms: this.uniforms, transparent: true, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
+      vertexShader: /* glsl */ `
+        attribute vec4 aRib;
+        varying vec4 vRib;
+        void main() { vRib = aRib; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        varying vec4 vRib;
+        void main() {
+          float av = abs(vRib.y), s = vRib.z;
+          // a ragged, smoking edge that crawls along the body toward the tip
+          float n = 0.5 + 0.25 * sin(s * 31.0 - uTime * 4.0 + vRib.y * 2.0) + 0.25 * sin(s * 73.0 + uTime * 6.3);
+          float body = 1.0 - smoothstep(0.5 + 0.35 * n, 1.0, av);
+          float rim = smoothstep(0.3, 0.9, av) * body;
+          // a light-eating core, a cold, sickly rim; a faint pulse travels up it
+          vec3 col = mix(vec3(0.01, 0.012, 0.016), vec3(0.42, 0.62, 0.55), rim * 0.6);
+          float pulse = pow(0.5 + 0.5 * sin(s * 9.0 - uTime * 5.0), 8.0);
+          col += vec3(0.1, 0.2, 0.17) * pulse * (1.0 - av) * 0.5;
+          gl_FragColor = vec4(col, body * vRib.w * (0.55 + 0.45 * (1.0 - rim * 0.4)));
+        }`,
+    }));
+    this.mesh.frustumCulled = false;
+    this.mesh.renderOrder = 2.5;
+  }
+  begin() { this.n = 0; }
+  // pts: [{x, y, w}] along the path (root first); alpha; z
+  add(pts, alpha, z) {
+    if (this.n >= this.max || pts.length < 2 || alpha <= 0.002) return;
+    const r = this.n++, S = this.S;
+    for (let i = 0; i < S; i++) {
+      const k = Math.min(pts.length - 1, Math.round(i * (pts.length - 1) / (S - 1)));
+      const p = pts[k], q = pts[Math.min(pts.length - 1, k + 1)], o = pts[Math.max(0, k - 1)];
+      let tx = q.x - o.x, ty = q.y - o.y; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+      const nx = -ty * p.w, ny = tx * p.w;
+      const a = (r * S + i) * 2;
+      this.pos.set([p.x + nx, p.y + ny, z, p.x - nx, p.y - ny, z], a * 3);
+      const along = i / (S - 1);
+      this.uvs.set([along, 1, p.s ?? along, alpha, along, -1, p.s ?? along, alpha], a * 4);
+    }
+  }
+  end() {
+    for (let r = this.n; r < this.max; r++) for (let i = 0; i < this.S * 2; i++) this.uvs[((r * this.S) * 2 + i) * 4 + 3] = 0;
+    this.aPos.needsUpdate = this.aUv.needsUpdate = true;
   }
 }

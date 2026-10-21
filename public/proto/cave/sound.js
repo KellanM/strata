@@ -54,6 +54,7 @@ export class CaveSound {
       if (q.kind === 'chime') this.bell(62 + PENTA[(q.k * 3) % PENTA.length], T, 0.09, 3.2);
       else if (q.kind === 'gloam') this.breath(T, 7, 0.16);
       else if (q.kind === 'grip') this.breath(T, q.moon ? 2.5 : 1.2, q.moon ? 0.12 : 0.05, 240);
+      else if (q.kind === 'yank') { this.thud(T, q.moon ? 0.32 : 0.16); this.breath(T, 0.35, q.moon ? 0.16 : 0.08, 900); }
       else if (q.kind === 'fall') this.whoosh(T, q.dur, q.moon ? 0.22 : 0.1);
       else if (q.kind === 'rumble') this.rumble(T, 6.5);
       else if (q.kind === 'impact') this.thud(T, q.moon ? 0.5 : 0.28);
@@ -61,8 +62,8 @@ export class CaveSound {
       else if (q.kind === 'lantern') { this.bell(74, T, 0.12, 5); this.bell(81, T + 0.35, 0.07, 5); }
     }
     // everything ebbs away with the fade
-    this.bus.gain.setValueAtTime(1, at(30.4));
-    this.bus.gain.linearRampToValueAtTime(0, at(33.5));
+    this.bus.gain.setValueAtTime(1, at(33.6));
+    this.bus.gain.linearRampToValueAtTime(0, at(36.6));
   }
 
   stop(fade = 0.4) {
@@ -96,9 +97,9 @@ export class CaveSound {
     const at = (t) => T + Math.max(0, t - from);
     const o2 = c.createOscillator(), g2 = c.createGain();
     o2.type = 'sawtooth'; o2.frequency.value = hz(39); g2.gain.value = 0;
-    g2.gain.setValueAtTime(0, at(8.4)); g2.gain.linearRampToValueAtTime(0.28, at(12)); g2.gain.setValueAtTime(0.28, at(19)); g2.gain.linearRampToValueAtTime(0, at(23));
+    g2.gain.setValueAtTime(0, at(9.2)); g2.gain.linearRampToValueAtTime(0.3, at(13)); g2.gain.setValueAtTime(0.3, at(22)); g2.gain.linearRampToValueAtTime(0, at(27));
     o2.connect(g2).connect(f); this.src(o2, T);
-    f.frequency.setValueAtTime(260, at(13)); f.frequency.linearRampToValueAtTime(420, at(17.5)); f.frequency.linearRampToValueAtTime(200, at(24));
+    f.frequency.setValueAtTime(260, at(15)); f.frequency.linearRampToValueAtTime(440, at(21)); f.frequency.linearRampToValueAtTime(200, at(27));
   }
 
   bell(m, T, gain, decay) {

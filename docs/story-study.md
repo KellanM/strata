@@ -632,3 +632,77 @@ legible, and the shower of meteors across the gap is the most cinematic moment.
   **not been run on an iPhone yet**; the sound has not been heard on one either.
 - Gold reads as gold paint only near the light; far from it, the stars are
   dull ochre.
+
+### Second pass (Kellan's feedback: "the tendrils should look much more evil", and the ground "continuous, not cut up panels... think of real tapestries")
+
+**Looked at** (Wikimedia Commons images, `shots/cave/ref/`): the Bayeux Tapestry
+(scene 32, Halley's comet; scene 51, Hastings), a Genji emaki calligraphy sheet,
+the Ban Dainagon Ekotoba, Chōjū-giga scroll 1, and a cast of Trajan's Column.
+What they do:
+- **Bayeux:** one wavy, hummocked ground line carries the whole story. Top and
+  bottom borders have their own rhythm (beasts between diagonal bars). Towers and
+  trees divide scenes. The comet breaks into the top border while the people
+  below point at it. The same people come back again and again.
+- **Emaki:** horizontal bands of mist cross the scene as transitions. Gold leaf is
+  scattered in squares.
+- **Chōjū-giga:** no frames at all; tufts of grass and trees are the only dividers.
+- **Trajan's Column:** a continuous low relief carved into the stone.
+
+**Changed:**
+- **One continuous frieze** (`mural.js` rewritten). One unbroken hummocked ground
+  line runs the whole wall. A top border is the sky band: a gold star between each
+  pair of diagonal bars. A bottom border is wavy strata with ammonites, the things
+  the stone keeps. The same trio (tall, red, child) recurs:
+  - walking under the moon;
+  - stopped and pointing as the Gloam rises;
+  - cowering;
+  - struck to ash.
+
+  The moon recurs too. The scene dividers are:
+  - a Bayeux tree;
+  - the Gloam's own column of painted smoke;
+  - a dead tree;
+  - emaki-style bands of the Gloam's mist.
+
+  To the right of the theft the sky band shows empty sockets, so it reads as time
+  passing. The land from the impact onward is the same ground broken into islands.
+  Figures, ground line and tree are slightly raised, like carved relief. The frieze's
+  ends are worn.
+- **Evil tendrils** (`Ribbons` in `render.js`): dark ribbons that eat the light, with
+  a sickly cold rim, a ragged smoking edge, barbs along their length and clawed,
+  hooked tips. They reach in lunges, recoil a little and hunt with their tips. They
+  coil as tilted, tightening spirals that cross over the moon like a grip, and
+  squeeze. Then the **yank**: a jerk, a give, a harder jerk, a straining hold, and a
+  violent tear. That is about 2.2–3.3 s, with a thud and a camera jerk on each pull.
+  After that they whip back down. Dark smoke clings to them. The painted Gloam is
+  now dark too, with a pale cold rim. No face, no eyes.
+- **Meteors** are streaks: a small hot head and a long tail drawn out along the fall.
+  The sky band's stars fly on past, toward the far islands.
+- **The impact** is calmer: three hits (star, moon, star), smaller flashes, fewer
+  sparks. The star sinks as a bead into a scorched crater.
+- **The stones** are pale grey banded domes, outlined in charcoal like the game's
+  stones. They are no longer earth-red acorns.
+- **The rock** is fractured plates, each tilted its own way, with dark seams and pits.
+  Voxel edges show only where the rock actually steps, and colour varies by plate,
+  not by voxel. It no longer reads as even tiles.
+- **Length:** 35.6 s, longer for the yank.
+
+Contact sheet: `docs/story-frames/cave-spike-v2.jpg`.
+
+**Honest read of v2:**
+- **Evil and legible:** the tendrils, especially the grip on the moon and the hunting
+  hooked tips. The meteors now read as streaks.
+- **Continuous:** the frieze holds, borders and all.
+- **Still weak:**
+  - The tendrils are smooth vector ribbons, crisper than the voxel world round them.
+    They may read more as "tentacles/roots" than as mist. Smoke clings to them, but
+    they are clearly solid.
+  - The small stars' grips are tight knots at the tendril tips. The moon's grip is
+    the one that reads at a glance.
+  - The yank reads in motion but not in a still.
+  - D's islands are a row of similar V shapes.
+  - The emaki mist bands in E read as dark dashes rather than clouds.
+  - B's Gloam column is partly outside the lantern's light while it rises.
+- **Not checked yet:** still not run or heard on an iPhone. Desktop Chrome runs at
+  about 16 ms a frame with 11 draw calls, but headless Chrome stepped the pixel ratio
+  down to 1.625 during playback, so the cost at ratio 2 on a phone is unknown.

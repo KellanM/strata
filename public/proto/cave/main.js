@@ -6,7 +6,7 @@
 // window.cave.seek(t) renders any moment; the whole sequence is a function of t.
 import * as THREE from 'three';
 import { Mural, paint, W, rng } from './mural.js';
-import { wallMeshes, voxelMaterial, Tiles, Sprites, Finish, lightUniforms, MAX_LIGHTS } from './render.js';
+import { wallMeshes, voxelMaterial, Tiles, Sprites, Ribbons, Finish, lightUniforms, MAX_LIGHTS } from './render.js';
 import { makeStory, END } from './story.js';
 import { CaveSound } from './sound.js';
 
@@ -37,13 +37,14 @@ const story = makeStory(info, mural);
 const tiles = new Tiles(story.tileCount, voxelMaterial(shared, 0.5));
 const mist = new Sprites(1000, shared);
 const glow = new Sprites(900, shared, { glow: true });
-scene.add(tiles.mesh, mist.mesh, glow.mesh);
+const ribbons = new Ribbons(16, 56);
+scene.add(tiles.mesh, mist.mesh, ribbons.mesh, glow.mesh);
 const finish = new Finish();
 const sound = new CaveSound();
 
 // dust in the lantern's light: only what the flame reaches is seen
 const r = rng(11);
-const motes = Array.from({ length: 320 }, () => ({ x: r() * W, y: 14 + r() * 80, z: 1.5 + r() * 9, s: 0.18 + r() * 0.35, h: r() }));
+const motes = Array.from({ length: 320 }, () => ({ x: r() * W, y: 14 + r() * 82, z: 1.5 + r() * 9, s: 0.18 + r() * 0.35, h: r() }));
 function addMotes(t, L, camX) {
   for (const m of motes) {
     if (Math.abs(m.x - camX) > 34) continue;
@@ -64,7 +65,7 @@ function resize() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   const vt = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), ht = vt * camera.aspect;
-  fitDist = Math.max(19.5 / ht, 33 / vt);
+  fitDist = Math.max(20 / ht, 44 / vt);
   finish.uniforms.uAspect.value = w / h;
 }
 window.addEventListener('resize', resize);
@@ -76,11 +77,12 @@ let uiFade = 0;
 function render(t) {
   shared.uTime.value = t;
   finish.uniforms.uTime.value = t;
-  mist.begin(); glow.begin();
-  const f = story.frame(t, mist, glow);
+  ribbons.uniforms.uTime.value = t;
+  mist.begin(); glow.begin(); ribbons.begin();
+  const f = story.frame(t, mist, glow, ribbons);
   const L = f.lantern;
   addMotes(t, L, f.cam.x);
-  mist.end(); glow.end();
+  mist.end(); glow.end(); ribbons.end();
 
   shared.uLantern.value.set(L.x, L.y, L.z, L.R);
   shared.uLanternCol.value.set(1.0, 0.5, 0.19).multiplyScalar(2.5 * L.I);
