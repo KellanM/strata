@@ -118,7 +118,7 @@ const voxelFrag = /* glsl */ `
     col += spec * vGl.x * 0.5 * (1.0 - abs(n.z));   // only its raised edges catch the light
     vec3 cold = mix(vec3(0.42, 0.3, 0.95), vec3(0.3, 0.9, 0.95), 0.6);
     // (gamma lifts any glow over black a lot: the body itself gives none, only a rare pulse)
-    col += cold * (vGl.y * 0.5 * (1.0 - vGl.x) + vGl.x * vGl.z * vGl.z * 0.008);
+    col += cold * (vGl.y * 0.5 * (1.0 - vGl.x) + vGl.x * vGl.z * vGl.z * 0.003);
     col += vEmit * vec3(1.0, 0.55, 0.2);
     col = 1.0 - exp(-col * uExposure);
     gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);

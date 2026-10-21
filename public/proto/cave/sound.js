@@ -56,6 +56,8 @@ export class CaveSound {
       else if (q.kind === 'grip') this.breath(T, q.moon ? 2.5 : 1.2, q.moon ? 0.12 : 0.05, 240);
       else if (q.kind === 'crack') { this.grind(T, 0.8); this.rumble(T + 0.6, 2.4); this.wrong(T + 0.8); }
       else if (q.kind === 'jolt') { this.thud(T, q.near ? 0.2 : 0.08); this.click(T, q.near ? 0.12 : 0.05); this.click(T + 0.04, 0.06); }
+      else if (q.kind === 'impend') this.impend(T, 9);
+      else if (q.kind === 'creak') this.creak(T);
       else if (q.kind === 'hush') this.hush(T, 0.85);
       else if (q.kind === 'strike') { this.stab(T); this.thud(T, 0.3); }
       else if (q.kind === 'heart') { this.thud(T, 0.22); this.thud(T + 0.24, 0.13); }
@@ -108,6 +110,25 @@ export class CaveSound {
     f.frequency.setValueAtTime(260, at(15)); f.frequency.linearRampToValueAtTime(440, at(21)); f.frequency.linearRampToValueAtTime(200, at(27));
   }
 
+  // the dark closing in: a low drone that slowly rises and thickens
+  impend(T, dur) {
+    const c = this.ctx, g = c.createGain(), f = c.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.setValueAtTime(90, T); f.frequency.linearRampToValueAtTime(320, T + dur);
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(0.13, T + dur * 0.8); g.gain.linearRampToValueAtTime(0, T + dur + 0.5);
+    for (const [m, det] of [[31, -8], [32, 6], [38, 0]]) {
+      const o = c.createOscillator(); o.type = 'sawtooth'; o.detune.value = det;
+      o.frequency.setValueAtTime(hz(m), T); o.frequency.linearRampToValueAtTime(hz(m + 1.5), T + dur);
+      o.connect(f); this.src(o, T, T + dur + 0.6);
+    }
+    f.connect(g).connect(this.bus);
+  }
+  // stone giving a little, somewhere in the dark
+  creak(T) {
+    const c = this.ctx, n = this.noise(), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = 'bandpass'; f.frequency.setValueAtTime(260 + Math.random() * 200, T); f.frequency.linearRampToValueAtTime(140, T + 0.35); f.Q.value = 9;
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(0.09, T + 0.08); g.gain.linearRampToValueAtTime(0, T + 0.4);
+    n.connect(f).connect(g).connect(this.bus); this.src(n, T, T + 0.45);
+  }
   // a moment of near silence before the strike
   hush(T, dur) {
     const g = this.bus.gain;

@@ -659,5 +659,45 @@ export function paint(m) {
   }
   gloamDetails(m);
   info.gloamT = m.gloamT;
+
+  // ---- the long night's Gloam keeps growing. Each cell gets the moment the
+  // mass reaches it: outward from the clouds and the sea, in small irregular
+  // steps, veins feeling ahead, never over the islands' land.
+  {
+    const growT = new Float32Array(N).fill(NONE);
+    const x0 = XE0 - 8, T0 = 26.2;
+    const blocked = (x, y) => {
+      const p = m.p0[idx(x, y)];
+      return p === PIG.ochre || p === PIG.rust || p === PIG.red || p === PIG.charcoal || p === PIG.gold || p === PIG.s1 || p === PIG.s2 || p === PIG.s3;
+    };
+    const ok = (x, y) => x >= x0 && x <= FX1 && y >= G0 && y < TB0 && !blocked(x, y);
+    const dist = new Int16Array(N).fill(-1), queue = [];
+    for (let y = G0; y < TB0; y++) for (let x = x0; x <= FX1; x++) if (m.gloamT[idx(x, y)] < 30) { dist[idx(x, y)] = 0; queue.push(idx(x, y)); }
+    for (let q = 0; q < queue.length; q++) {
+      const k = queue[q], x = k % W, y = (k / W) | 0;
+      if (dist[k] >= 26) continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const X = x + dx, Y = y + dy, K = idx(X, Y);
+        if (!ok(X, Y) || dist[K] >= 0) continue;
+        dist[K] = dist[k] + 1; queue.push(K);
+        // patient and uneven: each step comes when it comes
+        growT[K] = T0 + dist[K] * 0.72 * (0.7 + 0.6 * fbm(X * 0.25, Y * 0.25, 901)) + 0.5 * hash2(X, Y, 902);
+      }
+    }
+    // veins of it feel ahead of the mass
+    for (const k of queue) {
+      if (dist[k] !== 0 || hash2(k, 0, 903) > 0.05) continue;
+      let x = k % W, y = (k / W) | 0, a = hash2(k, 1, 903) * 6.28;
+      const t0 = T0 + 1 + hash2(k, 2, 903) * 6;
+      for (let s = 0; s < 10; s++) {
+        a += (hash2(k, s, 904) - 0.5) * 1.0; x += Math.cos(a); y += Math.sin(a);
+        const X = Math.round(x), Y = Math.round(y);
+        if (!ok(X, Y)) break;
+        const K = idx(X, Y);
+        growT[K] = Math.min(growT[K], t0 + s * 0.55);
+      }
+    }
+    info.growT = growT;
+  }
   return info;
 }

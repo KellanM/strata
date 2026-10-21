@@ -849,3 +849,36 @@ Contact sheet: `docs/story-frames/cave-spike-v4.jpg` (4×2):
 - **Not checked yet:** not run on an iPhone by me. Desktop Chrome runs at about
   16 ms a frame with 10 draw calls; the pixel ratio stepped down to 1.625 in headless
   Chrome.
+
+### Fifth pass (Kellan: "the clouds in the final area should look like they are slowly growing like the darkness is impending")
+
+- **It grows.** In the long night, the Gloam's clouds and sea now swell outward cell by
+  cell. Every cell has a precomputed moment when the mass reaches it, grown outward
+  from the clouds and the sea in uneven steps of about 0.7 s, with veins feeling
+  ahead. It never grows over the islands' land. The separate clouds swell, merge
+  and close in from above and below between about 26 s and 34 s.
+- **A faint pulse** as each step lands.
+- **The light holds it back.** Where the real lantern's light falls, the dark pauses
+  and recoils, and it presses on again once the light has moved. That is a seed for
+  the story's "last light".
+- **It never takes the painted lantern.** The clear space around the painted lantern
+  shrinks over 27.5–33.5 s to a last ring about 4–5 cells wide. That small warm light
+  is the last thing before the fade.
+- **Sound:** a low drone that slowly rises and thickens from 26.5 s, and quiet stone
+  creaks as it advances.
+- **Fixes:**
+  - The Gloam's smoke sprites are now exactly black: any colour above black read
+    as grey slashes over the Gloam after gamma.
+  - The static Gloam's pulse is now a faint, blotchy throb instead of a diagonal
+    wave.
+- Module URLs are `?v=5`.
+
+Contact sheet: `docs/story-frames/cave-spike-v5.jpg`. Two context frames (long ago,
+the stars fleeing), then the ending at 27.0, 29.4, 31.6 and 34.0 s, showing the dark
+closing in.
+
+**Honest read:** the impending growth reads well across the four ending frames, and
+the last ring of light around the painted lantern is a strong final image. The
+growth is slow enough that much of it happens while the lantern walks in, so the
+hold-back recoil is subtle in stills; it needs watching in motion. Not checked on an
+iPhone yet.

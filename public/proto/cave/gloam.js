@@ -7,7 +7,7 @@
 // The wall's shader reads this texture per voxel, so the Gloam is stepped,
 // blocky and lit by the same lantern as the figures.
 import * as THREE from 'three';
-import { W, H, hash2 } from './mural.js?v=4';
+import { W, H, hash2 } from './mural.js?v=5';
 
 const N = W * H;
 export class GloamField {
@@ -21,8 +21,9 @@ export class GloamField {
     this.near = 0;                  // how much body is close to the lantern
   }
   // gT: when each cell becomes the Gloam's body for good (the islands' undersides, the sea, the clouds)
-  setStatic(gT) { this.gT = gT; }
-  begin(x0, x1, t) {
+  // growT: when the long night's mass reaches each cell; keep: the painted lantern, whose light it never takes
+  setStatic(gT, growT, keep) { this.gT = gT; this.growT = growT; this.keep = keep; }
+  begin(x0, x1, t, L) {
     this.x0 = Math.max(0, Math.floor(x0)); this.x1 = Math.min(W - 1, Math.ceil(x1));
     const gT = this.gT;
     for (let y = 0; y < H; y++) {
@@ -32,10 +33,24 @@ export class GloamField {
       if (!gT) continue;
       for (let x = this.x0; x <= this.x1; x++) {
         const k = o + x;
-        if (gT[k] <= t) {
+        let grown = gT[k] <= t;
+        const gr = this.growT ? this.growT[k] : 1e6;
+        if (!grown && gr < 1e5 && t >= gr) {
+          // the light holds it back: where the real lantern shines it pauses and recoils
+          const dl = L ? Math.hypot(x - L.x, y - L.y) / L.R : 9;
+          const hold = L ? 2.6 * Math.exp(-2.4 * dl * dl) * Math.min(1, L.I) : 0;
+          // and it never takes the painted lantern: the dark space round it shrinks to a last small ring
+          const K = this.keep, dk = K ? Math.hypot(x - K.x, (y - K.y) * 1.15) : 99;
+          const safe = K ? 4.6 + 13 * (1 - Math.min(1, Math.max(0, (t - 27.5) / 6))) : 0;
+          if (t >= gr + hold && dk > safe) {
+            grown = true;
+            this.pulse[k] = Math.exp(-(t - gr - hold) * 2.5);   // a faint pulse as each step lands
+          }
+        }
+        if (grown) {
           this.body[k] = 1;
-          this.pulse[k] = Math.pow(0.5 + 0.5 * Math.sin(x * 0.35 + y * 0.2 - t * 2.2), 6);
-        } else if ((x > 0 && gT[k - 1] <= t) || (x < W - 1 && gT[k + 1] <= t) || (y > 0 && gT[k - W] <= t) || (y < H - 1 && gT[k + W] <= t)) {
+          if (gT[k] <= t) this.pulse[k] = 0.6 * Math.pow(0.5 + 0.5 * Math.sin(t * 1.3 + 6 * Math.sin(x * 0.21) * Math.cos(y * 0.17) + 4 * hash2(x >> 2, y >> 2, 3)), 10);   // a slow, blotchy throb
+        } else if ((x > 0 && this.body[k - 1] > 0) || (y > 0 && this.body[k - W] > 0) || (x < W - 1 && gT[k + 1] <= t) || (y < H - 1 && gT[k + W] <= t)) {
           this.cold[k] = 0.022;   // the faint cold rim
         }
       }

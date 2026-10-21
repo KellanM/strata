@@ -1,6 +1,6 @@
 // The sequence as pure functions of time t (seconds), so any frame can be
 // rendered exactly (?t=17.2&still) and a skip or replay never drifts.
-import { hash2, ground, MOUTH } from './mural.js?v=4';
+import { hash2, ground, MOUTH } from './mural.js?v=5';
 import * as THREE from 'three';
 
 export const END = 35.6;   // the fade is complete
@@ -211,7 +211,7 @@ export function makeStory(info, mural) {
   }
 
   // ------------------------------------------------------------ per-frame output
-  const DARK = [0.035, 0.04, 0.055];   // the Gloam's smoke: it eats light
+  const DARK = [0, 0, 0];   // exactly black: anything above it reads grey over the Gloam after gamma   // the Gloam's smoke: it eats light
   const DUST = [0.09, 0.07, 0.06];
 
   // the tiles, in a fixed order: every body's cells, then chips of rock torn from the fissure's lips
@@ -379,7 +379,7 @@ export function makeStory(info, mural) {
     // spills over the lips and runs along its length before anything climbs.
     const camX = out.cam.x;
     if (field) {
-      field.begin(camX - 30, camX + 30, t);
+      field.begin(camX - 30, camX + 30, t, out.lantern);
       for (const c of info.crack) {
         if (!field.inRange(c.x)) continue;
         const open = c.t < 0 || t > (c.region === 2 ? c.t2 : c.t) + 0.6;
@@ -541,6 +541,8 @@ export function makeStory(info, mural) {
     for (const I of imp) cues.push({ t: I.t, kind: 'impact', moon: I.moon });
     cues.push({ t: 20.5, kind: 'rumble' });
     for (const I of imp) for (let r = 0; r < 4; r++) cues.push({ t: I.t + (I.moon ? 1.5 : 1.8) + r * 0.4 + 0.1, kind: 'stone', r });
+    cues.push({ t: 26.5, kind: 'impend' });
+    for (let tc = 27.3; tc < 33.5; tc += 0.7 + hash2(Math.round(tc * 10), 0, 905) * 0.9) cues.push({ t: tc, kind: 'creak' });
     cues.push({ t: 31.3, kind: 'lantern' });
     cues.sort((a, b) => a.t - b.t);
   }
