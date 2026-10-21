@@ -767,3 +767,85 @@ open, the grip, the tearing loose, the islands, the long night).
   about 16 ms a frame with 10 draw calls, but headless Chrome stepped the pixel
   ratio down to 1.625. The per-frame field update (a 256×108 texture) is new CPU
   and upload work for the phone.
+
+### Fourth pass (Kellan, on v3)
+
+Kellan's notes on v3:
+- "Through the crack it looks blue. It should look like a crag... an actual crack in a cave wall."
+- The border patterns should be reliefs.
+- The darkness should follow the crack.
+- The final clouds look cut off, and should keep the Gloam's dark identity.
+- Then: "could the crack appear like the gloam is breaking in?" and "the stars that fly off could probably fly in 3d space like they are escaping the wall."
+
+**Changed:**
+- **The crack is a crag.**
+  - It is stepped voxel layers going into the rock, each about a cell wide, each
+    darker than the one above, down to black.
+  - The darkening is applied by depth in the shader. Side walls also darken the
+    deeper they go into the wall.
+  - The lips are jagged and broken: raised shards, missing chips.
+  - It is a hairline at its ends, opens about 6 cells wide at its mouth, and tears
+    wider in C.
+  - The blue glow is gone. All that is left is a rare, very faint cold glint deep in
+    the black.
+- **It forms on screen as the Gloam breaks in.**
+  - The hairline is there from "long ago" as an omen.
+  - At 10 s the stone near the mouth bulges.
+  - Then it breaks open from the mouth in jolts (about 9 cells per 0.42 s), each with
+    a stone crack, dust and a small shake, and short cracks spider off each jolt.
+  - Chunks of the lips are pushed out of the wall toward the camera as real 3D
+    tiles that tilt, tumble and fall.
+  - The camera pushes in on the mouth for the break.
+- **The Gloam follows the crack.** It fills the crack from the bottom and brims over
+  the lips, with drips running down here and there. It runs along the crack both
+  ways from the mouth, so it oozes from the whole length. Only after that do limbs
+  climb from points on the crack toward the sky (B), and C's tendrils grow out of
+  the same line.
+- **One material.**
+  - The undersides of D's islands, the sea of the long night and the clouds are now
+    the Gloam's own body: oily black raised rock, a faint cold rim, thorns and veins
+    of rot on its edges, and a slow pulse.
+  - It is no longer pale-rimmed paint.
+  - The clouds are whole, lobed shapes, with no flat clipped bellies.
+- **Borders in relief:** raised ridges, raised diagonal bars, raised wavy strata and
+  ammonites, gold studs for the stars, and real recessed sockets where stars were
+  torn out.
+- **The stars escape in 3D.** Each one bursts out of the stone in sparks, then
+  tumbles as a rigid glowing body through the air in front of the wall, up to 18–30
+  units out. Its light and trail travel at its depth, and it lights the wall as it
+  passes.
+  - The moon and two stars plunge back into D's land.
+  - The four sky-band stars flee toward the viewer and out of the frame.
+- **Also:**
+  - The moon is held by two claws instead of three.
+  - Scene C is less dark: the lantern chokes less.
+  - The lantern is brighter in D.
+  - The fissure in D now runs beneath the islands, not through them.
+  - Module URLs are `?v=4`.
+
+Contact sheet: `docs/story-frames/cave-spike-v4.jpg` (4×2):
+- long ago, with the faint omen crack;
+- close on the crack breaking, with chunks thrown out;
+- the Gloam filling it and climbing from it;
+- the two-claw grip;
+- stars fleeing out of the wall in 3D;
+- the islands;
+- the Gloam's clouds;
+- the long night.
+
+**Honest read:**
+- **Works:**
+  - The break is now an event, and the Gloam visibly comes out of the crack.
+  - The stars leaving the wall in 3D are the most dramatic moment.
+  - The clouds and sea read as the Gloam.
+- **Weaker:**
+  - The crag's steps read as a gradient of darkness more than as distinct ledges at
+    phone size; the camera looks straight at the wall, so the side walls stay thin.
+  - Once the Gloam fills the mouth, the depth is hidden, as intended, but it means
+    the depth is only on screen for about a second.
+  - Chunks are thin slabs (the tile depth), not fat rocks.
+  - Wherever the Gloam is, the frame is dark; D and E are moody but low-key.
+  - The stars' grips are still dense.
+- **Not checked yet:** not run on an iPhone by me. Desktop Chrome runs at about
+  16 ms a frame with 10 draw calls; the pixel ratio stepped down to 1.625 in headless
+  Chrome.

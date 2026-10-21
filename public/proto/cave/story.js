@@ -1,6 +1,6 @@
 // The sequence as pure functions of time t (seconds), so any frame can be
 // rendered exactly (?t=17.2&still) and a skip or replay never drifts.
-import { hash2, ground, MOUTH } from './mural.js?v=3';
+import { hash2, ground, MOUTH } from './mural.js?v=4';
 import * as THREE from 'three';
 
 export const END = 35.6;   // the fade is complete
@@ -44,11 +44,11 @@ export function makeStory(info, mural) {
 
   // ------------------------------------------------------------ the lantern
   const lx = track([
-    [0, 6], [1.8, 10], [7.6, 46], [9.6, 72], [11.8, 90], [13.6, 97], [15.2, 118], [17.2, 124], [19.4, 128], [21.0, 134],
+    [0, 6], [1.8, 10], [7.4, 46], [9.6, 86], [11.8, 93], [13.6, 98], [15.2, 118], [17.2, 124], [19.4, 128], [21.0, 134],
     [22.8, 166], [25.4, 175], [27.2, 182], [29.6, 214], [31.2, L.x], [END, L.x],
   ]);
   const ly = track([
-    [0, 52], [4, 57], [7.6, 54], [9.6, 50], [11.8, 48], [13.6, 52], [15.2, 60], [17.4, 70], [19.4, 66], [21.0, 56],
+    [0, 52], [4, 57], [7.4, 54], [9.6, 51], [11.8, 50], [13.6, 52], [15.2, 60], [17.4, 70], [19.4, 66], [21.0, 56],
     [22.8, 43], [27.2, 41], [29.6, 45], [31.2, L.y], [END, L.y],
   ]);
   const lr = track([[0, 27], [7.4, 27], [9.6, 23], [23.5, 23], [25, 26], [28.5, 26], [29.6, 23], [31.2, 19], [33.2, 9], [END, 8.5]]);
@@ -61,20 +61,20 @@ export function makeStory(info, mural) {
     const fl = 1 + (0.06 + 0.16 * gutter) * Math.sin(t * 13.1) + (0.05 + 0.12 * gutter) * Math.sin(t * 7.3 + 1) + 0.04 * Math.sin(t * 23.7 + 2)
       + 0.05 * Math.sin(t * 31.3 + Math.sin(t * 3.1) * 4);
     const ignite = smooth(0.2, 1.8, t) * (1 + 0.5 * Math.exp(-Math.pow((t - 1.0) / 0.25, 2)));
-    return { x: lx(t) + sway + 0.12 * Math.sin(t * 17.0), y: ly(t) + bob + 0.1 * Math.sin(t * 19.0), z: 5, R: lr(t) * (1 + 0.03 * Math.sin(t * 9.1)), I: ignite * fl * Math.max(0.25, 1 - 0.42 * gutter) * (t < 8 ? 1.12 : 1) };
+    return { x: lx(t) + sway + 0.12 * Math.sin(t * 17.0), y: ly(t) + bob + 0.1 * Math.sin(t * 19.0), z: 5, R: lr(t) * (1 + 0.03 * Math.sin(t * 9.1)), I: ignite * fl * Math.max(0.35, 1 - 0.32 * gutter) * (t < 8 ? 1.12 : 1) * (1 + 0.35 * smooth(23.8, 24.6, t) * (1 - smooth(28.8, 29.8, t))) };
   };
 
   // ------------------------------------------------------------ the camera
-  const cx = track([[0, 24], [7.0, 36], [9.6, 76], [13.4, 94], [15.4, 124], [21.0, 128], [22.8, 172], [27.0, 178], [29.8, 222], [END, L.x]]);
-  const cy = track([[0, 56], [15.4, 57], [21.0, 56], [29.8, 55], [END, L.y + 7]]);
-  const cd = track([[0, 1.03], [6, 1.0], [15.4, 1.0], [19.0, 0.95], [21.0, 0.98], [22.8, 1.0], [29.8, 1.0], [33.5, 0.86], [END, 0.84]]);
+  const cx = track([[0, 24], [7.0, 36], [9.4, 92], [10.6, 98], [12.2, 96], [13.4, 97], [15.4, 124], [21.0, 128], [22.8, 172], [27.0, 178], [29.8, 222], [END, L.x]]);
+  const cy = track([[0, 56], [9.0, 56], [10.6, 50], [12.2, 53], [15.4, 57], [21.0, 56], [29.8, 55], [END, L.y + 7]]);
+  const cd = track([[0, 1.03], [6, 1.0], [9.2, 1.0], [10.6, 0.7], [12.4, 0.82], [13.6, 1.0], [15.4, 1.0], [19.0, 0.95], [21.0, 0.98], [22.8, 1.0], [29.8, 1.0], [33.5, 0.86], [END, 0.84]]);
 
   // ------------------------------------------------------------ the bodies (C)
   const bodies = info.bodies, imp = info.impacts;
   const moon = bodies.find((b) => b.kind === 'moon');
   const field = bodies.filter((b) => b.kind === 'star' && !b.border), border = bodies.filter((b) => b.border);
   // where each lands: two stars and the moon on D's ground; the sky band's stars far off in E
-  const far = [{ x: 204, y: ground(204) + 1 }, { x: 218, y: ground(218) + 1 }, { x: 232, y: 26 }, { x: 244, y: ground(244) + 1 }];
+  const far = [{ x: 170, y: 64, z: 92 }, { x: 160, y: 30, z: 88 }, { x: 182, y: 80, z: 95 }, { x: 176, y: 40, z: 90 }];
   // they seep out of the fissure, rise a little, go still... and strike together
   const plan = (b, c0, strike, target, flight, impactT) => {
     const release = impactT - flight, reach = strike + 0.3;
@@ -84,7 +84,7 @@ export function makeStory(info, mural) {
   plan(moon, 15.0, 17.15, imp[1], 1.9, imp[1].t);
   plan(field[0], 15.25, 17.2, imp[0], 1.6, imp[0].t);
   plan(field[1], 15.4, 17.22, imp[2], 1.6, imp[2].t);
-  border.forEach((b, k) => plan(b, 15.1 + k * 0.15, 17.18 + k * 0.03, far[k], 2.6, 23.2 + k * 0.32));
+  border.forEach((b, k) => { b.escape = true; plan(b, 15.1 + k * 0.15, 17.18 + k * 0.03, far[k], 1.9, 22.5 + k * 0.32); });
   for (const b of bodies) {
     const root = info.gloamTop(b.home.x);
     const fall = (b.home.y - root) * (b.kind === 'moon' ? 0.5 : 0.55);
@@ -108,36 +108,37 @@ export function makeStory(info, mural) {
     return { x: b.target.x, y: b.target.y, z: 1, heat: 0, on: false, phase: 3 };
   }
   // the fall: an accelerating arc from where the Gloam let go to the ground
+  // the fall: it pops out of the stone and flees through the air in front of the
+  // wall, toward the viewer, then plunges into the land (or escapes past the edge)
   function meteorPoint(b, u) {
-    const P0 = { x: b.home.x + b.drag.x, y: b.home.y + b.drag.y }, P3 = b.target;
-    const dx = P3.x - P0.x;
-    const P1 = { x: P0.x + dx * 0.25, y: P0.y + 3 }, P2 = { x: P3.x - dx * 0.3, y: P3.y + Math.max(10, (P0.y - P3.y) * 0.6) };
+    const P0 = { x: b.home.x + b.drag.x, y: b.home.y + b.drag.y, z: b.zWall + 0.3 }, P3 = b.target;
+    const dx = P3.x - P0.x, out = b.escape ? 1 : 0;
+    const P1 = { x: P0.x + dx * 0.15, y: P0.y + 5, z: out ? 30 : 18 };
+    const P2 = { x: P3.x - dx * (out ? 0.15 : 0.35), y: P3.y + (out ? 4 : Math.max(12, (P0.y - P3.y) * 0.7)), z: out ? 58 : 16 };
     const k = 1 - u;
-    return {
-      x: k * k * k * P0.x + 3 * k * k * u * P1.x + 3 * k * u * u * P2.x + u * u * u * P3.x,
-      y: k * k * k * P0.y + 3 * k * k * u * P1.y + 3 * k * u * u * P2.y + u * u * u * P3.y,
-    };
+    const f = (a, b2, c, d) => k * k * k * a + 3 * k * k * u * b2 + 3 * k * u * u * c + u * u * u * d;
+    return { x: f(P0.x, P1.x, P2.x, P3.x), y: f(P0.y, P1.y, P2.y, P3.y), z: f(P0.z, P1.z, P2.z, P3.z ?? 0.5) };
   }
   function meteorAt(b, t) {
-    const u = Math.pow(clamp((t - b.g.release) / b.g.flight), 1.45), p = meteorPoint(b, u);
-    return { x: p.x, y: p.y, z: 3.6, heat: 0.6 + 0.4 * smooth(0, 0.2, u), u };
+    const u = Math.pow(clamp((t - b.g.release) / b.g.flight), 1.3), p = meteorPoint(b, u);
+    return { x: p.x, y: p.y, z: p.z, heat: 0.6 + 0.4 * smooth(0, 0.2, u), u };
   }
 
   // ------------------------------------------------------------ the tendrils
   const tendrils = [];
   for (const b of bodies) {
-    const n = b.kind === 'moon' ? 3 : 1;
+    const n = b.kind === 'moon' ? 2 : 1;
     for (let k = 0; k < n; k++) {
-      const off = b.kind === 'moon' ? (k - 1) * 11 : (hash2(b.j, 1, 7) - 0.5) * 14;
+      const off = b.kind === 'moon' ? (k - 0.5) * 16 : (hash2(b.j, 1, 7) - 0.5) * 14;
       const rx = clamp(b.home.x + off, 106, 148);
       const rc = info.crack.filter((c) => c.region === 2).reduce((best, c) => (Math.abs(c.x - rx) < Math.abs(best.x - rx) ? c : best));
       tendrils.push({
         b, k, root: { x: rc.x, y: rc.y },
         bend: (hash2(b.j, k, 9) < 0.5 ? -1 : 1) * (7 + 8 * hash2(b.j, k, 10)),
         ph: hash2(b.j, k, 11) * 6.28, wrapR: b.kind === 'moon' ? 5.6 + k * 0.4 : 1.65,
-        squash: b.kind === 'moon' ? 0.5 + 0.1 * k : 0.8, tilt: b.kind === 'moon' ? [-0.7, 0.35, 1.3][k] : (hash2(b.j, 4, 4) - 0.5) * 1.6,
-        dir: (k + b.j) % 2 ? -1 : 1, w0: b.kind === 'moon' ? 0.85 : 0.6, delay: k * 0.12,
-        a0: b.kind === 'moon' ? [-2.5, -1.57, -0.6][k] : -1.57 + (hash2(b.j, 2, 12) - 0.5) * 1.2,
+        squash: b.kind === 'moon' ? 0.5 + 0.1 * k : 0.8, tilt: b.kind === 'moon' ? [-0.55, 0.85][k] : (hash2(b.j, 4, 4) - 0.5) * 1.6,
+        dir: (k + b.j) % 2 ? -1 : 1, w0: b.kind === 'moon' ? 0.75 : 0.55, delay: k * 0.12,
+        a0: b.kind === 'moon' ? [-2.4, -0.7][k] : -1.57 + (hash2(b.j, 2, 12) - 0.5) * 1.2,
       });
     }
   }
@@ -230,8 +231,9 @@ export function makeStory(info, mural) {
       tileSpecs.push(sp);
     }
   }
-  for (const L of info.lips) if ((L.region === 1 || L.region === 2) && hash2(L.x, L.y, 91) < (L.region === 1 ? 0.5 : 0.18) && tileSpecs.length < 200) {
-    tileSpecs.push({ chip: L, color: ROCK, metal: 0, vx: (hash2(L.x, L.y, 92) - 0.5) * 6, vy: 1 + hash2(L.x, L.y, 93) * 3 });
+  for (const C of info.chunks) if (tileSpecs.length < 260 && hash2(C.x, C.y, 91) < (C.region === 0 ? 0.35 : 0.85)) {
+    const h = (k) => hash2(C.x, C.y, 92 + k);
+    tileSpecs.push({ chunk: C, color: ROCK, metal: 0, vx: (h(0) - 0.5) * 5, vy: 0.5 + h(1) * 3, vz: 5 + h(2) * 9, spin: [(h(3) - 0.5) * 12, (h(4) - 0.5) * 12, (h(5) - 0.5) * 8] });
   }
   const pulseAt = (s, t) => Math.pow(0.5 + 0.5 * Math.sin(s * 9 - t * 5), 6) * (0.4 + 0.6 * heart(t));
   // a heartbeat under the drag: lub-dub
@@ -241,7 +243,57 @@ export function makeStory(info, mural) {
     return 0.3 + 0.7 * (Math.exp(-p * 14) + 0.6 * Math.exp(-Math.abs(p - 0.24) * 14));
   }
   const breath = (t, x) => 0.62 + 0.38 * Math.sin(t * 1.6 - x * 0.15);
-  const COLD = [0.35, 0.62, 0.95];
+  // the Gloam wells out of the fissure and runs along it: when it reaches each point of the line
+  const mouth = info.crackMouth;
+  const oozeAt = (c) => {
+    if (c.x >= 151) return c.region === 4 && hash2(c.x, c.y, 811) < 0.09 ? -1 : 1e9;   // the old wound still seeps, here and there
+    let tA = Math.max(c.t + 1.1, 11.2 + Math.abs(c.along - mouth.along) * 0.045);
+    if (c.region === 2) tA = Math.max(tA, c.t2 + 0.35);
+    return tA;
+  };
+  for (const c of info.crack) c.ooze = oozeAt(c);
+  // in B, limbs of it climb from the fissure toward the sky, rooted in the line
+  const risers = info.crack.filter((c) => c.region === 1 && c.x > 70 && c.x < 103).filter((c, i, a) => i % Math.floor(a.length / 5) === 2).slice(0, 5)
+    .map((c, k) => ({ c, k, t0: c.ooze + 0.5 + k * 0.15, len: 16 + 12 * hash2(k, 1, 812), ang: Math.PI / 2 + (hash2(k, 2, 812) - 0.5) * 0.9, ph: hash2(k, 3, 812) * 6.3 }));
+  function riserPoints(R, t) {
+    const grow = easeOut((t - R.t0) / 2.4);
+    const n = 40, pts = [];
+    let x = R.c.x, y = R.c.y, a = R.ang;
+    const L = R.len * grow;
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, s = f * L;
+      pts.push({ x, y, s: s / 10, w: (1.0 * Math.pow(1 - f, 0.8) + 0.08) * (1 + 0.5 * Math.max(0, 1 - ((s * 0.9 + R.ph) % 1) * 4)) });
+      a += Math.sin(s * 0.35 + R.ph + t * 0.6) * 0.06 + (f > 0.8 ? 0.12 * (R.k % 2 ? 1 : -1) : 0);   // sways; its tip hooks
+      x += Math.cos(a) * L / n; y += Math.sin(a) * L / n;
+    }
+    return grow > 0.01 ? pts : null;
+  }
+
+  // a limb of the Gloam drawn into the field: its body, thorns in the grid, veins of rot forking off
+  function limb(field, pts, a, t, born, seed) {
+    field.path(pts, pulseAt, t);
+    for (let i = 3; i < pts.length - 3; i += 4) {
+      const p = pts[i], q = pts[i + 1], h = hash2(i, seed, 31);
+      const ang = Math.atan2(q.y - p.y, q.x - p.x), side = (i >> 2) % 2 ? 1 : -1;
+      const nx = -Math.sin(ang) * side, ny = Math.cos(ang) * side;
+      field.cell(p.x + nx * (p.w + 1), p.y + ny * (p.w + 1), a, 0);
+      field.cell(p.x + nx * (p.w + 1.8) - Math.cos(ang) * 0.9, p.y + ny * (p.w + 1.8) - Math.sin(ang) * 0.9, a, 0);
+      if (h < 0.55 && p.s < 1) {
+        const grow = clamp((t - (born + 0.5 + p.s * 1.5)) / 1.6) * a;
+        let vx = p.x, vy = p.y, va = ang + side * (1.0 + 0.5 * h);
+        const len = Math.round((3 + 6 * h) * grow);
+        for (let k = 0; k < len; k++) {
+          va += (hash2(i * 7 + k, seed, 33) - 0.5) * 0.9;
+          vx += Math.cos(va); vy += Math.sin(va);
+          field.cell(vx, vy, a * 0.9, 0);
+          if (k === Math.floor(len / 2)) {
+            let fx = vx, fy = vy, fa = va - side * 0.9;
+            for (let j = 0; j < len / 2; j++) { fa += (hash2(j, i, 34) - 0.5) * 0.8; fx += Math.cos(fa); fy += Math.sin(fa); field.cell(fx, fy, a * 0.8, 0); }
+          }
+        }
+      }
+    }
+  }
 
   function frame(t, mist, glow, field) {
     const out = { lights: [], tiles: [], shake: { x: 0, y: 0 } };
@@ -263,10 +315,21 @@ export function makeStory(info, mural) {
       if (!p.on) continue;
       if (p.phase === 2) {
         const big = b.kind === 'moon';
-        out.lights.push({ x: p.x, y: p.y, z: 4, R: big ? 18 : 12, c: [1.8 * p.heat, 0.95 * p.heat, 0.36 * p.heat], w: p.heat * (big ? 2 : 1) });
+        const lz = Math.min(p.z, 30);
+        out.lights.push({ x: p.x, y: p.y, z: lz + 3, R: (big ? 18 : 12) + lz * 0.9, c: [1.8 * p.heat, 0.95 * p.heat, 0.36 * p.heat], w: p.heat * (big ? 2 : 1) });
         // a streak, not a ball: a small hot head and a long tail drawn out along the fall
-        glow.add(p.x, p.y, 3.8, big ? 4.5 : 2, 0, 0.3, 0, 1, 1.2, 0.7, 0.35);
-        glow.add(p.x, p.y, 3.9, big ? 1.8 : 0.9, 0, 0.9, 0, 1, 2.0, 1.6, 1.1);
+        glow.add(p.x, p.y, p.z + 0.2, big ? 4.5 : 2, 0, 0.3, 0, 1, 1.2, 0.7, 0.35);
+        glow.add(p.x, p.y, p.z + 0.3, big ? 1.8 : 0.9, 0, 0.9, 0, 1, 2.0, 1.6, 1.1);
+        // it breaks free of the stone in a spray of sparks
+        const dr = t - b.g.release;
+        if (dr < 0.9) for (let k = 0; k < (big ? 18 : 10); k++) {
+          const h1 = hash2(k, b.j, 41), h2 = hash2(k, b.j, 42), h3 = hash2(k, b.j, 43);
+          const P0 = { x: b.home.x + b.drag.x, y: b.home.y + b.drag.y };
+          const life = 0.5 + 0.4 * h3;
+          if (dr > life) continue;
+          const a = h1 * 6.28, v = 6 + 8 * h2;
+          glow.add(P0.x + Math.cos(a) * v * dr, P0.y + Math.sin(a) * v * dr - 6 * dr * dr, b.zWall + 1 + (4 + 8 * h3) * dr, 0.5, 0, 1 - dr / life, 0, 1, 2.0, 1.2, 0.4);
+        }
         const N = big ? 40 : 34;
         let prev = p;
         for (let i = 1; i <= N; i++) {
@@ -275,7 +338,7 @@ export function makeStory(info, mural) {
           const q = meteorPoint(b, uu), f = 1 - i / (N + 1);
           const ang = Math.atan2(prev.y - q.y, prev.x - q.x);
           prev = q;
-          glow.add(q.x, q.y, 3.7, (big ? 1.9 : 0.85) * (0.4 + 0.6 * f), ang, f * f * 0.9, 0, 3.4, 1.3 * f + 0.2, 0.6 * f + 0.06, 0.08 + 0.1 * f);
+          glow.add(q.x, q.y, q.z, (big ? 1.9 : 0.85) * (0.4 + 0.6 * f), ang, f * f * 0.9, 0, 3.4, 1.3 * f + 0.2, 0.6 * f + 0.06, 0.08 + 0.1 * f);
         }
       } else if (p.heat > 0) {
         glow.add(p.x, p.y, 2.0, b.kind === 'moon' ? 9 : 3, 0, p.heat * 0.5, 0, 1, 1.0, 0.5, 0.18);
@@ -283,10 +346,11 @@ export function makeStory(info, mural) {
     }
 
     for (const sp of tileSpecs) {
-      if (sp.chip) {
-        const L = sp.chip, dt = t - L.t;
-        if (dt < 0 || dt > 1.3) { out.tiles.push(null); continue; }
-        out.tiles.push({ x: L.x + sp.vx * dt, y: L.y + sp.vy * dt - 16 * dt * dt, z: mural.zAt(L.x, L.y) + 0.4 + dt * 2.5, heat: 0, rnd: hash2(L.x, L.y, 9) });
+      if (sp.chunk) {
+        const C = sp.chunk, dt = t - C.t;
+        if (dt < 0 || dt > 1.8) { out.tiles.push(null); continue; }
+        out.tiles.push({ x: C.x + sp.vx * dt, y: C.y + sp.vy * dt - 15 * dt * dt, z: mural.zAt(C.x, C.y) + 0.2 + sp.vz * dt, heat: 0, rnd: hash2(C.x, C.y, 9),
+          rot: [sp.spin[0] * dt, sp.spin[1] * dt, sp.spin[2] * dt] });
         continue;
       }
       const b = sp.b, p = b.now;
@@ -299,32 +363,56 @@ export function makeStory(info, mural) {
         continue;
       }
       if (sp.flake !== undefined && t > sp.flake && t >= b.g.release) { out.tiles.push(null); continue; }
+      if (p.phase === 2) {
+        // a rigid body tumbling as it flees
+        const dt = t - b.g.release, rz = dt * (b.kind === 'moon' ? 2 : 7) * (b.j % 2 ? 1 : -1), ry = dt * 2.5;
+        const cz = Math.cos(rz), sz = Math.sin(rz), cy2 = Math.cos(ry);
+        const ox = sp.dx * cz - sp.dy * sz, oy = sp.dx * sz + sp.dy * cz;
+        out.tiles.push({ x: p.x + ox * cy2, y: p.y + oy, z: p.z - ox * Math.sin(ry), heat: p.heat, rnd: hash2(sp.dx + 9, sp.dy + 9, b.j), rot: [0, ry, rz] });
+        continue;
+      }
       out.tiles.push({ x: p.x + sp.dx, y: p.y + sp.dy, z: p.z, heat: p.heat, rnd: hash2(sp.dx + 9, sp.dy + 9, b.j) });
     }
 
-    // the fissure breathes a cold light from somewhere else; where it has torn open, more
+    // the fissure: dark, stepped rock. Where it has opened, a cold glint comes and
+    // goes far down in the black. When the Gloam arrives it wells up out of it,
+    // spills over the lips and runs along its length before anything climbs.
     const camX = out.cam.x;
     if (field) {
-      field.begin(camX - 30, camX + 30);
+      field.begin(camX - 30, camX + 30, t);
       for (const c of info.crack) {
         if (!field.inRange(c.x)) continue;
-        const br = breath(t, c.x);
-        let v = 0.07;
-        if (c.region === 1) v = 0.07 + 0.85 * smooth(9.2, 10.2, t) * Math.max(0.06, 1.2 - Math.hypot(c.x - MOUTH.x, c.y - MOUTH.y) / 22);
-        else if (c.region === 2) v = 0.12 + 0.55 * smooth(14.4, 15.2, t);
-        else if (c.region === 3) v = 0.18;
-        else if (c.region === 4) v = 0.38;
-        field.glow(c.x, c.y, v * br);
+        const open = c.t < 0 || t > (c.region === 2 ? c.t2 : c.t) + 0.6;
+        if (open && c.w > 1.4) {
+          const g = Math.pow(0.5 + 0.5 * Math.sin(t * 1.3 + hash2(c.x, c.y, 820) * 40), 40);
+          if (g > 0.2 && hash2(c.x, c.y, 825) < 0.25) field.glow(c.x, c.y, 0.05 * g);
+        }
+        const dt = t - c.ooze;
+        if (c.ooze < 0) { field.stamp(c.x, c.y, 0.5 + 0.35 * Math.sin(t * 1.8 + c.x), pulseAt(c.along * 0.1, t), 1); continue; }
+        if (dt <= 0) continue;
+        // it fills the crack from the bottom, then brims and spills over the lips
+        // (thin: the crag's stepped sides stay in view; it brims over only here and there)
+        const fill = clamp(dt / 1.2), spill = clamp((dt - 0.9) / 1.8) * (hash2(Math.round(c.along / 3), 0, 824) < 0.45 ? 1 : 0.25);
+        const r = c.w * 0.45 * fill + spill * (0.9 + 0.6 * hash2(c.x, c.y, 821));
+        field.stamp(c.x, c.y, r, pulseAt(c.along * 0.1, t), 1);
+        if (spill > 0.3 && hash2(c.x, c.y, 822) < 0.1) field.stamp(c.x + (hash2(c.x, 1, 823) - 0.5) * 3, c.y - 1.5 - spill * 1.5, 0.6, 0, 1);   // a drip running down
       }
-      for (const L of info.lips) if (t > L.t && field.inRange(L.x)) field.glow(L.x, L.y, 0.45 * breath(t, L.x) * smooth(L.t, L.t + 0.4, t) * (L.region === 1 ? 1 : 0.7));
+      // limbs of it climb from the fissure in B
+      for (const R of risers) {
+        if (t < R.t0 || !field.inRange(R.c.x)) continue;
+        const pts = riserPoints(R, t);
+        if (pts) limb(field, pts, 1, t, R.t0, R.k + 40);
+      }
     }
-    {
-      const open = smooth(9.2, 10.0, t) * breath(t, MOUTH.x);
-      if (open > 0.01) out.lights.push({ x: MOUTH.x, y: MOUTH.y, z: 3, R: 15, c: COLD.map((v) => v * open * 0.9), w: open * 0.8 });
-      const cOpen = smooth(14.4, 15.2, t) * (1 - smooth(22, 24, t)) * breath(t, 127);
-      if (cOpen > 0.01) out.lights.push({ x: 127, y: 44, z: 3, R: 20, c: COLD.map((v) => v * cOpen * 0.35), w: cOpen * 0.7 });
-      const eOpen = breath(t, 224) * smooth(27, 29, t);
-      if (eOpen > 0.01) out.lights.push({ x: 222, y: 24, z: 3, R: 13, c: COLD.map((v) => v * eOpen * 0.4), w: eOpen * 0.3 });
+    // each jolt of the break: a crack of stone, a puff of dust
+    for (const J of info.jolts) {
+      const dt = t - J.t;
+      if (dt < 0 || dt > 1.6) continue;
+      for (let k = 0; k < 3; k++) {
+        const h = hash2(J.x, k, 830);
+        mist.add(J.x + (h - 0.5) * 3, J.y + dt * (1 + h), 3 + dt * 2, 2.5 + dt * 2.5, h * 6, 0.2 * (1 - dt / 1.6) * smooth(0, 0.1, dt), k % 4, 1.2, 0.3, 0.26, 0.22);
+      }
+      if (Math.abs(J.x - camX) < 25) { const a = 0.12 * Math.exp(-dt * 10); out.shake.x += a * Math.sin(dt * 70); out.shake.y += a * Math.cos(dt * 60); }
     }
 
     // the tendrils
@@ -336,31 +424,7 @@ export function makeStory(info, mural) {
       const pts = tendrilPoints(T, t, tgt, e, t < g.reach);
       const a = smooth(g.c0 + T.delay, g.c0 + T.delay + 0.3, t) * (after ? 1 - smooth(0.35, 0.65, t - g.release) : 1);
       if (field && a > 0.02) {
-        // the body, raised out of the stone on the voxel grid
-        if (a > 0.5) field.path(pts, pulseAt, t);
-        else field.path(pts.map((p) => ({ ...p, w: p.w * (a / 0.5) })), pulseAt, t);
-        // thorns that grow out of it in the grid, and veins of rot branching through the paint
-        for (let i = 3; i < pts.length - 3; i += 4) {
-          const p = pts[i], q = pts[i + 1], h = hash2(i, T.k + 5 * T.b.j, 31);
-          const ang = Math.atan2(q.y - p.y, q.x - p.x), side = (i >> 2) % 2 ? 1 : -1;
-          const nx = -Math.sin(ang) * side, ny = Math.cos(ang) * side;
-          field.cell(p.x + nx * (p.w + 1), p.y + ny * (p.w + 1), a, 0);
-          field.cell(p.x + nx * (p.w + 1.8) - Math.cos(ang) * 0.9, p.y + ny * (p.w + 1.8) - Math.sin(ang) * 0.9, a, 0);
-          if (h < 0.55 && p.s < 1) {
-            const grow = clamp((t - (g.c0 + T.delay + 0.5 + p.s * 1.5)) / 1.6) * a;
-            let vx = p.x, vy = p.y, va = ang + side * (1.0 + 0.5 * h);
-            const len = Math.round((3 + 6 * h) * grow);
-            for (let k = 0; k < len; k++) {
-              va += (hash2(i * 7 + k, T.k, 33) - 0.5) * 0.9;
-              vx += Math.cos(va); vy += Math.sin(va);
-              field.cell(vx, vy, a * 0.9, 0);
-              if (k === Math.floor(len / 2)) {   // a fork
-                let fx = vx, fy = vy, fa = va - side * 0.9;
-                for (let j = 0; j < len / 2; j++) { fa += (hash2(j, i, 34) - 0.5) * 0.8; fx += Math.cos(fa); fy += Math.sin(fa); field.cell(fx, fy, a * 0.8, 0); }
-              }
-            }
-          }
-        }
+        limb(field, a > 0.5 ? pts : pts.map((p) => ({ ...p, w: p.w * (a / 0.5) })), a, t, g.c0 + T.delay, T.k + 5 * T.b.j);
         // smoke, faint, rising off it
         for (let i = 6; i < pts.length; i += 12) {
           const p = pts[i], h = hash2(i, T.k + 3 * T.b.j, 21), age = (t * 0.6 + h) % 1;
@@ -380,7 +444,7 @@ export function makeStory(info, mural) {
     if (field) {
       // the flame shrinks from the dark that comes near it
       const L0 = out.lantern, near = clamp(field.countNear(L0.x, L0.y, L0.R) / 260);
-      L0.I *= 1 - 0.3 * near; L0.R *= 1 - 0.18 * near;
+      L0.I *= 1 - 0.18 * near; L0.R *= 1 - 0.12 * near;
       field.commit();
     }
 
@@ -461,8 +525,9 @@ export function makeStory(info, mural) {
         if (Math.hypot(s.x - Lt.x, (s.y - Lt.y) * 0.6) < 7 && hash2(k, 0, 88) < 0.7) { seen.add(k); cues.push({ t, kind: 'chime', k: seen.size }); }
       });
     }
-    cues.push({ t: 9.2, kind: 'crack' });
-    cues.push({ t: 9.6, kind: 'gloam' });
+    cues.push({ t: 9.4, kind: 'crack' });
+    for (const J of info.jolts) cues.push({ t: J.t, kind: 'jolt', near: J.region === 1 });
+    cues.push({ t: 11.0, kind: 'gloam' });
     cues.push({ t: 16.3, kind: 'hush' });
     cues.push({ t: 17.15, kind: 'strike' });
     for (let tb = 17.4; tb < 22.6; tb += 0.92) cues.push({ t: tb, kind: 'heart' });

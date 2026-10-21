@@ -5,11 +5,11 @@
 //   ?auto      start without the tap (silent)            ?fps   frame times
 // window.cave.seek(t) renders any moment; the whole sequence is a function of t.
 import * as THREE from 'three';
-import { Mural, paint, W, H, rng } from './mural.js?v=3';
-import { wallMeshes, voxelMaterial, Tiles, Sprites, Finish, lightUniforms, MAX_LIGHTS } from './render.js?v=3';
-import { makeStory, END } from './story.js?v=3';
-import { GloamField } from './gloam.js?v=3';
-import { CaveSound } from './sound.js?v=3';
+import { Mural, paint, W, H, rng } from './mural.js?v=4';
+import { wallMeshes, voxelMaterial, Tiles, Sprites, Finish, lightUniforms, MAX_LIGHTS } from './render.js?v=4';
+import { makeStory, END } from './story.js?v=4';
+import { GloamField } from './gloam.js?v=4';
+import { CaveSound } from './sound.js?v=4';
 
 const params = new URLSearchParams(location.search);
 const $ = (s) => document.querySelector(s);
@@ -38,6 +38,7 @@ const shared = {
 };
 const field = new GloamField();
 shared.tGloam.value = field.tex;
+field.setStatic(info.gloamT);
 for (const m of wallMeshes(mural.build(), voxelMaterial(shared, 4))) scene.add(m);
 const story = makeStory(info, mural);
 const tiles = new Tiles(story.tileCount, voxelMaterial(shared, 0.5, 1), story.tileSpecs);
@@ -99,7 +100,7 @@ function render(t) {
   }
   for (let i = 0; i < tiles.count; i++) {
     const tl = f.tiles[i];
-    if (tl) tiles.set(i, tl.x, tl.y, tl.z, tl.rnd, tl.heat * 1.3);
+    if (tl) tiles.set(i, tl.x, tl.y, tl.z, tl.rnd, tl.heat * 1.3, ...(tl.rot ?? [0, 0, 0]));
     else tiles.set(i, 0, -1000, 0, 0, 0);
   }
   tiles.commit();

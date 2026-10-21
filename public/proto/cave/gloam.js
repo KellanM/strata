@@ -7,7 +7,7 @@
 // The wall's shader reads this texture per voxel, so the Gloam is stepped,
 // blocky and lit by the same lantern as the figures.
 import * as THREE from 'three';
-import { W, H, hash2 } from './mural.js?v=3';
+import { W, H, hash2 } from './mural.js?v=4';
 
 const N = W * H;
 export class GloamField {
@@ -20,12 +20,25 @@ export class GloamField {
     this.x0 = 0; this.x1 = W - 1;   // the columns touched this frame
     this.near = 0;                  // how much body is close to the lantern
   }
-  begin(x0, x1) {
+  // gT: when each cell becomes the Gloam's body for good (the islands' undersides, the sea, the clouds)
+  setStatic(gT) { this.gT = gT; }
+  begin(x0, x1, t) {
     this.x0 = Math.max(0, Math.floor(x0)); this.x1 = Math.min(W - 1, Math.ceil(x1));
+    const gT = this.gT;
     for (let y = 0; y < H; y++) {
       const o = y * W;
       this.body.fill(0, o + this.x0, o + this.x1 + 1); this.cold.fill(0, o + this.x0, o + this.x1 + 1);
       this.scar.fill(0, o + this.x0, o + this.x1 + 1); this.pulse.fill(0, o + this.x0, o + this.x1 + 1);
+      if (!gT) continue;
+      for (let x = this.x0; x <= this.x1; x++) {
+        const k = o + x;
+        if (gT[k] <= t) {
+          this.body[k] = 1;
+          this.pulse[k] = Math.pow(0.5 + 0.5 * Math.sin(x * 0.35 + y * 0.2 - t * 2.2), 6);
+        } else if ((x > 0 && gT[k - 1] <= t) || (x < W - 1 && gT[k + 1] <= t) || (y > 0 && gT[k - W] <= t) || (y < H - 1 && gT[k + W] <= t)) {
+          this.cold[k] = 0.022;   // the faint cold rim
+        }
+      }
     }
     this.near = 0;
   }

@@ -28,6 +28,14 @@ const voxelVert = /* glsl */ `
   varying vec3 vWorld, vN, vCol;
   varying float vMetal, vEmit, vTw, vEdge;
   varying vec2 vTilt, vUv;
+  varying float vRec, vFront;
+  #ifdef TILE
+  attribute vec3 aRot;   // a loose tile tumbles: euler angles
+  mat3 rotOf(vec3 r) {
+    float cx = cos(r.x), sx = sin(r.x), cy = cos(r.y), sy = sin(r.y), cz = cos(r.z), sz = sin(r.z);
+    return mat3(cy * cz, cy * sz, -sy, sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy, cx * sy * cz + sx * sz, cx * sy * sz - sx * cz, cx * cy);
+  }
+  #endif
   float h1(float n) { return fract(sin(n) * 43758.5453); }
   void main() {
     float s1 = smoothstep(0.0, 0.45, uTime - aT.x);
@@ -37,7 +45,11 @@ const voxelVert = /* glsl */ `
     // the Gloam, read from its field on the voxel grid
     vec4 gl = texture2D(tGloam, (floor(aPos.xy + 0.5) + 0.5) / uGloamSize);
     float body = gl.r, scar = gl.b * (1.0 - uTileMode);
-    dz += (body * 0.65 - scar * 0.12) * (1.0 - uTileMode);
+    // how far the rock has been broken away here: the crag goes dark with depth
+    float rec = max(0.0, -dz);
+    vRec = rec * (1.0 - body);
+    // the Gloam wells up out of the depths: its body fills a crack nearly to the surface
+    dz += (body * (0.65 + rec * 0.85) - scar * 0.12) * (1.0 - uTileMode);
     // paint it has touched dies: drained to grey and darkened; its body is black rock
     float lumC = dot(c.rgb, vec3(0.3, 0.5, 0.2));
     c.rgb = mix(c.rgb, vec3(lumC) * 0.22, scar * 0.85);
@@ -46,8 +58,16 @@ const voxelVert = /* glsl */ `
     vGl = vec3(body, gl.g, gl.a);
     vCol = c.rgb; vMetal = c.a;
     vEmit = aE.x * s1 * (1.0 - s2) * (0.25 + 0.75 * exp(-max(uTime - aT.x, 0.0) * 0.9)) + aE.y;
+    #ifdef TILE
+    mat3 R = rotOf(aRot);
+    vec3 w = aPos.xyz + R * vec3(position.xy, position.z * uDepth) + vec3(0.0, 0.0, -0.5 * uDepth);
+    vN = R * normal;
+    #else
     vec3 w = vec3(aPos.x + position.x, aPos.y + position.y, aPos.z + dz + (position.z - 0.5) * uDepth);
-    vWorld = w; vN = normal; vUv = uv; vEdge = aE.z;
+    vN = normal;
+    #endif
+    vFront = aPos.z + dz;
+    vWorld = w; vUv = uv; vEdge = aE.z;
     // per-voxel constants worked out here: hashing an interpolated varying stripes
     vTilt = (vec2(h1(aPos.w * 91.7), h1(aPos.w * 13.1)) - 0.5) * 1.1;
     vTw = pow(0.5 + 0.5 * sin(uTime * (1.1 + aPos.w * 2.3) + aPos.w * 60.0), 28.0);
@@ -63,6 +83,7 @@ const voxelFrag = /* glsl */ `
   varying float vMetal, vEmit, vTw, vEdge;
   varying vec2 vTilt, vUv;
   varying vec3 vGl;
+  varying float vRec, vFront;
   void light(vec3 P, vec3 col, float R, vec3 n, vec3 nf, vec3 V, inout vec3 diff, inout vec3 spec) {
     vec3 L = P - vWorld; float d = length(L); L /= d;
     float a = att(d, R);
@@ -90,6 +111,9 @@ const voxelFrag = /* glsl */ `
     vec2 e = min(vUv, 1.0 - vUv);
     // only where the rock actually steps: flat stretches don't read as tiles
     col *= 1.0 - max(vEdge, vGl.x) * 0.32 * (1.0 - smoothstep(0.0, 0.12, min(e.x, e.y)));
+    // the crag: each layer down is darker, to black at the bottom; side walls darken as they go down
+    col *= 1.0 - 0.96 * smoothstep(1.2, 4.4, vRec);
+    col *= exp(-max(0.0, vFront - vWorld.z) * 0.6);
     // the Gloam's body has an oily sheen; the cold from somewhere else breathes at its rims and in the fissure
     col += spec * vGl.x * 0.5 * (1.0 - abs(n.z));   // only its raised edges catch the light
     vec3 cold = mix(vec3(0.42, 0.3, 0.95), vec3(0.3, 0.9, 0.95), 0.6);
@@ -125,6 +149,7 @@ function voxelGeometry() {
 
 export function voxelMaterial(shared, depth, tileMode = 0) {
   return new THREE.ShaderMaterial({
+    defines: tileMode ? { TILE: '' } : {},
     uniforms: { ...shared, uDepth: { value: depth }, uTileMode: { value: tileMode } },
     vertexShader: voxelVert, fragmentShader: voxelFrag,
   });
@@ -162,6 +187,8 @@ export class Tiles {
       c1.set([0.012, 0.01, 0.01, 0], i * 4);
       t.set([sp.crackT ?? 1e6, 1e6, 0, 0], i * 4);
     }
+    this.aRot = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3).setUsage(THREE.DynamicDrawUsage);
+    g.setAttribute('aRot', this.aRot);
     g.setAttribute('aPos', this.aPos); g.setAttribute('aE', this.aE);
     g.setAttribute('aC0', new THREE.InstancedBufferAttribute(c, 4));
     g.setAttribute('aC1', new THREE.InstancedBufferAttribute(c1, 4));
@@ -172,11 +199,12 @@ export class Tiles {
     this.mesh.frustumCulled = false;
     this.count = count;
   }
-  set(i, x, y, z, rnd, emit) {
+  set(i, x, y, z, rnd, emit, rx = 0, ry = 0, rz = 0) {
+    this.aRot.array.set([rx, ry, rz], i * 3);
     this.aPos.array.set([x, y, z, rnd], i * 4);
     this.aE.array[i * 3 + 1] = emit;
   }
-  commit() { this.aPos.needsUpdate = true; this.aE.needsUpdate = true; }
+  commit() { this.aPos.needsUpdate = true; this.aE.needsUpdate = true; this.aRot.needsUpdate = true; }
 }
 
 // ---------------------------------------------------------------- sprites

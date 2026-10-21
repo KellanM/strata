@@ -87,6 +87,7 @@ export class Mural {
     this.dz1 = new Float32Array(N); this.e1 = new Float32Array(N);
     this.p2 = new Int8Array(N).fill(-1); this.v2 = new Float32Array(N); this.t2 = new Float32Array(N).fill(NONE);
     this.dz2 = new Float32Array(N);
+    this.gloamT = new Float32Array(N).fill(NONE);   // when this cell becomes the Gloam's body (gloam.js)
     this.relief();
   }
 
@@ -98,7 +99,7 @@ export class Mural {
       const w = worley(x / 6.5, y / 5.5, 5);
       const tilt = ((hash2(w.id * 1e6, 1, 6) - 0.5) * (x / 6.5 - w.px) + (hash2(w.id * 1e6, 2, 6) - 0.5) * (y / 5.5 - w.py)) * 1.4;
       let plate = (w.id - 0.5) * 1.1 + tilt;
-      if (w.f2 - w.f1 < 0.1) plate -= 0.6;   // a seam
+      if (w.f2 - w.f1 < 0.1) plate -= 0.28;   // a seam
       let z = (fbm(x * 0.045, y * 0.05, 3) - 0.5) * 2.6 + (fbm(x * 0.35, y * 0.35, 8) - 0.5) * 0.5 + (hash2(x, y, 9) - 0.5) * 0.1;
       if (hash2(x, y, 12) < 0.025) z -= 0.55;   // a pit
       const dy = y < BB0 ? BB0 - y : y > TB1 ? y - TB1 : 0, dx = x < FX0 ? FX0 - x : x > FX1 ? x - FX1 : 0;
@@ -142,7 +143,7 @@ export class Mural {
   stone(x, y, out) {
     const f = fbm(x * 0.08, y * 0.08, 41), g = fbm(x * 0.4, y * 0.4, 43);
     const w = worley(x / 6.5, y / 5.5, 5);
-    const l = 0.76 + 0.34 * f + 0.22 * (g - 0.5) + 0.04 * (hash2(x, y, 44) - 0.5) + 0.2 * (w.id - 0.5) - (w.f2 - w.f1 < 0.12 ? 0.18 : 0);
+    const l = 0.76 + 0.34 * f + 0.22 * (g - 0.5) + 0.04 * (hash2(x, y, 44) - 0.5) + 0.2 * (w.id - 0.5) - (w.f2 - w.f1 < 0.12 ? 0.07 : 0);
     out.setHex(0xa08d74).multiplyScalar(l);
     // seams of cooler, greyer rock run through the warm limestone
     const cool = smooth(0.6, 0.8, fbm(x * 0.05 + 7, y * 0.12, 45));
@@ -233,24 +234,40 @@ const CHILD_UP = ['X.X', 'X.X', '.X.', 'XXX', '.X.', 'X.X'];
 const CROUCH = ['..X..', '.XXX.', 'XXXX.', '.XXX.', 'X..X.'];
 const AMMONITE = ['.XXX.', 'X...X', 'X.X.X', 'X..XX', '.XX..'];
 
-// The Gloam as the painters drew it: rounded billows and fingers of dots, a
-// dark body inside a pale cold rim. discs: [x, y, r, order 0..1]. With t0/t1
-// it is painted in over time (lowest first), else it is there already.
-function gloam(b, discs, { t0, t1, from, spread = 30 } = {}) {
+// The Gloam: rounded billows, as its own material (black rock raised from the
+// wall, read by gloam.js), not paint. discs: [x, y, r]. t: when it is there.
+function gloam(b, discs, t = -1) {
   const m = b.m;
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for (const [x, y, r] of discs) { x0 = Math.min(x0, x - r); x1 = Math.max(x1, x + r); y0 = Math.min(y0, y - r); y1 = Math.max(y1, y + r); }
-  const inside = (x, y) => discs.some(([cx, cy, r]) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r);
   for (let y = Math.floor(y0); y <= Math.ceil(y1); y++) for (let x = Math.floor(x0); x <= Math.ceil(x1); x++) {
-    let order = 2;
-    for (const [cx, cy, r, o] of discs) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) order = Math.min(order, o);
-    if (order > 1.5) continue;
-    order = from ? Math.max(order * 0.3, clamp(Math.hypot(x - from.x, y - from.y) / spread)) : Math.max(order, clamp((y - y0) / 40));
-    const rim = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y + 1) || !inside(x, y - 1);
-    if (rim && hash2(x, y, 208) < 0.1) continue;
-    const pig = rim ? PIG.rim : PIG.gloam, cov = rim ? 0.75 : 0.82 + 0.15 * hash2(x, y, 207);
-    if (t0 === undefined) { m.set(x, y, pig, cov); continue; }
-    m.ev1(x, y, pig, t0 + (t1 - t0) * clamp(order + (hash2(x, y, 206) - 0.5) * 0.04), { cov, dz: 0.12 });
+    if (!inside(x, y)) continue;
+    if (!discs.some(([cx, cy, r]) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r)) continue;
+    const k = idx(x, y);
+    m.gloamT[k] = Math.min(m.gloamT[k], t);
+  }
+}
+// thorns and veins of rot on every edge of the Gloam's material, grown with it
+function gloamDetails(m) {
+  const edges = [];
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const k = idx(x, y), t = m.gloamT[k];
+    if (t >= NONE) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (m.gloamT[idx(x + dx, y + dy)] >= NONE) { edges.push([x, y, dx, dy, t]); break; }
+  }
+  for (const [x, y, dx, dy, t] of edges) {
+    const h = hash2(x, y, 701);
+    if (h < 0.1) {   // a thorn, two cells out
+      for (let k = 1; k <= 2; k++) { const kk = idx(x + dx * k, y + dy * k); if (inside(x + dx * k, y + dy * k)) m.gloamT[kk] = Math.min(m.gloamT[kk], t + 0.3); }
+    } else if (h < 0.13) {   // a vein of rot creeping off into the stone
+      let vx = x, vy = y, a = Math.atan2(dy, dx);
+      const len = 3 + Math.floor(hash2(x, y, 702) * 6);
+      for (let k = 0; k < len; k++) {
+        a += (hash2(x + k, y, 703) - 0.5) * 1.1; vx += Math.cos(a); vy += Math.sin(a);
+        const X = Math.round(vx), Y = Math.round(vy);
+        if (inside(X, Y)) m.gloamT[idx(X, Y)] = Math.min(m.gloamT[idx(X, Y)], t + 0.4 + k * 0.08);
+      }
+    }
   }
 }
 function billows(seed, x0, x1, base, rMin, rMax, order = 0) {
@@ -286,24 +303,30 @@ export function paint(m) {
 
   // ---- the bottom border: thin wavy strata and the fossils the stone keeps
   for (let x = FX0; x <= FX1; x++) {
-    b.lift = -0.22; b.dot(x, BB0, PIG.charcoal); b.dot(x, BB1, PIG.charcoal); b.lift = 0;
+    // the border is carved: raised ridges and wavy strata the lantern rakes across
+    b.lift = 0.55; b.dot(x, BB0, PIG.charcoal, 0.45); b.dot(x, BB1, PIG.charcoal, 0.45); b.lift = 0;
     for (const [o, pig] of [[2, PIG.rust], [4.5, PIG.ochre], [6.5, PIG.rust]]) {
       const y = BB0 + o + 0.9 * Math.sin(x * 0.13 + o * 1.7);
-      if (hash2(x, o * 10, 5) < 0.85) b.dot(x, y, pig, 0.6);
+      if (hash2(x, o * 10, 5) < 0.9) { b.lift = 0.38; b.dot(x, y, pig, 0.45); b.lift = 0; }
     }
   }
+  b.lift = 0.6;
   for (let x = FX0 + 9; x < FX1 - 6; x += 15) b.sprite(x, BB0 + 2, AMMONITE, PIG.charcoal);
+  b.lift = 0;
 
   // ---- the top border: the sky band, diagonal bars and a star between each pair
   info.borderStars = [];
-  for (let x = FX0; x <= FX1; x++) { b.lift = -0.22; b.dot(x, TB0, PIG.charcoal); b.dot(x, TB1, PIG.charcoal); b.lift = 0; }
+  for (let x = FX0; x <= FX1; x++) { b.lift = 0.55; b.dot(x, TB0, PIG.charcoal, 0.45); b.dot(x, TB1, PIG.charcoal, 0.45); b.lift = 0; }
+  const socket = (sx, sy) => {   // a star's seat, cut into the stone
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { m.set(sx + dx, sy + dy, PIG.ghost, 0.75); m.lift(sx + dx, sy + dy, -0.95); }
+  };
   for (let x = FX0 + 2; x < FX1 - 4; x += 10) {
-    b.line(x, TB0 + 1, x + 3, TB1 - 1, PIG.rust, 0.7);
+    b.lift = 0.45; b.line(x, TB0 + 1, x + 3, TB1 - 1, PIG.rust, 0.55); b.lift = 0;
     const sx = x + 7, sy = (TB0 + TB1) / 2;
     if (sx > FX1 - 2) continue;
-    if (sx < 106) b.star(sx, sy, true);
-    else if (sx < 148) info.borderStars.push({ x: sx, y: sy });       // C: these will be torn out
-    else for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) m.set(sx + dx, sy + dy, PIG.ghost, 0.5);   // gone: empty sockets
+    if (sx < 106) { b.lift = 0.5; b.star(sx, sy, true); b.lift = 0; }
+    else if (sx < 148) { socket(sx, sy); info.borderStars.push({ x: sx, y: sy }); }   // C: torn out of their seats
+    else socket(sx, sy);   // gone: empty sockets
   }
 
   // ---- the land: one ground, whole until D, broken from D on
@@ -328,7 +351,7 @@ export function paint(m) {
   b.disc(46, 75, 5.2, PIG.gold);
   for (const [x, y] of [[45, 76], [48, 73], [44, 73]]) b.dot(x, y, PIG.ochre);
   const starsA = [[8, 80, 1], [14, 70, 0], [19, 82, 1], [24, 63, 0], [29, 75, 1], [35, 84, 0], [37, 66, 0], [12, 58, 0], [54, 82, 1], [56, 66, 0], [40, 56, 0], [27, 54, 1], [6, 66, 0], [51, 58, 0]];
-  for (const [x, y, big] of starsA) b.star(x, y, big);
+  b.lift = 0.3; for (const [x, y, big] of starsA) b.star(x, y, big); b.lift = 0;
   figure(16, ground(18) + 2, TALL_WALK, PIG.charcoal);
   figure(22, ground(24) + 2, UP, PIG.red);
   figure(29, ground(30) + 2, CHILD_UP, PIG.charcoal);
@@ -354,32 +377,15 @@ export function paint(m) {
   b.disc(82, 78, 4.4, PIG.gold);
   b.dot(81, 79, PIG.ochre); b.dot(83, 77, PIG.ochre);
   const starsB = [[66, 84, 1], [72, 70, 0], [90, 86, 1], [95, 72, 0], [98, 82, 1], [70, 60, 0], [76, 88, 0], [88, 64, 0]];
-  for (const [x, y, big] of starsB) b.star(x, y, big);
-  figure(64, ground(66) + 2, POINT, PIG.charcoal, 12.9);
-  figure(70, ground(72) + 2, UP, PIG.red, 12.5);
-  figure(76, ground(77) + 2, CHILD, PIG.charcoal, 12.2);
-  {
-    const gb = (x) => ground(x) + 1;
-    const discs = [
-      ...billows(203, 80, 108, gb, 3, 5.5, 0),
-      ...billows(204, 84, 108, (x) => gb(x) + 6, 2.5, 4.5, 0.15),
-      // the column that divides B from C: the Gloam stands up out of the land
-      ...finger(102, gb(102) + 10, 0.05, 1, 12, 4.2, 0.2, 0.18),
-      ...finger(92, gb(92) + 7, -0.25, 1, 9, 2.8, 0.35, 0.4),
-      ...finger(86, gb(86) + 6, -0.6, 1, 7, 2.2, 0.35, -0.5),
-    ];
-    gloam(b, discs, { t0: 9.9, t1: 13.6, from: MOUTH, spread: 26 });
-  }
+  b.lift = 0.3; for (const [x, y, big] of starsB) b.star(x, y, big); b.lift = 0;
+  figure(64, ground(66) + 2, POINT, PIG.charcoal, 13.5);
+  figure(70, ground(72) + 2, UP, PIG.red, 13.1);
+  figure(76, ground(77) + 2, CHILD, PIG.charcoal, 12.8);
+  // (the Gloam here wells out of the fissure and climbs: story.js)
 
   // ---- C: it pulls them down. Its body lies along the ground; the moon, two
   // stars and the sky band's stars are loose tiles over faint stains
-  const g3 = billows(301, 104, 150, (x) => ground(x) + 1, 3, 6.5, 0);
-  gloam(b, g3);
-  info.gloamTop = (x) => {
-    let top = ground(x) + 1;
-    for (const [cx, cy, r] of g3) if (Math.abs(x - cx) < r) top = Math.max(top, cy + Math.sqrt(r * r - (x - cx) ** 2));
-    return top;
-  };
+  info.gloamTop = (x) => ground(x) + 1;
   figure(110, Math.round(info.gloamTop(112)) - 1, CROUCH, PIG.charcoal, 17.4);
   figure(116, Math.round(info.gloamTop(117)) - 1, CROUCH, PIG.red, 17.6, true);
   figure(121, Math.round(info.gloamTop(122)) - 1, CHILD, PIG.charcoal, 17.3);
@@ -437,7 +443,7 @@ export function paint(m) {
       const tCrack = crackT[ck] + (tp - y) * 0.035;
       if (near < 0.75) {
         m.ev1(x, y, PIG.crack, tCrack, { cov: 0.95, dz: -0.7 });
-        m.ev2(x, y, PIG.gloam, 24.0 + (tp - y) * 0.04, { cov: 0.85, dz: -0.8 });
+        m.gloamT[idx(x, y)] = Math.min(m.gloamT[idx(x, y)], 24.0 + (tp - y) * 0.04);
         continue;
       }
       if (x < XD0) continue;
@@ -448,9 +454,7 @@ export function paint(m) {
       const q = clamp(1 - Math.abs(x - (mid + P.lean * half)) / (half * (1 + Math.abs(P.lean))));
       const thick = 1.5 + P.depth * Math.pow(q, P.pow) * (1 + 0.3 * Math.sin((x - a) / (c - a) * Math.PI * 2 * P.lobes)) + fbm(x * 0.4, y * 0.1, 405);
       if (tp - y > thick || near < 1.8) {
-        const rim = tp - y <= thick + 1 && near >= 1.8;
-        m.ev1(x, y, rim ? PIG.rim : PIG.gloam, 23.7 + (1 - (y - G0) / (tp - G0)) * 0.5 + 0.25 * hash2(x, y, 406),
-          { cov: rim ? 0.7 : 0.8 + 0.15 * hash2(x, y, 407), dz: -0.6 });
+        m.gloamT[idx(x, y)] = Math.min(m.gloamT[idx(x, y)], 23.7 + (1 - (y - G0) / (tp - G0)) * 0.5 + 0.25 * hash2(x, y, 406));
       }
     }
   }
@@ -477,18 +481,15 @@ export function paint(m) {
     m.ev1(x, y, PIG.wash, 24.2 + (TB0 - y) * 0.03 + 0.6 * n, { cov: 0.25 + 0.3 * smooth(0.3, 0.7, n) });
   }
 
-  // ---- divider D|E: bands of the Gloam's mist cross the frieze, as clouds do in an emaki
-  // emaki clouds: long bands with scalloped tops and flat bellies
-  for (const [cx, cy, len] of [[199, 50, 18], [194, 64, 13], [205, 76, 20], [216, 60, 12], [238, 72, 16], [246, 54, 10]]) {
+  // ---- divider D|E and the long night's sky: emaki cloud bands, made of the Gloam itself
+  for (const [cx, cy, len] of [[199, 52, 14], [196, 66, 11], [205, 77, 14], [215, 60, 11], [234, 70, 12], [240, 55, 8]]) {
     const discs = [], rr = rng(Math.round(cx * 7 + cy));
-    for (let k = -len / 2; k <= len / 2; k += 1.6 + rr() * 1.2) {
-      const taper = 1 - Math.pow(Math.abs(k) / (len / 2 + 1), 2);
-      const r = 1.2 + 2.2 * taper * (0.6 + 0.6 * rr());
-      discs.push([cx + k, cy + r * 0.55, r, 0]);
+    for (let k = -len / 2; k <= len / 2; k += 1.5 + rr() * 1.0) {
+      const taper = 1 - Math.pow(Math.abs(k) / (len / 2 + 1.5), 2);
+      discs.push([cx + k, cy + (rr() - 0.3) * 1.2, 1.0 + 2.0 * taper * (0.6 + 0.5 * rr())]);
     }
-    for (let k = -len / 3; k <= len / 3; k += 2.2) discs.push([cx + k + 2, cy - 0.6, 1.4 + rr(), 0]);
-    // a flat belly: nothing below the band's base line
-    gloam(b, discs.map(([x, y, r]) => [x, Math.max(y, cy - 1 + r * 0.9), r, 0]));
+    for (let k = -len / 4; k <= len / 4; k += 2.4) discs.push([cx + k + 1, cy + 1.6, 1.6 + rr() * 0.8]);   // a scalloped top
+    gloam(b, discs);
   }
 
   // ---- E: the long night. No stars, no figures; the land is islands in the
@@ -544,61 +545,119 @@ export function paint(m) {
   for (const [dx, dy] of [[-4, 3], [4, 3], [-4, 5], [4, 5], [-3, 7], [3, 7], [0, 9]]) b.dot(LX + dx, LY + dy, PIG.ochre, 0.75);
   info.lantern = { x: LX, y: LY + 3 };
 
-  // ---- the fissure: a crack in the rock itself, not painted. A hairline the
-  // whole length of the frieze, from the sky over A down to its mouth in B,
-  // along the ground under C, through D's land and on through the long night.
-  // It tears open where the Gloam comes through, and stays a seeping scar.
+  // ---- the fissure: a crack in the rock itself, not painted. At first only a
+  // hairline omen along the whole frieze. When the Gloam comes, the stone
+  // bulges, then breaks open from its mouth in B in jolts, spidering out both
+  // ways; chunks of the lips are pushed out of the wall. It is stepped rock,
+  // layer under layer, darker with depth to black. In C it tears wider again
+  // before the tendrils; through D and the long night it is an old open wound.
   {
     const ctrl = [[28, 87], [40, 82], [52, 74], [60, 66], [70, 58], [84, 51], [MOUTH.x, MOUTH.y],
-      [112, 44], [126, 45], [140, 43], [150, 39], [158, 33], [170, 31], [184, 30], [196, 27], [210, 25], [224, 24], [238, 26], [FX1, 25]];
-    const cells = new Map();
-    const add = (x, y, along) => { x = Math.round(x); y = Math.round(y); const k = idx(x, y); if (!cells.has(k)) cells.set(k, { x, y, along }); };
+      [112, 44], [126, 45], [140, 43], [150, 39], [156, 31], [166, 27], [178, 26], [190, 26], [200, 26], [212, 25], [224, 24], [238, 26], [FX1 - 2, 25]];
+    const line = new Map();
+    const add = (x, y, along) => { x = Math.round(x); y = Math.round(y); const k = idx(x, y); if (!line.has(k)) line.set(k, { x, y, along }); };
     let along = 0, px = ctrl[0][0], py = ctrl[0][1];
     for (let i = 0; i < ctrl.length - 1; i++) {
       const [x0, y0] = ctrl[i], [x1, y1] = ctrl[i + 1], len = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(len * 2);
       for (let k = 1; k <= n; k++) {
         const u = k / n, jag = (fbm(along * 0.35, 0, 611) - 0.5) * 3.2 + (hash2(Math.round(along), 0, 612) - 0.5) * 1.1;
-        const x = x0 + (x1 - x0) * u - jag * (y1 - y0) / len;
-        const y = y0 + (y1 - y0) * u + jag * (x1 - x0) / len;
-        // stay 4-connected so the fissure never breaks
+        const x = x0 + (x1 - x0) * u - jag * (y1 - y0) / len, y = y0 + (y1 - y0) * u + jag * (x1 - x0) / len;
         if (Math.round(x) !== Math.round(px) && Math.round(y) !== Math.round(py)) add(px, y, along);
         add(x, y, along); px = x; py = y; along += 0.5;
       }
     }
-    const list = [...cells.values()];
+    const list = [...line.values()];
+    const total = along;
+    const mouthC = list.reduce((a, c) => (Math.hypot(c.x - MOUTH.x, c.y - MOUTH.y) < Math.hypot(a.x - MOUTH.x, a.y - MOUTH.y) ? c : a));
     const region = (x) => (x < 56 ? 0 : x < 104 ? 1 : x < 151 ? 2 : x < XE0 ? 3 : 4);
-    // how wide it tears, and when: wide at the mouth, open along C before the tendrils, a wide old scar in E
-    const tearOf = (x, y) => {
-      const dm = Math.hypot(x - MOUTH.x, y - MOUTH.y);
-      if (dm < 16) return { w: 2.6 * (1 - dm / 18) + 0.6, t: 9.2 + dm * 0.05 };
-      if (x >= 104 && x < 151) return { w: 1.3, t: 14.4 + Math.abs(x - 127) * 0.02 };
-      if (x >= XE0) return { w: 1.2, t: -1 };
-      return null;
-    };
+    const JOLT = 0.42, STEP = 9;   // it breaks in jolts, about nine cells a jolt
+    info.jolts = [];
     for (const c of list) {
-      const k = idx(c.x, c.y);
-      m.p0[k] = PIG.crack; m.v0[k] = 0.92; m.p1[k] = -1; m.p2[k] = -1; m.z[k] -= 1.3;
+      c.region = region(c.x);
+      const dm = Math.hypot(c.x - MOUTH.x, c.y - MOUTH.y);
+      const jag = 0.75 + 0.5 * fbm(c.along * 0.3, 1, 614);
+      // wide where it tears open, hairline at its ends
+      let w = c.region === 0 ? 0.45 + 0.75 * smooth(28, 56, c.x) : c.region === 1 ? 1.2 + 4.6 * Math.exp(-Math.pow(dm / 13, 2)) : c.region === 2 ? 2.3 : c.region === 3 ? 1.3 : 1.7 * (1 - smooth(FX1 - 14, FX1, c.x)) + 0.4;
+      c.w = w * jag;
+      c.w1 = c.region === 2 ? 1.0 * jag : c.w;   // C first opens narrow, tears wider later
+      if (c.x >= 151) { c.t = -1; c.t2 = -1; continue; }   // D and E: the old wound
+      const jolt = Math.floor(Math.abs(c.along - mouthC.along) / STEP);
+      c.t = 10.0 + jolt * JOLT + (Math.abs(c.along - mouthC.along) % STEP) * 0.012;
+      c.t2 = c.region === 2 ? 14.0 + Math.abs(c.x - 127) * 0.012 : c.t;
+      if (Math.abs(c.along - mouthC.along) % STEP < 0.5) info.jolts.push({ x: c.x, y: c.y, t: c.t, region: c.region });
     }
-    const lips = new Map();
+    // the nearest line cell to each wall cell within reach
+    const near = new Map();
     for (const c of list) {
-      const tear = tearOf(c.x, c.y);
-      if (!tear) continue;
-      const R = Math.ceil(tear.w);
+      const R = Math.ceil(c.w + 2);
       for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
-        const d = Math.hypot(dx, dy), x = c.x + dx, y = c.y + dy;
-        if (d > tear.w || cells.has(idx(x, y)) || !inside(x, y)) continue;
-        const k = idx(x, y), t = tear.t < 0 ? -1 : tear.t + d * 0.12 + 0.1 * hash2(x, y, 613);
-        if (!lips.has(k) || lips.get(k).t > t) lips.set(k, { x, y, t, d, region: region(x) });
+        const x = c.x + dx, y = c.y + dy;
+        if (!inside(x, y)) continue;
+        const d = Math.hypot(dx, dy), k = idx(x, y), cur = near.get(k);
+        if (!cur || d / Math.max(c.w, 0.5) < cur.d / Math.max(cur.c.w, 0.5)) near.set(k, { d, c, x, y });
       }
     }
-    for (const L of lips.values()) {
-      const k = idx(L.x, L.y);
-      if (L.t < 0) { m.p0[k] = PIG.crack; m.v0[k] = 0.85; m.z[k] -= 1.6; m.p1[k] = -1; m.p2[k] = -1; continue; }
-      m.p2[k] = -1;
-      m.ev1(L.x, L.y, PIG.crack, L.t, { cov: 0.95, dz: -2.4 });
+    const omen = (x, y) => { const k = idx(x, y); m.z[k] -= 0.35; m.p0[k] = PIG.crack; m.v0[k] = 0.55; };
+    info.chunks = [];
+    for (const { d, c, x, y } of near.values()) {
+      const k = idx(x, y);
+      const open = (w, t) => {
+        if (d >= w) return false;
+        const layer = Math.min(4, 1 + Math.floor((w - d) / 1.1));
+        const dz = -(0.5 + layer * 0.85);
+        m.p2[k] = -1;
+        if (t < 0) { m.p1[k] = -1; m.p0[k] = PIG.crack; m.v0[k] = Math.min(1, 0.08 + layer * 0.16); m.z[k] += dz; return true; }
+        const tt = t + d * 0.05;
+        // the stone bulges before it gives, near where it breaks
+        if (c.region <= 2) m.ev1(x, y, m.p0[k], tt - 0.6, { cov: m.v0[k], dz: 0.3 });
+        m.ev2(x, y, PIG.crack, tt, { cov: Math.min(1, 0.08 + layer * 0.16), dz: dz - 0.3 });
+        return true;
+      };
+      if (d < 0.6) { if (c.x < 151) omen(x, y); }
+      if (c.region === 2 && c.t >= 0) {
+        if (d < c.w1) {
+          // open narrow as the break runs through, then torn deeper before the tendrils
+          const l1 = Math.min(4, 1 + Math.floor((c.w1 - d) / 1.1)), l2 = Math.min(4, 1 + Math.floor((c.w - d) / 1.1));
+          const dz1 = -(0.5 + l1 * 0.6), dz2 = -(0.8 + l2 * 0.85);
+          m.p2[k] = -1;
+          m.ev1(x, y, PIG.crack, c.t + d * 0.05, { cov: Math.min(1, 0.08 + l1 * 0.16), dz: dz1 });
+          m.ev2(x, y, PIG.crack, c.t2 + d * 0.05, { cov: Math.min(1, 0.08 + l2 * 0.16), dz: dz2 - dz1 });
+          continue;
+        }
+        if (open(c.w, c.t2)) continue;
+      } else if (open(c.w, c.t)) continue;
+      // the lips: broken and jagged; some are pushed out of the wall as chunks
+      if (d < c.w + 1.3 && c.x < 151) {
+        const h = hash2(x, y, 615), tLip = (c.region === 2 ? c.t2 : c.t) + d * 0.05;
+        if (h < 0.42) {
+          m.p2[k] = -1;
+          m.ev1(x, y, m.p0[k], tLip - 0.6, { cov: m.v0[k], dz: 0.3 });
+          m.ev2(x, y, PIG.crack, tLip, { cov: 0.55, dz: -0.9 });
+          info.chunks.push({ x, y, t: tLip, region: c.region });
+        } else if (h < 0.65) {
+          m.p2[k] = -1;
+          m.ev1(x, y, m.p0[k], tLip - 0.6, { cov: m.v0[k], dz: 0.45 });
+        }
+      } else if (d < c.w + 1.3 && hash2(x, y, 616) < 0.3) m.z[k] += 0.3;   // the old wound's broken lips
     }
-    info.crack = list.map((c) => ({ ...c, region: region(c.x) }));
-    info.lips = [...lips.values()].filter((L) => L.t > 0);
+    // short spidering cracks off each jolt
+    for (const J of info.jolts) for (let s2 = 0; s2 < 2; s2++) {
+      let a = (hash2(J.x, s2, 617) - 0.5) * 2 + (s2 ? Math.PI / 2 : -Math.PI / 2), x = J.x, y = J.y;
+      const len = 3 + Math.floor(hash2(J.x, s2, 618) * 5);
+      for (let k2 = 0; k2 < len; k2++) {
+        a += (hash2(J.x + k2, s2, 619) - 0.5) * 0.8; x += Math.cos(a); y += Math.sin(a);
+        const X = Math.round(x), Y = Math.round(y);
+        if (!inside(X, Y) || line.has(idx(X, Y))) continue;
+        m.p2[idx(X, Y)] = -1;
+        m.ev2(X, Y, PIG.crack, J.t + 0.05 + k2 * 0.03, { cov: 0.7, dz: -0.7 });
+      }
+    }
+    // the deep cells, where a cold glint can come up from the far side
+    info.crack = list;
+    info.crackMouth = mouthC;
+    info.crackTotal = total;
   }
+  gloamDetails(m);
+  info.gloamT = m.gloamT;
   return info;
 }

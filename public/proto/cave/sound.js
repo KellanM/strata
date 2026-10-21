@@ -54,7 +54,8 @@ export class CaveSound {
       if (q.kind === 'chime') this.bell(62 + PENTA[(q.k * 3) % PENTA.length], T, 0.09, 3.2);
       else if (q.kind === 'gloam') this.breath(T, 7, 0.16);
       else if (q.kind === 'grip') this.breath(T, q.moon ? 2.5 : 1.2, q.moon ? 0.12 : 0.05, 240);
-      else if (q.kind === 'crack') { this.rumble(T, 2.2); this.grind(T, 1.6); this.wrong(T); }
+      else if (q.kind === 'crack') { this.grind(T, 0.8); this.rumble(T + 0.6, 2.4); this.wrong(T + 0.8); }
+      else if (q.kind === 'jolt') { this.thud(T, q.near ? 0.2 : 0.08); this.click(T, q.near ? 0.12 : 0.05); this.click(T + 0.04, 0.06); }
       else if (q.kind === 'hush') this.hush(T, 0.85);
       else if (q.kind === 'strike') { this.stab(T); this.thud(T, 0.3); }
       else if (q.kind === 'heart') { this.thud(T, 0.22); this.thud(T + 0.24, 0.13); }
