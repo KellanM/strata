@@ -706,3 +706,64 @@ Contact sheet: `docs/story-frames/cave-spike-v2.jpg`.
 - **Not checked yet:** still not run or heard on an iPhone. Desktop Chrome runs at
   about 16 ms a frame with 11 draw calls, but headless Chrome stepped the pixel ratio
   down to 1.625 during playback, so the cost at ratio 2 on a phone is unknown.
+
+### Third pass (Kellan: "the tendrils look disconnected from the art on the walls... it should feel more evil"; "it looks like the gloam just appears from a random spot... can it creep in from a crack in the wall?")
+
+**Changed:**
+
+- **The Gloam is painted into the wall now.** The vector ribbons are gone. Every
+  frame, the tendrils are drawn onto the wall's own voxel grid as a texture the
+  stone shader reads (`gloam.js`), with four effects:
+  - **Black rock.** The cells they cover turn oily black and push up out of the
+    wall as stepped relief, so they read as part of the same carving as the figures.
+  - **Thorns and rot.** Thorns grow out of them cell by cell, and veins branch off
+    and fork through the paint like rot.
+  - **Dead paint.** Paint they have touched dies, draining to dark grey, and stays
+    dead after they are gone, leaving scars.
+  - **Pulse.** A faint pulse beats up them in time with a heartbeat.
+
+  The moon's gold shows through the coils; the moon cracks along three lines, one
+  per jerk of the yank, and gold flakes fall off its rim.
+- **A source: a fissure in the rock itself.** It is not painted.
+  - A recessed crack runs the whole frieze. In "long ago" it is already a faint
+    hairline across the sky, breathing a cold light the lantern walks past.
+  - In B it tears open at its mouth: the lips crack away and chips of rock fall,
+    and a light from somewhere else breathes out of it in a cold violet-cyan,
+    unlike anything in the warm palette. The painted Gloam spills out of the mouth
+    into the mural and climbs toward the sky.
+  - In C the tendrils grow out of the same fissure.
+  - It stays a seeping scar through D's land and the long night.
+- **More evil:**
+  - The tendrils seep out, rise a little and go still. The flame chokes, the
+    sound hushes, and then they strike together in one lunge with a dissonant stab.
+  - The yank keeps its jerks, now with a heartbeat under it.
+  - The torn stars' chimes bend down out of tune.
+  - The painted figures drain to ash as the Gloam reaches them.
+  - The lantern dims and shrinks when the Gloam is near it.
+- **Also:**
+  - The opening is warmer and golden: a wider light and a warm ambient that turns
+    cold when the fissure opens.
+  - The figures are about 8 voxels tall instead of 6.
+  - The islands vary in depth, lean and lobes, and there are islets of different
+    sizes.
+  - The mist bands at the end are now lobed emaki clouds with flat bellies.
+  - The module URLs are bumped to `?v=3`.
+
+Contact sheet: `docs/story-frames/cave-spike-v3.jpg` (long ago, the fissure tears
+open, the grip, the tearing loose, the islands, the long night).
+
+**Honest read:**
+- **Evil and of a piece with the wall:** the black rot with forking veins, the moon
+  cracking in its grip, and the fissure.
+- **Stillness then strike:** this needs motion to judge.
+- **Weaker:**
+  - The voxel tendrils are dense where several overlap. The grip on the moon and
+    the stars is less crisp than the v2 coils were; it reads more as a thicket
+    closing over them.
+  - C is now very dark by design (the flame chokes); the silhouettes hold, but
+    only just.
+  - The fissure's chips are too small to notice at phone size.
+- **Not checked yet:** still not tried on an iPhone by me. Desktop Chrome runs at
+  about 16 ms a frame with 10 draw calls, but headless Chrome stepped the pixel
+  ratio down to 1.625. The per-frame field update (a 256×108 texture) is new CPU
+  and upload work for the phone.

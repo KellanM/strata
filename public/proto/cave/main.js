@@ -5,10 +5,11 @@
 //   ?auto      start without the tap (silent)            ?fps   frame times
 // window.cave.seek(t) renders any moment; the whole sequence is a function of t.
 import * as THREE from 'three';
-import { Mural, paint, W, rng } from './mural.js?v=2';
-import { wallMeshes, voxelMaterial, Tiles, Sprites, Ribbons, Finish, lightUniforms, MAX_LIGHTS } from './render.js?v=2';
-import { makeStory, END } from './story.js?v=2';
-import { CaveSound } from './sound.js?v=2';
+import { Mural, paint, W, H, rng } from './mural.js?v=3';
+import { wallMeshes, voxelMaterial, Tiles, Sprites, Finish, lightUniforms, MAX_LIGHTS } from './render.js?v=3';
+import { makeStory, END } from './story.js?v=3';
+import { GloamField } from './gloam.js?v=3';
+import { CaveSound } from './sound.js?v=3';
 
 const params = new URLSearchParams(location.search);
 const $ = (s) => document.querySelector(s);
@@ -31,14 +32,18 @@ const shared = {
   uTime: { value: 0 },
   uAmb: { value: new THREE.Vector3(0.010, 0.011, 0.018) },
   uExposure: { value: 1.5 },
+  uDebug: { value: Number(params.get('dbg') || 0) },
+  tGloam: { value: null },
+  uGloamSize: { value: new THREE.Vector2(W, H) },
 };
+const field = new GloamField();
+shared.tGloam.value = field.tex;
 for (const m of wallMeshes(mural.build(), voxelMaterial(shared, 4))) scene.add(m);
 const story = makeStory(info, mural);
-const tiles = new Tiles(story.tileCount, voxelMaterial(shared, 0.5));
+const tiles = new Tiles(story.tileCount, voxelMaterial(shared, 0.5, 1), story.tileSpecs);
 const mist = new Sprites(1000, shared);
 const glow = new Sprites(900, shared, { glow: true });
-const ribbons = new Ribbons(16, 56);
-scene.add(tiles.mesh, mist.mesh, ribbons.mesh, glow.mesh);
+scene.add(tiles.mesh, mist.mesh, glow.mesh);
 const finish = new Finish();
 const sound = new CaveSound();
 
@@ -77,12 +82,12 @@ let uiFade = 0;
 function render(t) {
   shared.uTime.value = t;
   finish.uniforms.uTime.value = t;
-  ribbons.uniforms.uTime.value = t;
-  mist.begin(); glow.begin(); ribbons.begin();
-  const f = story.frame(t, mist, glow, ribbons);
+  mist.begin(); glow.begin();
+  const f = story.frame(t, mist, glow, field);
+  shared.uAmb.value.set(...f.amb);
   const L = f.lantern;
   addMotes(t, L, f.cam.x);
-  mist.end(); glow.end(); ribbons.end();
+  mist.end(); glow.end();
 
   shared.uLantern.value.set(L.x, L.y, L.z, L.R);
   shared.uLanternCol.value.set(1.0, 0.5, 0.19).multiplyScalar(2.5 * L.I);
@@ -179,4 +184,5 @@ window.cave = {
   END,
   seek(t) { frozenT = t; state = 'still'; uiFade = 0; render(t); },
   ready: true,
+  field,
 };

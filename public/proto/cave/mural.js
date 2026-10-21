@@ -17,7 +17,9 @@ export const TB0 = 88, TB1 = 96;               // top border (sky band) lines
 export const G0 = BB1 + 1;                     // the land's base
 // scene centres: A long ago, B the Gloam rises, C it pulls them down, D the impact, E the long night
 export const SC = [32, 80, 127, 174, 226];
-export const XD0 = 153, XE0 = 197;             // where the land is broken: from D's first crack, and E
+export const XD0 = 153, XE0 = 197;
+// where the Gloam breaks into the world: the mouth of a fissure in the rock itself
+export const MOUTH = { x: 100, y: 45 };             // where the land is broken: from D's first crack, and E
 
 // ---------------------------------------------------------------- noise
 export function hash2(x, y, s = 0) {
@@ -62,11 +64,11 @@ export const ground = (x) => Math.round(36 + 2.2 * Math.sin(x * 0.061 + 0.5) + 4
 // ---------------------------------------------------------------- pigments
 export const PIG = {
   stone: 0, ochre: 1, red: 2, rust: 3, charcoal: 4, gloam: 5, rim: 6, gold: 7,
-  ghost: 8, crack: 9, s1: 10, s2: 11, s3: 12, clay: 13, wash: 14, goldFleck: 15,
+  ghost: 8, crack: 9, s1: 10, s2: 11, s3: 12, clay: 13, wash: 14, goldFleck: 15, ash: 16,
 };
 const PIG_HEX = [
   0, 0xc8923f, 0x8a2f1c, 0xae4f28, 0x241e1b, 0x26282f, 0xb9c4c4, 0xf0c050,
-  0x7a6a5a, 0x120e0c, 0x8c867e, 0xcfc6b4, 0xb08a52, 0xd6cfc2, 0x1c1816, 0xb78a48,
+  0x7a6a5a, 0x08070a, 0x8c867e, 0xcfc6b4, 0xb08a52, 0xd6cfc2, 0x1c1816, 0xb78a48, 0x5e5a57,
 ];
 const METAL = new Float32Array(PIG_HEX.length); METAL[PIG.gold] = 1; METAL[PIG.goldFleck] = 0.35;
 const PIG_LIN = PIG_HEX.map((h) => new THREE.Color(h));
@@ -222,19 +224,19 @@ class Brush {
 }
 
 // the recurring trio: a tall one, a red one, a child
-const TALL_WALK = ['.X..', 'XXX.', '.X.X', '.X..', 'X.X.', 'X..X'];
-const UP = ['X...X', 'X.X.X', '.XXX.', '..X..', '.X.X.', '.X.X.'];
-const POINT = ['....X', '.X.X.', 'XXX..', '.X...', '.X...', 'X.X..'];
-const STAND = ['.X.', 'XXX', '.X.', '.X.', 'X.X', 'X.X'];
-const CHILD = ['.X.', 'XXX', '.X.', 'X.X'];
-const CHILD_UP = ['X.X', '.X.', '.X.', 'X.X'];
-const CROUCH = ['.X..', 'XXX.', '.XXX', 'X..X'];
+const TALL_WALK = ['..X..', '.XXX.', 'X.X.X', 'X.X..', '..X..', '.X.X.', '.X..X', 'X...X'];
+const UP = ['X.X.X', 'X.X.X', '.XXX.', '..X..', '..X..', '.X.X.', '.X.X.', 'X...X'];
+const POINT = ['....X', '..XX.', '..XX.', '.XXX.', 'X.X..', '..X..', '.X.X.', 'X...X'];
+const STAND = ['..X..', '.XXX.', 'X.X.X', 'X.X.X', '..X..', '.X.X.', '.X.X.', '.X.X.'];
+const CHILD = ['.X.', 'XXX', '.X.', '.X.', 'X.X'];
+const CHILD_UP = ['X.X', 'X.X', '.X.', 'XXX', '.X.', 'X.X'];
+const CROUCH = ['..X..', '.XXX.', 'XXXX.', '.XXX.', 'X..X.'];
 const AMMONITE = ['.XXX.', 'X...X', 'X.X.X', 'X..XX', '.XX..'];
 
 // The Gloam as the painters drew it: rounded billows and fingers of dots, a
 // dark body inside a pale cold rim. discs: [x, y, r, order 0..1]. With t0/t1
 // it is painted in over time (lowest first), else it is there already.
-function gloam(b, discs, { t0, t1 } = {}) {
+function gloam(b, discs, { t0, t1, from, spread = 30 } = {}) {
   const m = b.m;
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for (const [x, y, r] of discs) { x0 = Math.min(x0, x - r); x1 = Math.max(x1, x + r); y0 = Math.min(y0, y - r); y1 = Math.max(y1, y + r); }
@@ -243,7 +245,7 @@ function gloam(b, discs, { t0, t1 } = {}) {
     let order = 2;
     for (const [cx, cy, r, o] of discs) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) order = Math.min(order, o);
     if (order > 1.5) continue;
-    order = Math.max(order, clamp((y - y0) / 40));
+    order = from ? Math.max(order * 0.3, clamp(Math.hypot(x - from.x, y - from.y) / spread)) : Math.max(order, clamp((y - y0) / 40));
     const rim = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y + 1) || !inside(x, y - 1);
     if (rim && hash2(x, y, 208) < 0.1) continue;
     const pig = rim ? PIG.rim : PIG.gloam, cov = rim ? 0.75 : 0.82 + 0.15 * hash2(x, y, 207);
@@ -272,6 +274,14 @@ function finger(x, y, dx, dy, n, r0, o0 = 0.35, curl = 0.3) {
 export function paint(m) {
   const b = new Brush(m);
   const info = { sc: SC };
+  // a figure, raised a little like carved relief; drainT: its colour drains to ash as the Gloam touches it
+  const figure = (x, y, rows, pig, drainT, flip = false) => {
+    b.lift = 0.2; b.sprite(x, y, rows, pig, flip); b.lift = 0;
+    if (drainT === undefined) return;
+    rows.forEach((row, r) => [...row].forEach((ch, c) => {
+      if (ch === 'X') m.ev1(x + (flip ? row.length - 1 - c : c), y + rows.length - 1 - r, PIG.ash, drainT + (rows.length - r) * 0.08, { cov: 0.75 });
+    }));
+  };
   const T_IMPACT = [22.5, 23.5, 22.95];   // D's three impacts: left star, the moon, right star
 
   // ---- the bottom border: thin wavy strata and the fossils the stone keeps
@@ -319,11 +329,9 @@ export function paint(m) {
   for (const [x, y] of [[45, 76], [48, 73], [44, 73]]) b.dot(x, y, PIG.ochre);
   const starsA = [[8, 80, 1], [14, 70, 0], [19, 82, 1], [24, 63, 0], [29, 75, 1], [35, 84, 0], [37, 66, 0], [12, 58, 0], [54, 82, 1], [56, 66, 0], [40, 56, 0], [27, 54, 1], [6, 66, 0], [51, 58, 0]];
   for (const [x, y, big] of starsA) b.star(x, y, big);
-  b.lift = 0.18;
-  b.sprite(17, ground(18) + 2, TALL_WALK, PIG.charcoal);
-  b.sprite(23, ground(24) + 2, UP, PIG.red);
-  b.sprite(30, ground(31) + 2, CHILD_UP, PIG.charcoal);
-  b.lift = 0;
+  figure(16, ground(18) + 2, TALL_WALK, PIG.charcoal);
+  figure(22, ground(24) + 2, UP, PIG.red);
+  figure(29, ground(30) + 2, CHILD_UP, PIG.charcoal);
   info.chimeStars = [...starsA.map(([x, y]) => ({ x, y })), { x: 46, y: 75 }];
 
   // ---- divider A|B: a Bayeux tree, its branches curling at the ends
@@ -347,11 +355,9 @@ export function paint(m) {
   b.dot(81, 79, PIG.ochre); b.dot(83, 77, PIG.ochre);
   const starsB = [[66, 84, 1], [72, 70, 0], [90, 86, 1], [95, 72, 0], [98, 82, 1], [70, 60, 0], [76, 88, 0], [88, 64, 0]];
   for (const [x, y, big] of starsB) b.star(x, y, big);
-  b.lift = 0.18;
-  b.sprite(65, ground(66) + 2, POINT, PIG.charcoal);
-  b.sprite(71, ground(72) + 2, UP, PIG.red);
-  b.sprite(76, ground(77) + 2, CHILD, PIG.charcoal);
-  b.lift = 0;
+  figure(64, ground(66) + 2, POINT, PIG.charcoal, 12.9);
+  figure(70, ground(72) + 2, UP, PIG.red, 12.5);
+  figure(76, ground(77) + 2, CHILD, PIG.charcoal, 12.2);
   {
     const gb = (x) => ground(x) + 1;
     const discs = [
@@ -362,7 +368,7 @@ export function paint(m) {
       ...finger(92, gb(92) + 7, -0.25, 1, 9, 2.8, 0.35, 0.4),
       ...finger(86, gb(86) + 6, -0.6, 1, 7, 2.2, 0.35, -0.5),
     ];
-    gloam(b, discs, { t0: 9.4, t1: 13.4 });
+    gloam(b, discs, { t0: 9.9, t1: 13.6, from: MOUTH, spread: 26 });
   }
 
   // ---- C: it pulls them down. Its body lies along the ground; the moon, two
@@ -374,11 +380,9 @@ export function paint(m) {
     for (const [cx, cy, r] of g3) if (Math.abs(x - cx) < r) top = Math.max(top, cy + Math.sqrt(r * r - (x - cx) ** 2));
     return top;
   };
-  b.lift = 0.18;
-  b.sprite(111, Math.round(info.gloamTop(112)) - 1, CROUCH, PIG.charcoal);
-  b.sprite(116, Math.round(info.gloamTop(117)) - 1, CROUCH, PIG.red, true);
-  b.sprite(120, Math.round(info.gloamTop(121)) - 1, CHILD, PIG.charcoal);
-  b.lift = 0;
+  figure(110, Math.round(info.gloamTop(112)) - 1, CROUCH, PIG.charcoal, 17.4);
+  figure(116, Math.round(info.gloamTop(117)) - 1, CROUCH, PIG.red, 17.6, true);
+  figure(121, Math.round(info.gloamTop(122)) - 1, CHILD, PIG.charcoal, 17.3);
   const PLUS = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   const disc = [];
   for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) if (dx * dx + dy * dy <= 4.4 * 4.4) disc.push([dx, dy]);
@@ -409,7 +413,7 @@ export function paint(m) {
   // ---- D: the impact. The trio is struck to ash; the land cracks into three
   // islands over the Gloam; stone closes over each star in layers
   const firstHit = Math.min(...T_IMPACT);
-  for (const [x0, spr, pig] of [[160, STAND, PIG.charcoal], [165, STAND, PIG.red], [169, CHILD, PIG.charcoal]]) {
+  for (const [x0, spr, pig] of [[159, STAND, PIG.charcoal], [165, STAND, PIG.red], [171, CHILD, PIG.charcoal]]) {
     const y0 = ground(x0 + 1) + 2;
     spr.forEach((row, r) => [...row].forEach((ch, c) => {
       if (ch !== 'X') return;
@@ -440,8 +444,9 @@ export function paint(m) {
       let seg = 0;
       while (seg < splits.length - 1 && x > crackX[seg + 1](y)) seg++;
       const a = bounds[seg], c = bounds[seg + 1], mid = (a + c) / 2, half = (c - a) / 2;
-      const q = clamp(1 - Math.abs(x - mid) / half);
-      const thick = 1.5 + 9 * Math.pow(q, 1.5) + fbm(x * 0.4, y * 0.1, 405);
+      const P = [{ lean: -0.35, depth: 6, lobes: 1, pow: 1.1 }, { lean: 0.25, depth: 12, lobes: 0, pow: 1.8 }, { lean: 0.05, depth: 8.5, lobes: 2, pow: 0.9 }][seg];
+      const q = clamp(1 - Math.abs(x - (mid + P.lean * half)) / (half * (1 + Math.abs(P.lean))));
+      const thick = 1.5 + P.depth * Math.pow(q, P.pow) * (1 + 0.3 * Math.sin((x - a) / (c - a) * Math.PI * 2 * P.lobes)) + fbm(x * 0.4, y * 0.1, 405);
       if (tp - y > thick || near < 1.8) {
         const rim = tp - y <= thick + 1 && near >= 1.8;
         m.ev1(x, y, rim ? PIG.rim : PIG.gloam, 23.7 + (1 - (y - G0) / (tp - G0)) * 0.5 + 0.25 * hash2(x, y, 406),
@@ -473,10 +478,17 @@ export function paint(m) {
   }
 
   // ---- divider D|E: bands of the Gloam's mist cross the frieze, as clouds do in an emaki
-  for (const [cx, cy, len, th] of [[200, 48, 14, 2.2], [196, 62, 12, 1.8], [203, 74, 16, 2], [194, 82, 9, 1.5], [214, 56, 10, 1.6], [236, 70, 12, 1.8]]) {
-    const discs = [];
-    for (let k = -len / 2; k <= len / 2; k += 1.5) discs.push([cx + k, cy + Math.sin(k * 0.4) * 0.8, th * (1 - Math.pow(Math.abs(k) / (len / 2 + 1), 2) * 0.6), 0]);
-    gloam(b, discs);
+  // emaki clouds: long bands with scalloped tops and flat bellies
+  for (const [cx, cy, len] of [[199, 50, 18], [194, 64, 13], [205, 76, 20], [216, 60, 12], [238, 72, 16], [246, 54, 10]]) {
+    const discs = [], rr = rng(Math.round(cx * 7 + cy));
+    for (let k = -len / 2; k <= len / 2; k += 1.6 + rr() * 1.2) {
+      const taper = 1 - Math.pow(Math.abs(k) / (len / 2 + 1), 2);
+      const r = 1.2 + 2.2 * taper * (0.6 + 0.6 * rr());
+      discs.push([cx + k, cy + r * 0.55, r, 0]);
+    }
+    for (let k = -len / 3; k <= len / 3; k += 2.2) discs.push([cx + k + 2, cy - 0.6, 1.4 + rr(), 0]);
+    // a flat belly: nothing below the band's base line
+    gloam(b, discs.map(([x, y, r]) => [x, Math.max(y, cy - 1 + r * 0.9), r, 0]));
   }
 
   // ---- E: the long night. No stars, no figures; the land is islands in the
@@ -493,20 +505,24 @@ export function paint(m) {
     gloam(b, sea);
   }
   // the same ground, now islands, drifted apart
-  const isl = [[XE0 + 2, 210], [214, 234], [238, 249]];
-  for (const [a, c] of isl) {
-    const mid = (a + c) / 2, half = (c - a) / 2;
-    for (let x = a; x <= c; x++) {
-      const top = ground(x), q = clamp(1 - Math.abs(x - mid) / (half + 0.6));
-      const th = Math.max(1, Math.round(1.5 + 10 * Math.pow(q, 1.5) + 0.6 * fbm(x * 0.5, 3, 503)));
+  const isl = [
+    { a: XE0 + 2, c: 208, lean: 0.3, depth: 7, pow: 1.4, lobes: 0 },
+    { a: 213, c: 235, lean: -0.3, depth: 14, pow: 1.2, lobes: 1 },
+    { a: 239, c: 249, lean: 0, depth: 4, pow: 0.4, lobes: 2 },
+  ];
+  for (const I of isl) {
+    const mid = (I.a + I.c) / 2, half = (I.c - I.a) / 2;
+    for (let x = I.a; x <= I.c; x++) {
+      const top = ground(x), q = clamp(1 - Math.abs(x - (mid + I.lean * half)) / (half * (1 + Math.abs(I.lean)) + 0.6));
+      const th = Math.max(1, Math.round(1.2 + I.depth * Math.pow(q, I.pow) * (1 + 0.3 * Math.sin((x - I.a) / (I.c - I.a) * Math.PI * 2 * I.lobes)) + 0.8 * fbm(x * 0.5, 3, 503)));
       for (let k = 0; k <= th; k++) { b.lift = 0.12; b.dot(x, top - k, landPig(k, x, top - k)); }
       b.lift = 0.22; b.dot(x, top + 1, PIG.charcoal); b.lift = 0;
     }
   }
-  // two small islets drifting higher
-  for (const [a, c, top] of [[203, 207, 58], [241, 245, 62]]) for (let x = a; x <= c; x++) {
-    const th = x === a || x === c ? 0 : 2;
-    for (let k = 0; k <= th; k++) b.dot(x, top - k, k ? PIG.red : PIG.ochre);
+  // islets of different sizes drifting at different heights
+  for (const [a, c, top, th] of [[201, 204, 56, 2], [209, 211, 64, 1], [237, 243, 62, 3], [228, 230, 50, 1]]) for (let x = a; x <= c; x++) {
+    const d = Math.min(x - a, c - x), h = Math.min(th, d + 1);
+    for (let k = 0; k <= h; k++) b.dot(x, top - k, k ? PIG.red : PIG.ochre);
   }
   // the banded stones, where the far-flung stars came down
   const mound = (cx, R, Hh) => {
@@ -527,5 +543,62 @@ export function paint(m) {
   for (const [dx, dy] of [[0, 2], [0, 3], [-1, 2], [1, 2], [0, 4]]) b.dot(LX + dx, LY + dy, PIG.gold);
   for (const [dx, dy] of [[-4, 3], [4, 3], [-4, 5], [4, 5], [-3, 7], [3, 7], [0, 9]]) b.dot(LX + dx, LY + dy, PIG.ochre, 0.75);
   info.lantern = { x: LX, y: LY + 3 };
+
+  // ---- the fissure: a crack in the rock itself, not painted. A hairline the
+  // whole length of the frieze, from the sky over A down to its mouth in B,
+  // along the ground under C, through D's land and on through the long night.
+  // It tears open where the Gloam comes through, and stays a seeping scar.
+  {
+    const ctrl = [[28, 87], [40, 82], [52, 74], [60, 66], [70, 58], [84, 51], [MOUTH.x, MOUTH.y],
+      [112, 44], [126, 45], [140, 43], [150, 39], [158, 33], [170, 31], [184, 30], [196, 27], [210, 25], [224, 24], [238, 26], [FX1, 25]];
+    const cells = new Map();
+    const add = (x, y, along) => { x = Math.round(x); y = Math.round(y); const k = idx(x, y); if (!cells.has(k)) cells.set(k, { x, y, along }); };
+    let along = 0, px = ctrl[0][0], py = ctrl[0][1];
+    for (let i = 0; i < ctrl.length - 1; i++) {
+      const [x0, y0] = ctrl[i], [x1, y1] = ctrl[i + 1], len = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(len * 2);
+      for (let k = 1; k <= n; k++) {
+        const u = k / n, jag = (fbm(along * 0.35, 0, 611) - 0.5) * 3.2 + (hash2(Math.round(along), 0, 612) - 0.5) * 1.1;
+        const x = x0 + (x1 - x0) * u - jag * (y1 - y0) / len;
+        const y = y0 + (y1 - y0) * u + jag * (x1 - x0) / len;
+        // stay 4-connected so the fissure never breaks
+        if (Math.round(x) !== Math.round(px) && Math.round(y) !== Math.round(py)) add(px, y, along);
+        add(x, y, along); px = x; py = y; along += 0.5;
+      }
+    }
+    const list = [...cells.values()];
+    const region = (x) => (x < 56 ? 0 : x < 104 ? 1 : x < 151 ? 2 : x < XE0 ? 3 : 4);
+    // how wide it tears, and when: wide at the mouth, open along C before the tendrils, a wide old scar in E
+    const tearOf = (x, y) => {
+      const dm = Math.hypot(x - MOUTH.x, y - MOUTH.y);
+      if (dm < 16) return { w: 2.6 * (1 - dm / 18) + 0.6, t: 9.2 + dm * 0.05 };
+      if (x >= 104 && x < 151) return { w: 1.3, t: 14.4 + Math.abs(x - 127) * 0.02 };
+      if (x >= XE0) return { w: 1.2, t: -1 };
+      return null;
+    };
+    for (const c of list) {
+      const k = idx(c.x, c.y);
+      m.p0[k] = PIG.crack; m.v0[k] = 0.92; m.p1[k] = -1; m.p2[k] = -1; m.z[k] -= 1.3;
+    }
+    const lips = new Map();
+    for (const c of list) {
+      const tear = tearOf(c.x, c.y);
+      if (!tear) continue;
+      const R = Math.ceil(tear.w);
+      for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+        const d = Math.hypot(dx, dy), x = c.x + dx, y = c.y + dy;
+        if (d > tear.w || cells.has(idx(x, y)) || !inside(x, y)) continue;
+        const k = idx(x, y), t = tear.t < 0 ? -1 : tear.t + d * 0.12 + 0.1 * hash2(x, y, 613);
+        if (!lips.has(k) || lips.get(k).t > t) lips.set(k, { x, y, t, d, region: region(x) });
+      }
+    }
+    for (const L of lips.values()) {
+      const k = idx(L.x, L.y);
+      if (L.t < 0) { m.p0[k] = PIG.crack; m.v0[k] = 0.85; m.z[k] -= 1.6; m.p1[k] = -1; m.p2[k] = -1; continue; }
+      m.p2[k] = -1;
+      m.ev1(L.x, L.y, PIG.crack, L.t, { cov: 0.95, dz: -2.4 });
+    }
+    info.crack = list.map((c) => ({ ...c, region: region(c.x) }));
+    info.lips = [...lips.values()].filter((L) => L.t > 0);
+  }
   return info;
 }

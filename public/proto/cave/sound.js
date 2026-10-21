@@ -54,6 +54,11 @@ export class CaveSound {
       if (q.kind === 'chime') this.bell(62 + PENTA[(q.k * 3) % PENTA.length], T, 0.09, 3.2);
       else if (q.kind === 'gloam') this.breath(T, 7, 0.16);
       else if (q.kind === 'grip') this.breath(T, q.moon ? 2.5 : 1.2, q.moon ? 0.12 : 0.05, 240);
+      else if (q.kind === 'crack') { this.rumble(T, 2.2); this.grind(T, 1.6); this.wrong(T); }
+      else if (q.kind === 'hush') this.hush(T, 0.85);
+      else if (q.kind === 'strike') { this.stab(T); this.thud(T, 0.3); }
+      else if (q.kind === 'heart') { this.thud(T, 0.22); this.thud(T + 0.24, 0.13); }
+      else if (q.kind === 'tear') this.bend(66 + [0, 3, 5, 7, 10, 12, 15, 17, 19, 22][q.k % 10], T, 0.08);
       else if (q.kind === 'yank') { this.thud(T, q.moon ? 0.32 : 0.16); this.breath(T, 0.35, q.moon ? 0.16 : 0.08, 900); }
       else if (q.kind === 'fall') this.whoosh(T, q.dur, q.moon ? 0.22 : 0.1);
       else if (q.kind === 'rumble') this.rumble(T, 6.5);
@@ -102,6 +107,43 @@ export class CaveSound {
     f.frequency.setValueAtTime(260, at(15)); f.frequency.linearRampToValueAtTime(440, at(21)); f.frequency.linearRampToValueAtTime(200, at(27));
   }
 
+  // a moment of near silence before the strike
+  hush(T, dur) {
+    const g = this.bus.gain;
+    g.setValueAtTime(1, T); g.linearRampToValueAtTime(0.25, T + 0.3); g.setValueAtTime(0.25, T + dur - 0.02); g.linearRampToValueAtTime(1, T + dur);
+  }
+  // a dissonant stab: a cluster a semitone apart, with a scrape of noise
+  stab(T) {
+    for (const m of [49, 50, 56, 61]) this.bell(m, T, 0.07, 2.4);
+    this.breath(T, 0.5, 0.25, 1400);
+  }
+  // stone grinding apart as the fissure opens
+  grind(T, dur) {
+    const c = this.ctx, n = this.noise(), f = c.createBiquadFilter(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+    f.type = 'bandpass'; f.frequency.value = 520; f.Q.value = 3;
+    lfo.frequency.value = 23; lg.gain.value = 0.12; lfo.connect(lg).connect(g.gain);
+    g.gain.setValueAtTime(0.0, T); g.gain.linearRampToValueAtTime(0.14, T + 0.2); g.gain.linearRampToValueAtTime(0, T + dur);
+    n.connect(f).connect(g).connect(this.bus); this.src(n, T, T + dur + 0.1); this.src(lfo, T, T + dur + 0.1);
+  }
+  // the wrong note from somewhere else: two high tones beating, that never leave
+  wrong(T) {
+    const c = this.ctx, g = c.createGain();
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(0.025, T + 3);
+    for (const [f0, pan] of [[1661, -0.4], [1668.5, 0.4]]) {
+      const o = c.createOscillator(), p = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
+      o.type = 'sine'; o.frequency.value = f0; if (p.pan) p.pan.value = pan;
+      o.connect(p).connect(g); this.src(o, T);
+    }
+    g.connect(this.bus);
+  }
+  // a star's chime, bending down out of tune as it is torn loose
+  bend(m, T, gain) {
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain();
+    o.frequency.setValueAtTime(hz(m), T); o.frequency.exponentialRampToValueAtTime(hz(m) * 0.72, T + 1.4);
+    o.detune.setValueAtTime(0, T); o.detune.linearRampToValueAtTime(-40, T + 1.4);
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(gain, T + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, T + 1.8);
+    o.connect(g).connect(this.bus); this.src(o, T, T + 1.9);
+  }
   bell(m, T, gain, decay) {
     const c = this.ctx, car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain();
     car.frequency.value = hz(m); mod.frequency.value = hz(m) * 3.5;
