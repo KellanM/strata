@@ -563,3 +563,12 @@ storyboard 4 with Kellan before building it, then 5 and 6.
   what the fall did to the world. Proposal in chat: the antagonist is a force,
   not a character, and its body is the sea of mist already on the map (see below
   once decided).
+
+**Update (2026-10-21, later):**
+- The antagonist is a **pure force, and its body is the mist**. No face, no fight.
+- Kellan's motive: it wanted the world in darkness, so it **pulled the stars and
+  the moon out of the sky**. This replaces the "the moon held the stars up" framing,
+  which was hard to follow.
+- The frame: *long ago this calamity happened and the world was dropped into darkness.*
+- Open: the antagonist's name. The exposition idea is Kellan's: a lantern-lit voxel
+  cave wall, painted like a cave painting.
