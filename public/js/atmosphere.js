@@ -59,6 +59,7 @@ export class GodRays {
       uTime: { value: 0 }, uAspect: { value: 1 },
       uHaloR: { value: 0.03 },   // the tutorial outline's halo radius (uv height)
       uEvolve: { value: 0 },     // 0..1: the title's light slowly turns, swells and changes its shafts
+      uPhase: { value: 0 },      // the shafts' own clock, run faster on the title (main.js): a speed change never jumps it
     };
     this.blurScene = new THREE.Scene();
     this.blurScene.add(fullscreen(new THREE.ShaderMaterial({
@@ -66,7 +67,7 @@ export class GodRays {
       fragmentShader: /* glsl */ `
         uniform sampler2D tMask;
         uniform vec2 uCenter;
-        uniform float uTime, uAspect, uHaloR, uEvolve;
+        uniform float uTime, uAspect, uHaloR, uEvolve, uPhase;
         varying vec2 vUv;
         void main() {
           // the tutorial's outlined cubes (mask g) glow softly out into the air:
@@ -95,7 +96,7 @@ export class GodRays {
           float ang = atan(da.y, da.x);
           // the fan turns a little, back and forth, and its shafts drift at their own
           // speeds (faster on the title, uEvolve), with a broad swell of light that wanders
-          float e = uEvolve, tt = uTime * (1.0 + 1.6 * e);
+          float e = uEvolve, tt = uPhase;
           ang += e * 0.22 * sin(uTime * 0.045);
           float streak = 0.55 + 0.22 * sin(ang * 7.0 + tt * 0.13) + 0.16 * sin(ang * 13.0 - tt * 0.21)
                        + 0.12 * sin(ang * 29.0 + 1.7 + tt * 0.07)

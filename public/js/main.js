@@ -1620,6 +1620,8 @@ function draw() {
   rays.uniforms.uTime.value = t;
   // the title's light slowly evolves; it eases back to the levels' steadier rays as the title goes
   rays.uniforms.uEvolve.value += ((titleUp ? 1 : 0) - rays.uniforms.uEvolve.value) * Math.min(1, dt * 1.5);
+  // their clock is summed, not scaled: uTime * speed swept the shafts through minutes of motion as the speed eased
+  rays.uniforms.uPhase.value += dt * (1 + 1.6 * rays.uniforms.uEvolve.value);
   const gain = game?.palette.rayGain ?? 1;
   rays.compUniforms.uIntensity.value = gain * (0.42 + rayBoost * 0.5 + 0.05 * Math.sin(t * 0.7));
 

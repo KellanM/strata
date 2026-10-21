@@ -290,6 +290,8 @@ body.world-up #map-world { display: block; }
 .map-head, .map { position: relative; z-index: 1; }
 .mw-strip { position: absolute; inset: 0; }
 .mw-dawn { position: absolute; left: 0; top: 0; width: 100%; }
+.mw-dusk { position: absolute; left: 0; width: 100%; }   /* over the mist layers, under the stones */
+.mw-dusk-stars { position: absolute; left: 0; }
 .mw-layer { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
 .map-scroll { scroll-timeline: --map-scroll block; }
 /* the far layer falls behind the page (0.84 of its speed), driven by the scroll

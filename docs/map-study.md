@@ -33,7 +33,7 @@ Kellan approved direction B with mist and voxel mountain tops. It is now the gam
 - **The title** is the real logo over the world's night sky. The canvas hides its background and motes there. The title and logo move with the page; only the stars parallax.
 - **The descent** lasts 1.5 s, or 0.8 s when it is repeated in the same session (`DESCENT` in main.js, sessionStorage `strata.descended`).
 - **While the map is up** (`body.map-up`), the canvas fades out and stops drawing after 0.6 s. It only comes back once `start()` has rebuilt the level under the veil. This is still "cover before you swap".
-- **Decisions:** chapters after the next one fold into a short stretch of mist (`FOLD_LATER_CHAPTERS`). The shrine treatment in the level is the restrained one: gilded block edges (`uGild`), a held title card, a gold portal and a three-note bell (`sound.shrine`).
+- **Decisions:** every locked chapter keeps its full length under cloud (`FOLD_LATER_CHAPTERS = false`, Kellan 2026-10-20; folding them into a short stretch was tried first). The shrine treatment in the level is the restrained one: gilded block edges (`uGild`), a held title card, a gold portal and a three-note bell (`sound.shrine`).
 
 **The path flash (Kellan's video).** When the mist lifted, the new path showed at full opacity, dimmed, and then drew in.
 - *Cause:* the new trail segments and stones were inserted visible. Measuring the trail (`getTotalLength`) flushed style, which committed opacity 1. Then opacity 0 and the transition were set together, so the browser animated 1 → 0 before the reveal.

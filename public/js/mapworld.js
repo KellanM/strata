@@ -117,6 +117,11 @@ export class MapWorld {
     this.scene.append(this.seaStrip, this.dawn);
     this.layers = {};
     for (const k of ['far', 'near']) { const d = document.createElement('div'); d.className = `mw-layer mw-${k}`; this.scene.appendChild(d); this.layers[k] = d; }
+    // the end of the map: under the Drift the mist sinks into night and the stars come out
+    this.dusk = document.createElement('div'); this.dusk.className = 'mw-dusk';
+    this.duskStars = document.createElement('canvas'); this.duskStars.className = 'mw-dusk-stars';
+    this.dusk.appendChild(this.duskStars);
+    this.scene.appendChild(this.dusk);
     const reduce = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.parallax = PARALLAX && !reduce && !!globalThis.CSS?.supports?.('animation-timeline: scroll()');
     if (this.parallax) this.layers.far.classList.add('mw-par');
@@ -193,10 +198,49 @@ export class MapWorld {
     const g = dawnGradient(Hs, h, this.firstSeaHex);
     this.dawn.style.height = `${(DAWN + BELOW_END * h).toFixed(1)}px`;
     this.dawn.style.background = `${g.css} 0 ${(DAWN - Hs).toFixed(1)}px / 100% ${g.height.toFixed(1)}px no-repeat`;
+    this.layoutDusk();
     // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
     const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
     this.layers.far.style.setProperty('--par', `${(range * (1 - FAR_RATE)).toFixed(1)}px`);
   }
+  // The title read backwards: the last chapter's mist warms to a faint horizon
+  // glow, deepens through the title's violets to its night under the Drift, and
+  // its stars come out toward the bottom. Over the mist (no hard edge where the
+  // last chapter's cloud ends), under the stones.
+  layoutDusk() {
+    const { h, w } = this, m = this.model;
+    if (!m?.driftTop) { this.dusk.style.display = 'none'; return; }
+    const top = m.driftTop - 0.9 * h, len = m.end - top;
+    const at = (z) => z - top;
+    const hex = (c, a) => [ch(c, 16), ch(c, 8), ch(c, 0), a];
+    const keys = [[0, hex(0xeabfbf, 0)], [0.4 * h, hex(0xd2a6bd, 0.35)], [at(m.driftTop) - 0.2 * h, hex(0x8f7fae, 0.8)],
+      [at(m.driftTop), hex(0x4c5187, 1)], [at(m.driftLabel) + 40, hex(0x323a68, 1)], [at(m.driftStones), hex(0x232a52, 1)], [len, hex(0x121731, 1)]];
+    // eased between keys and sampled finely, so no corner shows as a band
+    const stops = [];
+    for (let i = 0; i < keys.length - 1; i++) {
+      const [z0, c0] = keys[i], [z1, c1] = keys[i + 1];
+      for (let k = 0; k < 10; k++) {
+        const t = k / 10, e = t * t * (3 - 2 * t), c = c0.map((v, j) => v + (c1[j] - v) * e);
+        stops.push(`rgba(${c.slice(0, 3).map(Math.round).join(',')},${c[3].toFixed(3)}) ${(z0 + (z1 - z0) * t).toFixed(1)}px`);
+      }
+    }
+    stops.push(`rgb(18,23,49) ${len.toFixed(1)}px`);
+    Object.assign(this.dusk.style, { display: '', top: `${top.toFixed(1)}px`, height: `${len.toFixed(1)}px`, background: `linear-gradient(180deg, ${stops.join(', ')})` });
+    // the stars, thickening and brightening toward the bottom
+    const s0 = at(m.driftLabel) - 60, sh = len - s0, d = Math.min(2, this.dpr), c = this.duskStars;
+    c.width = Math.round(w * d); c.height = Math.round(sh * d);
+    Object.assign(c.style, { top: `${s0.toFixed(1)}px`, width: `${w}px`, height: `${sh.toFixed(1)}px` });
+    const g = c.getContext('2d'), rand = rng('dusk');
+    g.setTransform(d, 0, 0, d, 0, 0); g.fillStyle = '#eef0ff';
+    for (let i = 0; i < 1100; i++) {
+      const x = rand(), y = rand(), k = rand(), r = k > 0.93 ? 1.9 : k > 0.7 ? 1.3 : 0.9;
+      const ramp = Math.min(1, 1.35 * Math.pow(y, 1.1));   // few at the Drift, the full sky at the bottom
+      if (rand() > 0.15 + 0.85 * ramp) continue;
+      g.globalAlpha = ramp * (r > 1.5 ? 1 : r > 1 ? 0.8 : 0.55) * (0.5 + 0.5 * rand());
+      g.fillRect(x * w, y * sh, r, r);
+    }
+  }
+
   // what shows behind the map while it dives into a level or pulls back from one
   backdrop(p) {
     if (!p || typeof p.skyTop !== 'number') return;

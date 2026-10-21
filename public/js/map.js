@@ -24,7 +24,7 @@ const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
 // Chapters past the next one still under cloud are folded into a short stretch
 // (name, signature peak, shrine light) and open to full length when they become
 // the next. false: every chapter keeps its full length under cloud.
-export const FOLD_LATER_CHAPTERS = true;
+export const FOLD_LATER_CHAPTERS = false;
 const FOLDED_H = 300;
 const BAND = 1000, BAND_PAD = 420;   // the map's paint bands (content-visibility), px
 // a short chapter asks for fewer: two stars a stone at most
@@ -282,7 +282,8 @@ export function renderMap(root, opts) {
   drift.forEach((n, j) => {
     nodes.push({ kind: 'drift', x: x0 + colW * (0.5 + (j - 1) * 0.3), y: y + (j === 1 ? 26 : 0), palette: driftPalette, sky: driftPalette, n, state: allSolved && j === 0 ? 'current' : 'open' });
   });
-  const height = y + 190;
+  // below the Drift the mist sinks into night, the title's sky upside down (mapworld.js)
+  const height = y + 190 + Math.round((globalThis.innerHeight || 844) * 0.8);
   root.style.height = `${height}px`;
 
   // the trail's x at a depth (for keeping names and scenery off it)
@@ -313,7 +314,7 @@ export function renderMap(root, opts) {
         trailX: (z) => trailX(z - headH) - cx,
         // the stones and their labels, for keeping scenery off them (a label sits on the side toward the centre)
         stones: nodes.filter((n) => n.kind !== 'drift').map((n) => ({ x: n.x - cx, z: headH + n.y, lbl: n.x > x0 + colW / 2 ? -1 : 1 })),
-        driftTop: headH + driftTop, end: headH + height,
+        driftTop: headH + driftTop, driftLabel: headH + driftLabelY, driftStones: headH + y, end: headH + height,
       });
       mark('map: world built');
     }
@@ -369,7 +370,7 @@ export function renderMap(root, opts) {
     const i = Math.max(0, Math.floor(y / BAND));
     let g = bands.get(i);
     if (!g) {
-      const top = i * BAND - BAND_PAD, h = BAND + 2 * BAND_PAD;
+      const top = i * BAND - BAND_PAD, h = Math.min(BAND + 2 * BAND_PAD, height - top);   // the last band stops at the map's end, or it scrolls on past it
       const el = document.createElement('div');
       el.className = 'map-band';
       el.style.top = `${top}px`; el.style.height = `${h}px`;
