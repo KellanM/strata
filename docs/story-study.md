@@ -572,3 +572,6 @@ storyboard 4 with Kellan before building it, then 5 and 6.
 - The frame: *long ago this calamity happened and the world was dropped into darkness.*
 - Open: the antagonist's name. The exposition idea is Kellan's: a lantern-lit voxel
   cave wall, painted like a cave painting.
+- **Name: the Gloam** (Kellan, 2026-10-21). Exposition: the ~30 s lantern-lit voxel
+  cave mural, five panels, with real mist tendrils dragging the painted moon and stars
+  down. A throwaway spike is at public/proto/cave.html.
