@@ -1,0 +1,556 @@
+# Story study: giving Strata an arc
+
+Date: 2026-10-21. Read this before repeating the research. Frames for the
+recommended concept are in `docs/story-frames/`; working captures and
+exemplar contact sheets are in `shots/story-study/` (git-ignored).
+
+## Brief
+
+Kellan: "Any ideas related to [giving the game an arc]? How have other games
+worked on this? Like saving the princess in Mario or saving Zelda... Are
+creatures trapped in stones by a force and we need to free them and bring
+life back to the world?"
+
+Strata has a world (a sea of cloud, fifteen island chapters from dawn to
+night, a companion walking a gold trail, the Drift under a night sky) but no
+arc. Nothing says what the companion walks toward or what happens after the
+fifteenth chapter.
+
+**Non-negotiables** (Kellan, earlier): Journey and Monument Valley first,
+then Shadow of the Colossus: mythic, vast, a call to adventure, beautiful but
+minimal, close to a work of art. Cosy is off-brand. Show only what's needed;
+no labels or breakdowns; results staged in the scene. Wordless or nearly so.
+Mobile-first, short sessions. The core mechanic doesn't change.
+
+**Criteria for this brief** (mine, not a universal score):
+1. **Minute one.** A player sees the goal, or its absence, before the first
+   stone, without reading anything.
+2. **Each chapter changes the world.** Finishing a chapter visibly changes
+   something you'll see again, not a number.
+3. **Wordless.** It works with no new text. Existing one-line stories may
+   carry it, but nothing may *depend* on reading them.
+4. **Fits what's there.** It explains 158 mixed objects (a toaster, a whale,
+   a mikoshi, a black smoker) without retconning them, and gives the Drift a
+   place.
+5. **Not cosy, not preachy, not dark for its own sake.**
+6. **Cheap in this codebase.** It reuses the title pan, the peaks, the
+   companion, the gold, the palettes.
+
+## What the game already says (baseline, read from code)
+
+There is more latent story than it seems. It falls into four threads.
+
+- **The stone keeps things.** Five chapter lines say so: "Morning finds what
+  the stone was keeping" (I), "Green things grow slowly inside the quiet
+  rock" (III), "Every seed keeps a shape it has not shown" (IV), "Older than
+  names, the stones are still listening" (X), and the last chapter's line:
+  **"What the sky let fall, the stone held"** (XV). Objects agree: the Cat
+  "has slept in this rock since before the moss"; the Fish "swam into the
+  stone and decided to stay"; the Geode is "a dull grey stone, holding a
+  night sky inside"; the Owl "watched every star fall, and kept a list".
+- **Someone walked ahead of you.** First Light is full of it: the Candle "lit
+  before dawn, so the first visitor would find the way"; the Teapot "still
+  warm. Someone was here a moment ago"; the Key "fits a lock somewhere further
+  down the trail"; the Steps lead "to a door nobody has opened yet"; the Bed
+  is turned down "for someone coming home". Beacon Hills: a fire "lit for
+  you"; the Watchtower: "someone up here has been watching the road for you";
+  the Great Beacon: "When you light it, they will see it from the sea." Later:
+  the Lighthouse keeper "left the lamp lit, just in case", the Alpine Hut's
+  "lamp in the window for climbers coming down late", the Pocket Watch "kept
+  someone company on a very long journey".
+- **Lights.** Candle, Beacon, Torchbearer Fox, Lighthouse, Anglerfish ("it
+  brought its own lamp"), Brass Lantern, Paper Lantern, the whole Lantern
+  Festival, the Star ("the first one out, so the others know where to go").
+  The companion (`map.js`, a two-block Totem with one eye) carries a small
+  gold lamp, "the gold of the trail it walks", and the map's rule is that
+  **gold means progress only** (map-study.md).
+- **A day that ends in night.** The chapters run dawn to night (Dawn palette
+  to Night). The title is a night sky that pans down through the horizon onto
+  the map; the map ends at Starfall, then the Drift, then a long empty night
+  sky (`shots/bottom-end.png`). The game already *starts and ends in stars*,
+  with nothing in between them yet. The last shrine is the Crescent Moon:
+  "The moon came down to rest, and forgot to leave."
+
+The twelve lessons (Pillar, Step, Plinth, Wall, Arch, Colonnade, Rune, Cairn,
+Stair, Cornerstone, Geode, Dolmen) are a builder's vocabulary of stone, and
+the Beacon Hills summit already shows a lit fire (`chapter-next-sheet.png`).
+
+What the game does not have: a goal visible from the start, any change to
+the world when a chapter ends (beyond the next chapter's cloud parting), an
+ending, or a reason for the Drift.
+
+## Sources and inspection
+
+Each finding has four parts: **C** a practitioner claim with its source; **O**
+observed evidence with a video id and time; **I** my interpretation; **A**
+what to apply to Strata.
+
+**How things were inspected.** I can't play these games here. I read
+interviews and talk pages; re-read the contact sheets already made for the
+map study (`shots/map-study/exemplars/`: Journey PS3 longplay bkL94nKSd2M
+0:00–77:05 every 30 s, Sky realm gates eLm48_klF3I, SotC, MV1–3); and grabbed
+new frames from YouTube in Chrome for Monument Valley 1 (7RcB1R7iVe4),
+Gorogoa (g9N_tyMyMOw), Gris (9z6t9veznXg) and Okami (ERKofit71sI), into
+`shots/story-study/sheets/`. yt-dlp is blocked (HTTP 403), so the frames are
+seek-and-screenshot stills from fan no-commentary footage at about 360p, not
+continuous viewing. No audio. Where a point rests on memory or a wiki, it
+says so.
+
+### Rescue: Super Mario Bros. and Zelda (why "save X" works, and why it's wrong here)
+
+- **C.** Miyamoto: "the structure of the gameplay always comes before the
+  story... what is the most natural story to take place within that
+  structure" (Kotaku via [MCV, 2013](https://www.mcvuk.com/miyamoto-on-the-damsel-in-distress/)).
+- **I.** The princess is a destination label for a left-to-right run with a
+  castle at the end of each world. It works because it is one noun, stated
+  once, and the structure (worlds, castles, "your princess is in another
+  castle") repeats it. It needs a villain, a captive and text, and it frames
+  the world as an obstacle course.
+- **A.** Take the structure, not the content: **one noun, set up once,
+  repeated by the structure at every chapter end.** Strata has no enemies and
+  no peril, so a rescue would import a villain the game doesn't contain.
+
+### Journey (thatgamecompany, 2012)
+
+- **C.** Chen: "The game's goal is simple: go to the mountain." "We used the
+  environment to guide the player without using words, or compass, or map"
+  ([Push Square, 2012](https://www.pushsquare.com/news/2012/02/interview_thatgamecompany_journey)).
+  "You need to form an emotional arc like in a Hollywood movie with a three
+  act structure... to create a climax you need a low moment"; mid-game "the
+  mountain has disappeared"; the end is "kind of like a flashback with it all
+  together just to see how beautiful life is"
+  ([WhatCulture, 2013](https://whatculture.com/gaming/bafta-nominated-journey-director-jenova-chen-interview)).
+  Campbell's Hero's Journey shaped it; *Koyaanisqatsi* showed him "I can
+  create an emotional narrative arc without plot, character, or dialogue"
+  ([Engadget, 2012](https://www.engadget.com/2012-11-07-hit-list-qanda-jenova-chen-thatgamecompany-president.html)).
+  Nava: the mural is "this really long image... you kind of uncover
+  throughout the game" (GDC, RoHrwAacTwo 23:35, map-study J3).
+- **O.** bkL94nKSd2M: the mountain with its beam over a dune crest at
+  1:06–2:26; the mural rooms between chapters (42:30–50:30: glyph walls, the
+  white-robed elders); the snow climb greys and slows (51:00–69:00) until the
+  screen goes white (69:30–70:00); then a burst upward in colour
+  (70:30–73:00) and a walk into the light (74:30–75:30).
+- **I.** Three tools: a **goal visible from the first frame**; **interludes
+  that show the story as pictures** between chapters, not text; and **a low
+  before the high** (cold, slow, alone) so the summit means something.
+- **A.** Give Strata one thing visible from the title that is plainly
+  unfinished, a quiet moment at each chapter end that shows it changing, and
+  let the last chapters cool and empty before the ending fills.
+
+### Monument Valley 1 (ustwo games, 2014)
+
+- **C.** Wong describes the story as a symbolic "song" rather than a book
+  (Polygon via [Wikipedia](https://en.wikipedia.org/wiki/Monument_Valley_(video_game)));
+  collecting and unlocks are "an artificial layer"; "Ida doesn't collect
+  anything… she gives something back" (ANIMAL, already in
+  game-loop-study.md).
+- **O.** 7RcB1R7iVe4 (`sheets/mv1_0-99999.jpg`): the last chapter,
+  Observatory, is the game's only night: an impossible cube under stars
+  (41:05–41:30). After it, Ida stands on a small plinth in a dark field of
+  crow people under a starry sky (42:20). They turn into colourful birds and
+  rise into the night above her (42:45–43:10); then the title (43:35). No
+  text in any of these frames. I did not capture a level-end altar moment, so
+  that part rests on memory.
+- **O, the ending.** The payoff is *things rising into a night sky* over a
+  tiny, still hero. That is concept A's ending almost exactly, which is
+  encouraging (it is proven, and on-brand) and a warning (it must not look
+  copied: Strata's version is constellations that stay, made of the objects
+  you found, seen again on every title).
+- **I.** The collecting is reversed: the player returns what was taken. Each
+  level ends in the same small ritual, so the arc is carried by repetition of
+  one gesture, not by exposition.
+- **A.** Strata's reveal is already a ritual (the object floats with its
+  gems). The arc should be **giving back**, not hoarding: each object or
+  chapter returns something to the world.
+
+### Shadow of the Colossus (Team Ico, 2005)
+
+- **C.** Ueda began to doubt "feeling good by beating monsters" and "getting
+  a sense of accomplishment" while making it
+  ([Cane and Rinse, 2019](https://caneandrinse.com/fumito-ueda-interview/));
+  "subtracting design" (1UP on GDC 2004, map-study S1).
+- **O.** Map-study S3/S4: unexplored land under drawn cloud; a rider a tenth
+  of the frame tall.
+- **I.** The quest has a **cost** the player feels without being told. A
+  small cost gives weight; a large one would break Strata's calm.
+- **A.** One quiet cost at the end, e.g. the companion gives up its lamp.
+
+### Sky: Children of the Light (thatgamecompany, 2019)
+
+- **C/O.** Spirits are freed and return to their realm's constellation; each
+  realm gate shows a constellation that fills with figures as you find them
+  (eLm48_klF3I 0:48–2:16, a fan guide; official store copy: free trapped
+  ancestral spirits and send them home among the stars).
+- **I.** Collection drawn as **stars in a shape**, shown in a place you
+  return to. The sky is the album.
+- **A.** Direct precedent for constellations as Strata's journal-in-the-sky.
+
+### Okami (Clover, 2006)
+
+- **C.** The team chose sumi-e to convey Amaterasu's link to nature and her
+  task of restoring it ([Wikipedia](https://en.wikipedia.org/wiki/%C5%8Ckami);
+  Kamiya in [Iwata Asks](https://iwataasks.nintendo.com/interviews/wiiu/thewonderful101/0/4)).
+  Brush gods hide in constellations "with any number of stars missing"; you
+  draw the missing stars to restore them (Okami wiki; not a developer source).
+- **O.** ERKofit71sI 0:04–1:16: a guardian sapling blooms and a wave of petals
+  rolls outward across a grey, cursed field, turning it green and pink in
+  one sweep. (The rest of that video failed to load.)
+- **I.** Restoration is staged as **one wave across the land**, not object by
+  object, so the payoff reads at a glance. Constellations with missing stars
+  are an existing, legible image of "incomplete sky".
+- **A.** A chapter's completion should be one gesture across its whole
+  island, and a missing star or missing moon reads as "unfinished" without
+  words.
+
+### Gorogoa (Jason Roberts, 2017)
+
+- **C.** "I think of the character as a mystic... He's devoted to something
+  outside the world, and trying to find it"; "If you don't know where your
+  destination is, you don't know how long you have to wander"; "The
+  animators, especially with no dialogue, are also the actors"
+  ([Kotaku, 2017](https://kotaku.com/the-puzzle-of-a-lifetime-1821235999)).
+  GDC 2018: "What is the fantasy at the heart of the game's story and
+  gameplay, and how is it rooted in real world emotional and spiritual
+  drives?" ([session summary](https://gonintendo.com/archives/282371-gdc-2018-session-gorogoa-the-design-of-a-cosmic-acrostic)).
+- **O.** g9N_tyMyMOw (`sheets/gorogoa_0-99999.jpg`): at 15:00 a coloured
+  mandala holds the coloured orbs the boy is gathering. The last minutes are
+  dominated by an **empty circle** (28:40–30:20), carried from panel to
+  panel. At 30:45 a bowl holds all five coloured orbs together; at 31:10 the
+  many-coloured creature appears; at 31:35 the credits. No words in any
+  frame.
+- **I.** The closest match to Strata: a wordless puzzle game whose story is
+  one devotion (a boy seeking a creature, gathering coloured offerings),
+  where every puzzle is also a picture in the story. The ending is *the
+  collection assembled in one place*, preceded by an empty shape the player
+  has been looking at for minutes.
+- **A.** The arc can be a single devotion carried by pictures; the puzzles
+  don't need to "mean" anything individually if the collection does.
+
+### Gris (Nomada, 2018)
+
+- **C.** Secondary only: the team consulted a psychologist on grief; each
+  chapter adds a colour (Wikipedia; analyses). I found no primary interview.
+- **O.** 9z6t9veznXg (the last part of a longplay series;
+  `sheets/gris_0-99999.jpg`): the full palette is back (0:30–8:00); at 10:30
+  thin constellation lines are drawn across a night sky above a tower; at
+  13:00–15:30 the screen goes black, then to black-and-white ink (the low);
+  at 18:00 a line of stars joined by hairlines runs up a lilac sky to the
+  statue's open hand: the lights gathered over the game become the way up.
+  Credits at 20:30.
+- **I.** Colour as the progress bar: the world gains a hue per chapter, and
+  nothing else needs to be counted.
+- **A.** Strata's fifteen palettes are already a colour strip (map-study J2);
+  a chapter's completion can *give its colour back* somewhere you see again.
+  And a second precedent (with MV1's ending) for **collected lights becoming
+  stars**, so the idea is proven in exactly this genre, and Strata's version
+  must be its own: the constellations are the shrines you uncovered, and
+  they live on the title, not only in the finale.
+
+### Collection that pays off: Super Mario Galaxy, Monument Valley, Townscaper
+
+- **Galaxy.** Grand Stars power the Comet Observatory's beacon; it changes
+  colour with each one, and each opens a dome
+  ([Super Mario Wiki](https://mariowiki.com/Beacon_(Comet_Observatory))). One
+  object in the hub shows total progress, in light.
+- **Florence** (Wong, 2018): "When you're communicating with visuals, music
+  and gameplay scenarios then the player can interpret these events as they
+  wish... a deeper meaning rather than one that we tell them directly"
+  ([MCV, 2018](https://mcvuk.com/?p=23751)).
+- **Townscaper** as counterpoint: Stålberg calls it a toy; "no goal" beyond
+  the pleasure of building ([Bloomberg, 2020](https://www.bloomberg.com/news/articles/2020-07-24/the-video-game-where-you-build-an-empty-town)).
+  An arc is optional; Picross games ship 300 puzzles with none. Strata
+  doesn't *need* a plot; it needs a destination.
+- **Picross with story.** Murder by Numbers wraps picross in a visual novel:
+  each puzzle reveals evidence ([PC Gamer](https://www.pcgamer.com/murder-by-numbers-review/));
+  reviews found the story and the puzzles pulling apart. A wordy frame is the
+  wrong lesson for Strata.
+- **Alba** (ustwo): "as you do that, you kind of realise there's more stuff
+  going on on the island. Some stuff is in disrepair" (Mistry, via
+  [PocketGamer.biz](https://www.pocketgamer.biz/interview/75834/alba-a-wildlife-adventures-journey-to-plant-one-million-trees-around-the-world/)).
+  A catalogue plus a place that heals.
+
+## Mechanisms that transfer
+
+1. **One noun, visible from minute one** (Journey's mountain, Mario's
+   princess, Galaxy's beacon). Strata's title is where every session starts:
+   that is the place for it.
+2. **Give back, don't hoard** (MV, Sky). The collection returns something.
+3. **One gesture per chapter, across the whole place** (Okami's wave, MV's
+   altar, Galaxy's dome). Not per object; per chapter.
+4. **Absence reads before presence** (Okami's missing stars, Journey's
+   vanished mountain). A gap in a familiar shape is legible without words.
+5. **A low before the high, and one small cost** (Journey's snow, SotC).
+6. **The story is a picture, not a sentence** (Gorogoa, Florence, Journey's
+   murals). Strata's existing one-liners can stay optional flavour.
+
+## Five concepts
+
+Each is a different answer to "what is the player doing?": returning,
+following, waking, building, or nothing at all. Costs are rough: S is about a
+day, M two to four days, L a week or more.
+
+### A. What the Sky Let Fall (returning)
+
+- **Premise.** Long ago the sky came down. Every star fell into the world and
+  became a thing in it (a teapot, a heron, a black smoker) and the stone held
+  each one safe. Peeling a stone frees its star; finishing a chapter sends
+  that chapter's light home. Chapter XV's line already says it.
+- **The companion** is a star-keeper: the small Totem whose lamp is the one
+  star that never left. It wants to carry the lights home.
+- **The stones** are what kept the fallen sky. Nothing is imprisoned; the
+  stone was shelter ("Morning finds what the stone was keeping").
+- **Minute one.** The title opens on a night sky that is visibly *missing
+  things*: thinner stars, and a faint ring where the moon should be. Low on
+  the horizon, one gold point: the companion's lamp.
+- **Each chapter.** When its last stone falls, a gold light lifts off the
+  chapter's summit and climbs out of frame. On the next visit to the title a
+  new constellation hangs in the sky, drawn in the shape of that chapter's
+  shrine (a cottage, a beacon, a tortoise...). Fifteen chapters, fifteen
+  constellations, no counters.
+- **Ending.** Starfall's last stone. The camera rises back up the whole map
+  (the title's descent, reversed) through every chapter, into a sky that is
+  now full; the moon is back in its ring. The companion opens its lamp and
+  lets its own star go up last. It stands lampless and small at the
+  horizon; the trail behind it is lit by the sky instead. No text.
+- **Objects and the Drift.** Any object can have been a star, so the mixed
+  set needs no retcon; the journal becomes a star atlas. The Drift is the
+  sky that is *still* falling: after the ending, each Drift solve adds a
+  shooting star to the empty night below the map (`bottom-end.png` is
+  already that empty sky).
+- **Arc.** Dawn to night is already the palette strip, so the late chapters
+  darken (Journey's low) while the title sky fills (the high). The cost is
+  the lamp.
+- **Risks.** Stars could read as a progress counter (keep them sparse, no
+  numbers, no tap targets). "Things are stars" could tip into whimsy (keep it
+  vast: big empty sky, tiny companion, slow). The ending lives on the title,
+  so a player who never returns to it misses the build-up (mitigate: the
+  ending pan forces one pass).
+- **Cost: M.** The title stars are already pre-drawn canvas sheets in
+  `mapworld.js`; constellations are one more sheet (S). The rising light on
+  chapter completion fits the existing cloud-parting ceremony in `map.js`
+  (S). The ending pan reverses the title descent, plus the moon and the lamp
+  (M). Drift shooting stars (S). No new 3D art; the constellations come from
+  the shrines' own voxels.
+
+### B. The Lamp Road (following)
+
+- **Premise.** Someone walked this road before you and lit a fire on every
+  summit. The fires have gone out. You relight them, chapter by chapter, and
+  at the end you find out who walked ahead.
+- **The companion** is the next walker. It follows the warm teapots, the
+  candle, the watchtower "watching the road for you".
+- **The stones** are what the walker left behind: gifts and waymarks.
+- **Minute one.** From the title, along the horizon, a line of fifteen dark
+  beacon summits receding, the first one lit.
+- **Each chapter.** Its signature summit takes a gold flame that stays lit on
+  the map; scrolling the map shows the chain of fires growing behind you.
+- **Ending.** At the last summit there is no one, only a lamp left on a
+  stone. The companion takes it, turns, and the map plays back to First
+  Light, where it lights the Candle and warms the Teapot for whoever comes
+  next. The player became the "someone" of chapter I.
+- **Objects and the Drift.** Animals sit oddly as "things left behind"; the
+  Drift is new travellers' roads.
+- **Arc.** The cycle (Journey) and the call to adventure (Beacon Hills
+  already names it).
+- **Risks.** The twist depends on players remembering chapter I's one-liners
+  (it fails without the text). Fires on every peak need lit and unlit
+  versions of all fifteen pre-rendered summit sprites.
+- **Cost: M.** Re-render peaks with a flame layer (`tools/render-peaks.mjs`),
+  title horizon chain (S), return-walk ending (M).
+
+### C. The Long Stillness (waking; Kellan's idea, reframed)
+
+- **Premise.** A long stillness lay over the world. Everything in it went
+  into the stone to wait. Each solve wakes one; each chapter wakes a land.
+- **The companion** is the one thing that stayed awake, carrying the last
+  ember.
+- **The stones** are shelter, not prisons: no villain needed. (A "force that
+  traps creatures" brings an enemy the game never shows, and a trapped
+  toaster is funny in the wrong way.)
+- **Minute one.** The map is grey and silent ahead of you; only First Light
+  has colour.
+- **Each chapter.** One wave (Okami's bloom) rolls over the island: colour,
+  sound, the solved objects begin to move on their stones.
+- **Ending.** The last chapter wakes, and the dawn of chapter I comes round
+  again, the night sky under the Drift turning to morning.
+- **Objects and the Drift.** Fits every object; the Drift is things still
+  sleeping.
+- **Arc.** Gentle, but it has no low and no cost.
+- **Risks.** The most cosy of the five; "bring life back" is the most common
+  mobile meta (Gardenscapes, Merge Mansion) and reads like one. Desaturating
+  unreached chapters fights the map's desire rule (a locked chapter should
+  look *wanted*, map-study criterion 2). Moving objects on the map is the
+  map's slowest path on phones.
+- **Cost: L.** Per-chapter desaturation and the wave in `mapworld.js`,
+  animated objects (new per-object motion), frame-rate risk on the map.
+
+### D. The Strata Tower (building)
+
+- **Premise.** On the horizon stands a broken tower of fifteen bands. Each
+  chapter's shrine restores one band in that chapter's colour. Complete, it
+  is the game's colour script stood on end.
+- **The companion** is its keeper, carrying each band home.
+- **The stones** are quarry: you are cutting the tower's stone, and keeping
+  what was inside it.
+- **Minute one.** The grey tower on the title horizon, its top missing.
+- **Each chapter.** A band lights in the chapter's palette.
+- **Ending.** The fifteenth band, then the companion climbs and sets its
+  lamp at the top: a lighthouse for the next traveller.
+- **Objects and the Drift.** Objects are incidental, which is honest but
+  thin; the Drift is the tower's foundation, endless.
+- **Arc.** Satisfying collection (Galaxy's beacon), little feeling.
+- **Risks.** A new hero asset that must hold up at title size; a tower reads
+  as a progress bar.
+- **Cost: M–L.** A voxel tower with fifteen states, a title placement, the
+  climb.
+
+### E. No plot: the Atlas (the counterpoint)
+
+- **Premise.** Keep Strata a picross album (Townscaper, Picross). Add only an
+  end: when the last chapter is done, the camera rises over the whole map,
+  every object on its stone, and stops in the night sky.
+- **Cost: S.** **Risk:** it answers "what happens after XV" but not "what am
+  I walking toward", which was the question.
+
+## Recommendation: A, What the Sky Let Fall
+
+| | A Sky | B Lamp Road | C Stillness | D Tower | E Atlas |
+|---|---|---|---|---|---|
+| 1 Minute one | missing moon, one gold star | dark beacon chain | grey map ahead | broken tower | none |
+| 2 Chapter changes the world | constellation in the title sky | fire on its summit | colour wave | a band lights | none |
+| 3 Wordless | yes | the twist needs chapter I's text | yes | yes | yes |
+| 4 Fits 158 objects + Drift | anything was a star; Drift = still falling | animals strain "left behind" | yes | objects incidental | yes |
+| 5 Not cosy / preachy | vast, one small cost | cyclical, a little sentimental | the cosiest | neutral | neutral |
+| 6 Cost | M | M | L | M–L | S |
+
+Why A:
+
+- **It is already the game's last line.** "What the sky let fall, the stone
+  held" (XV), "Morning finds what the stone was keeping" (I), the Geode, the
+  Owl, the Star, the Crescent Moon shrine. A builds on what Kellan wrote rather
+  than replacing it, and the mixed objects need no explanation.
+- **The title is the right stage.** Every session starts on the night sky and
+  pans down to the map. A puts the arc there, so the player sees their whole
+  journey for two seconds every time they open the game: Journey's mountain
+  and Galaxy's beacon in the one screen that is already pure scenery.
+- **Giving back, not hoarding** (MV, Sky). The constellations are made from
+  the shrines' own voxels, so the sky is the journal returned to the world.
+- **It has a low and a cost.** The palette strip already darkens toward
+  Starfall while the sky fills; the companion gives up its lamp. That is the
+  SotC note at Monument Valley volume.
+- **It costs no new 3D art**, and it uses gold correctly (gold = progress:
+  the lamp, the rising light, the Drift's falling stars).
+
+Keep from B: the companion lighting the First Light Candle in the ending's
+last beat is a lovely echo, and works inside A if the ending pan passes
+through chapter I. Keep from C: Kellan's "bring life back" survives as the
+reframing that **the stone was shelter, not a prison**: no villain.
+
+## Experiment: styleframes
+
+**Question tested:** can concept A's arc be read from the title alone, with
+no words, without cluttering the screen Kellan already likes?
+
+**Method.** Real screens from the game (390×844 phone, port 5240, seeded
+saves), with the concept painted on a canvas over the live page
+(`shots/story-study/frames.mjs`; no game code changed). Constellations are
+generated from each shrine's own voxels (`renderThumb` silhouette, a star per
+well-covered cell, thinned to seven by farthest-point sampling, joined by a
+minimum spanning tree). Three passes:
+
+- **v1** (`shots/story-study/out/`): rejected. A dark veil to "thin the sky"
+  also greyed the logo; constellations of 14–20 stars with heavy glow read as
+  dot-matrix blobs, not stars; a dashed ring for the missing moon read as a
+  UI selection; the full sky smothered the wordmark.
+- **v2** (`out2/`): constellations cut to seven stars and hairlines, the
+  missing moon as a starless dark disc. Much better, but a veil with holes
+  left a visible band around the wordmark.
+- **v3** (`out3/`, copied small to `docs/story-frames/`): no veil (a real
+  build would draw fewer stars instead), the moon's glow fixed.
+
+**Frames** (`docs/story-frames/storyboard.jpg` shows them in a row):
+
+| Frame | Shows |
+|---|---|
+| `00-title-today.jpg` | Baseline: today's title. |
+| `01-minute-one-title.jpg` | Minute one: a starless dark disc where the moon should be (top right) and one gold point low on the horizon, the companion's lamp. |
+| `02b-first-light-done-light-rises.jpg` | First Light's last stone solved: a gold glow on the red-roofed summit and a thread of light rising off the top of the screen. |
+| `03-title-after-chapter-I.jpg` | The next title: one small constellation (the Cottage's stars) top left. |
+| `04-title-after-chapter-VIII.jpg` | Eight constellations around the logo. |
+| `05-title-ending-full-sky.jpg` | The ending: fifteen constellations, the moon back in its place, the companion's gold star let go at the top of the sky; no lamp on the horizon. |
+| `06b-drift-stars-still-falling.jpg` | After the ending: gold stars still falling into the night below the Drift. |
+
+**My assessment** (not a player test):
+
+- **Purpose and comprehension.** The *progression* reads: the sky visibly
+  fills from 01 to 05, the dark disc is noticed and reads as "missing", and
+  the filled moon resolves it. Without words, a player would likely read "my
+  progress lives in the sky"; whether they read "the things I uncovered
+  *were* stars" is not established and probably needs the ending's motion
+  (the light lifting off, the camera rising). The constellations do **not**
+  read as their shrines at this sampling; they read as abstract
+  constellations. That is acceptable (real constellations are abstract) but
+  if the shapes matter, each needs hand placing.
+- **Creative execution.** v3 stays minimal at 1 and 8 chapters. At 15 it is
+  busier than anything else in the game's UI, but it reads as sky, not
+  interface, because nothing is numbered, aligned or tappable. Fifteen is the
+  upper limit; I'd test 15 smaller ones, or let the earliest fade as others
+  arrive. The chapter-end thread is right in place and colour but faint at
+  storyboard size: on a phone it would need motion (and probably a sound) to
+  land. The gold lamp on the horizon in 01 is the weakest frame: it floats
+  without a reason until you know the story.
+- **Technical.** Overlays only; positions are hand-set around the wordmark
+  and cube; no motion, no performance cost measured.
+
+**What this disproved:** heavier "absence" (darkening the whole sky) hurts
+the title more than it helps; absence works only as one precise gap (the
+moon).
+
+## Prioritised hit list (nothing built; for Kellan's go-ahead)
+
+| # | Change | Why (evidence) | Cost | Review |
+|---|---|---|---|---|
+| 1 | **A constellation sheet in the title sky.** One per completed chapter, drawn from its shrine's voxels: 5–7 stars, hairline links, no glow beyond the existing stars. Fixed places clear of the wordmark and the cube. | Sky's realm constellations; Galaxy's beacon; one noun from minute one | S | The title at 0, 1, 8 and 15 chapters on a phone: does it read as sky, not a counter? |
+| 2 | **The missing moon.** A ring in the title sky with no stars in it, filled at the end. | Okami's missing stars; absence reads before presence | S | Does a first-time player notice it at all? (it may need to be larger) |
+| 3 | **The light lifting off a finished chapter.** After the last stone's reveal, a gold thread rises from the chapter's summit and leaves the top of the screen; it plays once, inside the existing cloud-parting ceremony. | MV's end-of-level ritual; Okami's one gesture | S–M | Is the moment legible with no text, and short enough (≤2 s)? |
+| 4 | **The ending.** After Starfall's last stone: the camera climbs back up the map to the full sky, the moon returns, the companion lets its lamp go. | Journey's flashback and ascent; SotC's cost | M | A full storyboard first; then a real build on a phone |
+| 5 | **The Drift keeps falling.** After the ending, each Drift solve sends a gold shooting star into the empty night below the map. | Endless mode with a reason | S | Does it stay quiet? (one star per solve, no counter) |
+| 6 | **Let the late chapters cool.** Check that Frost → Cloud Isles → Starfall get quieter and emptier before the end (sound, motes). | Journey's low before the high | S | Listen through XIII–XV |
+
+Suggested order: 1 and 2 together (they make minute one), then 3, then
+storyboard 4 with Kellan before building it, then 5 and 6.
+
+## Honest limits
+
+- **I played none of these games.** Evidence is interviews, wiki entries
+  where marked, and stills from fan no-commentary longplays at about 360p,
+  grabbed by seeking in Chrome (yt-dlp is blocked). Stills are not
+  continuous viewing: timing, motion and music are not judged. No audio.
+- **Partial footage.** The Okami restoration video failed after 1:16; the
+  first MV1 pass hit "Something went wrong" pages, so MV1 has 12 usable
+  frames. The Journey and Sky sheets are re-reads of the map study's.
+- **Not accessed:** Chen's GDC 2013 *Designing Journey* (Vault login), Ken
+  Wong's GDC talks, Roberts' GDC 2018 talk itself (only its summary), any
+  primary Nomada interview on Gris's colour, any primary Sky story talk.
+- **The styleframes are overlays on real screens**, drawn in a canvas over
+  the live game; they show composition and legibility, not motion, timing or
+  performance. The constellations are generated from the shrine voxels by a
+  quick sampling rule; a real build would hand-tune each one.
+- **No player has seen any of this.** My judgements of the frames are mine.
+
+## Questions only Kellan can answer
+
+1. **Which concept?** A (recommended), B, or a mix (A with B's candle beat).
+2. **Is the companion allowed a cost?** Giving up its lamp at the end is the
+   one sad note. Too much, or right?
+3. **Where does the ending trigger?** The last *main* stone of Starfall
+   (today the Observatory), not an optional shrine. Should the Crescent Moon
+   move from Starfall's shrine to a final, required stone after Starfall (a
+   wordless chapter "XVI" of one puzzle), with a new Starfall shrine?
+4. **Does the title change at all?** A changes the title sky every time a
+   chapter ends. Is the title sacred (logo, rays), or can the sky carry
+   progress?
+5. **Constellation shapes:** from each chapter's shrine (as drawn), or from
+   its signature summit landmark, or a hand-drawn emblem per chapter?
+6. **Do the one-line stories change?** None need to. A few could lean in
+   (e.g. the Star, the Owl), but they should stay optional.
