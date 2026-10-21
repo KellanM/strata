@@ -554,3 +554,12 @@ storyboard 4 with Kellan before building it, then 5 and 6.
    its signature summit landmark, or a hand-drawn emblem per chapter?
 6. **Do the one-line stories change?** None need to. A few could lean in
    (e.g. the Star, the Owl), but they should stay optional.
+
+## Kellan's decisions (2026-10-21)
+
+- **Concept A**, What the Sky Let Fall. **Triumphant** ending, not bittersweet.
+- The stars fell to earth **as meteors**.
+- Open, under discussion: *why* they fell, whether there is an antagonist, and
+  what the fall did to the world. Proposal in chat: the antagonist is a force,
+  not a character, and its body is the sea of mist already on the map (see below
+  once decided).
