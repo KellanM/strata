@@ -1,6 +1,6 @@
 // The sequence as pure functions of time t (seconds), so any frame can be
 // rendered exactly (?t=17.2&still) and a skip or replay never drifts.
-import { hash2, ground } from './mural.js';
+import { hash2, ground } from './mural.js?v=2';
 
 export const END = 35.6;   // the fade is complete
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));

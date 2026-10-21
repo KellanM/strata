@@ -5,10 +5,10 @@
 //   ?auto      start without the tap (silent)            ?fps   frame times
 // window.cave.seek(t) renders any moment; the whole sequence is a function of t.
 import * as THREE from 'three';
-import { Mural, paint, W, rng } from './mural.js';
-import { wallMeshes, voxelMaterial, Tiles, Sprites, Ribbons, Finish, lightUniforms, MAX_LIGHTS } from './render.js';
-import { makeStory, END } from './story.js';
-import { CaveSound } from './sound.js';
+import { Mural, paint, W, rng } from './mural.js?v=2';
+import { wallMeshes, voxelMaterial, Tiles, Sprites, Ribbons, Finish, lightUniforms, MAX_LIGHTS } from './render.js?v=2';
+import { makeStory, END } from './story.js?v=2';
+import { CaveSound } from './sound.js?v=2';
 
 const params = new URLSearchParams(location.search);
 const $ = (s) => document.querySelector(s);
