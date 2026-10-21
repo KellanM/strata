@@ -575,3 +575,60 @@ storyboard 4 with Kellan before building it, then 5 and 6.
 - **Name: the Gloam** (Kellan, 2026-10-21). Exposition: the ~30 s lantern-lit voxel
   cave mural, five panels, with real mist tendrils dragging the painted moon and stars
   down. A throwaway spike is at public/proto/cave.html.
+
+## Cave spike (2026-10-21)
+
+**Built.** `public/proto/cave.html` (+ `public/proto/cave/*.js`), live at
+https://kellanm.github.io/strata/proto/cave.html. A 32 s wordless sequence on a
+236 × 104 voxel cave wall (stone heightfield, ribs of rock between five painted
+panels) lit only by the companion's lantern: a warm, flickering point light with
+a soft Gaussian falloff, carried along the wall with a step-bob. Pigment is
+per-voxel: ochre, earth red, charcoal, pale clay for the Gloam, and gold for the
+sky's lights (gold flakes are tilted per voxel so they glint as the flame moves).
+Tap to begin (this also starts the sound, for iOS), tap to skip, a replay ring at
+the end. `?t=17&still` holds any frame; the whole sequence is a function of t.
+Contact sheet: `docs/story-frames/cave-spike.jpg`.
+
+**Choices.**
+- **No text at all**, not even "GLOAM". The mist is its only name; the word would
+  be the one label in an otherwise painted world. Easy to add as a carved glyph if
+  wanted.
+- **The Gloam is pale, cold clay in paint and cold blue-grey in the real mist**,
+  so it reads against the warm stone and lantern (warm = life, cold = the Gloam).
+  The real tendrils rise out of the painted mass in panel 3, coil round each star
+  and the moon, drag them down, and let go; the stars ignite and streak right as
+  meteors, lighting the wall as they pass (each meteor is a real light), and the
+  camera follows them into panel 4.
+- **Stone closes in horizontal bands** (strata), bottom up, as low domes outlined
+  in charcoal: the game's stones in cave-painting form. Each star's gold is the
+  last thing covered.
+- **The land splits into three broad islands** floating in pale painted mist, the
+  same shape as the map's inverted peaks; panel 5 repeats them, figures gone, one
+  painted lantern on the middle island. The real lantern stops on it and its light
+  closes in before the fade.
+- Sound is synthesised (own small WebAudio, not `audio.js`, which is tied to the
+  chapter keys): a low drone, a semitone that rubs in when the Gloam rises, a
+  chime per star the lantern finds, a breath per grip, whooshes, a rumble, thuds,
+  a click per closing stone layer, one warm bell for the lantern; all through a
+  generated cave reverb.
+
+**What works** (my judgement from frames on a 390 × 844 viewport, not a player
+test): the lantern-on-stone look is moody and the voxel grid reads; panel 1 is
+clear (figures, moon, stars) and the gold glints; the painted mist rising in
+panel 2 reads as a swell with fingers reaching for the sky; the key beat reads,
+because the cold real mist against the warm wall makes the coils round each star
+legible, and the shower of meteors across the gap is the most cinematic moment.
+
+**What doesn't yet.**
+- The *drag* is the weakest part of the key beat: the coil and the fall read, the
+  pull between them is only about 1.5 s and modest. It needs more time or a
+  harder yank.
+- The stars land as small hot beads that, at a glance, look a little like
+  candles. The banded domes read as stones but also a little like acorns.
+- Panel 4 is busy for about 3 s (five impacts, cracks, mist, domes, the sky
+  darkening at once); it might be calmer with three impacts.
+- Real time was checked only in desktop Chrome (≈16.7 ms a frame, 10 draw calls,
+  ~150k triangles, pixel ratio capped at 2, stepping down on slow frames). It has
+  **not been run on an iPhone yet**; the sound has not been heard on one either.
+- Gold reads as gold paint only near the light; far from it, the stars are
+  dull ochre.
