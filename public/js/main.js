@@ -2108,6 +2108,9 @@ function finishPull() {
     // the logo has scrolled away: hide the canvas outright before its view offset
     // resets, or the logo pops back to the centre while the canvas fades out
     if (toMap()) { canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; }); }
+    // to the first lesson: the glide faded the canvas out with the logo (setScroll);
+    // hand it back to the stylesheet so it fades in on the lesson, or the lesson is played blind
+    else canvas.style.transition = canvas.style.opacity = '';
     titleScreen.classList.remove('show');
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
