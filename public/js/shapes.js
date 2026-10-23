@@ -78,14 +78,43 @@ export const SHAPES = [
     {
       id: 'heart', name: 'Heart', fraction: 0.5, seed: 6,
       story: 'Carved by someone patient, for whoever would find it.',
-      ...extrude([
-        '.RR.RR.',
-        'RRRRRRR',
-        'RRRRRRR',
-        '.RRRRR.',
-        '..RRR..',
-        '...R...',
-      ], 2, { R: 0xe0546b }),
+      // an amulet (Kellan, 2026-10-23): the same heart, coloured as a ruby set
+      // in a gold bezel. The rim is every cell on the outline; the stone is
+      // the rest. Both are lit from the upper left on a five-step ramp, the
+      // steps blended by a 2x2 ordered dither so the shading reads as curved
+      // rather than banded; one specular glint on the ruby's shoulder. The
+      // back face sits a step darker. Warm on warm (gold and ruby are
+      // neighbours on the wheel), held apart by value: light gold, deep ruby.
+      ...(() => {
+        const rows = [
+          '.##.##.',
+          '#######',
+          '#######',
+          '.#####.',
+          '..###..',
+          '...#...',
+        ];
+        const H = rows.length;
+        const on = (x, y) => y >= 0 && y < H && x >= 0 && x < 7 && rows[H - 1 - y][x] === '#';
+        const GOLD = [0x8f6326, 0xb98535, 0xdcab48, 0xf0cc6a, 0xfae6a4];
+        const RUBY = [0x6e1a34, 0x9c2540, 0xc9344c, 0xe85d74, 0xf6a0b0];
+        const BAYER = [[0, 2], [3, 1]];
+        const ramp = (tones, k, x, y, shift) => {
+          const t = k * (tones.length - 1) + (BAYER[y & 1][x & 1] / 4 - 0.375) - shift;
+          return tones[Math.max(0, Math.min(tones.length - 1, Math.round(t)))];
+        };
+        return {
+          dims: [7, H, 2],
+          cell: (x, y, z) => {
+            if (!on(x, y)) return 0;
+            const rim = ![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([a, b]) => on(x + a, y + b));
+            const back = z === 0 ? 1 : 0;
+            if (rim) return ramp(GOLD, ((6 - x) + y) / 11, x, y, back);
+            if (z === 1 && x === 1 && y === 4) return 0xffe3ea;              // the glint
+            return ramp(RUBY, ((6 - x) + y - 3) / 7, x, y, back);
+          },
+        };
+      })(),
     },
     {
       // from the object gallery (teabag pal)
