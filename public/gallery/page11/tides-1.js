@@ -26,7 +26,7 @@ export default [
     pairFrontAt(g, 3.5, 2, 2, INK); pairFrontAt(g, 3.5, 2, 1, BLUSH);
     for (const x of [2, 3, 4, 5]) g.set(x, 0, 4, x % 2 ? tideDk : tide);
     pairAt(g, 3.5, 1, 0, 4, tideDk); pairAt(g, 3.5, 1, 0, 3, tide);                      // tentacles
-    return g.entry({ id: 'cand-p11-ammonite', name: 'Ammonite', story: 'It waited a million years in the rock, then got up.' });
+    return g.entry({ id: 'cand-p11-ammonite', name: 'Ammonite Crawler', story: 'It waited a million years in the rock, then got up.' });
   })(),
 
   // a crab with barnacles on its back, both claws raised, stalk eyes up and

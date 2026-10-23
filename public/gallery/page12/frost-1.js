@@ -1,15 +1,15 @@
 // Page 12 · II Frost Relics: high up, where the cold came first and kept
 // everything just as it was. A stone mammoth with frost on its back, a
 // pebble sprite frozen mid-wave in a chunk of ice, a seal pup asleep on its
-// floe, a snow-capped stone lantern with a cold blue light, and a monkey in a
-// hot spring that has never once got out.
+// floe, a snow-capped stone lantern with a cold blue light, and a wolf that
+// still walks the high pass.
 // Sky: the Frost palette (white to ice blue), so stone stays warm sandstone,
 // frost is pure white on the top faces, and ice blue is the one accent; the
-// only warm colours are a monkey's face and a seal's black eyes.
+// wolf's eyes are the same ice blue, and the seal's are ink.
 import { grid } from '../voxel.js';
 import { INK, BLUSH, S, front, out, pair, pairAt, pairFront, pairFrontAt, quad, tint, onSurface } from './kit.js';
 
-const { stone, stoneLt, stoneDk, basalt, moss, mossDk, mossLt, frost, frostBlue, ice, iceDk, glow, tide, foam, cream } = S;
+const { stone, stoneLt, stoneDk, moss, mossLt, frost, frostBlue, ice, iceDk, glow, cream } = S;
 
 export default [
   // a mammoth coming toward you, slow and patient: a domed head, small ears,
@@ -71,22 +71,19 @@ export default [
     return g.entry({ id: 'cand-p12-rime-lantern', name: 'Rime Lantern', story: 'Its flame went cold, but it never went out.' });
   })(),
 
-  // a snow monkey up to its shoulders in a hot spring, a pink face, a cap of
-  // snow on its head, steam rising round it from the water
+  // a wolf of the high passes, sitting up: pale stone, a ruff of frost at
+  // its chest, tall ears, a long muzzle and two ice-blue eyes, its tail
+  // curled round with a white tip
   (() => {
-    const g = grid(9, 6, 8);
-    const fur = 0xb9ada3, face = 0xe8928a;
-    g.cylinder('y', [4, 3.5], 4.2, [0, 1], stone).cylinder('y', [4, 3.5], 2.9, [1, 1], tide);   // the pool
-    tint(g, (x, y, z) => y === 0 && (x + z) % 3 === 0, stoneDk);
-    tint(g, (x, y, z) => y === 1 && g.get(x, y, z) === stone && (x * 2 + z) % 5 === 0, frost);
-    g.ellipsoid([4, 1.6, 3.4], [1.9, 1.3, 1.5], fur);
-    g.ellipsoid([4, 3.3, 3.6], [1.6, 1.3, 1.3], fur);
-    for (const x of [3, 4, 5]) for (const y of [2, 3]) front(g, x, y, face);
-    pairFrontAt(g, 4, 3, 3, INK);
-    g.box([3, 5], [4, 4], [3, 4], (x, y, z) => (g.get(x, y, z) ? frost : undefined)).set(4, 5, 3, frost);   // snow on its head
-    pair(g, 2, 3, 3, fur);                                                              // ears
-    for (const [x, z] of [[1, 2], [7, 5]]) g.set(x, 2, z, foam).set(x, 3, z, foam);     // steam
-    g.set(6, 2, 2, foam).set(2, 2, 5, foam);
-    return g.entry({ id: 'cand-p12-snow-monkey', name: 'Hot Spring Monkey', story: 'The snow falls on its head. It does not mind at all.' });
+    const g = grid(5, 9, 7);
+    g.ellipsoid([2, 2.2, 2.6], [2.3, 2.4, 2.1], stone);
+    g.ellipsoid([2, 5.4, 3.2], [2.3, 1.7, 1.8], stone);
+    tint(g, (x, y, z) => y >= 1 && y <= 4 && z >= 3 && onSurface(g, x, y, z), frost);   // the frost ruff
+    g.set(2, 4, 5, stoneLt).set(2, 5, 5, stoneLt).set(2, 5, 6, INK).set(2, 4, 6, stoneLt);   // muzzle and nose
+    pairFront(g, 1, 6, iceDk);                                                          // ice-blue eyes
+    pair(g, 1, 7, 3, stone); pair(g, 1, 8, 3, stoneDk);                                   // tall ears
+    pair(g, 1, 0, 5, stoneLt); pair(g, 1, 1, 5, stone);                                   // front legs
+    g.set(2, 1, 0, stone).set(3, 1, 0, stone).set(4, 1, 0, stone).set(4, 1, 1, frost);   // the tail, curled round
+    return g.entry({ id: 'cand-p12-frost-wolf', name: 'Frost Wolf', story: 'It walks the pass at night so nobody walks it alone.' });
   })(),
 ];
