@@ -17,6 +17,66 @@ const ring = (dx, dz) => Math.sqrt(dx * dx + dz * dz);
 const ell = (dx, dy, dz, rx, ry, rz) => (dx / rx) ** 2 + (dy / ry) ** 2 + (dz / rz) ** 2 <= 1;
 const DIRS8 = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 
+// Dithered light (the Heart amulet's look, Kellan 2026-10-23), for any object:
+// each colour that covers a surface becomes a short ramp of tones lit from the
+// upper left and the front, neighbouring tones blended by a 2x2 ordered dither
+// so a form reads as turned, not flat. Light has a temperature, as in the
+// favourites: lit tones lean warm and pale, shaded ones cool and deep.
+// Colours on only a few cubes (eyes, a flame, a glint) are accents and keep
+// their exact value. `swap` recolours first ({ from: to }); `span` is how many
+// tones the light runs across, end to end; `keep` lists colours left flat.
+const toLin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+const toSrgb = (c) => Math.round(255 * Math.max(0, Math.min(1, c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)));
+function oklab(hex) {
+  const r = toLin(hex >> 16), g = toLin((hex >> 8) & 255), b = toLin(hex & 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+}
+function fromOklab([L, A, B]) {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3, m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3,
+    s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+  return (toSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s) << 16)
+    | (toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s) << 8)
+    | toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s);
+}
+// one tone `step` away from `hex`: lighter and warmer up, deeper and cooler down
+function tone(hex, step) {
+  if (!step) return hex;
+  const [L, A, B] = oklab(hex);
+  const up = step > 0, n = Math.abs(step);
+  const room = up ? Math.min(0.065, (0.985 - L) / 2) : 0.06;            // pale colours run out of light
+  const C = Math.hypot(A, B), keepC = up ? 1 - 0.06 * n : 1 + 0.05 * n;   // highlights a touch paler
+  return fromOklab([L + step * room, A * keepC + (up ? 0.003 : 0.009) * n, B * keepC + (up ? 0.016 : -0.02) * n * (C > 0.02 ? 1 : 0.6)]);
+}
+const BAYER2 = [[0, 2], [3, 1]];
+function lit(shape, { swap = {}, span = 3, keep = [], accent = 5 } = {}) {
+  const [X, Y, Z] = shape.dims, base = shape.cell;
+  const paint = (x, y, z) => { const c = base(x, y, z); return c && (swap[c] ?? c); };
+  const count = new Map(), lo = [X, Y, Z], hi = [0, 0, 0];
+  for (let z = 0; z < Z; z++) for (let y = 0; y < Y; y++) for (let x = 0; x < X; x++) {
+    const c = paint(x, y, z); if (!c) continue;
+    count.set(c, (count.get(c) || 0) + 1);
+    [x, y, z].forEach((v, a) => { lo[a] = Math.min(lo[a], v); hi[a] = Math.max(hi[a], v); });
+  }
+  const n = (v, a) => (hi[a] > lo[a] ? (v - lo[a]) / (hi[a] - lo[a]) : 0.5);
+  const cache = new Map();
+  return {
+    ...shape,
+    cell(x, y, z) {
+      const c = paint(x, y, z);
+      if (!c || count.get(c) < accent || keep.includes(c)) return c;
+      const k = 0.5 * n(y, 1) + 0.3 * (1 - n(x, 0)) + 0.2 * n(z, 2);       // upper left, front
+      const step = Math.max(-2, Math.min(2, Math.round((k - 0.5) * span + BAYER2[y & 1][(x + z) & 1] / 4 - 0.375)));
+      const key = c * 8 + step + 4;
+      if (!cache.has(key)) cache.set(key, tone(c, step));
+      return cache.get(key);
+    },
+  };
+}
+
 // Baked voxels (tools/bake-gallery.mjs): one string per height, bottom up;
 // in each, rows back to front separated by spaces, one character per x, '.'
 // for empty. `key` maps characters to colours.
@@ -3080,6 +3140,30 @@ export const ADDED_LATER = new Set([
 // new one solved. Cake Stand and the Layer Cake shrine left with Teatime and
 // live on in gallery page 6.
 export const RETIRED = new Set(['cake-stand', 'bonus-teatime']);
+
+// Objects lit by lit() (above), with any recolouring each one takes first.
+// First Light is the first chapter to take it (Kellan, 2026-10-23); the Heart
+// has its own hand-made ramps.
+const LIT = {
+  // sandstone treads on terracotta, not pink and white
+  steps: { swap: { 0xe58f84: 0xc77f58, 0xfcefe0: 0xf0e0c2 } },
+  'teabag-pal': {},
+  // ivory wax in a brass dish
+  candle: { swap: { 0xf6efe4: 0xf3e5c8, 0xe9b949: 0xc99a42 } },
+  // sage enamel, like the tin toys: the toast is the warm accent
+  toaster: { swap: { 0xc9d1d9: 0xb4c9b2, 0x5d6670: 0x55625a } },
+  key: { swap: { 0xe9b949: 0xd2a046 } },                                      // brass
+  // a dusk-blue quilt on the wood
+  bed: { swap: { 0x8cc8e8: 0xa9c0d2, 0x5b8fd6: 0x4d6d9a, 0xf6efe4: 0xefe4cc } },
+  chair: { swap: { 0xe0546b: 0xbf4a40 } },                                    // a madder cushion
+  alpaca: {}, aqueduct: {}, rucksack: {}, trilobite: {},
+  // cloth-bound spines in old dyes, not a sweet shop
+  bookshelf: { swap: { 0xe0565b: 0xb34a3f, 0x5b8fd6: 0x4d6d9a, 0x5fae6e: 0x5f8a4e, 0xf4a3b5: 0xd99a8c, 0xe9b949: 0xcf9f45,
+    0x4fb3a9: 0x3f8a80, 0xf08a6c: 0xcf7650, 0x9b7fd1: 0x77669e, 0xf6d365: 0xe0c27a } },
+  'fried-egg': {}, 'kitten-box': {},
+  teapot: { swap: { 0x5b8fd6: 0x3e66a3, 0xf6efe4: 0xf4ecdc } },              // cobalt on porcelain
+};
+for (const shape of SHAPES) if (LIT[shape.id]) shape.cell = lit(shape, LIT[shape.id]).cell;
 
 // Every level's starting block fits its object exactly: an empty slab on an
 // edge of the block is a whole row of 0s to chisel, taps that teach nothing.
