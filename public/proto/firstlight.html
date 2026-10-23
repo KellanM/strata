@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#05060f">
+  <meta name="robots" content="noindex">
+  <title>Strata · first light</title>
+  <script type="importmap">
+    { "imports": { "three": "../vendor/three/build/three.module.min.js" } }
+  </script>
+  <style>
+    :root { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", system-ui, sans-serif; }
+    html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; background: #04050c;
+      -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    /* the night: out of black, and a little deeper blue as the view rises into it */
+    #sky { position: fixed; inset: 0; opacity: var(--lit, 0);
+      background: linear-gradient(180deg,
+        color-mix(in srgb, #121731 calc(100% - var(--up, 0) * 100%), #0f1430) 0%,
+        #1a2046 45%,
+        color-mix(in srgb, #2a2f5c calc(100% - var(--up, 0) * 100%), #3d4380) 100%); }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+    #name { position: fixed; left: 0; right: 0; top: calc(17vh + env(safe-area-inset-top)); margin: 0; text-align: center;
+      font: 400 30px/1 var(--font); letter-spacing: .9em; padding-left: .9em; text-transform: uppercase;
+      color: #eef0ff; text-shadow: 0 0 22px rgba(150, 170, 255, .3); opacity: 0; pointer-events: none;
+      transition: opacity 2.4s ease, letter-spacing 3.2s cubic-bezier(.2,.8,.2,1), padding-left 3.2s cubic-bezier(.2,.8,.2,1); }
+    #name.show { opacity: 1; letter-spacing: .5em; padding-left: .5em; }
+    /* the fingertip: where to touch, only after a long while of nothing */
+    #hint { position: fixed; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; pointer-events: none;
+      border: 1.5px solid rgba(255, 226, 180, .55); opacity: 0; transition: opacity 1.2s ease; }
+    #hint.show { opacity: 1; animation: touch 2.8s ease-in-out infinite; }
+    @keyframes touch { 0% { transform: scale(1.35); opacity: 0; } 35% { transform: scale(.82); opacity: .85; } 55% { transform: scale(.78); opacity: .85; } 100% { transform: scale(1.5); opacity: 0; } }
+    #replay { position: fixed; left: 50%; bottom: calc(9vh + env(safe-area-inset-bottom)); width: 48px; height: 48px; margin-left: -24px;
+      border-radius: 50%; border: 1px solid rgba(220, 225, 255, .3); background: transparent; display: grid; place-items: center; cursor: pointer;
+      padding: 0; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
+    #replay.show { opacity: 1; pointer-events: auto; }
+    #replay svg { width: 20px; height: 20px; stroke: rgba(230, 232, 255, .75); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    #perf { position: fixed; left: 8px; bottom: 8px; font: 11px monospace; color: #9a8; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="sky"></div>
+  <canvas id="scene"></canvas>
+  <h1 id="name">Strata</h1>
+  <div id="hint"></div>
+  <button id="replay" aria-label="Again"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button>
+  <div id="perf"></div>
+  <script type="module" src="firstlight/main.js?v=1"></script>
+</body>
+</html>
