@@ -31,7 +31,12 @@ Kellan approved direction B with mist and voxel mountain tops. It is now the gam
 - **The peaks are pre-rendered.** `node tools/render-peaks.mjs` (with the dev server on 5203) renders every palette's voxel sprites in Chrome through `proto/peaks-export.html`. It uses the game's own block shader (`proto/voxels.js`). The output is one WebP atlas per palette plus `peaks.json`, written to `public/map-peaks/` (about 0.5 MB). The map loads them as images and never builds voxels at runtime. Re-run the tool after changing `proto/peaks.js` or a palette.
 - **map.js** still owns the stones, the trail (today's design), the names, `progress()` and the unlock rules. It hands the world a layout model (`opts.world.build`).
 - **The title** is the real logo over the world's night sky. The canvas hides its background and motes there. The title and logo move with the page; only the stars parallax.
-- **The descent** lasts 1.5 s, or 0.8 s when it is repeated in the same session (`DESCENT` in main.js, sessionStorage `strata.descended`).
+- **The descent** lasts 1.0 s, or 0.75 s when it is repeated in the same session (`DESCENT` in main.js, sessionStorage `strata.descended`), on `ease.descent`. It was 1.5 / 0.8 s on `ease.out` until 2026-10-22, when Kellan found it slow and clunky. A trace (`shots/descent-trace.mjs`) showed most of that came from a stall: the map's first layout and paint ran on the tap's first frame, and the wall-clock glide then jumped about 60% of the way down. Now:
+  - the map is primed under the title, just below the screen, once it's built (`primeMap`), and re-primed on the way back up;
+  - the glide's clock advances at most 1/30 s per frame, so a slow frame slows it instead of skipping ahead;
+  - past 90% of the way, the title lets touches through, and the first touch on the map lands it at once (`HAND_OFF`).
+
+  Compared against Alto and Monument Valley from memory: the title is a layer over a live world, the response to a touch starts on the next frame, and it ends without a long crawl.
 - **While the map is up** (`body.map-up`), the canvas fades out and stops drawing after 0.6 s. It only comes back once `start()` has rebuilt the level under the veil. This is still "cover before you swap".
 - **Decisions:** every locked chapter keeps its full length under cloud (`FOLD_LATER_CHAPTERS = false`, Kellan 2026-10-20; folding them into a short stretch was tried first). The shrine treatment in the level is the restrained one: gilded block edges (`uGild`), a held title card, a gold portal and a three-note bell (`sound.shrine`).
 

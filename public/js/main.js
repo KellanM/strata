@@ -13,7 +13,7 @@ import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { MapWorld } from './mapworld.js';
 import { renderJournal, closeView, viewOpen } from './journal.js';
-import { rate as motionRate, after, mark, reveal, devFlags, ease, DUR, BEAT } from './motion.js';
+import { rate as motionRate, after, mark, reveal, prepareReveal, devFlags, ease, DUR, BEAT } from './motion.js';
 import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
 
@@ -2029,6 +2029,7 @@ const buildMap = () => {
   renderMenu(false, false, false);
   mapSheet().scrollTop = 0;
   mark('title: map built');
+  primeMap();
 };
 after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 
@@ -2037,7 +2038,8 @@ after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const toMap = () => !!localStorage.getItem('strata.tutorial');
 const mapSheet = () => $('#menu .map-scroll');
-const DESCENT = { first: 1.5, again: 0.8 };   // seconds for a whole descent (decision 2, docs/map-study.md)
+const DESCENT = { first: 1.0, again: 0.75 };   // seconds for a whole descent (decision 2, docs/map-study.md)
+const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {
   pull.k = k;
   titleU = Math.min(1, Math.max(0, k / window.innerHeight));
@@ -2058,37 +2060,54 @@ function setScroll(k) {
     sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.3 * H * Math.min(1, k / H)).toFixed(1)}px`;
   }
 }
-// glide from the current scroll to `to` (px), then call done
-function scrollTo(to, seconds, curve, done) {
+// glide from the current scroll to `to` (px), then call done. Its clock counts
+// drawn frames, each at most 1/30 s: a slow frame slows it rather than skipping
+// ahead (a stall on the tap's first frame used to throw the page most of the way down)
+function scrollTo(to, seconds, curve, done, onFrame) {
   cancelAnimationFrame(pull.anim);
   pull.gliding = true;
-  const from = pull.k, t0 = performance.now();
-  const step = () => {
-    const k = Math.min(1, ((performance.now() - t0) / 1000) * motionRate / seconds);
+  const from = pull.k;
+  let t = 0, last = performance.now() - 1000 / 60;
+  const step = (now_) => {
+    t += Math.min(1000 / 30, Math.max(0, now_ - last)); last = now_;
+    const k = Math.min(1, (t / 1000) * motionRate / seconds);
     setScroll(from + (to - from) * curve(k));
+    onFrame?.(k);
     if (k < 1) pull.anim = requestAnimationFrame(step); else { pull.gliding = false; done?.(); }
   };
   pull.anim = requestAnimationFrame(step);
 }
 // a glide cut short by a new touch: its ending never runs
 function stopGlide() { cancelAnimationFrame(pull.anim); pull.gliding = false; }
+// The map waits under the title, just below the screen, already laid out and
+// painted: done on the tap's first frame instead, it stalled the descent's start
+let mapPrimed = false;
+function primeMap() {
+  if (!toMap() || !titleUp || $('#menu').classList.contains('show')) return;
+  buildMap();
+  const menu = $('#menu');
+  menu.style.transition = 'none';
+  mapSheet().style.transition = 'none';
+  menu.classList.add('pulling');   // its corner buttons wait until the map has arrived
+  show('#menu', true);
+  setScroll(pull.k);
+  stopReveal();
+  prepareReveal($('#map'), '.map-node, .map-region');
+  mapPrimed = true;
+  mark('title: map primed');
+}
 function startPull() {
   pull.live = true;
   stopGlide();
   mark('title: pull');
   titleScreen.style.transition = 'none';
-  if (!toMap() || $('#menu').classList.contains('show')) return;
-  buildMap();
-  const menu = $('#menu');
-  menu.style.transition = 'none';
-  mapSheet().style.transition = 'none';
-  setScroll(pull.k);
-  menu.classList.add('pulling');   // its corner buttons wait until the map has arrived
-  show('#menu', true);
+  if (!toMap() || ($('#menu').classList.contains('show') && !mapPrimed)) return;
+  primeMap();
+  if (!mapPrimed) return;
+  mapPrimed = false;
   // the stones cascade in as the map comes up
-  stopReveal();
   mapRevealed = true;
-  stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: mapSheet() });
+  stopReveal = reveal($('#map'), '.map-node, .map-region', { scroller: mapSheet(), prepared: true });
 }
 function finishPull() {
   if (!titleUp) return;
@@ -2097,14 +2116,15 @@ function finishPull() {
   mark('title: to ' + (toMap() ? 'map' : 'lesson'));
   sound.peel();
   const H = window.innerHeight;
-  // the descent: about 1.5 s, lingering at the horizon (world.js); quicker if
+  // the descent: about 1 s, lingering at the horizon (world.js); quicker if
   // this session has already seen it (an update reload). The lesson path keeps
   // the short glide: it isn't going to the map.
   const seen = sessionStorage.getItem('strata.descended') === '1';
   sessionStorage.setItem('strata.descended', '1');
   const left = 1 - pull.k / H;
   const seconds = !toMap() ? 0.5 : reduceMotion ? 0.01 : (seen ? DESCENT.again : DESCENT.first) * (0.35 + 0.65 * left);
-  scrollTo(H, seconds, toMap() ? ease.out : ease.glide, () => {
+  const landed = () => {
+    menuEl.removeEventListener('pointerdown', handOff, true);
     // the logo has scrolled away: hide the canvas outright before its view offset
     // resets, or the logo pops back to the centre while the canvas fades out
     if (toMap()) { canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; }); }
@@ -2116,6 +2136,15 @@ function finishPull() {
     camera.clearViewOffset();
     titleUp = false;
     if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true); }
+  };
+  // the last of the descent doesn't hold the player: the title lets touches
+  // through to the map, and the first one lands it at once (a stone's tap or a
+  // scroll then meets a settled map)
+  const handOff = () => { if (!pull.gliding) return; stopGlide(); setScroll(H); mark('title: landed by a touch'); landed(); };
+  scrollTo(H, seconds, toMap() ? ease.descent : ease.glide, landed, () => {
+    if (!toMap() || pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
+    titleScreen.style.pointerEvents = 'none';
+    menuEl.addEventListener('pointerdown', handOff, true);
   });
   if (!toMap()) after(0.25, () => startTutorial(0));
 }
@@ -2125,15 +2154,11 @@ function cancelPull(seconds = 0.35) {
     if (pull.live || !titleUp) return;
     titleScreen.style.cssText = '';
     titleScreen.classList.add('show');
-    if (toMap()) {
-      const menu = $('#menu');
-      menu.classList.add('instant');   // gone at once, not a fade of the whole map
-      show('#menu', false);
-      void menu.offsetWidth;
-      mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = '';
-      menu.classList.remove('pulling');
-      void menu.offsetWidth;
-      menu.classList.remove('instant');
+    // the map waits just below the screen again, primed for the next descent
+    if (toMap() && $('#menu').classList.contains('show')) {
+      stopReveal();
+      prepareReveal($('#map'), '.map-node, .map-region');
+      mapPrimed = true;
     }
   });
 }

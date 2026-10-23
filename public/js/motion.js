@@ -16,6 +16,7 @@ export const EASE = {
   inOut: [0.35, 0, 0.2, 1],         // starts promptly: a response to a tap must move at once
   pop: [0.2, 0.9, 0.3, 1.35],
   glide: [0.25, 1, 0.5, 1],          // long, soft arrival (camera-like moves)
+  descent: [0.3, 0.45, 0.15, 1],     // title -> map: moves on the tap's next frame, through the middle, a short soft landing
   fade: [0.4, 0, 0.6, 1],            // opacity and colour dissolves (washes, veils)
 };
 // Durations in seconds: quick feedback, standard, slow, whole-scene changes.
@@ -93,14 +94,21 @@ export const devFlags = {
 // ---- scroll reveal. Elements matching `selector` inside `root` start hidden
 // (class rv) and fade/rise in (class rv-in) as they enter `scroller`'s view,
 // once. Those already in view when it starts cascade in, top to bottom.
-export function reveal(root, selector, { scroller = null, stagger = 0.035, maxStagger = 0.4, instant = false } = {}) {
+// hide them ahead of a reveal (and its forced layout), e.g. while the screen is idle
+export function prepareReveal(root, selector) {
+  if (reduceMotion || !('IntersectionObserver' in window)) return;
   const els = [...root.querySelectorAll(selector)];
-  if (reduceMotion || instant || !('IntersectionObserver' in window)) return () => {};
   // jump straight to hidden (no transition): the elements may already have been
   // laid out visible, and would otherwise fade *out* first
   for (const el of els) { el.style.transition = 'none'; el.classList.add('rv'); }
   void root.offsetWidth;
   for (const el of els) el.style.transition = '';
+}
+// prepared: prepareReveal has already hidden them
+export function reveal(root, selector, { scroller = null, stagger = 0.035, maxStagger = 0.4, instant = false, prepared = false } = {}) {
+  const els = [...root.querySelectorAll(selector)];
+  if (reduceMotion || instant || !('IntersectionObserver' in window)) return () => {};
+  if (!prepared) prepareReveal(root, selector);
   const io = new IntersectionObserver((entries) => {
     const coming = entries.filter((e) => e.isIntersecting).map((e) => e.target)
       .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
