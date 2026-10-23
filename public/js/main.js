@@ -2311,5 +2311,19 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   });
 }
 
+// Tester's shortcut (Kellan, 2026-10-23): tap the stone's name five times,
+// quickly, and it carves itself: every empty cube is chiselled, no mistakes.
+{
+  let taps = 0, last = 0;
+  $('#pz-name').addEventListener('pointerdown', () => {
+    const t = performance.now();
+    taps = t - last < 600 ? taps + 1 : 1;
+    last = t;
+    if (taps < 5 || !game || game.solved) return;
+    taps = 0;
+    game.puzzle.solid.forEach((v, i) => { if (!v && !game.broken[i] && !game.solved) { game.painted[i] = 0; act(i, 'break'); } });
+  });
+}
+
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
 window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes };
