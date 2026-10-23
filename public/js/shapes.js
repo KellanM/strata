@@ -164,6 +164,38 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (page 13: Alpaca)
+      id: 'alpaca', name: 'Alpaca', from: 'cand-p13-alpaca', fraction: 0.2, seed: 2,
+      story: 'It carries the blanket. It does not carry opinions about the route.',
+      ...voxels({ a: 0xd8ccb4, b: 0xf3ead8, c: 0xd2453b, d: 0xe9b949, e: 0x2f4a7a, f: 0x6b4a3a, g: 0x3a3442 }, [
+        '..... .a.a. ..... .a.a. ..... .....',
+        '..... .b.b. ..... .b.b. ..... .....',
+        '..... .bbb. .bbb. .bbb. ..b.. .....',
+        '..b.. bbbbb bbbbb bbbbb .bbb. .....',
+        '..c.. .dbd. ebbbe bbbbb .bbb. .....',
+        '..... ..d.. .eee. .bbb. .bbb. .....',
+        '..... ..... ..... .bbb. .bbb. .....',
+        '..... ..... ..... .bbb. .bbb. .bfb.',
+        '..... ..... ..... .bbb. .bbb. .gbg.',
+        '..... ..... ..... .a.a. .b.b. .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 13: Aqueduct)
+      id: 'aqueduct', name: 'Aqueduct', from: 'cand-p13-aqueduct', fraction: 0.65, seed: 20,
+      story: 'Built to carry water to a city that has gone. The water still comes.',
+      ...voxels({ a: 0xd9b47a, b: 0x5f9e4a, c: 0xb8925a, d: 0x5ea8dc }, [
+        'a...a...a a...a...a b...b...b',
+        'a...a...a a...a...a a...a...a',
+        'a...a...a a...a...a a...a...a',
+        'aa.aaa.aa aa.aaa.aa aa.aaa.aa',
+        'ccccccccc ccccccccc ccccccccc',
+        'a.a.a.a.a a.a.a.a.a a.a.a.a.a',
+        'aaaaaaaaa aaaaaaaaa aaaaaaaaa',
+        'ccccccccc ddddddddd ccccccccc',
+      ]),
+    },
+    {
       // from the object gallery (page 5: Rucksack)
       id: 'rucksack', name: 'Rucksack', from: 'cand-p5-rucksack', fraction: 0.65, seed: 1,
       story: 'Packed the night before, a tin mug clinking on the side.',
@@ -176,6 +208,16 @@ export const SHAPES = [
         '..bbb.. .fffff. .fffff. .fffff. ....... .......',
         '....... hhihihh hhihihh ....... ....... .......',
         '....... hhihihh hhihihh ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 12: Trilobite)
+      id: 'trilobite', name: 'Trilobite', from: 'cand-p12-trilobite', fraction: 0.5, seed: 5,
+      story: 'Older than the mountains, and still not in a hurry.',
+      ...voxels({ a: 0xd9c49a, b: 0xb89a6e, c: 0xcdbf9f, d: 0x8a6a4a, e: 0xefe6cf, f: 0x3a3442 }, [
+        '..aaa.. .bbbbb. caaaaac dbbbbbd caaaaac dbbbbbd aaaaaaa aaaaaaa .aaaaa.',
+        '....... ..aaa.. ..eee.. ..aaa.. ..eee.. ..aaa.. ..eee.. .eaaae. ...e...',
+        '....... ....... ....... ....... ....... ....... ....... .f...f. .......',
       ]),
     },
     {
@@ -2670,6 +2712,8 @@ export const BONUS = [
 // A save from before then never saw them, so they don't count as gaps along
 // its trail (map.js progress): a returning player keeps the trail they walked.
 export const ADDED_LATER = new Set([
+  // gallery pages 12-13 (2026-10-22): Kellan's picks for First Light
+  'aqueduct', 'alpaca', 'trilobite',
   'cake-stand', 'stand-mixer', 'turkey', 'chestnut-cart', 'scarecrow', 'beaver', 'young-stag', 'boar-piglet',
   'giant-isopod', 'yeti-crab', 'meerkats', 'fennec', 'camel-calf', 'date-palm', 'moai', 'moss-spirit',
   'stone-golem', 'sundial', 'broken-column', 'stone-hare', 'giants-hand', 'tin-frog', 'pocket-watch',

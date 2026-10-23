@@ -231,6 +231,36 @@ export default [
     }
     return g.entry({ id: 'cand-doughnut', name: 'Doughnut' });
   })(),
+  // the Heart level as an amulet (Kellan, 2026-10-22): the same heart, set in
+  // gold - a gold back and rim, a domed ruby with one rose glint where the
+  // light catches it, and a small loop on top for the cord
+  (() => {
+    const g = grid(9, 10, 3);
+    const gold = 0xe9b949, deep = 0xb8862f, ruby = 0xd2384f, rose = 0xf4a3b5;
+    const front = [            // top row first; g rim, R ruby, P the glint
+      '...ggg...',
+      '...g.g...',
+      '.ggg.ggg.',
+      'gRPRgRRRg',
+      'gPRRRRRRg',
+      'gRRRRRRRg',
+      '.gRRRRRg.',
+      '..gRRRg..',
+      '...gRg...',
+      '....g....',
+    ];
+    front.forEach((row, i) => {
+      const y = 9 - i;
+      [...row].forEach((ch, x) => {
+        if (ch === '.') return;
+        const loop = y >= 8;
+        g.set(x, y, 1, ch === 'g' ? gold : ch === 'P' ? rose : ruby);
+        if (!loop) g.set(x, y, 0, deep);                                   // the gold back
+        if (ch !== 'g' && y >= 3 && y <= 6 && x >= 2 && x <= 6) g.set(x, y, 2, ch === 'P' ? rose : ruby);   // the dome
+      });
+    });
+    return g.entry({ id: 'cand-heart-amulet', name: 'Heart Amulet', story: 'Worn under a coat for a long road, and warm from it.' });
+  })(),
 ];
 
 function ell3(dx, dy, dz, r) { return dx * dx + dy * dy + dz * dz <= r * r; }
