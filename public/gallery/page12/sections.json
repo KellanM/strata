@@ -1,0 +1,4 @@
+[{"key":"dig","numeral":"I","name":"The Dig","chapter":"under the hill, the bones of a world that remembers","palette":"Desert","skyTop":"#f6e6c4","skyBottom":"#d29c6a"},
+ {"key":"frost","numeral":"II","name":"Frost Relics","chapter":"what the cold kept, it kept perfectly","palette":"Frost","skyTop":"#eef4fb","skyBottom":"#a9c3dd"},
+ {"key":"crystal","numeral":"III","name":"Crystal Deeps","chapter":"in the dark the stone grew stars of its own, and something lives in them","palette":"Dusk","skyTop":"#4a3f6b","skyBottom":"#b89cc0"},
+ {"key":"fallen","numeral":"IV","name":"The Star Keepers","chapter":"the stars fell into the earth; some were found, and kept","palette":"Stones","skyTop":"#c9cfdc","skyBottom":"#7d8aa0"}]
