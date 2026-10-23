@@ -363,6 +363,37 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 13: Yurt)
+      id: 'yurt', name: 'Yurt', from: 'cand-p13-yurt', fraction: 0.4, seed: 10,
+      story: 'Packed onto two camels, it can be home anywhere by dark.',
+      ...voxels({ a: 0xf3ead8, b: 0xf2a03d, c: 0xc0392b, d: 0xe9b949, e: 0x2f4a7a }, [
+        '...aaa... .aaaaaaa. .aaaaaaa. aaaaaaaaa aaaaaaaaa aaaaaaaaa .aaaaaaa. .aaaaaaa. ...bbb...',
+        '...ccc... .ccaaacc. .caaaaac. caaaaaaac caaaaaaac caaaaaaac .caaaaac. .ccaaacc. ...bdb...',
+        '...aaa... .aaaaaaa. .aaaaaaa. aaaaaaaaa aaaaaaaaa aaaaaaaaa .aaaaaaa. .aaaaaaa. ...aaa...',
+        '......... ..eeaee.. .eeeeeee. .eeeeeee. .aeeeeea. .eeeeeee. .eeeeeee. ..eeaee.. .........',
+        '......... ......... ...eae... ..eeeee.. ..aeeea.. ..eeeee.. ...eae... ......... .........',
+        '......... ......... ......... ...eae... ...aea... ...eae... ......... ......... .........',
+        '......... ......... ......... ......... ....d.... ......... ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 13: Travelling Lute)
+      id: 'travelling-lute', name: 'Travelling Lute', from: 'cand-p13-lute', fraction: 0.35, seed: 10,
+      story: 'Every town it passes through leaves one more song in it.',
+      ...voxels({ a: 0xb07a3a, b: 0xe2b25a, c: 0x6b4a3a, d: 0x3a3442, e: 0xe9b949 }, [
+        '....... ..aaa.. ...b... .......',
+        '..aaa.. .aaaaa. .bbbbb. ..ccc..',
+        '.aaaaa. aaaaaaa .bbbbb. .......',
+        '.aaaaa. aaaaaaa .bbbbb. ...d...',
+        '..aaa.. .aaaaa. .bbbbb. ...d...',
+        '....... ..aca.. ..bcb.. .......',
+        '....... ...c... ...c... .......',
+        '....... ...c... ...c... .......',
+        '...c... ...c... ...c... .......',
+        '..ccc.. ..ccc.. ..e.e.. .......',
+      ]),
+    },
+    {
       // from the object gallery (page 10: Hill Ram, P10·II-05)
       id: 'hill-ram', name: 'Hill Ram', from: 'cand-p10-ram', fraction: 0.65, seed: 8,
       story: 'He keeps the high ground, and steps aside to let you pass.',
@@ -511,6 +542,20 @@ export const SHAPES = [
         if (y === 0 && ((x === 6 && z >= 1) || (x === 5 && z === 3))) return 0xd9824a;
         return 0;
       },
+    },
+    {
+      // from the object gallery (page 11: Ember Snail)
+      id: 'ember-snail', name: 'Ember Snail', from: 'cand-p11-lava-snail', fraction: 0.7, seed: 8,
+      story: 'It carries the fire home, very slowly.',
+      ...voxels({ a: 0xc7beb0, b: 0xdcd4c6, c: 0x5a4f4c, d: 0xf2803d, e: 0xf6c14a, f: 0x3a3442 }, [
+        '.aaaa. baaaab .aaaa. .aaaa. .aaaa. baaaab baaaab .aaaa.',
+        '...... .c..c. .cccc. .cccc. .c..c. ...... .aaaa. .aaaa.',
+        '.c..c. .dccd. .cccc. .cccc. .cccc. .c..c. .aaaa. .aaaa.',
+        '.cccc. .dccd. .cccc. .ecce. .dccd. .cccc. ...... .a..a.',
+        '.cccc. .dccd. .cccc. .cccc. .dccd. .cccc. ...... .f..f.',
+        '.c..c. .dccd. .dccd. .dccd. .dccd. .c..c. ...... ......',
+        '...... .c..c. .cccc. .cccc. .c..c. ...... ...... ......',
+      ]),
     },
     {
       // A banded skep with a door you can only see once it's open, hanging by a
@@ -680,6 +725,21 @@ export const SHAPES = [
         '......... ......... ..aaaaa.. ...aaa... .........',
         '......... e......ee ..a...aee ......... .........',
         '......... fffffffff fffffffff ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 13: Hornbill)
+      id: 'hornbill', name: 'Hornbill', from: 'cand-p13-hornbill', fraction: 0.8, seed: 4,
+      story: 'It plants the forest one swallowed seed at a time.',
+      ...voxels({ a: 0x3a3442, b: 0xf6efe4, c: 0x5f9e4a, d: 0x8a5a3c, e: 0x4a4f5a, f: 0xf2c14e, g: 0xe9b949, h: 0xe0563b }, [
+        '..aaa.. ....... ....... ....... ....... .......',
+        '..bbb.. ....... ....... ....... ....... .......',
+        '..aaa.. c...... ddddddd ......c ....... .......',
+        '..aaa.. ..aaa.. c.eae.c ..bbb.. ....... .......',
+        '....... ..aaa.. .aaaaa. ..bbb.. ....... .......',
+        '....... ..aaa.. .aaaaa. ..aaa.. ...f... ...g...',
+        '....... ..aaa.. ..aaa.. ..aaa.. ...f... ...f...',
+        '....... ..aaa.. ..aaa.. ..bab.. ...h... ...h...',
       ]),
     },
     {
@@ -866,6 +926,19 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 11: Curled Fox)
+      id: 'curled-fox', name: 'Curled Fox', from: 'cand-p11-curled-fox', fraction: 0.75, seed: 13,
+      story: 'It wrapped its tail round itself and waited out the dark.',
+      ...voxels({ a: 0x8f877c, b: 0xc7beb0, c: 0xa8d97a, d: 0xd9a77c, e: 0x7cc35a, f: 0xf6efe4, g: 0xb87f55, h: 0x3a3442 }, [
+        'aaaaaaaa abbbbbba abbbbbba abbbbbba abbbbbba abbbbbba abbbbbba aaaaaaaa',
+        '......c. ...dd..e ..dddd.. .dddddd. .dddddd. ddddddd. fdddddd. .....g..',
+        '........ ..dddd.. .dddddd. .dddddd. .dddddd. ddddddd. ffddddd. .....f..',
+        '........ ........ ..gggg.. ..gggg.. ..ddddd. ....ddd. ....hdh. ........',
+        '........ ........ ........ ........ ....d.d. ....g.g. ........ ........',
+        '........ ........ ........ ........ ........ ....g.g. ........ ........',
+      ]),
+    },
+    {
       // from the object gallery (fox)
       id: 'fox', from: 'cand-fox', name: 'Fox', fraction: 0.55, seed: 24,
       story: 'It waited by the gate at dusk, tail wrapped round its paws.',
@@ -1042,6 +1115,47 @@ export const SHAPES = [
       },
     },
     {
+      // from the object gallery (page 14: Horseshoe Crab)
+      id: 'horseshoe-crab', name: 'Horseshoe Crab', from: 'cand-p14-horseshoe-crab', fraction: 0.95, seed: 10,
+      story: 'It has come up the same beach every spring since before there were flowers.',
+      ...voxels({ a: 0xcdbf9f, b: 0x6f5634, c: 0x9a7a4a, d: 0xb8955e, e: 0x3a3442 }, [
+        '....a.... ....b.... ....b.... ..bbbbb.. .bbbbbbb. .ccccccc. ccccccccc ccccccccc ccccccccc .ccccccc.',
+        '......... ......... ......... ...cbc... ..ccbcc.. ..ddddd.. .ddddddd. .deddded. ..ddddd.. .........',
+        '......... ......... ......... ......... ....d.... ....d.... ....d.... ....d.... ....d.... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 13: Stilt House)
+      id: 'stilt-house', name: 'Stilt House', from: 'cand-p13-stilt-house', fraction: 0.5, seed: 1,
+      story: 'When the river rises, it just stands a little taller.',
+      ...voxels({ a: 0xdff1fa, b: 0x5ea8dc, c: 0x8a5a3c, d: 0xd9b06a, e: 0x5a3e30, f: 0xa8832e, g: 0xc9a24a }, [
+        'abbbbab bbbabbb babbbba bbbbabb bbabbbb abbbbab',
+        '....... .c...c. ....... ....... .c...c. ...c...',
+        '....... .c...c. ....... ....... .c...c. ...d...',
+        '....... .c...c. ....... ....... .c...c. ...c...',
+        '....... .ccccc. .ccccc. .ccccc. .ccccc. ...c...',
+        '....... ....... ..ddd.. ..ded.. ....... .......',
+        '....... ....... ..ddd.. ..ded.. ....... .......',
+        '.fgggf. .fgggf. .fgggf. .fgggf. .fgggf. .fgggf.',
+        '....... ..fff.. ..fff.. ..fff.. ..fff.. .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 11: Conch Hermit)
+      id: 'conch-hermit', name: 'Conch Hermit', from: 'cand-p11-conch-hermit', fraction: 0.6, seed: 6,
+      story: 'It found a shell the sea forgot to take back.',
+      ...voxels({ a: 0xd9c49a, b: 0xf4a3b5, c: 0xe0565b, d: 0xf6efe4, e: 0x3a3442 }, [
+        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aabbbaa .accca. ..c.c..',
+        '..ddd.. .ddddd. ddddddd ddddddd ddbbbdd .dcccd. .......',
+        '....... ..aaa.. .aaaaa. .aaaaa. .abbba. ..c.c.. ..e.e..',
+        '....... ..ddd.. .ddddd. .ddddd. .ddddd. ..bbb.. .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ....... .......',
+        '....... ....... ...d... ..ddd.. ...d... ....... .......',
+        '....... ....... ....... ...a... ....... ....... .......',
+        '....... ....... ....... ...d... ....... ....... .......',
+      ]),
+    },
+    {
       // from the object gallery (crab)
       id: 'crab', from: 'cand-crab', name: 'Crab', fraction: 0.8, seed: 2,
       story: 'Sideways is still forward, if you are a crab.',
@@ -1176,6 +1290,37 @@ export const SHAPES = [
         '.bbbbb. ccccccc bbbbbbb ccccccc bbbbbbb ccccccc bbbbbbb ccccccc .eddde. .a...a.',
         '..bbb.. .ccccc. .bbbbb. .ccccc. .bbbbb. .ccccc. .bbbbb. .ccccc. ..ddd.. .......',
         '....... ..ccc.. ..bbb.. ..ccc.. ..bbb.. ..ccc.. ..bbb.. ..ccc.. ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 14: Sea Lily)
+      id: 'sea-lily', name: 'Sea Lily', from: 'cand-p14-sea-lily', fraction: 0.4, seed: 20,
+      story: 'It is turning to stone from the root up, and it does not mind.',
+      ...voxels({ a: 0x8f877c, b: 0x4f9a4a, c: 0xc7beb0, d: 0xcdbf9f, e: 0xefe6cf, f: 0xa83f55, g: 0xd2566a, h: 0xf4a3b5 }, [
+        '....... .aaaaa. .aaaaa. .aaaaa. .aaaaa. .aaaaa. .......',
+        '....... ...b... ..ccc.. .bcccb. ..ccc.. ...b... .......',
+        '....... ....... ....... ...d... ....... ....... .......',
+        '....... ....... ....... ...e... ....... ....... .......',
+        '....... ....... ....... ...d... ....... ....... .......',
+        '....... ....... ....... ...e... ....... ....... .......',
+        '....... ....... ..fff.. ..fff.. ..fff.. ....... .......',
+        '....... ....... ..ggg.. ..gfg.. ..ggg.. ....... .......',
+        '....... .g.g.g. ....... .g...g. ....... .g.g.g. .......',
+        '....... .h.h.h. ....... .h...h. ....... .h.h.h. .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 14: Coelacanth)
+      id: 'coelacanth', name: 'Coelacanth', from: 'cand-p14-coelacanth', fraction: 0.65, seed: 6,
+      story: 'Everyone said it had been gone for seventy million years. Nobody told it.',
+      ...voxels({ a: 0x264a72, b: 0x34608f, c: 0xf3ead8, d: 0x7fe0e6 }, [
+        '.....a.... .......... .......... .......... .....a....',
+        '...a..a... .......... aa........ .......... ...a..a...',
+        '.......... ...bcbcbb. .abbbbbbb. ...bcbcbb. ..........',
+        '.......... ..bbbbbbb. babbbbbbbb ..bbbbbbb. ..........',
+        '.......... ...bcbcbd. .abbbbbbb. ...bcbcbd. ..........',
+        '.......... .......... aa.bbbb... .......... ..........',
+        '.......... .......... ....aa.... .......... ..........',
       ]),
     },
     {
@@ -1335,6 +1480,19 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 14: Caravanserai)
+      id: 'caravanserai', name: 'Caravanserai', from: 'cand-p14-caravanserai', fraction: 0.3, seed: 19,
+      story: 'One day’s walk from the last one, one day’s walk from the next.',
+      ...voxels({ a: 0xb8834e, b: 0xd9b47a, c: 0xead2a0, d: 0x5ea8dc, e: 0x3fa7a0, f: 0x3a3442, g: 0xd9a46a, h: 0xdff1fa, i: 0xe8c08a }, [
+        'aaaaaaaaa abcbcbcba acbcbcbca abcdddcba acbdddbca abcdddcba acbcbcbca abcbcbcba aaefffeaa',
+        'gfgfgfgfg f.......f g.......g f.......f g...h...g f.......f g.......g f.......f ggefffegg',
+        'ggggggggg g.......g g.......g g.......g g.......g g.......g g.......g g.......g ggefffegg',
+        'a.g.g.g.a ......... g.......g ......... g.......g ......... g.......g ......... a.eifie.a',
+        'a.......a ......... ......... ......... ......... ......... ......... ......... a.eiiie.a',
+        '......... ......... ......... ......... ......... ......... ......... ......... ..eeeee..',
+      ]),
+    },
+    {
       // from the object gallery (page 9: Kasbah Tower)
       id: 'kasbah', name: 'Kasbah Tower', from: 'cand-p9-kasbah', fraction: 0.75, seed: 9,
       story: 'The storks come back to the same tower every spring.',
@@ -1403,6 +1561,22 @@ export const SHAPES = [
   // ---------------------------------------------------------------- Ember Steps
   // Temple architecture: long chains of deduction.
   ...chapter(8, [
+    {
+      // from the object gallery (page 14: Calendar Stone)
+      id: 'calendar-stone', name: 'Calendar Stone', from: 'cand-p14-calendar-stone', fraction: 0.9, seed: 15,
+      story: 'Every day of the year is carved on it, and it is still counting.',
+      ...voxels({ a: 0x8f877c, b: 0xdcd4c6, c: 0xc7beb0, d: 0xd9a441, e: 0xd2453b, f: 0x3a3442 }, [
+        '...aaa... ...aba...',
+        '.aaaaaaa. .aacdcaa.',
+        '.aaaaaaa. .adcecda.',
+        'aaaaaaaaa accbebcca',
+        'aaaaaaaaa bdbbbbbdb',
+        'aaaaaaaaa accfbfcca',
+        '.aaaaaaa. .adcbcda.',
+        '.aaaaaaa. .aacdcaa.',
+        '...aaa... ...aba...',
+      ]),
+    },
     {
       // from the object gallery (taiko drum)
       id: 'taiko-drum', from: 'cand-taiko', name: 'Taiko Drum', fraction: 0.8, seed: 18,
@@ -1609,6 +1783,22 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 14: Amber Midge)
+      id: 'amber-midge', name: 'Amber Midge', from: 'cand-p14-amber', fraction: 0.85, seed: 13,
+      story: 'It sat down on a warm branch to rest, a very long time ago.',
+      ...voxels({ a: 0x7a3a10, b: 0xa8561a, c: 0xd07f22, d: 0x3a2a22, e: 0xeaa63c, f: 0xf3e2b8, g: 0xf8d27a, h: 0xfff4d6 }, [
+        '..aaa.. ..bba..',
+        '.bbaaa. .ccbba.',
+        'bbabaaa ccbdbba',
+        'cbbbbaa ecfdfbb',
+        'bcbbaba cfcdbfb',
+        'eccbbbb gedcdcc',
+        '.cbcbb. .hcecc.',
+        '..ecc.. ..gee..',
+        '...c... ...e...',
+      ]),
+    },
+    {
       // from the object gallery (page 7: Stone Golem)
       id: 'stone-golem', name: 'Stone Golem', from: 'cand-p7-stone-golem', fraction: 0.7, seed: 7,
       story: 'It sat down to rest and grew a garden on its shoulders.',
@@ -1622,6 +1812,37 @@ export const SHAPES = [
         '......... .dddbddd. dddbbbddd .dddbddd. .........',
         '......... ..dbbbd.. .edbbbde. ...fbf.g. .........',
         '......... ....b.... ...bbb.h. ...bab... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 12: Eye Stone)
+      id: 'eye-stone', name: 'Eye Stone', from: 'cand-p12-eye-stone', fraction: 0.75, seed: 8,
+      story: 'Whatever comes out of the dark, it saw it first.',
+      ...voxels({ a: 0x8f877c, b: 0x8160c4, c: 0xc7beb0, d: 0xdcc8f8, e: 0xb48ce8, f: 0x3a3442, g: 0xdcd4c6 }, [
+        'aaaaa aaaaa aaaaa aaaaa aaaaa',
+        'b...b ccccc ccccc ccccc d...d',
+        'd...d ccccc ccccc ccccc .....',
+        '..... ccccc ccccc ccccc .....',
+        '..... ccccc ccccc ccccc bebeb',
+        '..... ccccc ccccc ccccc .efe.',
+        '..... .ccc. .ccc. .ccc. .ede.',
+        '..... .ccc. .ccc. .ccc. .aaa.',
+        '..... .ggg. .ggg. .ggg. .....',
+        '..... ..... ..g.. ..... .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 12: Fossil Fish)
+      id: 'fossil-fish', name: 'Fossil Fish', from: 'cand-p12-fossil-fish', fraction: 0.85, seed: 24,
+      story: 'Its bones are stone. Its eye has not heard the news.',
+      ...voxels({ a: 0xb89a6e, b: 0xd9c49a, c: 0xefe6cf, d: 0x3a3442, e: 0xa8d97a }, [
+        'aaaaaaaaa aaaaaaaaa',
+        'abbbbbbba .c..c.c..',
+        'abbbbbbba c.c.c.ccc',
+        'abbbbbbba .cccccccd',
+        'abbbbbbba c.c.c.ccc',
+        'abbbbbbba ac..c.c..',
+        'abbbbbbba ..e.....a',
       ]),
     },
     {
@@ -1791,6 +2012,21 @@ export const SHAPES = [
         '....... ....... ....de. cc..ddf ....de. ....... .......',
         '....... ....... .....g. c...ddh .....g. ....... .......',
         '....... ....... ....... ....... ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 14: Orrery)
+      id: 'orrery', name: 'Orrery', from: 'cand-p14-orrery', fraction: 0.5, seed: 3,
+      story: 'The whole sky, small enough to wind by hand.',
+      ...voxels({ a: 0x6b4a3a, b: 0xe0a83a, c: 0xdcab48, d: 0xc8704b, e: 0xf0cc6a, f: 0x5b8fd6, g: 0xfae6a4 }, [
+        '....... ...a... ..aaa.. .aaaaa. ..aaa.. ...a... .......',
+        '....... ....... ....... ...b... ....... ....... .......',
+        '....... ....... ....... ...b... ....... ....... .......',
+        '....... ....... ....... ...b... ....... ....... .......',
+        '..bbb.. .b.b.b. b..b..b bbbcbbb b..b..b .b.b.b. ..bbb..',
+        '...d... ....... ..ecc.. f.eec.f ..gee.. ....... ...d...',
+        '....... ....... ..eec.. ..gee.. ..gge.. ....... .......',
+        '....... ....... ....... ...g... ....... ....... .......',
       ]),
     },
     {
@@ -2118,6 +2354,20 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 12: Frost Mammoth)
+      id: 'frost-mammoth', name: 'Frost Mammoth', from: 'cand-p12-frost-mammoth', fraction: 0.65, seed: 23,
+      story: 'It walked into the winter and the winter never let it out.',
+      ...voxels({ a: 0x8f877c, b: 0xc7beb0, c: 0xf6efe4, d: 0x3a3442, e: 0xf4f9fd }, [
+        '......... ......... ...a.a... ......... ...a.a... ....a.... ....a....',
+        '......... ...bbb... ..bbbbb.. ..bbbbb.. ...bbb... ......... ..ccacc..',
+        '......... ..bbbbb.. .bbbbbbb. .bbbbbbb. .bbbbbbb. ...bbb... ..ccacc..',
+        '...bbb... .bbbbbbb. .bbbbbbb. .bbbbbbb. .abbbbba. ...bbb... ....a....',
+        '......... ..bbbbb.. .bbbbbbb. .bbbbbbb. abbbbbbba ..bbbbb.. ...dbd...',
+        '......... ......... ...eee... ...eee... ...bbb... ..bbbbb.. ...bbb...',
+        '......... ......... ......... ......... ...bbb... ...bbb... .........',
+      ]),
+    },
+    {
       // from the object gallery (page 6: Mountain Goat)
       id: 'mountain-goat', name: 'Mountain Goat', from: 'cand-p6-mountain-goat', fraction: 0.65, seed: 5,
       story: 'Sure-footed on ledges nobody else would even look at twice.',
@@ -2275,6 +2525,19 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 11: Grass Whale)
+      id: 'grass-whale', name: 'Grass Whale', from: 'cand-p11-grass-whale', fraction: 0.7, seed: 1,
+      story: 'It still breathes, once a year, when the tide should come.',
+      ...voxels({ a: 0x4f9a4a, b: 0x7cc35a, c: 0xc7beb0, d: 0xdcd4c6, e: 0x3a3442, f: 0xeee6d6, g: 0x8f877c, h: 0x5ea8dc, i: 0xdff1fa }, [
+        'abbbabbbab bbbccccccb bbcccccccc bacccccccc abbccccccb bbbabbbabb',
+        '.....cc... ...ccccddd .ccccccccd .ccccccccd ...ccccddd .....cc...',
+        '.......... ...ccccce. .ccccccccc .ccccccccc ...ccccce. ..........',
+        '.......... .....cc... .c.cfcccc. .c.cffccc. .....cc... ..........',
+        'ccc....... ccc....... cgg....h.. cgg....h.. ccc....... ccc.......',
+        '.......... .......i.. .......i.. .......i.. .......i.. ..........',
+      ]),
+    },
+    {
       // from the object gallery (page 4: Unicorn)
       id: 'unicorn', name: 'Unicorn', from: 'cand-p4-unicorn', fraction: 0.7, seed: 24,
       story: 'It only comes out when every star is lit.',
@@ -2418,6 +2681,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 14: Astrolabe)
+      id: 'astrolabe', name: 'Astrolabe', from: 'cand-p14-astrolabe', fraction: 0.85, seed: 13,
+      story: 'Hold it up to the night; it tells you where and when you are.',
+      ...voxels({ a: 0x8f6326, b: 0xdcab48, c: 0xb98535, d: 0xf0cc6a, e: 0x2f4a7a, f: 0xfff2b8, g: 0xe9b949, h: 0xfae6a4 }, [
+        '...aaa... ...bbb...',
+        '.ccacaaa. .dbeeebc.',
+        '.cccaaaa. .dfgggfb.',
+        'bcbccacaa degeeegeb',
+        'bbccccaaa degefegeb',
+        'dbbcbccac degeeegeb',
+        '.bbbcccc. .dfgggfb.',
+        '.bdbbcbc. .hdeeedd.',
+        '...bbb... ...ddd...',
+        '...bdb... ...dhd...',
+      ]),
+    },
+    {
       id: 'invader', name: 'Visitor', fraction: 0.65, seed: 1,
       story: 'It came a very long way, and seems glad to be found.',
       ...extrude([
@@ -2430,6 +2710,38 @@ export const SHAPES = [
         'G.G.....G.G',
         '...GG.GG...',
       ], 2, { G: 0x6cc28f }),
+    },
+    {
+      // from the object gallery (page 12: Moon Basin)
+      id: 'moon-basin', name: 'Moon Basin', from: 'cand-p12-moon-basin', fraction: 0.85, seed: 13,
+      story: 'A sliver of the moon fell here. The water keeps it cool.',
+      ...voxels({ a: 0x8f877c, b: 0xc7beb0, c: 0x7cc35a, d: 0xcfe9f7, e: 0xf4f9fd, f: 0xa8d97a, g: 0xf6efe4 }, [
+        '........ ..aaaa.. ..aaaa.. ..aaaa.. ..aaaa.. ........',
+        '.aaaaaa. .abbbba. cabbbbaa aabbbbac .abbbba. .aaaaaa.',
+        '.bbddbb. .bddddb. bdeedddb bdeedddb .bddddb. .bbfdbb.',
+        '........ ........ ...ee... ...ee... ........ ........',
+        '........ ........ ....ee.. ....ee.. ........ ........',
+        '........ ........ ....ee.. ....ee.. ........ ........',
+        '........ ........ ...ee... ...ee... ........ ........',
+        '........ ........ ..ge.... ..ge.... ........ ........',
+      ]),
+    },
+    {
+      // from the object gallery (page 12: Star Tablet)
+      id: 'star-tablet', name: 'Star Tablet', from: 'cand-p12-star-tablet', fraction: 0.85, seed: 16,
+      story: 'Carved so that nobody would forget where they went.',
+      ...voxels({ a: 0x8f877c, b: 0xc7beb0, c: 0xdcd4c6, d: 0xf6d365, e: 0x5d6680, f: 0xfff2b8, g: 0x7cc35a }, [
+        '..aaaaa.. ..aaaaa.. ..aaaaa..',
+        '...bbb... ...bbb... ...bbb...',
+        '..bbbbb.. ..bbbbc.. .........',
+        '.bbbbbbb. .deeeceb. .d....d..',
+        'bbbbbbbbb bbceccebb .........',
+        'bbbbbbbbb beccceeeb .........',
+        'bbbbbbbbb beceeceeb ....f....',
+        'bbbbbbbbb bbeeeecbb ..d......',
+        '.gbbbbbg. .geeeeed. .......d.',
+        '..ggggg.. ..ggggg.. .........',
+      ]),
     },
     {
       // from the object gallery (wishing well)
@@ -2741,6 +3053,10 @@ export const BONUS = [
 // A save from before then never saw them, so they don't count as gaps along
 // its trail (map.js progress): a returning player keeps the trail they walked.
 export const ADDED_LATER = new Set([
+  // gallery pages 11-14 (2026-10-23): Kellan's picks, placed by theme
+  'travelling-lute', 'yurt', 'ember-snail', 'hornbill', 'curled-fox', 'conch-hermit', 'stilt-house', 'horseshoe-crab',
+  'coelacanth', 'sea-lily', 'caravanserai', 'fossil-fish', 'eye-stone', 'calendar-stone', 'amber-midge', 'orrery',
+  'frost-mammoth', 'grass-whale', 'star-tablet', 'moon-basin', 'astrolabe',
   // gallery pages 12-13 (2026-10-22): Kellan's picks for First Light
   'aqueduct', 'alpaca', 'trilobite',
   'cake-stand', 'stand-mixer', 'turkey', 'chestnut-cart', 'scarecrow', 'beaver', 'young-stag', 'boar-piglet',

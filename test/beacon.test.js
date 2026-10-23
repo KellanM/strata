@@ -21,6 +21,8 @@ const { progress, bonusFor } = await import('../public/js/map.js');
 const { recordStars } = await import('../public/js/score.js');
 
 const BEACON = ['thistle', 'beacon', 'pocket-compass', 'hill-ram', 'torch-fox', 'heron', 'watchtower', 'pack-donkey'];
+// stones that joined Beacon Hills after it replaced Teatime (gallery page 13 picks)
+const BEACON_LATER = ['travelling-lute', 'yurt'];
 const TEATIME = ['teabag-pal', 'toaster', 'cake-stand', 'mug', 'stand-mixer', 'fried-egg', 'bunny-teacup', 'teapot'];
 const MOVED = { 'teabag-pal': 'First Light', toaster: 'First Light', 'fried-egg': 'First Light', teapot: 'First Light',
   'bunny-teacup': 'Moss Garden', mug: 'The Lagoon', 'stand-mixer': 'Clockwork Workshop' };
@@ -69,7 +71,7 @@ const shrineOpen = (chapter, solved, open) => {
 test('chapter II is Beacon Hills; Teatime stones moved with their ids, retired ids stay retired', () => {
   assert.equal(CHAPTERS[1].name, 'Beacon Hills');
   assert.equal(CHAPTERS[1].numeral, 'II');
-  assert.deepEqual(SHAPES.filter((s) => s.chapter === 'Beacon Hills').map((s) => s.id).sort(), [...BEACON].sort());
+  assert.deepEqual(SHAPES.filter((s) => s.chapter === 'Beacon Hills').map((s) => s.id).sort(), [...BEACON, ...BEACON_LATER].sort());
   assert.equal(bonusFor('Beacon Hills')?.name, 'The Great Beacon');
   assert.equal(bonusFor('Beacon Hills').id, 'bonus-beacon-hills');
   for (const [id, ch] of Object.entries(MOVED)) assert.equal(SHAPES.find((s) => s.id === id)?.chapter, ch, `${id} in ${ch}`);
@@ -136,7 +138,7 @@ test('a finished save keeps the whole map open, with the new chapter to play', (
   assert.ok(!solved['bonus-beacon-hills'], 'the Great Beacon is new and unsolved');
   for (const b of BONUS) if (b.chapter !== 'Beacon Hills') assert.ok(shrineOpen(b.chapter, solved, open) || solved[b.id], `${b.chapter} shrine`);
   const t = totals(solved);
-  assert.equal(t.found, SHAPES.length + BONUS.length - BEACON.length - 1);
+  assert.equal(t.found, SHAPES.length + BONUS.length - BEACON.length - BEACON_LATER.length - 1);
   assert.equal(t.gems, t.found * 3);
 });
 
