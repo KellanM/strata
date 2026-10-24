@@ -47,6 +47,8 @@ const VERT = /* glsl */`
   attribute vec4 aSeed;    // twinkle rate, phase, size, warmth
   attribute vec3 aState;   // visible (0..1), settled (0..1), heat (1 at birth)
   uniform float uTime, uPx, uTrail;
+  uniform vec4 uGlow;      // a patch of sky (centre xy, radii xy) whose stars shine brighter: the name's constellation
+  uniform float uGlowK;
   varying float vB;
   varying vec3 vCol;
   void main() {
@@ -59,6 +61,8 @@ const VERT = /* glsl */`
     // arriving: a soft glint as it lands in its place
     float land = 4.0 * aState.y * (1.0 - aState.y);
     float b = mix(shimmer + glint, twinkle, aState.y) + 1.6 * land * land;
+    vec2 g = (position.xy - uGlow.xy) / uGlow.zw;
+    b *= 1.0 + uGlowK * aState.y * exp(-dot(g, g) * 1.4);
     // the trail only keeps what is still moving
     vB = b * aState.x * mix(1.0, (1.0 - aState.y) * 0.26, uTrail);
     vec3 ember = vec3(1.0, 0.74, 0.40), air = vec3(0.86, 0.86, 1.0);
@@ -82,7 +86,7 @@ const FRAG = /* glsl */`
 export class Swarm {
   // reserved: the last `reserved` star places are kept for the first `reserved`
   // motes (the name, written in stars): nobody else takes them, and they go nowhere else
-  constructor({ count = 1400, seed = 7, source, stars, px = 1, reserved = 0 }) {
+  constructor({ count = 1400, seed = 7, source, stars, px = 1, reserved = 0, nameSpeed = 1 }) {
     this.n = count;
     const rand = this.rand = rng(seed);
     this.fine = waves(6, 0.32, 0.7, 0.25, 0.6, rand);
@@ -114,6 +118,7 @@ export class Swarm {
     this.stars = stars;
     this.free = new Uint8Array(stars.length / 3).fill(1);
     this.reserved = reserved;
+    this.nameSpeed = nameSpeed;
     const first = this.free.length - reserved;
     this.free.fill(0, first);
     // the name's stars: a touch larger, and warm, like the stone they came from
@@ -124,7 +129,7 @@ export class Swarm {
     g.setAttribute('aState', new THREE.BufferAttribute(this.state, 3).setUsage(THREE.DynamicDrawUsage));
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthWrite: false, depthTest: false,
-      blending: THREE.AdditiveBlending, uniforms: { uTime: { value: 0 }, uPx: { value: px }, uTrail: { value: 0 } },
+      blending: THREE.AdditiveBlending, uniforms: { uTime: { value: 0 }, uPx: { value: px }, uTrail: { value: 0 }, uGlow: { value: new THREE.Vector4(0, 0, 1, 1) }, uGlowK: { value: 0 } },
     });
     this.points = new THREE.Points(g, this.material);
     this.points.frustumCulled = false;
@@ -188,7 +193,8 @@ export class Swarm {
         this.star[i] = this.claim(i);
         this.settleAt[i] = t;
       }
-      const w = smooth(0, 2.4, t - this.settleAt[i]);
+      const fast = i < this.reserved ? this.nameSpeed : 1;   // the name's stars fly faster to their places
+      const w = smooth(0, 2.4 / fast, t - this.settleAt[i]);
       // the flock: keep to its place in the body, which breathes and shears as it turns
       const hx = H[i3], hy = H[i3 + 1], hz = H[i3 + 2];
       const qx = L.x + spread * (hx * (1 + 0.3 * Math.sin(t * 0.55 + hy * 2.1)) + 0.45 * hy * Math.sin(t * 0.4));
@@ -203,7 +209,7 @@ export class Swarm {
       let vz = (qz - z) * pull + Math.sin(t * 0.7 + i) * 0.3 * turb;
       if (this.star[i] >= 0) {
         const s = this.star[i] * 3, S = this.stars;
-        const k = 1.5 * w;
+        const k = 1.5 * fast * w;
         vx = vx * (1 - w) + (S[s] - x) * k;
         vy = vy * (1 - w) + (S[s + 1] - y) * k;
         vz = vz * (1 - w) + (S[s + 2] - z) * k;

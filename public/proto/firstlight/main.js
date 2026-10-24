@@ -5,7 +5,7 @@
 //   ?auto     tap by itself after 3 s (silent)      ?t=6    jump to 6 s after the tap
 //   ?still    hold that moment (for checks)         ?fps    frame times
 import * as THREE from 'three';
-import { Swarm, Trails, rng } from './swarm.js?v=2';
+import { Swarm, Trails, rng } from './swarm.js?v=3';
 import { Sound } from './sound.js?v=1';
 
 const params = new URLSearchParams(location.search);
@@ -131,9 +131,9 @@ const GLYPHS = {
   S: [[[1.9, 2.6], [1.3, 3], [0.6, 3], [0.1, 2.55], [0.25, 1.85], [1, 1.5], [1.75, 1.15], [1.9, 0.45], [1.35, 0], [0.6, 0], [0.1, 0.4]]],
   T: [[[0, 3], [1, 3], [2, 3]], [[1, 3], [1, 0]]],
   R: [[[0, 0], [0, 3], [1.3, 3], [1.85, 2.55], [1.85, 2.05], [1.3, 1.6], [0, 1.6]], [[0.9, 1.6], [1.9, 0]]],
-  A: [[[0, 0], [1, 3], [2, 0]], [[0.38, 1.15], [1.62, 1.15]]],
+  A: [[[0, 0], [1, 3], [2, 0]]],   // no crossbar: a peak, as the old title's A reads in stars
 };
-const nameStars = [], nameLines = [];
+const nameStars = [], nameLines = [], nameGlow = new THREE.Vector4(), fieldStars = [];
 {
   const word = 'STRATA', GAP = 1.15, W = word.length * 2 + (word.length - 1) * GAP;
   // the camera's resting pose (as step() leaves it at the top)
@@ -169,17 +169,34 @@ const nameStars = [], nameLines = [];
       }
     }
   });
-  // keep the name legible: no loose stars land in its band of sky
-  const v = new THREE.Vector3(), clear = [];
+  // the name sits in a richer patch of sky, its own constellation: a field of
+  // fixed stars around it comes out as it is written (nameField, below), and
+  // the shader brightens every risen star there too (uGlow). Only right on
+  // the strokes is the sky kept clear, so the letters read.
+  const cx = (left.x + right.x) / 2, cy = base + 1.5 * k, rx = (right.x - left.x) * 0.62, ry = 3 * k * 1.9;
+  nameGlow.set(cx, cy, rx, ry);
+  const near = (x, y, r) => nameStars.some(([px, py]) => Math.hypot(px - x, py - y) < r);
+  const v = new THREE.Vector3(), w = new THREE.Vector3(), clear = [];
   for (let i = 0; i < starPlaces.length; i += 3) {
     v.set(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]).project(rest);
-    if (Math.abs(v.x) < 0.9 && v.y > 0.44 && v.y < 0.86) continue;
+    // where it appears against the name's plane
+    w.set(v.x, v.y, 0.5).unproject(rest).sub(rest.position).normalize();
+    const d = (-1 - rest.position.z) / w.z;
+    if (near(rest.position.x + w.x * d, rest.position.y + w.y * d, 0.5 * k)) continue;
     clear.push(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]);
   }
   starPlaces.length = 0; starPlaces.push(...clear);
+  const gr = rng(17);
+  while (fieldStars.length < 170 * 3) {
+    const a = gr() * Math.PI * 2, r = Math.sqrt(-Math.log(1 - gr() * 0.95)) * 0.6;   // dense at the centre, thinning outward
+    const x = cx + Math.cos(a) * r * rx, y = cy + Math.sin(a) * r * ry;
+    if (near(x, y, 0.55 * k)) continue;
+    fieldStars.push(x, y, -1.5 - 2 * gr());
+  }
   for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
 }
-const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length });
+const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length, nameSpeed: 2.5 });
+swarm.material.uniforms.uGlow.value.copy(nameGlow);
 // the constellation's lines: drawn faintly once its stars are home
 const nameLine = (() => {
   const pos = new Float32Array(nameLines.length * 3);
@@ -191,6 +208,23 @@ const nameLine = (() => {
   return l;
 })();
 scene.add(nameLine);
+// the name's constellation: fixed stars round it, brightest near the middle
+const nameField = (() => {
+  const n = fieldStars.length / 3, seed = new Float32Array(n), r = rng(23);
+  for (let i = 0; i < n; i++) seed[i] = r();
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(fieldStars), 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uA: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR }, uGlow: { value: nameGlow } },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'attribute float aSeed; uniform float uTime, uPx; uniform vec4 uGlow; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vec2 q = (position.xy - uGlow.xy) / uGlow.zw; float c = exp(-dot(q,q) * 1.6); vA = (0.35 + 0.65 * c) * (0.5 + 0.5 * aSeed) * (0.8 + 0.2 * sin(uTime * (0.5 + aSeed) + aSeed * 50.0)); gl_PointSize = (2.6 + 4.2 * aSeed * aSeed * (0.5 + 0.5 * c)) * uPx; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform float uA; varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * uA * 1.8); gl_FragColor = vec4(vec3(1.0, 0.95, 0.86) * a, a); }',
+  });
+  const p = new THREE.Points(g, m); p.frustumCulled = false;
+  return p;
+})();
+scene.add(nameField);
 swarmScene.add(swarm.points);
 const trails = new Trails(renderer);
 
@@ -289,6 +323,9 @@ function step(dt) {
     for (let i = 0; i < swarm.reserved; i++) home += swarm.state[i * 3 + 1] >= 1;
     if (home === swarm.reserved && nameAt === null) nameAt = s;
     nameLine.material.opacity = nameAt === null ? 0 : 0.32 * smooth(0, 2.5, s - nameAt);
+    swarm.material.uniforms.uGlowK.value = 0.9 * smooth(5, 10, s);
+    nameField.material.uniforms.uA.value = smooth(6, 11, s);
+    nameField.material.uniforms.uTime.value = simT;
     if (s > 15) $('#replay').classList.add('show');
   }
   far.material.uniforms.uTime.value = simT;
