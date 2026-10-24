@@ -3141,9 +3141,10 @@ export const ADDED_LATER = new Set([
 // live on in gallery page 6.
 export const RETIRED = new Set(['cake-stand', 'bonus-teatime']);
 
-// Objects lit by lit() (above), with any recolouring each one takes first.
-// First Light is the first chapter to take it (Kellan, 2026-10-23); the Heart
-// has its own hand-made ramps.
+// Every stone and every shrine is lit by lit() (above). First Light took it
+// first (Kellan, 2026-10-23), with the recolouring listed for it here; the
+// rest take it in their own colours, at the defaults, unless an entry below
+// softens the light for them.
 const LIT = {
   // sandstone treads on terracotta, not pink and white
   steps: { swap: { 0xe58f84: 0xc77f58, 0xfcefe0: 0xf0e0c2 } },
@@ -3162,8 +3163,17 @@ const LIT = {
     0x4fb3a9: 0x3f8a80, 0xf08a6c: 0xcf7650, 0x9b7fd1: 0x77669e, 0xf6d365: 0xe0c27a } },
   'fried-egg': {}, 'kitten-box': {},
   teapot: { swap: { 0x5b8fd6: 0x3e66a3, 0xf6efe4: 0xf4ecdc } },              // cobalt on porcelain
+  // Beyond First Light, a softer light (two tones, not three) where the
+  // object's own pattern already does the work: segments, scales, mottled
+  // snow and stone, an icon. The full ramp crossing them reads as speckle.
+  'giant-isopod': { span: 2 }, 'dragon-head': { span: 2 }, invader: { span: 2 },
+  'mountain-goat': { span: 2 }, 'calendar-stone': { span: 2 }, 'stand-mixer': { span: 2 },
 };
-for (const shape of SHAPES) if (LIT[shape.id]) shape.cell = lit(shape, LIT[shape.id]).cell;
+// These carry hand-made dithered ramps of their own: the Heart, and the page
+// 14 pieces built with its kit (the amber, the orrery's sun, the astrolabe's
+// gold). Lighting them again would only muddy the steps.
+const LIT_SKIP = new Set(['heart', 'amber-midge', 'orrery', 'astrolabe']);
+for (const shape of [...SHAPES, ...BONUS]) if (!LIT_SKIP.has(shape.id)) shape.cell = lit(shape, LIT[shape.id]).cell;
 
 // Every level's starting block fits its object exactly: an empty slab on an
 // edge of the block is a whole row of 0s to chisel, taps that teach nothing.
