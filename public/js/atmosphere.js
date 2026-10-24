@@ -355,7 +355,7 @@ export class Ash {
           // it pops into being (a quick overshoot), and twinkles small as it goes
           float pop = smoothstep(0.0, 0.05, age) * (1.0 + 0.7 * exp(-age * 9.0));
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = max(2.0, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.4 * uUnitPx);
+          gl_PointSize = max(1.5, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.2 * uUnitPx);
         }`,
       fragmentShader: /* glsl */ `
         uniform float uPale;
@@ -415,7 +415,7 @@ export class Ash {
       this.vel.set([vx, vy, vz], i3);
       this.axis.set([center.x, center.z, phase], i3);
       this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
-      this.life[i] = 1.1 + Math.random() * 1.1;
+      this.life[i] = 0.55 + Math.random() * 0.55;   // brief: a quick puff, gone in about a second
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
     }
     this.geo.attributes.aSeed.needsUpdate = true;
