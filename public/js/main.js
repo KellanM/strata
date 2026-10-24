@@ -2011,8 +2011,7 @@ function carveLogo() {
   if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
-if (reduceMotion) carveLogo();
-else after(CARVE_AT, carveLogo);
+const beginTitle = () => { if (reduceMotion) carveLogo(); else after(CARVE_AT, carveLogo); };
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
@@ -2026,7 +2025,29 @@ const buildMap = () => {
   mark('title: map built');
   primeMap();
 };
-after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
+// The studio's card (index.html #splash) holds the screen while the heavy
+// work happens behind it: the first frames are drawn (every shader compiled)
+// and the whole map is built. Then it lifts - no sooner than its own little
+// animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
+// the title begins under it, the logo carving as before.
+const SPLASH_HOLD = 3.1;   // s: the stones set, the light comes, the name settles
+const splash = $('#splash');
+if (splash) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    buildMap();
+    const quick = splash.classList.contains('quick') || reduceMotion;
+    const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
+    setTimeout(() => {
+      splash.classList.add('out');
+      mark('splash: lifted');
+      setTimeout(() => splash.remove(), 800);
+      beginTitle();
+    }, left);
+  }));
+} else {
+  beginTitle();
+  after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
+}
 
 // the scroll: k px up. The title moves with it, the logo too (by shifting the
 // camera's view), and the map sheet follows from just below the screen.

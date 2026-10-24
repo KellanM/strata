@@ -270,7 +270,9 @@ export class MapWorld {
       g.save(); g.translate(x, y); g.scale(1, ry / rx); g.translate(-x, -y);
       g.fillStyle = grad; g.fillRect(x - rx, y - rx, rx * 2, rx * 2); g.restore();
     }
-    const out = { url: c.toDataURL(), w, h };
+    // the canvas itself goes on the page: encoding it to a PNG data URL (as it
+    // once did) cost seconds of main thread across a map's hundred ribbons
+    const out = { canvas: c, used: false, w, h };
     this.ribbons.set(key, out);
     return out;
   }
@@ -336,8 +338,12 @@ export class MapWorld {
     const drift = (el) => { rand(); rand(); return el; };
     const band = (layer, x, z, w, h, alpha, cls, seed) => {
       const rb = this.ribbon(mist, seed, Math.round(w), Math.round(h), alpha);
-      const img = new Image(); img.alt = ''; img.src = rb.url;
-      return drift(place(layer, img, x, z, rb.w, rb.h, 0.5, 0.5, `mist ${cls}`));
+      // a ribbon's canvas goes up once; the same ribbon again is a quick copy of it
+      let el = rb.canvas;
+      if (rb.used) { el = document.createElement('canvas'); el.width = rb.w; el.height = rb.h; el.getContext('2d').drawImage(rb.canvas, 0, 0); }
+      rb.used = true;
+      el.setAttribute('aria-hidden', 'true');
+      return drift(place(layer, el, x, z, rb.w, rb.h, 0.5, 0.5, `mist ${cls}`));
     };
     // a mountain top, its base faded out, and the densest mist across the cut
     const peak = (layer, x, z, key, cls = '') => {
