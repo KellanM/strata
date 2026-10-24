@@ -359,17 +359,18 @@ export class Ash {
           vec2 q = gl_PointCoord * 2.0 - 1.0;
           float d2 = dot(q, q);
           if (d2 > 1.0) discard;
-          vec3 ember = vec3(1.0, 0.74, 0.40), star = mix(uCool, vec3(1.0, 0.93, 0.82), vWarm);
+          // glowing light, never soot: gold as it leaves the stone, cooling to white
+          vec3 ember = vec3(1.0, 0.84, 0.42), star = mix(vec3(1.0, 0.98, 0.92), vec3(1.0, 0.94, 0.78), vWarm);
           vec3 col = mix(star, ember, vHeat);
           // a hot core and a soft halo, as the title's stars
           float core = exp(-d2 * 9.0), halo = 0.28 * exp(-d2 * 2.4);
           float a = (core + halo) * vB;
           if (uPale > 0.5) {
             // over a pale sky: the same star, laid on in deeper tones so it shows
-            // (a darker, richer core, as an ember seen against paper)
-            vec3 deep = mix(uCool, vec3(0.95, 0.5, 0.16), vHeat);
-            vec3 c = deep * mix(1.0, 0.78, core);
-            gl_FragColor = vec4(c, min(1.0, (core * 1.1 + halo * 0.9) * vB));
+            // (a white-hot core in a gold halo; the halo is what shows against pale sky)
+            vec3 gold = mix(vec3(1.0, 0.86, 0.5), vec3(1.0, 0.74, 0.28), vHeat);
+            vec3 c = mix(gold, vec3(1.0, 0.99, 0.94), core);
+            gl_FragColor = vec4(c, min(1.0, (core * 1.2 + halo * 1.6) * vB));
           } else {
             gl_FragColor = vec4(col * a, a);
           }
