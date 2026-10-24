@@ -5,7 +5,7 @@
 //   ?auto     tap by itself after 3 s (silent)      ?t=6    jump to 6 s after the tap
 //   ?still    hold that moment (for checks)         ?fps    frame times
 import * as THREE from 'three';
-import { Swarm, Trails, rng } from './swarm.js?v=1';
+import { Swarm, Trails, rng } from './swarm.js?v=2';
 import { Sound } from './sound.js?v=1';
 
 const params = new URLSearchParams(location.search);
@@ -21,6 +21,7 @@ const DPR = Math.min(2, window.devicePixelRatio || 1);
 renderer.setPixelRatio(DPR);
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
 const CAM_Z = 24;
+const CAM_FROM = -3.2, CAM_TO = 15;   // the camera's height on the wall, and at rest in the sky
 const scene = new THREE.Scene();
 const swarmScene = new THREE.Scene();
 
@@ -118,12 +119,78 @@ scene.add(halo);
 
 // ---------------------------------------------------------------- the sky's places for stars
 const starRand = rng(5), starPlaces = [];
-for (let i = 0; i < 1500; i++) {
+for (let i = 0; i < 1800; i++) {
   const z = -14 * starRand() ** 1.5;
   const spread = 1 + -z / CAM_Z;   // farther stars spread wider, to fill the same view
   starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 7 + 19 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
 }
-const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR });
+// The name, written in stars: each letter a few strokes (in a 2 x 3 box),
+// stars along them a little apart, as a constellation is drawn. Placed where
+// the camera comes to rest, high in the view, so the sky signs itself.
+const GLYPHS = {
+  S: [[[1.9, 2.6], [1.3, 3], [0.6, 3], [0.1, 2.55], [0.25, 1.85], [1, 1.5], [1.75, 1.15], [1.9, 0.45], [1.35, 0], [0.6, 0], [0.1, 0.4]]],
+  T: [[[0, 3], [1, 3], [2, 3]], [[1, 3], [1, 0]]],
+  R: [[[0, 0], [0, 3], [1.3, 3], [1.85, 2.55], [1.85, 2.05], [1.3, 1.6], [0, 1.6]], [[0.9, 1.6], [1.9, 0]]],
+  A: [[[0, 0], [1, 3], [2, 0]], [[0.38, 1.15], [1.62, 1.15]]],
+};
+const nameStars = [], nameLines = [];
+{
+  const word = 'STRATA', GAP = 1.15, W = word.length * 2 + (word.length - 1) * GAP;
+  // the camera's resting pose (as step() leaves it at the top)
+  const rest = camera.clone();
+  rest.aspect = window.innerWidth / window.innerHeight;
+  rest.fov = rest.aspect < 0.75 ? 45 : 38;
+  rest.updateProjectionMatrix();
+  rest.position.set(0, CAM_TO, CAM_Z); rest.lookAt(0, CAM_TO + 1.5, 0); rest.updateMatrixWorld();
+  const at = (nx, ny) => {   // screen (-1..1) to the sky plane z = -1
+    const d = new THREE.Vector3(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
+    return rest.position.clone().addScaledVector(d, (-1 - rest.position.z) / d.z);
+  };
+  const left = at(-0.78, 0.6), right = at(0.78, 0.6), k = (right.x - left.x) / W;
+  const base = left.y - 1.5 * k;
+  const place = (gx, gy) => {
+    const x = left.x + gx * k, y = base + gy * k;
+    let j = nameStars.findIndex(([px, py]) => Math.hypot(px - x, py - y) < 0.3 * k);
+    if (j < 0) { j = nameStars.length; nameStars.push([x, y, -1]); }
+    return j;
+  };
+  [...word].forEach((ch, n) => {
+    const ox = n * (2 + GAP);
+    for (const stroke of GLYPHS[ch]) {
+      let prev = null;
+      for (let s = 0; s < stroke.length - 1; s++) {
+        const [ax, ay] = stroke[s], [bx, by] = stroke[s + 1];
+        const steps = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / 0.62));
+        for (let q = s === 0 ? 0 : 1; q <= steps; q++) {
+          const j = place(ox + ax + (bx - ax) * q / steps, ay + (by - ay) * q / steps);
+          if (prev !== null && prev !== j) nameLines.push(prev, j);
+          prev = j;
+        }
+      }
+    }
+  });
+  // keep the name legible: no loose stars land in its band of sky
+  const v = new THREE.Vector3(), clear = [];
+  for (let i = 0; i < starPlaces.length; i += 3) {
+    v.set(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]).project(rest);
+    if (Math.abs(v.x) < 0.9 && v.y > 0.44 && v.y < 0.86) continue;
+    clear.push(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]);
+  }
+  starPlaces.length = 0; starPlaces.push(...clear);
+  for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
+}
+const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length });
+// the constellation's lines: drawn faintly once its stars are home
+const nameLine = (() => {
+  const pos = new Float32Array(nameLines.length * 3);
+  nameLines.forEach((j, i) => pos.set(nameStars[j], i * 3));
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.LineBasicMaterial({ color: 0xffe2b8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const l = new THREE.LineSegments(g, m); l.frustumCulled = false;
+  return l;
+})();
+scene.add(nameLine);
 swarmScene.add(swarm.points);
 const trails = new Trails(renderer);
 
@@ -147,7 +214,7 @@ scene.add(far);
 // ---------------------------------------------------------------- timeline
 const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const smoother = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * k * (k * (6 * k - 15) + 10); };
-const CAM_FROM = -3.2, CAM_TO = 15;
+let nameAt = null;   // when the name's last star landed
 let tapAt = null, simT = 0, lastReal = null, idleSince = 0;
 let camY = CAM_FROM;
 const sound = new Sound();
@@ -217,8 +284,11 @@ function step(dt) {
     swarm.step(simT, dt);
     swarm.material.uniforms.uTime.value = simT;
     far.material.uniforms.uA.value = smooth(9, 14, s);
-    // the name, once the sky has its first stars
-    if (s > 9.5) $('#name').classList.add('show');
+    // the name: when its stars are all home, the constellation's lines draw in
+    let home = 0;
+    for (let i = 0; i < swarm.reserved; i++) home += swarm.state[i * 3 + 1] >= 1;
+    if (home === swarm.reserved && nameAt === null) nameAt = s;
+    nameLine.material.opacity = nameAt === null ? 0 : 0.32 * smooth(0, 2.5, s - nameAt);
     if (s > 15) $('#replay').classList.add('show');
   }
   far.material.uniforms.uTime.value = simT;

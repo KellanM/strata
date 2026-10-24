@@ -80,7 +80,9 @@ const FRAG = /* glsl */`
   }`;
 
 export class Swarm {
-  constructor({ count = 1400, seed = 7, source, stars, px = 1 }) {
+  // reserved: the last `reserved` star places are kept for the first `reserved`
+  // motes (the name, written in stars): nobody else takes them, and they go nowhere else
+  constructor({ count = 1400, seed = 7, source, stars, px = 1, reserved = 0 }) {
     this.n = count;
     const rand = this.rand = rng(seed);
     this.fine = waves(6, 0.32, 0.7, 0.25, 0.6, rand);
@@ -111,6 +113,11 @@ export class Swarm {
     // the sky's star places: claimed one by one, nearest first
     this.stars = stars;
     this.free = new Uint8Array(stars.length / 3).fill(1);
+    this.reserved = reserved;
+    const first = this.free.length - reserved;
+    this.free.fill(0, first);
+    // the name's stars: a touch larger, and warm, like the stone they came from
+    for (let i = 0; i < reserved; i++) { seeds[i * 4 + 2] = 1.7 + 0.25 * rand(); seeds[i * 4 + 3] = 0.85 + 0.15 * rand(); }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     g.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4));
@@ -136,9 +143,14 @@ export class Swarm {
       this.pos.set([this.src.x + (r() - 0.5) * size, this.src.y + (r() - 0.5) * size, this.src.z + 0.5 + r() * 0.3], i * 3);
       this.vel.set([(r() - 0.5) * 0.6, 0.6 + r() * 0.8, (r() - 0.2) * 0.8], i * 3);
       this.ceiling[i] = this.src.y + 8 + 19 * Math.pow(r(), 0.7);
+      if (i < this.reserved) {   // the name: among the last to leave, the highest to climb
+        this.birth[i] = t + over * (0.35 + 0.65 * r());
+        this.ceiling[i] = this.stars[(this.free.length - this.reserved + i) * 3 + 1] - 1.5;
+      }
     }
   }
   claim(i) {
+    if (i < this.reserved) return this.free.length - this.reserved + i;
     const S = this.stars, x = this.pos[i * 3], y = this.pos[i * 3 + 1] + 2.5;
     let best = -1, bd = Infinity;
     for (let k = 0; k < this.free.length; k++) {
@@ -172,7 +184,7 @@ export class Swarm {
       const x = P[i3], y = P[i3 + 1], z = P[i3 + 2];
       const h = y - src.y;
       // settling: a mote that reached its height takes the nearest free star
-      if (this.star[i] < 0 && (y > this.ceiling[i] || age > 11)) {
+      if (this.star[i] < 0 && (y > this.ceiling[i] || age > (i < this.reserved ? 5.5 : 11))) {
         this.star[i] = this.claim(i);
         this.settleAt[i] = t;
       }
