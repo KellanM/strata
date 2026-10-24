@@ -305,6 +305,7 @@ function applyPalette(p) {
   const dark = new THREE.Color(p.skyTop).getHSL({}).l < 0.35;
   cubes.setPalette(p);
   fragments.setPalette(p);
+  ash.setPalette(p);
   background.setPalette(p);
   rays.setPalette(p, dark);
   motes.setPalette(p);
@@ -560,7 +561,7 @@ function act(i, which) {
   fragments.burst(cellWorld(i), from, t);
   shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
     { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
-  if (!reduceMotion) ash.burst(cellWorld(i), t, c(p.under), 18);   // and its ash rises
+  if (!reduceMotion) ash.burst(cellWorld(i), 30);   // and its ash rises
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
   const pz = game.puzzle;
@@ -1612,10 +1613,11 @@ function draw() {
     coachTick(t);
   }
   rayBoost *= Math.exp(-dt * 1.6);
+  ash.step(dt, t);
 
   // shared time / scale uniforms
   const unitPx = renderer.domElement.height / ((camera.top - camera.bottom) / camera.zoom);
-  motes.uniforms.uTime.value = shards.uniforms.uTime.value = ash.uniforms.uTime.value = fragments.uniforms.uTime.value = t;
+  motes.uniforms.uTime.value = shards.uniforms.uTime.value = fragments.uniforms.uTime.value = t;
   motes.uniforms.uUnitPx.value = shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
   motes.uniforms.uFocus.value = camera.position.distanceTo(controls.target);
   background.uniforms.uTime.value = t;

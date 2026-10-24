@@ -295,93 +295,145 @@ export class Shards {
 }
 
 // Ash: what a chiselled cube gives up (Kellan, 2026-10-23: "like ash rising
-// from a fire"), the first-light swarm in small. A few embers and flakes leave
-// the cube and climb, slowing as they go; the burst sways as one plume, like
-// incense smoke on still air, widening as it rises, and each mote drifts off
-// its own way inside it. Embers glow warm and cool as they climb; flakes are
-// the palette's shade, fluttering. All on the GPU: a burst only writes its
-// motes' starting state.
+// from a fire"; then: in 3D, fast and fluid, shaded like the title's stars).
+// Each mote is simulated in the world: it is thrown out of the cube in a puff,
+// then carried by moving air - a hot updraft over the cube that draws the
+// motes in toward its column as they rise (a plume), inside a swirling field
+// (an ABC flow, which has no sources or sinks, so it curls like real air and
+// never clumps). Drag lets each mote catch the air quickly, so the motion is
+// quick and alive rather than floaty. Drawn depth-tested, so the stone hides
+// what passes behind it. The look is the first-light swarm's: a hot core and a
+// soft halo, a quick shimmer with rare glints, ember-gold when it leaves the
+// stone and cooling to starlight. Over a pale sky additive light would vanish,
+// so there it is laid on normally in deeper tones (setPalette).
+const ABC = (x, y, z, t, out) => {
+  out[0] = Math.sin(z + t * 0.9) + 0.7 * Math.cos(y - t * 0.6);
+  out[1] = 0.8 * Math.sin(x + t * 0.7) + Math.cos(z + t * 0.5);
+  out[2] = 0.7 * Math.sin(y - t * 0.8) + 0.8 * Math.cos(x + t * 0.4);
+};
 export class Ash {
-  constructor(capacity = 900) {
+  constructor(capacity = 1200) {
     this.capacity = capacity;
     this.next = 0;
+    this.pos = new Float32Array(capacity * 3);
+    this.vel = new Float32Array(capacity * 3);
+    this.axis = new Float32Array(capacity * 3);   // the plume's foot (its burst's cube) and the air's phase
+    this.age = new Float32Array(capacity).fill(99);
+    this.life = new Float32Array(capacity).fill(1);
+    this.state = new Float32Array(capacity * 2);  // fade (0..1), heat (1 hot .. 0 cooled)
+    this.seeds = new Float32Array(capacity * 4);  // twinkle rate, phase, size, warmth
+    this.alive = 0;
     const geo = new THREE.BufferGeometry();
-    this.origin = new Float32Array(capacity * 3);
-    this.start = new Float32Array(capacity).fill(-99);
-    this.seed = new Float32Array(capacity * 4);    // life, rise speed, kind (0 ember, 1 flake), random
-    this.off = new Float32Array(capacity * 3);     // own drift (x, z), the burst's sway phase
-    this.color = new Float32Array(capacity * 3);
-    geo.setAttribute('position', new THREE.BufferAttribute(this.origin, 3));
-    geo.setAttribute('aStart', new THREE.BufferAttribute(this.start, 1));
-    geo.setAttribute('aSeed', new THREE.BufferAttribute(this.seed, 4));
-    geo.setAttribute('aOff', new THREE.BufferAttribute(this.off, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(this.color, 3));
+    geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aState', new THREE.BufferAttribute(this.state, 2).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(this.seeds, 4).setUsage(THREE.DynamicDrawUsage));
     this.geo = geo;
-    this.uniforms = { uTime: { value: 0 }, uUnitPx: { value: 30 } };
+    this.uniforms = {
+      uTime: { value: 0 }, uUnitPx: { value: 30 }, uPale: { value: 0 },
+      uCool: { value: new THREE.Color(0.9, 0.92, 1.0) },
+    };
     this.points = new THREE.Points(geo, new THREE.ShaderMaterial({
-      // drawn over the block: it is light leaving the stone, and the stone in front must not swallow it
-      uniforms: this.uniforms, transparent: true, depthWrite: false, depthTest: false,
+      uniforms: this.uniforms, transparent: true, depthWrite: false, depthTest: true,
+      blending: THREE.AdditiveBlending,
       vertexShader: /* glsl */ `
-        attribute float aStart;
-        attribute vec4 aSeed;
-        attribute vec3 aOff, aColor;
+        attribute vec2 aState;   // fade, heat
+        attribute vec4 aSeed;    // twinkle rate, phase, size, warmth
         uniform float uTime, uUnitPx;
-        varying vec3 vColor;
-        varying float vAlpha, vHot;
+        varying float vB, vHeat, vWarm;
         void main() {
-          float t = uTime - aStart;
-          if (t < 0.0 || t > aSeed.x) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-          float k = t / aSeed.x, r = aSeed.w, ph = aOff.z;
-          // buoyant: quick off the stone, slowing as it climbs
-          float h = aSeed.y * (1.0 - exp(-t * 0.85)) / 0.85;
-          // the plume sways as one (shared phase), more the higher it gets
-          float sx = sin(h * 1.5 + t * 0.8 + ph) * 0.2 * h + sin(h * 3.4 + ph * 2.3 + t * 1.6) * 0.06 * h;
-          float sz = cos(h * 1.2 + t * 0.7 + ph * 1.7) * 0.16 * h;
-          // and widens: each mote eases out along its own way
-          float wide = 0.1 + 0.32 * h;
-          // flakes flutter
-          float fl = aSeed.z * sin(t * (6.0 + 4.0 * r) + r * 40.0) * 0.05;
-          vec3 p = position + vec3(sx + aOff.x * wide + fl, h, sz + aOff.y * wide);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-          float fadeIn = smoothstep(0.0, 0.12, t), fadeOut = 1.0 - k * k;
-          // embers: hot gold, cooling to the palette's shade as they climb; a flicker
-          vHot = (1.0 - aSeed.z) * (1.0 - smoothstep(0.0, 0.85, k));
-          float flick = 0.8 + 0.2 * sin(t * (11.0 + 9.0 * r) + r * 60.0);
-          vec3 ember = mix(vec3(1.0, 0.68, 0.26), vec3(0.93, 0.36, 0.16), smoothstep(0.0, 0.5, k));
-          vColor = mix(aColor, ember * flick, vHot);
-          vAlpha = fadeIn * fadeOut * mix(1.0, 0.75, aSeed.z);
-          float size = mix(0.3, 0.24, aSeed.z) * (0.75 + 0.5 * r) * (1.0 - 0.35 * k);
-          gl_PointSize = max(1.5, size * uUnitPx);
+          if (aState.x <= 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+          float ph = aSeed.y * 6.2832;
+          // as the title's motes in flight: a quick shimmer, and now and then a glint
+          float shimmer = 0.62 + 0.38 * sin(uTime * mix(7.0, 13.0, aSeed.x) + ph);
+          float glint = pow(max(0.0, sin(uTime * mix(1.1, 2.7, aSeed.x) + ph * 7.0)), 30.0) * 1.8;
+          vB = (shimmer + glint) * aState.x;
+          vHeat = aState.y; vWarm = aSeed.w;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = max(2.0, aSeed.z * (0.75 + 0.3 * vB) * (0.7 + 0.5 * aState.y) * 0.6 * uUnitPx);
         }`,
       fragmentShader: /* glsl */ `
-        varying vec3 vColor;
-        varying float vAlpha, vHot;
+        uniform float uPale;
+        uniform vec3 uCool;
+        varying float vB, vHeat, vWarm;
         void main() {
           vec2 q = gl_PointCoord * 2.0 - 1.0;
           float d2 = dot(q, q);
           if (d2 > 1.0) discard;
-          // a soft body; embers carry a hot core
-          float a = min(1.0, 1.3 * exp(-d2 * 3.2)) * vAlpha;
-          vec3 c = mix(vColor, vec3(1.0, 0.9, 0.6), vHot * exp(-d2 * 12.0));
-          gl_FragColor = vec4(c, a);
+          vec3 ember = vec3(1.0, 0.74, 0.40), star = mix(uCool, vec3(1.0, 0.93, 0.82), vWarm);
+          vec3 col = mix(star, ember, vHeat);
+          // a hot core and a soft halo, as the title's stars
+          float core = exp(-d2 * 9.0), halo = 0.28 * exp(-d2 * 2.4);
+          float a = (core + halo) * vB;
+          if (uPale > 0.5) {
+            // over a pale sky: the same star, laid on in deeper tones so it shows
+            // (a darker, richer core, as an ember seen against paper)
+            vec3 deep = mix(uCool, vec3(0.95, 0.5, 0.16), vHeat);
+            vec3 c = deep * mix(1.0, 0.78, core);
+            gl_FragColor = vec4(c, min(1.0, (core * 1.1 + halo * 0.9) * vB));
+          } else {
+            gl_FragColor = vec4(col * a, a);
+          }
         }`,
     }));
     this.points.frustumCulled = false;
+    this.f = [0, 0, 0];
   }
 
-  // one cube's worth: `count` motes from inside it, about a third of them embers
-  burst(center, time, shade, count = 14) {
-    const ph = Math.random() * 6.283;
+  // light skies take the deeper, normally blended look; dark ones the starlight
+  setPalette(p) {
+    const lum = (h) => { const c = new THREE.Color(h); return 0.3 * c.r + 0.59 * c.g + 0.11 * c.b; };
+    const pale = (lum(p.skyTop) + lum(p.skyBottom)) / 2 > 0.55;
+    this.uniforms.uPale.value = pale ? 1 : 0;
+    this.uniforms.uCool.value.set(pale ? p.shade : (p.motes ?? 0xe8ecff));
+    this.points.material.blending = pale ? THREE.NormalBlending : THREE.AdditiveBlending;
+    this.points.material.needsUpdate = true;
+  }
+
+  // one cube's worth: a puff of motes from inside it
+  burst(center, count = 22) {
+    const phase = Math.random() * 20;
     for (let k = 0; k < count; k++) {
-      const i = this.next++ % this.capacity;
-      const a = Math.random() * Math.PI * 2, out = 0.4 + Math.random() * 0.8;
-      this.origin.set([center.x + (Math.random() - 0.5) * 0.7, center.y + (Math.random() - 0.5) * 0.7, center.z + (Math.random() - 0.5) * 0.7], i * 3);
-      const ember = k % 3 === 0;
-      this.seed.set([2.2 + Math.random() * 1.6, 2.2 + Math.random() * 1.8, ember ? 0 : 1, Math.random()], i * 4);
-      this.off.set([Math.cos(a) * out, Math.sin(a) * out, ph], i * 3);
-      this.start[i] = time + Math.pow(Math.random(), 2) * 0.35;   // most at once, a thin tail after
-      this.color.set([shade.r, shade.g, shade.b], i * 3);
+      const i = this.next++ % this.capacity, i3 = i * 3;
+      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u);
+      const sp = 1.5 + Math.random() * 2.5;
+      this.pos.set([center.x + (Math.random() - 0.5) * 0.6, center.y + (Math.random() - 0.5) * 0.6, center.z + (Math.random() - 0.5) * 0.6], i3);
+      this.vel.set([r * Math.cos(a) * sp, (u * 0.6 + 0.4) * sp, r * Math.sin(a) * sp], i3);
+      this.axis.set([center.x, center.z, phase], i3);
+      this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
+      this.life[i] = 1.1 + Math.random() * 1.1;
+      this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
     }
-    for (const name of ['position', 'aStart', 'aSeed', 'aOff', 'aColor']) this.geo.getAttribute(name).needsUpdate = true;
+    this.geo.attributes.aSeed.needsUpdate = true;
+  }
+
+  step(dt, t) {
+    dt = Math.min(dt, 1 / 30);
+    const P = this.pos, V = this.vel, A = this.axis, S = this.state, f = this.f;
+    let alive = 0;
+    for (let i = 0; i < this.capacity; i++) {
+      if (this.age[i] >= this.life[i]) { S[i * 2] = 0; continue; }
+      this.age[i] += dt;
+      const age = this.age[i], i3 = i * 3;
+      if (age < 0) { S[i * 2] = 0; continue; }
+      alive++;
+      const x = P[i3], y = P[i3 + 1], z = P[i3 + 2], k = age / this.life[i];
+      // the air: a swirl that grows as the mote leaves the stone, over a hot updraft
+      ABC(x * 1.3 + A[i3 + 2], y * 1.3, z * 1.3 - A[i3 + 2], t * 1.6 + A[i3 + 2], f);
+      const swirl = 2.6 * Math.min(1, age * 3);
+      const dx = x - A[i3], dz = z - A[i3 + 1], r2 = dx * dx + dz * dz;
+      const lift = 3.2 * Math.exp(-age * 0.9) * (0.55 + 0.45 * Math.exp(-r2 * 0.8)) + 0.5;
+      // entrained toward the plume's column as it rises
+      const ax = f[0] * swirl - dx * 1.2, ay = f[1] * swirl * 0.6 + lift, az = f[2] * swirl - dz * 1.2;
+      // drag: the mote catches the moving air quickly
+      const drag = 1 - Math.exp(-dt * 5.5);
+      V[i3] += (ax - V[i3]) * drag; V[i3 + 1] += (ay - V[i3 + 1]) * drag; V[i3 + 2] += (az - V[i3 + 2]) * drag;
+      P[i3] += V[i3] * dt; P[i3 + 1] += V[i3 + 1] * dt; P[i3 + 2] += V[i3 + 2] * dt;
+      S[i * 2] = Math.min(1, age * 14) * (1 - k * k);
+      S[i * 2 + 1] = Math.exp(-age * 2.2);
+    }
+    this.alive = alive;
+    this.uniforms.uTime.value = t;
+    this.geo.attributes.position.needsUpdate = true;
+    this.geo.attributes.aState.needsUpdate = true;
   }
 }
