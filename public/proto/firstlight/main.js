@@ -274,9 +274,9 @@ scene.add(far);
 const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const smoother = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * k * (k * (6 * k - 15) + 10); };
 let nameAt = null;   // when the name's last star landed
-// after the tap the story runs at SPEED (Kellan, 2026-10-23: half as long);
+// after the tap the story runs at SPEED (Kellan, 2026-10-23: a third as long);
 // twinkles keep real time (realT) so the settled sky stays calm
-const SPEED = 2;
+const SPEED = 3;
 let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
 let camY = CAM_FROM;
 const sound = new Sound();
