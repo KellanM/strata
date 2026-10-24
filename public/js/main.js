@@ -85,9 +85,9 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const mapWorld = new MapWorld($('#map-world'), $('#menu .map-scroll'));
 const menuEl = $('#menu');
 const titleEl = $('#title');
-// the hint lantern (top-right HUD slot) and the small card that offers a gift
-// (an empty lantern, a shrine short of stars); declared here, before boot's first startPuzzle
-const lanternEl = $('#lantern');
+// a slip taken back (top-right HUD slot) and the small card that offers a gift
+// (a slip taken back, a shrine short of stars); declared here, before boot's first startPuzzle
+const rewindEl = $('#rewind');
 const offerEl = $('#offer');
 let offerAction = null;
 let titleU = 0;               // the title pan, 0 (stars) .. 1 (the map at its top)
@@ -216,7 +216,7 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   show('#win', false);
   renderCoach();
   closeOffer();
-  renderLantern(!quiet);
+  renderRewind();
   // the first step into a chapter: its card is held on its own sky first, and
   // the block assembles as it leaves
   // a shrine always has its card held: "✦ The Shrine of …", with its bells
@@ -539,6 +539,7 @@ function act(i, which) {
 
   if (game.puzzle.solid[i]) {        // wrong: it belongs to the shape
     game.mistakes++;
+    (game.slips ??= []).push(i);   // the latest can be taken back (renderRewind)
     game.painted[i] = 1;
     cubes.setState(i, 1, t + 0.25, undefined, t);
     cubes.ripple(cell, t, 1.5, 9);
@@ -604,6 +605,7 @@ function win() {
   const t = now();
   mark('win');
   g.solved = true;
+  renderRewind();
   g.elapsed = t - g.start;
   clearProgress(g.shape.id);
   g.revealStart = t + 0.3;
@@ -699,11 +701,8 @@ function win() {
     };
     localStorage.setItem('strata.solved', JSON.stringify(solvedStore));
   }
-  // the ads' solve count, and the lantern's flames (once ever per gain)
-  const ch = !g.entry.bonus && g.shape.chapter;
-  const completed = ch && !prev && SHAPES.filter((s) => s.chapter === ch).every((s) => solvedStore[s.id]) ? ch : null;
-  ads.noteSolve({ id: g.shape.id, flawless: g.mistakes === 0, wasFlawless: prev?.mistakes === 0,
-    drift: g.shape.id.startsWith('random'), completedChapter: completed });
+  // the ads' solve count
+  ads.noteSolve();
   setTimeout(() => {
     if (game !== g) return;
     showResult(g, result, isBest);
@@ -1360,6 +1359,7 @@ function fmt(s) {
 
 function updateStrikes() {
   $('#strikes').textContent = game.mistakes ? '✕'.repeat(Math.min(game.mistakes, 5)) + (game.mistakes > 5 ? '+' : '') : '';
+  renderRewind();
 }
 
 const DRIFT_SIZES = [6, 8, 10];
@@ -1717,11 +1717,11 @@ $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); r
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
 renderSoundToggles();
 
-// ---------------------------------------------------------------- ads, the lantern, Remove Ads
+// ---------------------------------------------------------------- ads, a slip taken back, Remove Ads
 
 // docs/ads-study.md. ads.js decides (every cap) and its provider shows; here
 // are the moments: the breath and interstitial on the way from a result to
-// the map, the lantern, a shrine opened by an ad, and Remove Ads.
+// the map, a slip taken back, a shrine opened by an ad, and Remove Ads.
 
 // While an ad is up the game's sound stops, and a level's clock stands still.
 ads.onAd((on) => {
@@ -1786,58 +1786,50 @@ function closeOffer() {
 offerEl.querySelector('[data-no]').addEventListener('click', closeOffer);
 offerEl.querySelector('[data-yes]').addEventListener('click', () => { const run = offerAction; closeOffer(); run?.(); });
 
-// The hint lantern: in a level's empty top-right slot (not in lessons). A flame
-// lights one row with a move, the same light as the stuck nudge. Its flames are
-// small diamonds beneath it; none when it's empty, never a "0".
-const lanternShown = () => !!game && !game.entry.lesson && game.shape.id !== 'logo' && !titleUp;
-function renderLantern(rise = true) {
-  const on = lanternShown();
-  lanternEl.hidden = !on;
-  if (!on) return;
-  const n = ads.flames();
-  lanternEl.classList.toggle('lit', n > 0);
-  lanternEl.querySelector('.flames').innerHTML = '<i></i>'.repeat(n);
-  lanternEl.setAttribute('aria-label', n ? `Lantern, ${n} flame${n > 1 ? 's' : ''}: light a row with a move` : 'Lantern: light a row with a move');
-  // a flame gained since it was last seen rises into it, once the block is whole
-  if (rise && ads.takeRisen() > 0 && !reduceMotion) {
-    const g = game;
-    after(Math.max(0.6, (game.introEnd ?? 0) - now()) + 0.2, () => {
-      if (game !== g || lanternEl.hidden) return;
-      const f = document.createElement('span');
-      f.className = 'rise';
-      lanternEl.appendChild(f);
-      setTimeout(() => f.remove(), 1500);
-    });
+// A slip taken back (Kellan, 2026-10-24; it replaced the hint lantern). In a
+// level's empty top-right slot (not in lessons), only once there is a slip:
+// an ad takes back the latest one, so a stone finished clean still earns all
+// three stars. The cube stays marked (it does belong); only the slip goes.
+// With Remove Ads it is taken back at once. A day's cap (ads.js CONFIG.rewind).
+const rewindShown = () => !!game && !game.entry.lesson && game.shape.id !== 'logo' && !titleUp && !game.solved && game.mistakes > 0;
+function renderRewind() {
+  const on = rewindShown();
+  if (on && rewindEl.hidden && !reduceMotion) { rewindEl.classList.remove('arrive'); void rewindEl.offsetWidth; rewindEl.classList.add('arrive'); }
+  rewindEl.hidden = !on;
+  if (on) rewindEl.setAttribute('aria-label', `Take back your last slip (${game.mistakes} so far)`);
+}
+function takeBackSlip(g) {
+  if (game !== g || g.solved || g.mistakes <= 0) return;
+  const i = g.slips?.pop();
+  g.mistakes--;
+  const t = now();
+  if (i != null) {
+    cubes.setState(i, undefined, undefined, undefined, -1);   // no longer a slip; still marked
+    cubes.ripple(g.puzzle.coords(i), t, 0.6, 8);
   }
+  mark(`rewind: a slip taken back (${g.mistakes} left)`);
+  rewindEl.classList.add('glow');
+  setTimeout(() => rewindEl.classList.remove('glow'), 1400);
+  sound.stone(3);
+  buzz(10);
+  updateStrikes();
+  saveProgress();
 }
-function lightRow(move) {
-  idleFrom = now();
-  nudge = { level: 2, ...move };
-  applyCues();
-  mark('lantern: a row lit');
-  lanternEl.classList.add('glow');
-  setTimeout(() => lanternEl.classList.remove('glow'), 1400);
-}
-lanternEl.addEventListener('click', () => {
-  if (!lanternShown() || game.solved) return;
+rewindEl.addEventListener('click', () => {
+  if (!rewindShown()) return;
   if (now() < (game.introEnd ?? 0)) finishIntro();
   if (offerEl.classList.contains('show')) { closeOffer(); return; }
-  const move = findMove();
-  if (!move) { lanternEl.classList.remove('nudge'); void lanternEl.offsetWidth; lanternEl.classList.add('nudge'); return; }
-  if (ads.spendFlame()) { lightRow(move); renderLantern(false); return; }
-  // empty: an ad lights the row (it doesn't store a flame); at most 1 a stone, 3 a day
-  const g = game, id = g.shape.id, can = ads.lanternOffer(id);
-  if (can && ads.adsRemoved()) { ads.noteLanternAd(id); lightRow(move); return; }
+  const g = game, can = ads.rewindOffer();
+  if (can && ads.adsRemoved()) { ads.noteRewind(); takeBackSlip(g); return; }
   openOffer({
-    text: 'A lantern lights one row with a move.',
-    small: 'a new flame each morning',
+    text: 'Take back your last slip?',
+    small: can ? 'a clean stone keeps all three ◆' : 'that’s all for today',
     yes: can ? 'Watch an ad' : null,
     onYes: async () => {
-      const ok = await ads.showRewarded('lantern');
-      if (!ok || game !== g || g.solved) return;
-      ads.noteLanternAd(id);
-      const m = findMove();
-      if (m) lightRow(m);
+      const ok = await ads.showRewarded('rewind');
+      if (!ok) return;
+      ads.noteRewind();
+      takeBackSlip(g);
     },
   });
 });
@@ -1867,7 +1859,7 @@ function offerShrine(s) {
 // Remove Ads, in How to play under the sound toggles
 function renderSupport() { $('#support').classList.toggle('owned', ads.adsRemoved()); }
 $('#remove-ads').addEventListener('click', async () => {
-  if (await ads.buyRemoveAds()) { renderSupport(); renderLantern(false); }
+  if (await ads.buyRemoveAds()) { renderSupport(); renderRewind(); }
 });
 $('#restore-ads').addEventListener('click', async (e) => {
   const b = e.currentTarget;
@@ -1878,7 +1870,6 @@ $('#restore-ads').addEventListener('click', async (e) => {
 
 function renderDevAds() {
   $('#dev-ads-state').textContent = ads.enabled() ? 'on' : 'off';
-  $('#dev-flames-state').textContent = String(ads.flames());
 }
 
 // ---------------------------------------------------------------- developer panel
@@ -1920,10 +1911,9 @@ $('#dev-unlock').addEventListener('click', () => {
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
-$('#dev-flames').addEventListener('click', () => { ads.devAddFlames(3); renderDevAds(); renderLantern(false); });
 $('#dev-ads-reset').addEventListener('click', () => {
   ads.devReset();
-  renderDevAds(); renderSupport(); renderLantern(false);
+  renderDevAds(); renderSupport(); renderRewind();
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
@@ -2211,7 +2201,7 @@ function beginAscent() {
   mark('title: pull back up');
   if (game?.shape !== LOGO) {
     saveProgress();
-    titleUp = true;   // before the logo is set: no lantern, no HUD
+    titleUp = true;   // before the logo is set: no rewind, no HUD
     startPuzzle({ shape: LOGO, palette: PALETTES[0], number: null }, { quiet: true });
     game.broken[LOGO_CORNER] = 1;
     cubes.setState(LOGO_CORNER, undefined, undefined, 0);   // already carved

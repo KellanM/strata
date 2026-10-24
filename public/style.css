@@ -892,26 +892,17 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
   .map-node, .trail { transition: none; }
 }
 
-/* ---------- ads, the lantern, Remove Ads (docs/ads-study.md; styleframes in proto/ads.html) ---------- */
-/* the hint lantern, in the top-right HUD slot: its flame lit while it has one;
-   the flames it holds are small diamonds beneath it, none when it is empty */
-#lantern { position: relative; }
-#lantern[hidden] { display: none; }
-#lantern .flame { fill: currentColor; fill-opacity: 0; transition: fill-opacity .6s var(--ease-fade); }
-#lantern.lit .flame { fill: #e9b24e; fill-opacity: .95; stroke: #c98d2e; }
-#lantern:not(.lit) svg { opacity: .62; }
-#lantern .flames { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); display: flex; gap: 4px; }
-#lantern .flames i { width: 3.5px; height: 3.5px; transform: rotate(45deg); background: var(--ink-soft); opacity: .7; }
-#lantern.glow { box-shadow: 0 6px 24px rgba(40, 20, 60, 0.08), 0 0 22px 4px rgba(255, 236, 170, .7); }
-#lantern .rise { position: absolute; left: 50%; top: 50%; width: 10px; height: 13px; margin: -6px 0 0 -5px; pointer-events: none;
-  background: radial-gradient(closest-side, #fff6d6, rgba(255, 220, 140, .9) 45%, rgba(255, 210, 120, 0));
-  border-radius: 50% 50% 45% 45%; animation: flame-rise 1.4s var(--ease-out) both; }
-@keyframes flame-rise { 0% { transform: translateY(46px) scale(.7); opacity: 0; } 25% { opacity: 1; } 80% { transform: translateY(1px) scale(1); opacity: 1; } 100% { transform: translateY(0) scale(.6); opacity: 0; } }
-#lantern.nudge { animation: lantern-nudge .45s ease; }
-@keyframes lantern-nudge { 30% { transform: translateX(-3px); } 60% { transform: translateX(3px); } }
-@media (prefers-reduced-motion: reduce) { #lantern .rise, #lantern.nudge { animation: none; opacity: 0; } }
+/* ---------- ads, a slip taken back, Remove Ads (docs/ads-study.md; styleframes in proto/ads.html) ---------- */
+/* a slip taken back: in the top-right HUD slot, only while there is a slip; it arrives softly */
+#rewind { position: relative; }
+#rewind[hidden] { display: none; }
+#rewind .gem { fill: #e9b24e; stroke: #c98d2e; stroke-width: 1; }
+#rewind.arrive { animation: rewind-arrive .5s var(--ease-out) both; }
+@keyframes rewind-arrive { 0% { transform: scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+#rewind.glow { box-shadow: 0 6px 24px rgba(40, 20, 60, 0.08), 0 0 22px 4px rgba(255, 236, 170, .7); }
+@media (prefers-reduced-motion: reduce) { #rewind.arrive { animation: none; } }
 
-/* a small card that offers a gift: the empty lantern, a shrine short of stars */
+/* a small card that offers a gift: a slip taken back, a shrine short of stars */
 #offer { position: fixed; z-index: 8; left: 50%; bottom: calc(96px + var(--safe-b)); width: min(330px, calc(100% - 40px));
   transform: translate(-50%, 10px); opacity: 0; pointer-events: none;
   transition: opacity var(--dur-base) var(--ease-in), transform var(--dur-base) var(--ease-in); }

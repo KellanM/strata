@@ -43,9 +43,8 @@
       <span class="sub-line"><span id="pz-meta"></span><span id="timer">0:00</span><span id="strikes" aria-label="mistakes"></span></span>
     </div>
     <span class="hud-spacer">
-      <button id="lantern" class="icon-btn" aria-label="Lantern: light a row with a move" hidden>
-        <svg viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0M8 6.5h8M9 6.5 7.5 9v8.5L9 20h6l1.5-2.5V9L15 6.5M7.5 20.5h9"/><path class="flame" d="M12 11.2c1.1 1.2 1.4 2.1 1.4 2.8a1.4 1.4 0 0 1-2.8 0c0-.7.3-1.6 1.4-2.8z"/></svg>
-        <span class="flames" aria-hidden="true"></span>
+      <button id="rewind" class="icon-btn" aria-label="Take back your last slip" hidden>
+        <svg viewBox="0 0 24 24"><path d="M5 9a8 8 0 1 1-.9 6.5"/><path d="M4.5 4.5V9.5H9.5"/><path class="gem" d="M12 9.2l2.4 2.8-2.4 2.8-2.4-2.8z"/></svg>
       </button>
     </span>
   </header>
@@ -143,7 +142,7 @@
           <dt><span class="glyph slip">✕</span></dt><dd>a slip: you chiselled a cube that belongs. It's kept for you</dd>
           <dt><span class="gems">◆◆◆</span></dt><dd>for no slips, two for a few, one for finishing. No rush</dd>
         </dl>
-        <p class="aside">Stuck? On the first stones, wait and a row with a move will glow. Later, the <b>lantern</b> lights one: a new flame each morning.</p>
+        <p class="aside">Stuck? Wait a moment and a row with a move will glow. A slip can be taken back with <b>↺</b>, so a stone can still be finished clean.</p>
       </div>
 
       <div id="help-touch" class="help-page" role="tabpanel" hidden>
@@ -169,7 +168,7 @@
           <div class="support-offer">
             <p>Strata is free. Remove ads and support it.</p>
             <div class="row"><button id="remove-ads">Remove ads · $2.99</button></div>
-            <p class="perk">then the lantern and shrines need no ad</p>
+            <p class="perk">then taking back a slip and opening shrines need no ad</p>
             <button id="restore-ads" class="restore">restore purchase</button>
           </div>
           <div class="support-thanks">
@@ -198,8 +197,7 @@
         <button class="dev-row" id="dev-slowmo">Slow motion ×4 <span id="dev-slowmo-state"></span></button>
         <button class="dev-row" id="dev-motionlog">Motion log <span id="dev-motionlog-state"></span></button>
         <button class="dev-row" id="dev-ads">Simulated ads <span id="dev-ads-state"></span></button>
-        <button class="dev-row" id="dev-flames">+3 flames <span id="dev-flames-state"></span></button>
-        <button class="dev-row" id="dev-ads-reset">Reset ads, flames, shrines <span>›</span></button>
+        <button class="dev-row" id="dev-ads-reset">Reset ads, shrines <span>›</span></button>
         <button class="dev-row" id="dev-tutorial">Replay the tutorial <span>›</span></button>
         <button class="dev-row danger" id="dev-reset">Reset progress <span>›</span></button>
       </div>

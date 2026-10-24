@@ -1,4 +1,4 @@
-// Ads, the hint lantern's flames, shrines opened by an ad, and Remove Ads
+// Ads, a slip taken back by an ad, shrines opened by an ad, and Remove Ads
 // (docs/ads-study.md). The game talks only to this module; the module talks to
 // one provider, which actually shows an ad or makes a purchase.
 //
@@ -15,8 +15,8 @@
 // purchase). A Capacitor build registers its own with setProvider(): AppLovin
 // MAX for the two ad units (placements as named below) and StoreKit / Play
 // Billing (RevenueCat or cordova-plugin-purchase) for SKU. Every cap, the
-// first-session rule, the breath before an interstitial, the flames and the
-// shrines stay here and in main.js, unchanged.
+// first-session rule, the breath before an interstitial, the taken-back slip
+// and the shrines stay here and in main.js, unchanged.
 //
 // Everything that decides is a pure function of a plain state object, so
 // test/ads.test.js runs it in node without a DOM.
@@ -35,14 +35,11 @@ export const CONFIG = {
     freeFirstSession: true,   // none in the first session
     breathSec: 1.2,           // the quiet "a short ad, then the map" screen before it
   },
-  lantern: {
-    startFlames: 3,
-    maxFlames: 5,
-    morningFlames: 1,         // +1 each morning (local date), up to the cap
-    flawlessFlames: 1,        // +1 the first time a level is solved with no slips
-    chapterFlames: 1,         // +1 the first time a chapter is completed
-    adsPerStone: 1,           // an empty lantern lit by an ad: once per stone a day
-    adsPerDay: 3,             // and 3 a day (AppLovin warns of saturation above "one or two")
+  // A slip taken back by an ad (Kellan, 2026-10-24: in place of the hint
+  // lantern): each ad takes back the latest slip, so a stone can still be
+  // finished clean, for all three stars.
+  rewind: {
+    adsPerDay: 5,             // a day's cap (AppLovin warns of saturation above "one or two" an hour)
   },
   web: { adSec: 5 },          // the placeholder's countdown
   removeAds: { sku: 'strata.remove_ads', price: '$2.99' },
@@ -58,7 +55,7 @@ const store = () => globalThis.localStorage;
 
 // ---------------------------------------------------------------- pure rules
 
-// the local calendar date: a new flame "each morning"
+// the local calendar date: daily caps start over each morning
 export function dayOf(ms) {
   const d = new Date(ms);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -69,23 +66,14 @@ export function freshState(nowMs, { returning = false } = {}) {
     firstOpen: returning ? 0 : nowMs,   // a save from before ads were built is not a first session
     solvesSince: 0,                     // solves since the last interstitial
     lastAd: 0,                          // when the last interstitial showed (ms)
-    day: dayOf(nowMs), dayAds: 0, dayLanternAds: 0, litStones: [],
-    flames: CONFIG.lantern.startFlames, flameDay: dayOf(nowMs),
-    flawless: [], chapters: [],         // flames already given, never again
-    shown: CONFIG.lantern.startFlames,  // flames the lantern last showed (a gain rises in when next seen)
+    day: dayOf(nowMs), dayAds: 0, dayRewinds: 0,
   };
 }
 
-// a new day: the daily counts start over, and a morning flame is added
+// a new day: the daily counts start over
 export function rollDay(st, nowMs) {
   const today = dayOf(nowMs);
-  if (st.day !== today) { st.day = today; st.dayAds = 0; st.dayLanternAds = 0; st.litStones = []; }
-  if (st.flameDay !== today) { st.flameDay = today; addFlames(st, CONFIG.lantern.morningFlames); }
-  return st;
-}
-
-export function addFlames(st, n) {
-  st.flames = Math.min(CONFIG.lantern.maxFlames, Math.max(0, st.flames + n));
+  if (st.day !== today) { st.day = today; st.dayAds = 0; st.dayRewinds = 0; }
   return st;
 }
 
@@ -110,38 +98,21 @@ export function recordInterstitial(st, nowMs) {
   return st;
 }
 
-// A solve (levels, shrines and drifts; never a lesson). Counts toward the
-// interstitial, and gives its flames once ever:
-//   solve: { id, flawless, wasFlawless (an earlier solve of it had no slips),
-//            drift, completedChapter (the chapter's name, if this solve completed it) }
-// Returns the flames gained.
-export function recordSolve(st, solve) {
+// A solve (levels, shrines and drifts; never a lesson): counts toward the interstitial.
+export function recordSolve(st) {
   st.solvesSince++;
-  const before = st.flames;
-  if (solve.flawless && !solve.drift && !solve.wasFlawless && !st.flawless.includes(solve.id)) {
-    st.flawless.push(solve.id);
-    addFlames(st, CONFIG.lantern.flawlessFlames);
-  }
-  if (solve.completedChapter && !st.chapters.includes(solve.completedChapter)) {
-    st.chapters.push(solve.completedChapter);
-    addFlames(st, CONFIG.lantern.chapterFlames);
-  }
-  return st.flames - before;
+  return st;
 }
 
-// an empty lantern lit by an ad (or, with Remove Ads, without one): same caps
-export function lanternAdAllowed(st, stoneId, nowMs) {
-  const L = CONFIG.lantern;
-  const today = dayOf(nowMs);
-  const lit = st.day === today ? st.litStones : [];
-  const count = st.day === today ? st.dayLanternAds : 0;
-  return count < L.adsPerDay && lit.filter((id) => id === stoneId).length < L.adsPerStone;
+// a slip taken back by an ad (or, with Remove Ads, without one): a day's cap
+export function rewindAllowed(st, nowMs) {
+  const count = st.day === dayOf(nowMs) ? st.dayRewinds : 0;
+  return count < CONFIG.rewind.adsPerDay;
 }
 
-export function recordLanternAd(st, stoneId, nowMs) {
+export function recordRewind(st, nowMs) {
   rollDay(st, nowMs);
-  st.dayLanternAds++;
-  st.litStones.push(stoneId);
+  st.dayRewinds++;
   return st;
 }
 
@@ -218,7 +189,7 @@ export function log(event, placement, extra = {}) {
 export function adsRemoved() { return store()?.getItem(KEY_REMOVED) === '1'; }
 
 // May this placement run now? Interstitials: every cap. Rewarded: a loaded ad
-// (the lantern's own caps are asked through lanternOffer()).
+// (a taken-back slip's own cap is asked through rewindOffer()).
 export function canShow(placement, ctx = {}) {
   if (CONFIG.interstitial.placements.includes(placement)) {
     if (!enabled()) return false;
@@ -259,34 +230,17 @@ export async function restorePurchases() {
   return owned;
 }
 
-// ---- solves and flames
+// ---- solves, and slips taken back
 
-export function noteSolve(solve) {
+export function noteSolve() {
   const st = load();
   rollDay(st, Date.now());
-  const gained = recordSolve(st, solve);
+  recordSolve(st);
   save();
-  return gained;
 }
 
-export function flames() { const st = load(); rollDay(st, Date.now()); save(); return st.flames; }
-// flames gained since the lantern last showed them (they rise in), then marks them seen
-export function takeRisen() {
-  const st = load();
-  const risen = Math.max(0, st.flames - st.shown);
-  st.shown = st.flames;
-  save();
-  return risen;
-}
-export function spendFlame() {
-  const st = load();
-  if (st.flames <= 0) return false;
-  st.flames--; st.shown = st.flames;
-  save();
-  return true;
-}
-export const lanternOffer = (stoneId) => lanternAdAllowed(load(), stoneId, Date.now());
-export function noteLanternAd(stoneId) { recordLanternAd(load(), stoneId, Date.now()); save(); }
+export const rewindOffer = () => rewindAllowed(load(), Date.now());
+export function noteRewind() { recordRewind(load(), Date.now()); save(); }
 
 // ---- shrines opened by an ad
 
@@ -301,7 +255,6 @@ export function openShrine(id) {
 
 // ---- developer panel
 
-export function devAddFlames(n) { const st = load(); addFlames(st, n); save(); }
 export function devReset() {
   for (const k of [KEY, KEY_REMOVED, KEY_SHRINES]) store()?.removeItem(k);
   try { globalThis.sessionStorage?.removeItem(firstSessionFlag); } catch { /* */ }
