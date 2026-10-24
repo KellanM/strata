@@ -30,7 +30,7 @@ export class Sound {
     o.connect(g); g.connect(this.out); if (wet) g.connect(this.wet);
     o.start(at); o.stop(at + dur + 0.05);
   }
-  open() {
+  open(speed = 1) {
     if (!this.ctx) return;
     const c = this.ctx, t = c.currentTime;
     // the knock of stone giving way: a low thud with a little grit
@@ -44,12 +44,13 @@ export class Sound {
     for (const [m, gain] of [[50, 0.09], [57, 0.07], [62, 0.05], [69, 0.025]]) {
       const o = c.createOscillator(), og = c.createGain();
       o.type = 'sine'; o.frequency.value = midi(m);
+      const at = (x) => t + x / speed;   // the swell keeps pace with the light
       og.gain.setValueAtTime(0, t + 0.2);
-      og.gain.linearRampToValueAtTime(gain, t + 3.5);
-      og.gain.linearRampToValueAtTime(gain * 0.6, t + 9);
-      og.gain.linearRampToValueAtTime(0, t + 16);
+      og.gain.linearRampToValueAtTime(gain, at(3.5));
+      og.gain.linearRampToValueAtTime(gain * 0.6, at(9));
+      og.gain.linearRampToValueAtTime(0, at(16));
       o.connect(og); og.connect(this.out); og.connect(this.wet);
-      o.start(t + 0.2); o.stop(t + 16.2);
+      o.start(t + 0.2); o.stop(at(16) + 0.2);
     }
   }
   star() {

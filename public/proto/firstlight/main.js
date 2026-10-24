@@ -5,8 +5,8 @@
 //   ?auto     tap by itself after 3 s (silent)      ?t=6    jump to 6 s after the tap
 //   ?still    hold that moment (for checks)         ?fps    frame times
 import * as THREE from 'three';
-import { Swarm, Trails, rng } from './swarm.js?v=4';
-import { Sound } from './sound.js?v=1';
+import { Swarm, Trails, rng } from './swarm.js?v=5';
+import { Sound } from './sound.js?v=2';
 
 const params = new URLSearchParams(location.search);
 const $ = (s) => document.querySelector(s);
@@ -274,7 +274,10 @@ scene.add(far);
 const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const smoother = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * k * (k * (6 * k - 15) + 10); };
 let nameAt = null;   // when the name's last star landed
-let tapAt = null, simT = 0, lastReal = null, idleSince = 0;
+// after the tap the story runs at SPEED (Kellan, 2026-10-23: half as long);
+// twinkles keep real time (realT) so the settled sky stays calm
+const SPEED = 2;
+let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
 let camY = CAM_FROM;
 const sound = new Sound();
 swarm.onSettle = () => sound.star();
@@ -284,7 +287,7 @@ function open() {
   tapAt = simT;
   swarm.release(simT + 0.35);
   $('#hint').classList.remove('show');
-  sound.open();
+  sound.open(SPEED);
 }
 
 function layout() {
@@ -309,7 +312,8 @@ function frame(real) {
   if (params.has('fps')) $('#perf').textContent = `${(dt * 1000).toFixed(1)} ms`;
 }
 function step(dt) {
-  simT += dt;
+  const sdt = dt * (tapAt === null ? 1 : SPEED);
+  simT += sdt; realT += dt;
   const s = tapAt === null ? -1 : simT - tapAt;
   // before the tap: the cube breathes, once every 5.5 s (about a slow breath)
   const breath = 0.5 - 0.5 * Math.cos(simT * Math.PI * 2 / 5.5);
@@ -340,8 +344,8 @@ function step(dt) {
     // the rising light lights the wall as it passes
     wallMat.uniforms.uL.value[1].copy(swarm.centre).setZ(swarm.centre.z + 1.5);
     wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);
-    swarm.step(simT, dt);
-    swarm.material.uniforms.uTime.value = simT;
+    swarm.step(simT, sdt);
+    swarm.material.uniforms.uTime.value = realT;
     far.material.uniforms.uA.value = smooth(9, 14, s);
     // the name: when its stars are all home, the constellation's lines draw in
     let home = 0;
@@ -363,11 +367,11 @@ function step(dt) {
     }
     if (s > 15) $('#replay').classList.add('show');
   }
-  far.material.uniforms.uTime.value = simT;
+  far.material.uniforms.uTime.value = realT;
   // the camera: holds on the wall, then follows the flock up into the sky (a soft, lagging follow)
   if (tapAt !== null) {
     const want = Math.min(CAM_TO, Math.max(CAM_FROM, swarm.lead.y - 2.5));
-    camY += (want - camY) * (1 - Math.exp(-dt * 1.3 * smooth(0.6, 2.2, simT - tapAt)));
+    camY += (want - camY) * (1 - Math.exp(-sdt * 1.3 * smooth(0.6, 2.2, simT - tapAt)));
   }
   const up = (camY - CAM_FROM) / (CAM_TO - CAM_FROM);
   camera.position.set(0, camY, CAM_Z);
@@ -381,7 +385,7 @@ function render(dt) {
   renderer.clear();
   renderer.render(scene, camera);
   if (tapAt !== null) {
-    trails.render(swarmScene, camera, swarm, dt, 0.95);
+    trails.render(swarmScene, camera, swarm, dt * SPEED, 0.95);
     trails.composite(1.6);
     const was = renderer.autoClear; renderer.autoClear = false;
     renderer.render(swarmScene, camera);
