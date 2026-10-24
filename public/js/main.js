@@ -8,7 +8,7 @@ import { sound } from './audio.js';
 import { Finale } from './finale.js';
 import { Fragments } from './fragments.js';
 import { Cubes } from './cubes.js';
-import { Background, GodRays, Motes, Shards } from './atmosphere.js';
+import { Ash, Background, GodRays, Motes, Shards } from './atmosphere.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { MapWorld } from './mapworld.js';
@@ -37,8 +37,9 @@ const background = new Background();
 const rays = new GodRays();
 const motes = new Motes();
 const shards = new Shards();
+const ash = new Ash();
 const handles = new PeelHandles(cubes.uniforms.uLight);
-scene.add(background.mesh, motes.points, shards.points, handles.group);
+scene.add(background.mesh, motes.points, shards.points, ash.points, handles.group);
 const finale = new Finale(cubes.uniforms.uLight);
 scene.add(finale.group);
 const fragments = new Fragments(cubes.uniforms.uLight);
@@ -559,6 +560,7 @@ function act(i, which) {
   fragments.burst(cellWorld(i), from, t);
   shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
     { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
+  if (!reduceMotion) ash.burst(cellWorld(i), t, c(p.under), 18);   // and its ash rises
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
   const pz = game.puzzle;
@@ -1613,8 +1615,8 @@ function draw() {
 
   // shared time / scale uniforms
   const unitPx = renderer.domElement.height / ((camera.top - camera.bottom) / camera.zoom);
-  motes.uniforms.uTime.value = shards.uniforms.uTime.value = fragments.uniforms.uTime.value = t;
-  motes.uniforms.uUnitPx.value = shards.uniforms.uUnitPx.value = unitPx;
+  motes.uniforms.uTime.value = shards.uniforms.uTime.value = ash.uniforms.uTime.value = fragments.uniforms.uTime.value = t;
+  motes.uniforms.uUnitPx.value = shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
   motes.uniforms.uFocus.value = camera.position.distanceTo(controls.target);
   background.uniforms.uTime.value = t;
   rays.uniforms.uTime.value = t;
@@ -1639,7 +1641,7 @@ function draw() {
   if (game) {
     rays.render(renderer, () => {
       const vis = handles.group.visible;
-      background.mesh.visible = motes.points.visible = shards.points.visible = handles.group.visible = false;
+      background.mesh.visible = motes.points.visible = shards.points.visible = ash.points.visible = handles.group.visible = false;
       const ringsOn = winRings.map((r) => r.mesh.visible);
       const finaleOn = finale.group.visible;
       finale.group.visible = fragments.mesh.visible = false;
@@ -1647,7 +1649,7 @@ function draw() {
       cubes.uniforms.uMask.value = 1;
       renderer.render(scene, camera);
       cubes.uniforms.uMask.value = 0;
-      background.mesh.visible = motes.points.visible = shards.points.visible = true;
+      background.mesh.visible = motes.points.visible = shards.points.visible = ash.points.visible = true;
       handles.group.visible = vis;
       winRings.forEach((r, k) => { r.mesh.visible = ringsOn[k]; });
       finale.group.visible = finaleOn;

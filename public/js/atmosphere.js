@@ -293,3 +293,95 @@ export class Shards {
     for (const name of ['position', 'aVel', 'aStart', 'aColor', 'aMeta']) this.geo.getAttribute(name).needsUpdate = true;
   }
 }
+
+// Ash: what a chiselled cube gives up (Kellan, 2026-10-23: "like ash rising
+// from a fire"), the first-light swarm in small. A few embers and flakes leave
+// the cube and climb, slowing as they go; the burst sways as one plume, like
+// incense smoke on still air, widening as it rises, and each mote drifts off
+// its own way inside it. Embers glow warm and cool as they climb; flakes are
+// the palette's shade, fluttering. All on the GPU: a burst only writes its
+// motes' starting state.
+export class Ash {
+  constructor(capacity = 900) {
+    this.capacity = capacity;
+    this.next = 0;
+    const geo = new THREE.BufferGeometry();
+    this.origin = new Float32Array(capacity * 3);
+    this.start = new Float32Array(capacity).fill(-99);
+    this.seed = new Float32Array(capacity * 4);    // life, rise speed, kind (0 ember, 1 flake), random
+    this.off = new Float32Array(capacity * 3);     // own drift (x, z), the burst's sway phase
+    this.color = new Float32Array(capacity * 3);
+    geo.setAttribute('position', new THREE.BufferAttribute(this.origin, 3));
+    geo.setAttribute('aStart', new THREE.BufferAttribute(this.start, 1));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(this.seed, 4));
+    geo.setAttribute('aOff', new THREE.BufferAttribute(this.off, 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(this.color, 3));
+    this.geo = geo;
+    this.uniforms = { uTime: { value: 0 }, uUnitPx: { value: 30 } };
+    this.points = new THREE.Points(geo, new THREE.ShaderMaterial({
+      // drawn over the block: it is light leaving the stone, and the stone in front must not swallow it
+      uniforms: this.uniforms, transparent: true, depthWrite: false, depthTest: false,
+      vertexShader: /* glsl */ `
+        attribute float aStart;
+        attribute vec4 aSeed;
+        attribute vec3 aOff, aColor;
+        uniform float uTime, uUnitPx;
+        varying vec3 vColor;
+        varying float vAlpha, vHot;
+        void main() {
+          float t = uTime - aStart;
+          if (t < 0.0 || t > aSeed.x) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+          float k = t / aSeed.x, r = aSeed.w, ph = aOff.z;
+          // buoyant: quick off the stone, slowing as it climbs
+          float h = aSeed.y * (1.0 - exp(-t * 0.85)) / 0.85;
+          // the plume sways as one (shared phase), more the higher it gets
+          float sx = sin(h * 1.5 + t * 0.8 + ph) * 0.2 * h + sin(h * 3.4 + ph * 2.3 + t * 1.6) * 0.06 * h;
+          float sz = cos(h * 1.2 + t * 0.7 + ph * 1.7) * 0.16 * h;
+          // and widens: each mote eases out along its own way
+          float wide = 0.1 + 0.32 * h;
+          // flakes flutter
+          float fl = aSeed.z * sin(t * (6.0 + 4.0 * r) + r * 40.0) * 0.05;
+          vec3 p = position + vec3(sx + aOff.x * wide + fl, h, sz + aOff.y * wide);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+          float fadeIn = smoothstep(0.0, 0.12, t), fadeOut = 1.0 - k * k;
+          // embers: hot gold, cooling to the palette's shade as they climb; a flicker
+          vHot = (1.0 - aSeed.z) * (1.0 - smoothstep(0.0, 0.85, k));
+          float flick = 0.8 + 0.2 * sin(t * (11.0 + 9.0 * r) + r * 60.0);
+          vec3 ember = mix(vec3(1.0, 0.68, 0.26), vec3(0.93, 0.36, 0.16), smoothstep(0.0, 0.5, k));
+          vColor = mix(aColor, ember * flick, vHot);
+          vAlpha = fadeIn * fadeOut * mix(1.0, 0.75, aSeed.z);
+          float size = mix(0.3, 0.24, aSeed.z) * (0.75 + 0.5 * r) * (1.0 - 0.35 * k);
+          gl_PointSize = max(1.5, size * uUnitPx);
+        }`,
+      fragmentShader: /* glsl */ `
+        varying vec3 vColor;
+        varying float vAlpha, vHot;
+        void main() {
+          vec2 q = gl_PointCoord * 2.0 - 1.0;
+          float d2 = dot(q, q);
+          if (d2 > 1.0) discard;
+          // a soft body; embers carry a hot core
+          float a = min(1.0, 1.3 * exp(-d2 * 3.2)) * vAlpha;
+          vec3 c = mix(vColor, vec3(1.0, 0.9, 0.6), vHot * exp(-d2 * 12.0));
+          gl_FragColor = vec4(c, a);
+        }`,
+    }));
+    this.points.frustumCulled = false;
+  }
+
+  // one cube's worth: `count` motes from inside it, about a third of them embers
+  burst(center, time, shade, count = 14) {
+    const ph = Math.random() * 6.283;
+    for (let k = 0; k < count; k++) {
+      const i = this.next++ % this.capacity;
+      const a = Math.random() * Math.PI * 2, out = 0.4 + Math.random() * 0.8;
+      this.origin.set([center.x + (Math.random() - 0.5) * 0.7, center.y + (Math.random() - 0.5) * 0.7, center.z + (Math.random() - 0.5) * 0.7], i * 3);
+      const ember = k % 3 === 0;
+      this.seed.set([2.2 + Math.random() * 1.6, 2.2 + Math.random() * 1.8, ember ? 0 : 1, Math.random()], i * 4);
+      this.off.set([Math.cos(a) * out, Math.sin(a) * out, ph], i * 3);
+      this.start[i] = time + Math.pow(Math.random(), 2) * 0.35;   // most at once, a thin tail after
+      this.color.set([shade.r, shade.g, shade.b], i * 3);
+    }
+    for (const name of ['position', 'aStart', 'aSeed', 'aOff', 'aColor']) this.geo.getAttribute(name).needsUpdate = true;
+  }
+}
