@@ -7,11 +7,10 @@ Started 2026-10-24. This is the master list for taking Strata from the web build
 
 ## 0. Decisions only Kellan can make
 
-- [ ] **Studio name.** Quiet Cairn is a proposal (the splash card uses it).
-  - A cairn is a stack of stones left to mark the way for whoever comes next. That is Journey's pilgrimage, Monument Valley's monuments and Colossus's ruins in one image, and it is what Strata is made of.
-  - A web search on 2026-10-24 found no studio by that name. A trademark search (USPTO, EUIPO) and the domain are still to do.
-  - Alternatives that were considered: Waymark (an itch.io prototype uses it), Capstone (taken by a board-game publisher), Lodestar.
-- [ ] **Bundle / application ID.** `com.quietcairn.strata` is drafted in `capacitor.config.json`. It is **permanent once published**, so settle the studio name first.
+- [x] **Studio name: Unsupervised Rock** (Kellan, 2026-10-24). Silicon is rock, and the game was made by AI left to run unsupervised; it is also simply a rock with no one watching it.
+  - A web search on 2026-10-24 found no studio by that name. A trademark search (USPTO, EUIPO) and the domain (`unsupervisedrock.com`?) are still to do.
+  - Considered and set aside: Quiet Cairn (the first splash), Pet Rock Productions, Rock Bottom Games, Damp Sock Studio.
+- [ ] **Bundle / application ID.** `com.unsupervisedrock.strata` is drafted in `capacitor.config.json`. It is **permanent once published**, so settle the studio name first.
 - [ ] **Developer accounts:**
   - Apple Developer Program: $99 a year. Decide between an individual account and an organisation; an organisation needs a D-U-N-S number, which takes days to weeks.
   - Google Play Console: $25 one-off. Personal accounts created after November 2023 must run a closed test with 12+ testers for 14 days before production (`gtm-study.md`).
@@ -35,7 +34,7 @@ Started 2026-10-24. This is the master list for taking Strata from the web build
 - [ ] `npm i -D @capacitor/cli @capacitor/core @capacitor/ios @capacitor/android`, then `npx cap add ios` / `npx cap add android`. Add the iOS platform on a Mac: it needs Xcode and CocoaPods or SPM.
 - [~] **Icons and launch screens.** Source art is in `resources/`, made by `tools/make-store-art.mjs`:
   - `icon.png` at 1024;
-  - `splash.png` and `splash-dark.png` at 2732, black with the cairn mark, so the native launch screen matches the web card exactly.
+  - `splash.png` and `splash-dark.png` at 2732, black with the rock mark, so the native launch screen matches the web card exactly.
   - Generate every size with `npx @capacitor/assets generate`.
   - Check the Android adaptive icon's safe zone: the block must sit inside the middle 66%.
 - [x] **The service worker is off inside the app.** Capacitor serves the files locally; Android's `https://localhost` would otherwise have registered it. See `main.js` (`nativeApp`).
@@ -106,7 +105,7 @@ The detail is in `ads-study.md`, store-release checklist; the essentials are:
 - [ ] Feature graphic for Play (1024x500).
 - [ ] Age-rating questionnaires: Apple's and IARC (Play).
 - [ ] Category: Games › Puzzle. Secondary category: Family? No; see section 0.
-- [ ] Support URL, marketing URL, copyright line ("© 2026 Quiet Cairn").
+- [ ] Support URL, marketing URL, copyright line ("© 2026 Unsupervised Rock").
 
 ## 8. Quality
 
@@ -132,5 +131,5 @@ The detail is in `ads-study.md`, store-release checklist; the essentials are:
 - [ ] Soft launch in 1 or 2 smaller markets to read D1 and D7 before the featuring forms (Google's asks for them).
 - [ ] Featuring: Apple's nomination (App Launch type, 3 weeks minimum, 3 months advised); Google's featuring form plus Indie Games Corner.
 - [ ] Pre-orders and pre-registration.
-- [ ] A press kit: logo (the cairn), key art, the trailer, a fact sheet.
+- [ ] A press kit: logo (the rock), key art, the trailer, a fact sheet.
 - [ ] After launch: review mining for "ad", "ads" and "paid"; content drops as the growth lever (`gtm-study.md`).
