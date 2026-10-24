@@ -65,6 +65,7 @@ function lit(shape, { swap = {}, span = 3, keep = [], accent = 5 } = {}) {
   const cache = new Map();
   return {
     ...shape,
+    bounds: [lo, hi],   // where the object sits in its block (trimToObject needs no second look)
     cell(x, y, z) {
       const c = paint(x, y, z);
       if (!c || count.get(c) < accent || keep.includes(c)) return c;
@@ -3173,7 +3174,14 @@ const LIT = {
 // 14 pieces built with its kit (the amber, the orrery's sun, the astrolabe's
 // gold). Lighting them again would only muddy the steps.
 const LIT_SKIP = new Set(['heart', 'amber-midge', 'orrery', 'astrolabe']);
-for (const shape of [...SHAPES, ...BONUS]) if (!LIT_SKIP.has(shape.id)) shape.cell = lit(shape, LIT[shape.id]).cell;
+// (lit() reads every cube once at load; its bounds spare trimToObject a second pass)
+const BOUNDS = new WeakMap();
+for (const shape of [...SHAPES, ...BONUS]) {
+  if (LIT_SKIP.has(shape.id)) continue;
+  const l = lit(shape, LIT[shape.id]);
+  shape.cell = l.cell;
+  BOUNDS.set(shape, l.bounds);
+}
 
 // Every level's starting block fits its object exactly: an empty slab on an
 // edge of the block is a whole row of 0s to chisel, taps that teach nothing.
@@ -3181,10 +3189,13 @@ for (const shape of [...SHAPES, ...BONUS]) if (!LIT_SKIP.has(shape.id)) shape.ce
 // unchanged). The tutorial keeps its blocks: its empty rows are the lesson.
 function trimToObject(shape) {
   const [X, Y, Z] = shape.dims;
-  const lo = [X, Y, Z], hi = [-1, -1, -1];
-  for (let z = 0; z < Z; z++) for (let y = 0; y < Y; y++) for (let x = 0; x < X; x++) {
-    if (!shape.cell(x, y, z)) continue;
-    [x, y, z].forEach((v, a) => { lo[a] = Math.min(lo[a], v); hi[a] = Math.max(hi[a], v); });
+  let [lo, hi] = BOUNDS.get(shape) ?? [];
+  if (!lo) {
+    lo = [X, Y, Z]; hi = [-1, -1, -1];
+    for (let z = 0; z < Z; z++) for (let y = 0; y < Y; y++) for (let x = 0; x < X; x++) {
+      if (!shape.cell(x, y, z)) continue;
+      [x, y, z].forEach((v, a) => { lo[a] = Math.min(lo[a], v); hi[a] = Math.max(hi[a], v); });
+    }
   }
   if (lo.every((v) => v === 0) && hi.every((v, a) => v === shape.dims[a] - 1)) return;
   const cell = shape.cell;
