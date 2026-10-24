@@ -302,10 +302,11 @@ export class Shards {
 // (an ABC flow, which has no sources or sinks, so it curls like real air and
 // never clumps). Drag lets each mote catch the air quickly, so the motion is
 // quick and alive rather than floaty. Drawn depth-tested, so the stone hides
-// what passes behind it. The look is the first-light swarm's: a hot core and a
-// soft halo, a quick shimmer with rare glints, ember-gold when it leaves the
-// stone and cooling to starlight. Over a pale sky additive light would vanish,
-// so there it is laid on normally in deeper tones (setPalette).
+// what passes behind it. Each mote is a white sparkle, as the title's stars:
+// a white-hot core in a soft bloom with a turning four-point flare that
+// blazes when it glints; it pops in with a little overshoot and twinkles
+// small as it goes. Over a pale sky additive light would vanish, so there it
+// is laid on normally over a faint shadow of the sky's shade (setPalette).
 const ABC = (x, y, z, t, out) => {
   out[0] = Math.sin(z + t * 0.9) + 0.7 * Math.cos(y - t * 0.6);
   out[1] = 0.8 * Math.sin(x + t * 0.7) + Math.cos(z + t * 0.5);
@@ -339,40 +340,43 @@ export class Ash {
         attribute vec2 aState;   // fade, heat
         attribute vec4 aSeed;    // twinkle rate, phase, size, warmth
         uniform float uTime, uUnitPx;
-        varying float vB, vHeat, vWarm;
+        varying float vB, vSpike, vRot;
         void main() {
           if (aState.x <= 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-          float ph = aSeed.y * 6.2832;
-          // as the title's motes in flight: a quick shimmer, and now and then a glint
-          float shimmer = 0.62 + 0.38 * sin(uTime * mix(7.0, 13.0, aSeed.x) + ph);
-          float glint = pow(max(0.0, sin(uTime * mix(1.1, 2.7, aSeed.x) + ph * 7.0)), 30.0) * 1.8;
-          vB = (shimmer + glint) * aState.x;
-          vHeat = aState.y; vWarm = aSeed.w;
+          float ph = aSeed.y * 6.2832, age = -log(max(aState.y, 1e-4)) / 2.2;
+          // as the title's motes: a quick shimmer, and now and then a glint that flares
+          float shimmer = 0.7 + 0.3 * sin(uTime * mix(7.0, 13.0, aSeed.x) + ph);
+          float glint = pow(max(0.0, sin(uTime * mix(2.0, 4.0, aSeed.x) + ph * 7.0)), 24.0);
+          vB = (shimmer + 1.4 * glint) * aState.x;
+          // the cross flare: always faint on the big ones, full while glinting
+          vSpike = (0.25 + 0.75 * glint) * smoothstep(0.7, 1.3, aSeed.z) + 0.5 * glint;
+          vRot = ph + age * mix(-2.5, 2.5, aSeed.x);
+          // it pops into being (a quick overshoot), and twinkles small as it goes
+          float pop = smoothstep(0.0, 0.05, age) * (1.0 + 0.7 * exp(-age * 9.0));
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = max(2.0, aSeed.z * (0.75 + 0.3 * vB) * (0.7 + 0.5 * aState.y) * 0.6 * uUnitPx);
+          gl_PointSize = max(2.0, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.95 * uUnitPx);
         }`,
       fragmentShader: /* glsl */ `
         uniform float uPale;
         uniform vec3 uCool;
-        varying float vB, vHeat, vWarm;
+        varying float vB, vSpike, vRot;
         void main() {
           vec2 q = gl_PointCoord * 2.0 - 1.0;
           float d2 = dot(q, q);
           if (d2 > 1.0) discard;
-          // glowing light, never soot: gold as it leaves the stone, cooling to white
-          vec3 ember = vec3(1.0, 0.84, 0.42), star = mix(vec3(1.0, 0.98, 0.92), vec3(1.0, 0.94, 0.78), vWarm);
-          vec3 col = mix(star, ember, vHeat);
-          // a hot core and a soft halo, as the title's stars
-          float core = exp(-d2 * 9.0), halo = 0.28 * exp(-d2 * 2.4);
-          float a = (core + halo) * vB;
+          // a sparkle: a white-hot core, a soft bloom, and a turning four-point flare
+          float c = cos(vRot), s = sin(vRot);
+          vec2 r = mat2(c, -s, s, c) * q;
+          float core = exp(-d2 * 26.0), bloom = 0.22 * exp(-d2 * 6.0);
+          float spikes = (exp(-abs(r.x) * 30.0) * exp(-r.y * r.y * 4.0) + exp(-abs(r.y) * 30.0) * exp(-r.x * r.x * 4.0)) * vSpike;
+          float a = min(1.0, (core * 1.4 + bloom + spikes) * vB) * (1.0 - smoothstep(0.85, 1.0, d2));
           if (uPale > 0.5) {
-            // over a pale sky: the same star, laid on in deeper tones so it shows
-            // (a white-hot core in a gold halo; the halo is what shows against pale sky)
-            vec3 gold = mix(vec3(1.0, 0.86, 0.5), vec3(1.0, 0.74, 0.28), vHeat);
-            vec3 c = mix(gold, vec3(1.0, 0.99, 0.94), core);
-            gl_FragColor = vec4(c, min(1.0, (core * 1.2 + halo * 1.6) * vB));
+            // over a pale sky white needs an edge: a faint soft shadow of the sky's shade under it
+            float shade = 0.22 * exp(-d2 * 3.5) * vB;
+            vec3 col = mix(uCool, vec3(1.0), clamp(a / max(a + shade, 1e-3) * 1.4, 0.0, 1.0));
+            gl_FragColor = vec4(col, min(1.0, a + shade));
           } else {
-            gl_FragColor = vec4(col * a, a);
+            gl_FragColor = vec4(vec3(1.0) * a, a);
           }
         }`,
     }));
