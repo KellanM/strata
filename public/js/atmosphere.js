@@ -354,7 +354,7 @@ export class Ash {
           // it pops into being (a quick overshoot), and twinkles small as it goes
           float pop = smoothstep(0.0, 0.05, age) * (1.0 + 0.7 * exp(-age * 9.0));
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = max(2.0, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.95 * uUnitPx);
+          gl_PointSize = max(2.0, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.4 * uUnitPx);
         }`,
       fragmentShader: /* glsl */ `
         uniform float uPale;
