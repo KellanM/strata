@@ -390,15 +390,23 @@ export class Ash {
     this.points.material.needsUpdate = true;
   }
 
-  // one cube's worth: a puff of motes from inside it
-  burst(center, count = 22) {
+  // one cube's worth. `toward`: the way the touch came from (out of the tapped
+  // face); the motes splash out that way in a cone, then the air takes them up
+  burst(center, count = 22, toward = null) {
     const phase = Math.random() * 20;
     for (let k = 0; k < count; k++) {
       const i = this.next++ % this.capacity, i3 = i * 3;
       const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u);
-      const sp = 1.5 + Math.random() * 2.5;
+      let vx, vy, vz;
+      if (toward) {
+        const sp = 3.5 + Math.random() * 4.5, cone = 0.55;
+        vx = (toward.x + r * Math.cos(a) * cone) * sp; vy = (toward.y + u * cone) * sp; vz = (toward.z + r * Math.sin(a) * cone) * sp;
+      } else {
+        const sp = 1.5 + Math.random() * 2.5;
+        vx = r * Math.cos(a) * sp; vy = (u * 0.6 + 0.4) * sp; vz = r * Math.sin(a) * sp;
+      }
       this.pos.set([center.x + (Math.random() - 0.5) * 0.6, center.y + (Math.random() - 0.5) * 0.6, center.z + (Math.random() - 0.5) * 0.6], i3);
-      this.vel.set([r * Math.cos(a) * sp, (u * 0.6 + 0.4) * sp, r * Math.sin(a) * sp], i3);
+      this.vel.set([vx, vy, vz], i3);
       this.axis.set([center.x, center.z, phase], i3);
       this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
       this.life[i] = 1.1 + Math.random() * 1.1;
@@ -420,11 +428,13 @@ export class Ash {
       const x = P[i3], y = P[i3 + 1], z = P[i3 + 2], k = age / this.life[i];
       // the air: a swirl that grows as the mote leaves the stone, over a hot updraft
       ABC(x * 1.3 + A[i3 + 2], y * 1.3, z * 1.3 - A[i3 + 2], t * 1.6 + A[i3 + 2], f);
-      const swirl = 2.6 * Math.min(1, age * 3);
+      // the splash spends itself first (drag); then the swirl and the updraft take over
+      const take = Math.min(1, Math.max(0, (age - 0.08) * 4));
+      const swirl = 2.6 * take;
       const dx = x - A[i3], dz = z - A[i3 + 1], r2 = dx * dx + dz * dz;
       const lift = 3.2 * Math.exp(-age * 0.9) * (0.55 + 0.45 * Math.exp(-r2 * 0.8)) + 0.5;
       // entrained toward the plume's column as it rises
-      const ax = f[0] * swirl - dx * 1.2, ay = f[1] * swirl * 0.6 + lift, az = f[2] * swirl - dz * 1.2;
+      const ax = f[0] * swirl - dx * 1.2 * take, ay = f[1] * swirl * 0.6 + lift * take, az = f[2] * swirl - dz * 1.2 * take;
       // drag: the mote catches the moving air quickly
       const drag = 1 - Math.exp(-dt * 5.5);
       V[i3] += (ax - V[i3]) * drag; V[i3 + 1] += (ay - V[i3 + 1]) * drag; V[i3 + 2] += (az - V[i3 + 2]) * drag;
