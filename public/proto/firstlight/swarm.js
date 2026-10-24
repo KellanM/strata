@@ -157,12 +157,18 @@ export class Swarm {
   claim(i) {
     if (i < this.reserved) return this.free.length - this.reserved + i;
     const S = this.stars, x = this.pos[i * 3], y = this.pos[i * 3 + 1] + 2.5;
+    // the nearest of a few free places picked at random: motes still settle
+    // roughly where they are, but fan out so the whole sky takes its share
     let best = -1, bd = Infinity;
-    for (let k = 0; k < this.free.length; k++) {
+    const first = this.free.length - this.reserved;
+    for (let tries = 0, seen = 0; tries < 400 && seen < 28; tries++) {
+      const k = (this.rand() * first) | 0;
       if (!this.free[k]) continue;
+      seen++;
       const dx = S[k * 3] - x, dy = S[k * 3 + 1] - y, d = dx * dx + dy * dy * 0.6;
       if (d < bd) { bd = d; best = k; }
     }
+    if (best < 0) for (let k = 0; k < first; k++) if (this.free[k]) { best = k; break; }
     if (best >= 0) this.free[best] = 0;
     return best;
   }

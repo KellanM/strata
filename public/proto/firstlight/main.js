@@ -5,7 +5,7 @@
 //   ?auto     tap by itself after 3 s (silent)      ?t=6    jump to 6 s after the tap
 //   ?still    hold that moment (for checks)         ?fps    frame times
 import * as THREE from 'three';
-import { Swarm, Trails, rng } from './swarm.js?v=3';
+import { Swarm, Trails, rng } from './swarm.js?v=4';
 import { Sound } from './sound.js?v=1';
 
 const params = new URLSearchParams(location.search);
@@ -173,7 +173,7 @@ const nameStars = [], nameLines = [], nameGlow = new THREE.Vector4(), fieldStars
   // fixed stars around it comes out as it is written (nameField, below), and
   // the shader brightens every risen star there too (uGlow). Only right on
   // the strokes is the sky kept clear, so the letters read.
-  const cx = (left.x + right.x) / 2, cy = base + 1.5 * k, rx = (right.x - left.x) * 0.62, ry = 3 * k * 1.9;
+  const cx = (left.x + right.x) / 2, cy = base + 1.5 * k, rx = (right.x - left.x) * 0.78, ry = 3 * k * 1.9;
   nameGlow.set(cx, cy, rx, ry);
   const near = (x, y, r) => nameStars.some(([px, py]) => Math.hypot(px - x, py - y) < r);
   const v = new THREE.Vector3(), w = new THREE.Vector3(), clear = [];
@@ -186,12 +186,25 @@ const nameStars = [], nameLines = [], nameGlow = new THREE.Vector4(), fieldStars
     clear.push(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]);
   }
   starPlaces.length = 0; starPlaces.push(...clear);
-  const gr = rng(17);
-  while (fieldStars.length < 170 * 3) {
+  // the background sky (system two): stars laid evenly over the resting view,
+  // a jittered grid so no patch is bare, at a spread of depths; and a denser
+  // cluster round the name, so it sits inside a constellation
+  const gr = rng(17), on = new THREE.Vector3();
+  const COLS = Math.round(15 * Math.max(1, rest.aspect / 0.46) ** 0.5), ROWS = Math.round(COLS * 2.4 / rest.aspect * 0.46 * 2.2);
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const nx = -1.05 + 2.1 * (c + gr()) / COLS, ny = -1.7 + 2.75 * (r + gr()) / ROWS;
+    const z = -2 - 12 * gr();
+    on.set(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
+    const x = rest.position.x + on.x * (z - rest.position.z) / on.z, y = rest.position.y + on.y * (z - rest.position.z) / on.z;
+    if (y < 4) continue;                                                    // the wall, not the sky
+    if (z > -4 && near(x, y, 0.5 * k)) continue;
+    fieldStars.push(x, y, z);
+  }
+  for (let n = 0; n < 150;) {
     const a = gr() * Math.PI * 2, r = Math.sqrt(-Math.log(1 - gr() * 0.95)) * 0.6;   // dense at the centre, thinning outward
     const x = cx + Math.cos(a) * r * rx, y = cy + Math.sin(a) * r * ry;
-    if (near(x, y, 0.55 * k)) continue;
-    fieldStars.push(x, y, -1.5 - 2 * gr());
+    if (near(x, y, 0.75 * k)) continue;
+    fieldStars.push(x, y, -1.5 - 2 * gr()); n++;
   }
   for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
 }
@@ -215,15 +228,27 @@ const nameField = (() => {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(fieldStars), 3));
   g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  // when each star wakes (sim time); far off until the rising light comes near it
+  g.setAttribute('aOn', new THREE.BufferAttribute(new Float32Array(n).fill(1e6), 1));
   const m = new THREE.ShaderMaterial({
-    uniforms: { uA: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR }, uGlow: { value: nameGlow } },
+    uniforms: { uGlowK: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR }, uGlow: { value: nameGlow } },
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: 'attribute float aSeed; uniform float uTime, uPx; uniform vec4 uGlow; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vec2 q = (position.xy - uGlow.xy) / uGlow.zw; float c = exp(-dot(q,q) * 1.6); vA = (0.35 + 0.65 * c) * (0.5 + 0.5 * aSeed) * (0.8 + 0.2 * sin(uTime * (0.5 + aSeed) + aSeed * 50.0)); gl_PointSize = (2.6 + 4.2 * aSeed * aSeed * (0.5 + 0.5 * c)) * uPx; gl_Position = projectionMatrix * mv; }',
-    fragmentShader: 'uniform float uA; varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * uA * 1.8); gl_FragColor = vec4(vec3(1.0, 0.95, 0.86) * a, a); }',
+    vertexShader: `attribute float aSeed, aOn; uniform float uTime, uPx, uGlowK; uniform vec4 uGlow; varying float vA;
+      void main(){
+        vec4 mv = modelViewMatrix * vec4(position,1.0);
+        vec2 q = (position.xy - uGlow.xy) / uGlow.zw; float c = uGlowK * exp(-dot(q,q) * 1.6);
+        float wake = clamp((uTime - aOn) / 1.4, 0.0, 1.0); wake *= wake;
+        float flash = 1.0 + 1.5 * wake * (1.0 - wake) * 4.0;               // a little glint as it wakes
+        vA = wake * flash * (0.45 + 0.7 * c + 0.4 * aSeed) * (0.8 + 0.2 * sin(uTime * (0.5 + aSeed) + aSeed * 50.0));
+        gl_PointSize = (2.0 + 3.2 * aSeed * aSeed + 2.6 * c) * uPx * clamp(14.0 / -mv.z, 0.6, 1.2);
+        gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: 'varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * 1.6); gl_FragColor = vec4(vec3(1.0, 0.95, 0.88) * a, a); }',
   });
   const p = new THREE.Points(g, m); p.frustumCulled = false;
   return p;
 })();
+const fieldOn = nameField.geometry.attributes.aOn, fieldRand = rng(31);
+let fieldLeft = fieldOn.count;
 scene.add(nameField);
 swarmScene.add(swarm.points);
 const trails = new Trails(renderer);
@@ -324,8 +349,18 @@ function step(dt) {
     if (home === swarm.reserved && nameAt === null) nameAt = s;
     nameLine.material.opacity = nameAt === null ? 0 : 0.32 * smooth(0, 2.5, s - nameAt);
     swarm.material.uniforms.uGlowK.value = 0.9 * smooth(5, 10, s);
-    nameField.material.uniforms.uA.value = smooth(6, 11, s);
+    nameField.material.uniforms.uGlowK.value = smooth(6, 11, s);
     nameField.material.uniforms.uTime.value = simT;
+    // the background wakes where the rising light passes, a widening reach; all of it by 13 s
+    if (fieldLeft && s > 1) {
+      const reach = 2 + 1.5 * s, c = swarm.centre, A = fieldOn.array;
+      for (let i = 0; i < A.length; i++) {
+        if (A[i] < 1e6) continue;
+        const x = fieldStars[i * 3] - c.x, y = fieldStars[i * 3 + 1] - c.y;
+        if (Math.hypot(x, y * 0.8) < reach || s > 13) { A[i] = simT + fieldRand() * 1.5; fieldLeft--; }
+      }
+      fieldOn.needsUpdate = true;
+    }
     if (s > 15) $('#replay').classList.add('show');
   }
   far.material.uniforms.uTime.value = simT;
