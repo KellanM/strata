@@ -115,11 +115,16 @@ export class PeelHandles {
       it.mesh.scale.setScalar(s * Math.max(k, 0.001));
 
       // the rail draws out from the diamond both ways; the ticks fade in with it
+      it.rail.material.opacity = 0.4 * line;
+      it.ticks.material.opacity = 0.5 * line * line;
+      // they move only when the diamond's corner, the peel or its pop-in does:
+      // rebuilt every frame, they re-uploaded six buffers a frame
+      const was = it.laid;
+      if (was && was[0] === pos[0] && was[1] === pos[1] && was[2] === pos[2] && was[3] === line && was[4] === dims[a]) continue;
+      it.laid = [pos[0], pos[1], pos[2], line, dims[a]];
       const p0 = [...pos], p1 = [...pos];
       p0[a] = pos[a] + (-half - 0.4 - pos[a]) * line; p1[a] = pos[a] + (half + 0.4 - pos[a]) * line;
       setPoints(it.rail, [new THREE.Vector3(...p0), new THREE.Vector3(...p1)]);
-      it.rail.material.opacity = 0.4 * line;
-      it.ticks.material.opacity = 0.5 * line * line;
       const ticks = [];
       for (let k = 0; k <= dims[a]; k++) { const q = [...pos]; q[a] = k - half; ticks.push(new THREE.Vector3(...q)); }
       setPoints(it.ticks, ticks);

@@ -250,6 +250,9 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu > * { opacity: 0; transition: opacity .5s ease; }
 #menu.show > * { opacity: 1; }
 #menu.instant, #menu.instant > *, #menu.pulling > * { transition: none; }
+/* hidden, the map's loops (ripples, halos, the companion's lamp) still ran and
+   restyled the page every frame under the level; they wait where they are */
+#menu:not(.show) * { animation-play-state: paused; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
@@ -866,6 +869,10 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .map-node.bonus.on-dark.open .mt { color: #ffe7a1; }
 .map-node.bonus .cube { filter: drop-shadow(0 4px 8px rgba(120, 80, 20, .25)); }
 .map-node.bonus.locked .cube { opacity: .7; filter: none; }
+/* an open shrine's two svgs cast their shadows each: cast by their box, the
+   shadow was redrawn on the main thread every frame the gem floated */
+.map-node.bonus.open .shrine-gem { filter: none; }
+.map-node.bonus.open .shrine-gem svg { filter: drop-shadow(0 4px 8px rgba(120, 80, 20, .25)); }
 .map-node.bonus .obj { width: 56px; height: 56px; }
 .map-node.bonus.far .label { opacity: .75; }
 

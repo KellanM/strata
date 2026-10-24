@@ -1598,7 +1598,11 @@ function draw() {
     // and the rest of the stone settles into shade while it shows
     const dimTo = cubes.focusAny && !game.solved && t >= (game.introEnd ?? 0) ? 1 : 0;
     u.uFocusDim.value += (dimTo - u.uFocusDim.value) * Math.min(1, dt * (dimTo ? 2.5 : 4));
-    if (!game.solved) $('#timer').textContent = fmt((game.adAway ?? game.pausedAt ?? t) - game.start);   // it stands still under an ad or the pause card
+    if (!game.solved) {   // it stands still under an ad or the pause card
+      // written only when the second turns: a text write every frame re-laid out the page each frame
+      const clock = fmt((game.adAway ?? game.pausedAt ?? t) - game.start), timerEl = $('#timer');
+      if (timerEl.textContent !== clock) timerEl.textContent = clock;
+    }
 
     if (game.win) {
       stepCelebration(t);

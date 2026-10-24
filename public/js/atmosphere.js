@@ -324,6 +324,7 @@ export class Ash {
     this.state = new Float32Array(capacity * 2);  // fade (0..1), heat (1 hot .. 0 cooled)
     this.seeds = new Float32Array(capacity * 4);  // twinkle rate, phase, size, warmth
     this.alive = 0;
+    this.awake = false;   // anything in the air (or about to be); asleep, step() does nothing
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('aState', new THREE.BufferAttribute(this.state, 2).setUsage(THREE.DynamicDrawUsage));
@@ -381,6 +382,7 @@ export class Ash {
         }`,
     }));
     this.points.frustumCulled = false;
+    this.geo.setDrawRange(0, 0);
     this.f = [0, 0, 0];
   }
 
@@ -417,17 +419,23 @@ export class Ash {
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
     }
     this.geo.attributes.aSeed.needsUpdate = true;
+    this.awake = true;
+    this.geo.setDrawRange(0, this.capacity);
   }
 
   step(dt, t) {
+    this.uniforms.uTime.value = t;
+    // most of the time nothing is in the air: no motes to move, nothing to
+    // upload, nothing to draw (the last waking frame already faded every one to 0)
+    if (!this.awake) return;
     dt = Math.min(dt, 1 / 30);
     const P = this.pos, V = this.vel, A = this.axis, S = this.state, f = this.f;
-    let alive = 0;
+    let alive = 0, waiting = 0;
     for (let i = 0; i < this.capacity; i++) {
       if (this.age[i] >= this.life[i]) { S[i * 2] = 0; continue; }
       this.age[i] += dt;
       const age = this.age[i], i3 = i * 3;
-      if (age < 0) { S[i * 2] = 0; continue; }
+      if (age < 0) { S[i * 2] = 0; waiting++; continue; }
       alive++;
       const x = P[i3], y = P[i3 + 1], z = P[i3 + 2], k = age / this.life[i];
       // the air: a swirl that grows as the mote leaves the stone, over a hot updraft
@@ -447,7 +455,8 @@ export class Ash {
       S[i * 2 + 1] = Math.exp(-age * 2.2);
     }
     this.alive = alive;
-    this.uniforms.uTime.value = t;
+    this.awake = alive + waiting > 0;
+    if (!this.awake) this.geo.setDrawRange(0, 0);
     this.geo.attributes.position.needsUpdate = true;
     this.geo.attributes.aState.needsUpdate = true;
   }
