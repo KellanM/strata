@@ -2304,7 +2304,11 @@ requestAnimationFrame(frame);
 // play checks right away.
 function calmMoment() { return !ads.adShowing() && !$('#breath') && (!game || game.solved || $('#menu').classList.contains('show')); }
 function applyUpdate() { if (updateReady && calmMoment()) location.reload(); }
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
+// Inside the store apps (Capacitor) the files are already on the phone: no service worker
+// (Android serves the app from https://localhost, which would otherwise register one)
+const nativeApp = !!window.Capacitor?.isNativePlatform?.();
+if (nativeApp) $('.home-tip')?.remove();   // "best on your Home Screen" is the web's advice
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp && location.hostname !== 'localhost') {
   const hadController = !!navigator.serviceWorker.controller;
   // updateViaCache 'none': always fetch sw.js fresh; GitHub Pages lets browsers reuse it for 10 min
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {

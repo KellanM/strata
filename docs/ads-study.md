@@ -499,7 +499,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
   - There is **no mature Capacitor-native MAX plugin.** `anthlubic/capacitor-applovin-max` was created 2026-10-14 with 0 stars. `DeineAgenturUG/capacitor-plugin-applovin` was last pushed in 2024 [F].
   - **Recommendation:** spike the official Cordova plugin inside Capacitor first. If it fights the build, write a small custom Capacitor plugin. Strata needs only init, consent, one interstitial unit, one rewarded unit and their callbacks.
   - Either way, it implements `ads.js`'s `setProvider('max')`.
-- [ ] One ad unit per format (AppLovin's recommendation), with **named placements**: `result_to_map`, `shrine_to_map`, `gem`, `lantern`.
+- [ ] One ad unit per format (AppLovin's recommendation), with **named placements**: `result_to_map`, `shrine_to_map`, `rewind` (a slip taken back; it replaced the lantern on 2026-10-24), `shrine`.
 - [ ] A dashboard frequency cap on the interstitial unit, as a **backstop** only. The real caps live in `ads.js`.
 - [ ] Preload the next ad after each show. If none is loaded, `canShow` returns false and the game simply continues. Never wait on an ad.
 - [ ] Test mode, plus MAX's Mediation Debugger, before submission.
@@ -524,7 +524,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 - [ ] Use either `@revenuecat/purchases-capacitor` (13.7.4, published 2026-10-13, actively maintained) or `cordova-plugin-purchase` (j3k0, 13.19.1, repo pushed 2026-10-14) [F]. RevenueCat is less code; cordova-plugin-purchase avoids a third-party service.
 - [ ] A **Restore purchase** button.
 - [ ] Keep the entitlement locally (`strata.ads.removed`) and re-verify it on launch, so the purchase works offline.
-- [ ] The purchase short-circuits `showInterstitial`. The gem and lantern resolve `true` without an ad.
+- [ ] The purchase short-circuits `showInterstitial`. A taken-back slip and a shrine resolve `true` without an ad.
 - [ ] Never gate the purchase on ATT (Apple 5.1.1(ii)).
 
 **Before and after launch**
