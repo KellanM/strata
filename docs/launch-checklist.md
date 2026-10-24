@@ -68,7 +68,8 @@ Started 2026-10-24. This is the master list for taking Strata from the web build
 
 - [x] **Boot:** the map's mist ribbons no longer encode PNGs. That was about 6.5 s of main thread when the map was built; the boot's long task fell from 8.1 s to 0.2 s in desktop Chrome.
 - [x] **The studio card** covers the first frames (shader compiles) and the map build, then lifts.
-- [~] An optimisation pass is in progress on branch `perf-pass`: idle frame rate, the pixel-ratio cap, per-frame allocations, the Ash particle loop, and the import cost of `shapes.js`.
+- [x] Optimisation pass (merged 2026-10-24): levels went from 32–38 fps to a steady 60 under 4x CPU throttle (timer text written only on change, hidden map animations paused, shrine shadow, Ash sleeps when empty, peel handles rebuilt only on change, shapes.js load).
+- [ ] Next levers, each a visual call: an idle cap at 30 fps after a few quiet seconds; DPR 2 → 1.5 on phones (44% less pixel fill); fewer god-ray march steps; stop the frame loop while the map is up; pause the map companion's SVG animations.
 - [ ] Measure on real devices: an older iPhone (an 11 or SE 2), a mid-range Android (Pixel 6a class) and a low-end Android. Targets:
   - 60 fps while playing;
   - no long task over 100 ms after the card lifts;
