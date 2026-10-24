@@ -12,9 +12,14 @@ import { readFileSync, mkdirSync } from 'node:fs';
 const root = new URL('../', import.meta.url);
 mkdirSync(new URL('resources/', root), { recursive: true });
 const icon = readFileSync(new URL('public/icon.svg', root), 'utf8');
-const mark = `<svg viewBox="0 0 96 96" width="440" height="440">
-  <path fill="#fff" d="M15 80c-3-11 7-23 25-26 14-2 26 2 34 9 7 6 9 14 3 19-7 6-22 8-36 8-15 0-24-3-26-10z"/>
-  <path fill="#fff" d="M54 30l1.6 6.4L62 38l-6.4 1.6L54 46l-1.6-6.4L46 38l6.4-1.6z"/>
+const mark = `<svg viewBox="0 0 120 100" width="520" height="433">
+  <path fill="#f1eee8" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
+  <path fill="#d8d3ca" d="M14 86c10 7 34 8 58 7 20-2 33-7 35-15 1 9-11 16-34 18-26 2-50 0-59-10z"/>
+  <path fill="#d8d3ca" d="M86 55c4 2 6 5 5 8-2-2-4-3-7-4 1-1 2-2 2-4z"/>
+  <circle fill="#fff" stroke="#111" stroke-width="1.6" cx="49" cy="66" r="10"/>
+  <circle fill="#fff" stroke="#111" stroke-width="1.6" cx="73" cy="64" r="8.5"/>
+  <circle fill="#111" cx="46.6" cy="68.6" r="4.6"/>
+  <circle fill="#111" cx="75.2" cy="62" r="4"/>
 </svg>`;
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 try {
