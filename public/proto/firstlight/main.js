@@ -274,9 +274,12 @@ scene.add(far);
 const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const smoother = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * k * (k * (6 * k - 15) + 10); };
 let nameAt = null;   // when the name's last star landed
-// after the tap the story runs at SPEED (Kellan, 2026-10-23: a third as long);
-// twinkles keep real time (realT) so the settled sky stays calm
-const SPEED = 3;
+// after the tap the story starts fast and slows into place (Kellan, 2026-10-23):
+// the clock runs at FAST as the light leaves the stone, easing to real time as
+// the name's stars land (story s 3..11). Twinkles keep real time (realT) so the
+// settled sky stays calm.
+const FAST = 4.5;
+const pace = (s) => 1 + (FAST - 1) * (1 - smooth(3, 11, s));
 let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
 let camY = CAM_FROM;
 const sound = new Sound();
@@ -287,7 +290,7 @@ function open() {
   tapAt = simT;
   swarm.release(simT + 0.35);
   $('#hint').classList.remove('show');
-  sound.open(SPEED);
+  sound.open(2.5);   // about the story's average pace over the swell
 }
 
 function layout() {
@@ -312,7 +315,7 @@ function frame(real) {
   if (params.has('fps')) $('#perf').textContent = `${(dt * 1000).toFixed(1)} ms`;
 }
 function step(dt) {
-  const sdt = dt * (tapAt === null ? 1 : SPEED);
+  const sdt = dt * (tapAt === null ? 1 : pace(simT - tapAt));
   simT += sdt; realT += dt;
   const s = tapAt === null ? -1 : simT - tapAt;
   // before the tap: the cube breathes, once every 5.5 s (about a slow breath)
@@ -385,7 +388,7 @@ function render(dt) {
   renderer.clear();
   renderer.render(scene, camera);
   if (tapAt !== null) {
-    trails.render(swarmScene, camera, swarm, dt * SPEED, 0.95);
+    trails.render(swarmScene, camera, swarm, dt * pace(simT - tapAt), 0.95);
     trails.composite(1.6);
     const was = renderer.autoClear; renderer.autoClear = false;
     renderer.render(swarmScene, camera);
