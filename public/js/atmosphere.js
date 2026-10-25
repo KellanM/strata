@@ -382,11 +382,11 @@ export class Ash {
           vec3 glowCol = mix(vTint, vTint * vTint, 0.5);   // the glow, a shade richer than the core
           if (uPale > 0.5) {
             // over a pale sky light can't add: the glow is laid on as colour, the core as white
-            float g = min(1.0, (0.55 * glow + 0.18 * haze) * vB);
+            float g = min(1.0, (0.3 * glow + 0.09 * haze) * vB);   // a faint glow
             vec3 col = mix(glowCol * 0.9, vec3(1.0), hot / max(hot + g, 1e-3));
             gl_FragColor = vec4(col, min(1.0, hot + g));
           } else {
-            float g = (0.5 * glow + 0.22 * haze) * vB;
+            float g = (0.27 * glow + 0.1 * haze) * vB;   // a faint glow
             gl_FragColor = vec4(vTint * hot + glowCol * g, min(1.0, hot + g));
           }
         }`,

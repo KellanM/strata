@@ -1885,7 +1885,7 @@ function renderDevAds() {
   const tn = localStorage.getItem('strata.titleName') || 'lines';
   $('#dev-titlename-state').textContent = tn === titleName ? tn : `${tn} (next launch)`;
   $('#dev-splashtest-state').textContent = localStorage.getItem('strata.splashTest') === 'shards' ? 'on (next launch)' : 'off';
-  const tw = localStorage.getItem('strata.titleWall') || 'wall';
+  const tw = localStorage.getItem('strata.titleWall') || 'none';
   $('#dev-titlewall-state').textContent = (tw !== 'none') === titleWall ? tw : `${tw} (next launch)`;
 }
 
@@ -1933,7 +1933,7 @@ $('#dev-splashtest').addEventListener('click', () => {
   renderDevAds();
 });
 $('#dev-titlewall').addEventListener('click', () => {
-  localStorage.setItem('strata.titleWall', (localStorage.getItem('strata.titleWall') || 'wall') === 'wall' ? 'none' : 'wall');
+  localStorage.setItem('strata.titleWall', (localStorage.getItem('strata.titleWall') || 'none') === 'none' ? 'wall' : 'none');
   renderDevAds();
 });
 $('#dev-titlename').addEventListener('click', () => {
@@ -2014,8 +2014,8 @@ const titleScreen = $('#title');
 // the name's style: a constellation along the letters, or the letters left dark
 // in a cloud of stars (developer panel, or ?name=negative)
 const titleName = new URLSearchParams(location.search).get('name') || localStorage.getItem('strata.titleName') || 'lines';
-// the wall under the stone (developer panel "Title wall", or ?wall=none)
-const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'wall') !== 'none';
+// the wall under the stone: off by default (Kellan, 2026-10-25); developer panel "Title wall", or ?wall=on
+const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'none') !== 'none';
 const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), veil: $('#fl-night'), nameStyle: titleName, withWall: titleWall,
   onOpen: () => { sound.unlock(); sound.chisel(1); buzz(12); },   // the stone breaks as a block does
   onNamed: () => {
