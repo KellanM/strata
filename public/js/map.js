@@ -57,7 +57,12 @@ function hashId(id) {
 function cube(top, left, right, size = 44) {
   const c = Math.cos(Math.PI / 6) * 0.5, h = 0.5;
   const p = (x, y) => `${(50 + x * 100).toFixed(1)},${(50 + y * 100).toFixed(1)}`;
-  return `<svg class="cube" viewBox="0 0 100 100" style="width:${size}px;height:${size}px" aria-hidden="true">
+  // its silhouette, behind the faces: on a stone you can play it shows as the
+  // barest lit edge, the sun's ring round the moon in an eclipse (style.css .rim)
+  const hex = `M${p(0, -h)}L${p(c, -h / 2)}L${p(c, h / 2)}L${p(0, h)}L${p(-c, h / 2)}L${p(-c, -h / 2)}Z`;
+  return `<svg class="cube" viewBox="0 0 100 100" style="width:${size}px;height:${size}px;overflow:visible" aria-hidden="true">
+    <path class="rim halo" d="${hex}" fill="none" stroke="#fff1cf" stroke-width="9" stroke-linejoin="round" stroke-opacity=".22"/>
+    <path class="rim" d="${hex}" fill="none" stroke="#fff6e2" stroke-width="3.4" stroke-linejoin="round"/>
     <path d="M${p(0, -h)}L${p(c, -h / 2)}L${p(0, 0)}L${p(-c, -h / 2)}Z" fill="${top}"/>
     <path d="M${p(-c, -h / 2)}L${p(0, 0)}L${p(0, h)}L${p(-c, h / 2)}Z" fill="${left}"/>
     <path d="M${p(c, -h / 2)}L${p(0, 0)}L${p(0, h)}L${p(c, h / 2)}Z" fill="${right}"/>

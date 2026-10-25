@@ -367,6 +367,9 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 @keyframes ripple { 0% { transform: scale(.6); opacity: .5; } 70%, 100% { transform: scale(1.35); opacity: 0; } }
 .map-node.current .halo { opacity: 1; animation: breathe 3.2s ease-in-out infinite; }
 .map-node.current .cube { animation: bob 3.2s ease-in-out infinite; }
+/* the eclipse's edge on the stones you can play now; none on locked ones (or the solved, which show their objects) */
+.map-node .cube .rim { display: none; }
+.map-node.open .cube .rim, .map-node.current .cube .rim { display: inline; }
 .map-node.current .nm { font-weight: 600; }
 @keyframes breathe { 0%, 100% { transform: scale(.82); opacity: .55; } 50% { transform: scale(1.08); opacity: 1; } }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
