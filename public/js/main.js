@@ -1876,6 +1876,8 @@ $('#restore-ads').addEventListener('click', async (e) => {
 
 function renderDevAds() {
   $('#dev-ads-state').textContent = ads.enabled() ? 'on' : 'off';
+  const tn = localStorage.getItem('strata.titleName') || 'lines';
+  $('#dev-titlename-state').textContent = tn === titleName ? tn : `${tn} (next launch)`;
 }
 
 // ---------------------------------------------------------------- developer panel
@@ -1917,6 +1919,11 @@ $('#dev-unlock').addEventListener('click', () => {
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
+$('#dev-titlename').addEventListener('click', () => {
+  const next = (localStorage.getItem('strata.titleName') || 'lines') === 'lines' ? 'negative' : 'lines';
+  localStorage.setItem('strata.titleName', next);
+  renderDevAds();
+});
 $('#dev-ads-reset').addEventListener('click', () => {
   ads.devReset();
   renderDevAds(); renderSupport(); renderRewind();
@@ -1987,7 +1994,10 @@ const titleScreen = $('#title');
 // The title is First light (js/firstlight/scene.js): it draws on its own
 // canvas inside the title, so it scrolls away with it; the game's canvas (the
 // old logo) stays hidden and undrawn while the title is up.
-const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), onNamed: () => {
+// the name's style: a constellation along the letters, or the letters left dark
+// in a cloud of stars (developer panel, or ?name=negative)
+const titleName = new URLSearchParams(location.search).get('name') || localStorage.getItem('strata.titleName') || 'lines';
+const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName, onNamed: () => {
   titleScreen.classList.add('named');
   mark('title: the name is written');
 } });

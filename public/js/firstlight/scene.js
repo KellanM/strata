@@ -15,7 +15,10 @@ import { Swarm, Trails, rng } from './swarm.js';
 import { Sound } from './sound.js';
 import { PALETTES } from '../palettes.js';
 
-export function createFirstLight({ canvas, hint = null, onNamed = null }) {
+// nameStyle: 'lines' (a constellation drawn along the letters) or 'negative'
+// (a dense cluster of stars around the letters, which are left dark)
+export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyle = 'lines' }) {
+  const negative = nameStyle === 'negative';
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
   const DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -161,7 +164,52 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
       if (j < 0) { j = nameStars.length; nameStars.push([x, y, -1]); }
       return j;
     };
-    [...word].forEach((ch, n) => {
+    // the negative name: the word set heavy on a small canvas, a distance field
+    // from its letters, and stars scattered round them - thickest right against
+    // their edges, thinning outward - so the letters are dark shapes in a cloud
+    let letterGap = () => Infinity;   // world distance from a point to the nearest letter (0 inside)
+    if (negative) {
+      const CW = 560, PAD = 70, CH = 150 + 2 * PAD, W2 = CW + 2 * PAD;
+      const cv = document.createElement('canvas'); cv.width = W2; cv.height = CH;
+      const g = cv.getContext('2d');
+      let size = 150;
+      g.font = `800 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
+      try { g.letterSpacing = '6px'; } catch { /* older engines */ }
+      size *= CW / g.measureText(word).width;
+      g.font = `800 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
+      g.fillText(word, W2 / 2, CH / 2 + size * 0.04);
+      const img = g.getImageData(0, 0, W2, CH).data;
+      // chamfer distance (px) to the nearest letter pixel
+      const D = new Float32Array(W2 * CH);
+      for (let i = 0; i < D.length; i++) D[i] = img[i * 4 + 3] > 110 ? 0 : 1e6;
+      const pass = (i, j, w) => { if (D[j] + w < D[i]) D[i] = D[j] + w; };
+      for (let y = 0; y < CH; y++) for (let x = 0; x < W2; x++) {
+        const i = y * W2 + x;
+        if (x > 0) pass(i, i - 1, 1); if (y > 0) { pass(i, i - W2, 1); if (x > 0) pass(i, i - W2 - 1, 1.414); if (x < W2 - 1) pass(i, i - W2 + 1, 1.414); }
+      }
+      for (let y = CH - 1; y >= 0; y--) for (let x = W2 - 1; x >= 0; x--) {
+        const i = y * W2 + x;
+        if (x < W2 - 1) pass(i, i + 1, 1); if (y < CH - 1) { pass(i, i + W2, 1); if (x < W2 - 1) pass(i, i + W2 + 1, 1.414); if (x > 0) pass(i, i + W2 - 1, 1.414); }
+      }
+      const u = (right.x - left.x) / CW, ox = (left.x + right.x) / 2, oy = base + 1.5 * k;   // world per px, the word's centre
+      const toPx = (x, y) => [Math.round((x - ox) / u + W2 / 2), Math.round(CH / 2 - (y - oy) / u)];
+      letterGap = (x, y) => {
+        const [px, py] = toPx(x, y);
+        if (px < 0 || py < 0 || px >= W2 || py >= CH) return Infinity;
+        return D[py * W2 + px] * u;
+      };
+      const nr = rng(41), SP = 4.2;
+      for (let py = 0; py < CH; py += SP) for (let px = 0; px < W2; px += SP) {
+        const x = px + (nr() - 0.5) * SP, y = py + (nr() - 0.5) * SP;
+        const d = D[Math.min(CH - 1, Math.max(0, Math.round(y))) * W2 + Math.min(W2 - 1, Math.max(0, Math.round(x)))];
+        if (d < 3.5) continue;                                            // the letters, and a hair's gap round them
+        const edge = Math.min(x, W2 - x, y, CH - y) / PAD;                // the cloud's own soft outer edge
+        if (nr() > Math.exp(-(d - 3.5) / 13) * Math.min(1, edge * 1.3)) continue;
+        nameStars.push([ox + (x - W2 / 2) * u, oy + (CH / 2 - y) * u, -1]);
+      }
+    }
+    if (!negative) [...word].forEach((ch, n) => {
       const ox = n * (2 + GAP);
       for (const stroke of GLYPHS[ch]) {
         let prev = null;
@@ -182,7 +230,9 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
     // the strokes is the sky kept clear, so the letters read.
     const cx = (left.x + right.x) / 2, cy = base + 1.5 * k, rx = (right.x - left.x) * 0.78, ry = 3 * k * 1.9;
     nameGlow.set(cx, cy, rx, ry);
-    const near = (x, y, r) => nameStars.some(([px, py]) => Math.hypot(px - x, py - y) < r);
+    // the sky kept clear where the name must read: right on the strokes (lines), or inside the letters (negative)
+    const near = negative ? (x, y, r) => letterGap(x, y) < r * 0.35
+      : (x, y, r) => nameStars.some(([px, py]) => Math.hypot(px - x, py - y) < r);
     const v = new THREE.Vector3(), w = new THREE.Vector3(), clear = [];
     for (let i = 0; i < starPlaces.length; i += 3) {
       v.set(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]).project(rest);
@@ -207,7 +257,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
       if (z > -4 && near(x, y, 0.5 * k)) continue;
       fieldStars.push(x, y, z);
     }
-    for (let n = 0; n < 150;) {
+    for (let n = 0; n < (negative ? 60 : 150);) {
       const a = gr() * Math.PI * 2, r = Math.sqrt(-Math.log(1 - gr() * 0.95)) * 0.6;   // dense at the centre, thinning outward
       const x = cx + Math.cos(a) * r * rx, y = cy + Math.sin(a) * r * ry;
       if (near(x, y, 0.75 * k)) continue;
@@ -215,7 +265,8 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
     }
     for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
   }
-  const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length, nameSpeed: 2.5 });
+  const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length, nameSpeed: 2.5,
+    nameSize: negative ? [0.75, 0.5] : [1.7, 0.25] });
   swarm.material.uniforms.uGlow.value.copy(nameGlow);
   // the constellation's lines: drawn faintly once its stars are home
   const nameLine = (() => {

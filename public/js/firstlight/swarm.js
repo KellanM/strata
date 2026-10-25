@@ -86,7 +86,7 @@ const FRAG = /* glsl */`
 export class Swarm {
   // reserved: the last `reserved` star places are kept for the first `reserved`
   // motes (the name, written in stars): nobody else takes them, and they go nowhere else
-  constructor({ count = 1400, seed = 7, source, stars, px = 1, reserved = 0, nameSpeed = 1 }) {
+  constructor({ count = 1400, seed = 7, source, stars, px = 1, reserved = 0, nameSpeed = 1, nameSize = [1.7, 0.25] }) {
     this.n = count;
     const rand = this.rand = rng(seed);
     this.fine = waves(6, 0.32, 0.7, 0.25, 0.6, rand);
@@ -122,7 +122,7 @@ export class Swarm {
     const first = this.free.length - reserved;
     this.free.fill(0, first);
     // the name's stars: a touch larger, and warm, like the stone they came from
-    for (let i = 0; i < reserved; i++) { seeds[i * 4 + 2] = 1.7 + 0.25 * rand(); seeds[i * 4 + 3] = 0.85 + 0.15 * rand(); }
+    for (let i = 0; i < reserved; i++) { seeds[i * 4 + 2] = nameSize[0] + nameSize[1] * rand(); seeds[i * 4 + 3] = 0.85 + 0.15 * rand(); }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     g.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4));
