@@ -23,7 +23,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   const CAM_Z = 24;
   // the camera's height on the wall, and at rest: only a little way up, so the
   // wall's mossy top stays in view at the foot of the sky, a horizon under the name
-  const CAM_FROM = -3.2, CAM_TO = 7;
+  const CAM_FROM = 0.5, CAM_TO = 9;
   const scene = new THREE.Scene();
   const swarmScene = new THREE.Scene();
 
@@ -32,7 +32,8 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   // and by whatever light is near it (the glowing cube, then the rising swarm).
   const STONE = [0xb4a998, 0xa89d8c, 0xbdb3a3, 0x9c9282];
   const TOP = 1;   // the top row of stones
-  const CUBE_AT = new THREE.Vector3(0, -5, 0);
+  // the glowing stone rests on the wall's mossy top (Kellan, 2026-10-24), not set into it
+  const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
   const rand = rng(11);
   const cells = [];
   for (let x = -8; x <= 8; x++) {
@@ -101,10 +102,6 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   const core = new THREE.Mesh(new THREE.PlaneGeometry(17, 24), new THREE.MeshBasicMaterial({ color: 0x08070d }));
   core.position.set(0, TOP - 11.5, -0.5);
   scene.add(core);
-  // the dark socket left behind (a slightly recessed back face)
-  const socket = new THREE.Mesh(new THREE.PlaneGeometry(0.97, 0.97), new THREE.MeshBasicMaterial({ color: 0x07060c }));
-  socket.position.set(CUBE_AT.x, CUBE_AT.y, -0.46);
-  scene.add(socket);
 
   // ---------------------------------------------------------------- the glowing cube
   const glowMat = new THREE.ShaderMaterial({
@@ -142,7 +139,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   for (let i = 0; i < 1800; i++) {
     const z = -14 * starRand() ** 1.5;
     const spread = 1 + -z / CAM_Z;   // farther stars spread wider, to fill the same view
-    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 3 + 15 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
+    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 5 + 15 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
   }
   // The name, written in stars: each letter a few strokes (in a 2 x 3 box),
   // stars along them a little apart, as a constellation is drawn. Placed where
