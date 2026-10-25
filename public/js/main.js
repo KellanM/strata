@@ -1884,6 +1884,7 @@ function renderDevAds() {
   $('#dev-ads-state').textContent = ads.enabled() ? 'on' : 'off';
   const tn = localStorage.getItem('strata.titleName') || 'lines';
   $('#dev-titlename-state').textContent = tn === titleName ? tn : `${tn} (next launch)`;
+  $('#dev-splashtest-state').textContent = localStorage.getItem('strata.splashTest') === 'shards' ? 'on (next launch)' : 'off';
   const tw = localStorage.getItem('strata.titleWall') || 'wall';
   $('#dev-titlewall-state').textContent = (tw !== 'none') === titleWall ? tw : `${tw} (next launch)`;
 }
@@ -1927,6 +1928,10 @@ $('#dev-unlock').addEventListener('click', () => {
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
+$('#dev-splashtest').addEventListener('click', () => {
+  if (localStorage.getItem('strata.splashTest') === 'shards') localStorage.removeItem('strata.splashTest'); else localStorage.setItem('strata.splashTest', 'shards');
+  renderDevAds();
+});
 $('#dev-titlewall').addEventListener('click', () => {
   localStorage.setItem('strata.titleWall', (localStorage.getItem('strata.titleWall') || 'wall') === 'wall' ? 'none' : 'wall');
   renderDevAds();
