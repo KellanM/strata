@@ -14,10 +14,12 @@ import * as THREE from 'three';
 import { Swarm, Trails, rng } from './swarm.js';
 import { Sound } from './sound.js';
 import { PALETTES } from '../palettes.js';
+import { Fragments } from '../fragments.js';
+import { Shards, Ash } from '../atmosphere.js';
 
 // nameStyle: 'lines' (a constellation drawn along the letters) or 'negative'
 // (a dense cluster of stars around the letters, which are left dark)
-export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyle = 'lines' }) {
+export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen = null, nameStyle = 'lines' }) {
   const negative = nameStyle === 'negative';
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
@@ -126,6 +128,17 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
   halo.position.copy(CUBE_AT).setZ(0.6);
   halo.scale.setScalar(5);
   scene.add(halo);
+  // The stone breaks as a block does in a level (main.js act): it comes apart
+  // into eight pieces that shrink away from the touch, a few chips fly, and its
+  // sparks splash out and rise - the same systems, in the glowing stone's
+  // colours. Then its light leaves as the swarm.
+  const GLOW = { top: 0xfff2cc, lit: 0xffd590, shade: 0xe9a560, under: 0xb8743c };
+  const fragments = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() });
+  fragments.setPalette(GLOW);
+  const shards = new Shards(), ash = new Ash();
+  ash.setPalette({ skyTop: 0x121731, skyBottom: 0x2a2f5c, shade: GLOW.shade, motes: 0xfff1d6 });
+  scene.add(fragments.mesh, shards.points, ash.points);
+  let unitPx = 30;   // device px per world unit at the stone's depth (the shards' and sparks' size)
 
   // ---------------------------------------------------------------- the sky's places for stars
   const starRand = rng(5), starPlaces = [];
@@ -347,9 +360,16 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
   function open() {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT;
-    swarm.release(simT + 0.35);
+    // the break, as in a level: from the face toward the touch (the front)
+    const t = realT, c = (h) => new THREE.Color(h);
+    glowCube.visible = false;
+    fragments.burst(CUBE_AT, CUBE_AT.clone().add(new THREE.Vector3(0, 0.15, 0.5)), t);
+    shards.burst(CUBE_AT, t, [c(GLOW.top), c(GLOW.lit), c(GLOW.top)], 3, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
+    if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.25, 1).normalize(), c(GLOW.lit));
+    // and the light it held leaves as the swarm
+    swarm.release(simT + 0.12);
     hint?.classList.remove('show');
-    if (!quiet) sound.open(2.5);   // about the story's average pace over the swell
+    if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
 
   function layout() {
@@ -360,6 +380,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
     camera.fov = w / h < 0.75 ? 45 : 38;
     camera.updateProjectionMatrix();
     trails.setSize(w * DPR, h * DPR);
+    unitPx = (h * DPR) / (2 * Math.tan(camera.fov * Math.PI / 360) * CAM_Z);
   }
   window.addEventListener('resize', layout);
   layout();
@@ -399,9 +420,6 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
       glowMat.uniforms.uB.value = 1 + 1.2 * flare;
-      const k = 1 - smoother(0.3, 2.6, s);
-      glowCube.scale.setScalar(Math.max(0.001, k));
-      glowCube.visible = k > 0.01;
       halo.material.opacity = (0.85 + 0.6 * flare) * (1 - smooth(1.2, 3.5, s));
       halo.scale.setScalar(5 + 3 * flare);
       wallMat.uniforms.uLi.value[0] = (2.3 + 2.5 * flare) * (1 - smooth(1, 3.8, s));
@@ -409,6 +427,10 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
       wallMat.uniforms.uL.value[1].copy(swarm.centre).setZ(swarm.centre.z + 1.5);
       wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);
       swarm.step(simT, sdt);
+      // the break's own pieces keep real time, as in a level
+      fragments.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
+      shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
+      ash.step(dt, realT);
       swarm.material.uniforms.uTime.value = realT;
       far.material.uniforms.uA.value = smooth(9, 14, s);
       // the name: when its stars are all home, the constellation's lines draw in

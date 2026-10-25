@@ -30,16 +30,18 @@ export class Sound {
     o.connect(g); g.connect(this.out); if (wet) g.connect(this.wet);
     o.start(at); o.stop(at + dur + 0.05);
   }
-  open(speed = 1) {
+  open(speed = 1, knock = true) {
     if (!this.ctx) return;
     const c = this.ctx, t = c.currentTime;
-    // the knock of stone giving way: a low thud with a little grit
-    this.tone(92, t, 0.5, 0.35, 'sine', false);
-    const n = c.createBufferSource(), buf = c.createBuffer(1, c.sampleRate * 0.25, c.sampleRate), ch = buf.getChannelData(0);
-    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, 4);
-    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.8;
-    const g = c.createGain(); g.gain.value = 0.25;
-    n.buffer = buf; n.connect(bp); bp.connect(g); g.connect(this.out); n.start(t);
+    if (knock) {
+      // the knock of stone giving way: a low thud with a little grit
+      this.tone(92, t, 0.5, 0.35, 'sine', false);
+      const n = c.createBufferSource(), buf = c.createBuffer(1, c.sampleRate * 0.25, c.sampleRate), ch = buf.getChannelData(0);
+      for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, 4);
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.8;
+      const g = c.createGain(); g.gain.value = 0.25;
+      n.buffer = buf; n.connect(bp); bp.connect(g); g.connect(this.out); n.start(t);
+    }
     // the swell: a warm open fifth that rises with the light and lets go
     for (const [m, gain] of [[50, 0.09], [57, 0.07], [62, 0.05], [69, 0.025]]) {
       const o = c.createOscillator(), og = c.createGain();

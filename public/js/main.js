@@ -1997,7 +1997,9 @@ const titleScreen = $('#title');
 // the name's style: a constellation along the letters, or the letters left dark
 // in a cloud of stars (developer panel, or ?name=negative)
 const titleName = new URLSearchParams(location.search).get('name') || localStorage.getItem('strata.titleName') || 'lines';
-const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName, onNamed: () => {
+const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName,
+  onOpen: () => { sound.unlock(); sound.chisel(1); buzz(12); },   // the stone breaks as a block does
+  onNamed: () => {
   titleScreen.classList.add('named');
   mark('title: the name is written');
 } });
