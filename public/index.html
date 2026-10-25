@@ -33,7 +33,8 @@
     #splash .gone { display: none; }
     #splash.shards .gone { display: inline; }   /* the test: ?splash=shards, or the developer panel */
     #splash .art { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
-      transform: scale(calc(var(--fit, 1) * .74)); opacity: 0; animation: card-in 1.1s ease .15s forwards; }   /* the mark a little smaller in the frame */
+      transform: scale(calc(var(--fit, 1) * .56)) translateY(71px); opacity: 0; animation: card-in 1.1s ease .15s forwards; }
+    /* the mark small in the frame, and centred by what is drawn - the disc's top (168) to the floor's foot (534) - not by its frame */
     #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
     /* the name lies on the floor inside the shadow, cut out of it: the light
        shows through its letters. It is laid down in the shadow's own
@@ -250,7 +251,9 @@
   </script>
   <script>
     // the card is drawn for a phone; on a larger screen it is fitted, whole
-    (() => { const f = () => document.querySelector('#splash .art')?.style.setProperty('--fit', Math.min(innerWidth / 390, innerHeight / 844, 1.6).toFixed(3));
+    (() => {
+      const art = document.querySelector('#splash .art');
+      const f = () => art?.style.setProperty('--fit', Math.min(innerWidth / 390, innerHeight / 844, 1.6).toFixed(3));
       f(); addEventListener('resize', f); })();
   </script>
   <div id="map-world" aria-hidden="true"></div>
