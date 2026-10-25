@@ -75,3 +75,34 @@ export function renderThumb(shape, palette, { size = 160, canvas: wantCanvas = f
   cache.set(key, url);
   return url;
 }
+
+// The eclipse's edge on an uncovered object (map; Kellan, 2026-10-25), drawn
+// as the stones' own (map.js cube .rim): a pale warm line a hair outside the
+// outline over the faintest halo, and nothing inside it. Its own picture, laid
+// over the object with screen blending (style.css .obj-rim), so it only adds
+// light and the miniature's shadow never browns it.
+export function renderRim(shape, palette, { size = 160 } = {}) {
+  const key = `rim|${shape.id}|${palette.shade}|${size}`;
+  if (cache.has(key)) return cache.get(key);
+  const src = renderThumb(shape, palette, { size, canvas: true });
+  const n = src.width, u = n / size;   // canvas pixels per drawn pixel at full size
+  const sil = (color) => {
+    const c = document.createElement('canvas'); c.width = c.height = n;
+    const g = c.getContext('2d');
+    g.drawImage(src, 0, 0);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = color; g.fillRect(0, 0, n, n);
+    return c;
+  };
+  const out = document.createElement('canvas'); out.width = out.height = n;
+  const o = out.getContext('2d');
+  // spread a silhouette r pixels out in every direction
+  const grow = (s, r) => { for (let k = 0; k < 16; k++) o.drawImage(s, Math.cos(k * Math.PI / 8) * r, Math.sin(k * Math.PI / 8) * r); };
+  o.globalAlpha = 0.22; grow(sil('#fff1cf'), 4.2 * u);   // the halo
+  o.globalAlpha = 1;    grow(sil('#fff6e2'), 1.5 * u);   // the line
+  o.globalCompositeOperation = 'destination-out';
+  o.drawImage(src, 0, 0);
+  const url = out.toDataURL('image/png');
+  cache.set(key, url);
+  return url;
+}

@@ -11,7 +11,7 @@
 // chapter keeps an optional shrine, lit once its stars are earned.
 
 import { recordStars } from './score.js';
-import { renderThumb } from './thumbs.js';
+import { renderThumb, renderRim } from './thumbs.js';
 import { PALETTES, variant } from './palettes.js';
 import * as Shapes from './shapes.js';
 import { after, mark, DUR, ease, rate as motionRate } from './motion.js';
@@ -461,7 +461,7 @@ export function renderMap(root, opts) {
       if (s) {
         // the stone has become the thing it was hiding
         const fresh = celebrate && !seenObjects.has(shape.id);
-        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}">`;
+        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120 })}"></span>`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
       b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +

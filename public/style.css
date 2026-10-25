@@ -428,6 +428,12 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
   transition: transform .5s var(--ease-out);
 }
 .map-node:hover .obj { transform: translateY(-3px); }
+/* the eclipse's edge, as the playable stones wear it: its own layer, screen-blended, so it only adds light */
+.obj-box { position: relative; display: inline-block; width: 64px; height: 64px; }
+.map-node .obj-rim { position: absolute; inset: 0; width: 64px; height: 64px; pointer-events: none; mix-blend-mode: screen; transition: transform .5s var(--ease-out); }
+.map-node:hover .obj-rim { transform: translateY(-3px); }
+.map-node.fresh .obj-rim { animation: object-rise .9s .7s cubic-bezier(.2,1.5,.4,1) both; }
+.map-node.bonus .obj-box, .map-node.bonus .obj-rim { width: 56px; height: 56px; }
 .map-node.fresh .cube { position: absolute; left: 50%; top: 50%; margin: -23px 0 0 -23px; animation: stone-away .55s .45s cubic-bezier(.5,0,.7,.3) both; }
 .map-node.fresh .obj { animation: object-rise .9s .7s cubic-bezier(.2,1.5,.4,1) both; }
 .map-node.fresh .halo { animation: fresh-glow 1.6s .6s ease-out both; }
