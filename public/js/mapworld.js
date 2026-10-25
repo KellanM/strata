@@ -28,11 +28,12 @@ const PARALLAX = false;   // the islands don't drift; only the title's stars hav
 const NIGHT = '#121731';
 // the sky, top to bottom over 1.4 screens, ending at the horizon
 // (the last stretch is long and the peak low, so the horizon is a glow, not a band)
-const SKY_STOPS = [[0, '#121731'], [0.45, '#232a52'], [0.72, '#4c5187'], [0.86, '#b791b6'], [0.94, '#eabfbf'], [1, '#fbe2d6']];
+// (Kellan, 2026-10-25: longer, so night turns to dawn over more of the way down)
+const SKY_STOPS = [[0, '#121731'], [0.3, '#1c234d'], [0.5, '#2c3465'], [0.64, '#454a80'], [0.76, '#6f6599'], [0.86, '#a888b0'], [0.93, '#dbb2bd'], [1, '#fbe2d6']];
 // below the horizon the glow sinks slowly into the first chapter's sea, over
 // this many screens: the title's sky and the map are one curve, no edge
-const BELOW = [[0, 0xfbe2d6], [0.12, 0xfbe1d7], [0.45, 0xf8dcd4]];
-const BELOW_END = 1.15;
+const BELOW = [[0, 0xfbe2d6], [0.2, 0xfbe1d7], [0.75, 0xf8dcd4]];
+const BELOW_END = 1.8;
 const DAWN = 60;   // the horizon sits this far below the top of the map's page
 
 // ---- colour, in plain hex (no three.js here)

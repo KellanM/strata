@@ -377,9 +377,10 @@ export class Ash {
           float c = cos(vRot), s = sin(vRot);
           vec2 r = mat2(c, -s, s, c) * q;
           // emissive: a small white-hot core, inside a wide glow in the stone's colour
-          float core = exp(-d2 * 70.0), glow = exp(-d2 * 7.0), haze = exp(-d2 * 2.5);
+          float core = exp(-d2 * 40.0), glow = exp(-d2 * 7.0), haze = exp(-d2 * 2.5);
           float spikes = (exp(-abs(r.x) * 60.0) * exp(-r.y * r.y * 3.0) + exp(-abs(r.y) * 60.0) * exp(-r.x * r.x * 3.0)) * vSpike;
-          float hot = min(1.0, (core * 2.4 + spikes * 1.4) * vB);
+          // motes, not stars (Kellan, 2026-10-25): a round soft core, no flare
+          float hot = min(1.0, core * 2.4 * vB);
           vec3 glowCol = mix(vTint, vTint * vTint, 0.5);   // the glow, a shade richer than the core
           if (uPale > 0.5) {
             // over a pale sky light can't add: the glow is laid on as colour, the core as white

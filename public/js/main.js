@@ -2173,7 +2173,7 @@ function setScroll(k) {
     const sheet = mapSheet();
     sheet.style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
     // the soft top edge (style.css #menu.pulling) slides up out of the sheet as it arrives
-    sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.3 * H * Math.min(1, k / H)).toFixed(1)}px`;
+    sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.5 * H * Math.min(1, k / H)).toFixed(1)}px`;
   }
 }
 // glide from the current scroll to `to` (px), then call done. Its clock counts

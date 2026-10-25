@@ -405,8 +405,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
   opacity: 0; pointer-events: none; transition: opacity .3s;
 }
 #map-close .ring { width: 66px; height: 66px; border: 1.5px solid #4a3d63; }
-/* the play glyph's weight sits left of its box: a nudge right centres it to the eye, as in the pause */
-#map-close .ring svg { width: 28px; height: 28px; margin-left: 3px; fill: currentColor; stroke-width: 1.2; }
+#map-close .ring svg { width: 30px; height: 30px; fill: currentColor; stroke-width: 1.2; }   /* the play triangle (M9 7v10l8-5z) is drawn so its optical centre - between its centroid and its box - sits on the ring's centre */
 #menu.has-game #map-close { opacity: 1; pointer-events: auto; }
 #map-help { position: absolute; top: calc(12px + var(--safe-t)); left: 16px; z-index: 1; }
 #menu:not(.show) #map-close { pointer-events: none; }
@@ -824,13 +823,13 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 /* while the map comes up from the title, its sky has no edge: the backdrop reaches
    well above the sheet and fades in over that reach, so the title's sky melts into it */
 /* the sheet's own top edge fades too; main.js slides the fade off the top as the map arrives */
-#menu.pulling .map-scroll { -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 12vh, #000 30vh);
-  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 12vh, #000 30vh);
-  -webkit-mask-size: 100% calc(100% + 30vh); mask-size: 100% calc(100% + 30vh);
+#menu.pulling .map-scroll { -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.2) 12vh, rgba(0,0,0,.6) 30vh, #000 50vh);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.2) 12vh, rgba(0,0,0,.6) 30vh, #000 50vh);
+  -webkit-mask-size: 100% calc(100% + 50vh); mask-size: 100% calc(100% + 50vh);
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
-#menu.pulling .map-backdrop { top: -55vh;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh);
-  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh); }
+#menu.pulling .map-backdrop { top: -85vh;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.18) 25vh, rgba(0,0,0,.5) 50vh, rgba(0,0,0,.82) 70vh, #000 85vh);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.18) 25vh, rgba(0,0,0,.5) 50vh, rgba(0,0,0,.82) 70vh, #000 85vh); }
 /* First light (js/firstlight/scene.js): the title is a wall at night with one
    glowing stone; its light writes the name in stars, so the lettered name is
    for screen readers only, and "swipe up" waits until the name is written */
