@@ -38,13 +38,12 @@
        perspective (narrow toward the horizon, wide toward us), so it reads as
        part of the scene rather than a caption over it. */
     #splash .name span { display: block; }
+    #splash .name .l1 { font-size: 38px; }   /* inside the shadow's edges at its depth */
     #splash .name .l2 { font-size: 96px; line-height: .84; transform: scaleY(.62); transform-origin: 50% 0; margin-bottom: -.3em; }   /* as wide as the shadow at its depth, squished */
     #splash .floor { position: absolute; left: 0; top: 384px; width: 390px; height: 300px; perspective: 260px; perspective-origin: 195px -40px; }
     #splash .name { position: absolute; left: 0; right: 0; top: 70px; margin: 0; text-align: center;
-      color: rgba(255, 255, 255, .86); transform: rotateX(64deg); transform-origin: 50% 100%;
-      font: 400 46px/.86 "Splash Anton", Impact, "Arial Narrow", sans-serif; letter-spacing: .01em; transform-style: preserve-3d; white-space: nowrap;
-      -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.95), rgba(0,0,0,.55));
-      mask-image: linear-gradient(180deg, rgba(0,0,0,.95), rgba(0,0,0,.55)); filter: blur(.4px); }
+      color: #fff; transform: rotateX(64deg); transform-origin: 50% 100%;
+      font: 400 46px/.86 "Splash Anton", Impact, "Arial Narrow", sans-serif; letter-spacing: .01em; transform-style: preserve-3d; white-space: nowrap; }
     @keyframes card-in { to { opacity: 1; } }
     /* a quick relaunch (an update's reload): just black, fading up into the game */
     #splash.quick > * { display: none; }
@@ -75,30 +74,11 @@
     <div class="art" aria-hidden="true">
       <svg viewBox="0 0 390 844">
         <defs>
-          <radialGradient id="sr-disc">
-            <stop offset=".86" stop-color="#fff"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="sr-bloom">
-            <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="sr-floor" cx="195" cy="382" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(195 382) scale(185 150) translate(-195 -382)">
-            <stop offset="0" stop-color="#fff" stop-opacity=".92"/>
-            <stop offset=".5" stop-color="#fff" stop-opacity=".42"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </radialGradient>
-          <linearGradient id="sr-fade" x1="0" y1="440" x2="0" y2="720" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#fff"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </linearGradient>
-          <mask id="sr-shadow-fade"><rect x="0" y="380" width="390" height="340" fill="url(#sr-fade)"/></mask>
           <clipPath id="sr-disc-clip"><circle cx="195" cy="300" r="132"/></clipPath>
-          <filter id="sr-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+          <clipPath id="sr-floor-clip"><path d="M5 384A190 150 0 0 0 385 384Z"/></clipPath>
         </defs>
-        <!-- the light behind: a great white disc and its bloom -->
-        <circle cx="195" cy="300" r="250" fill="url(#sr-bloom)"/>
-        <circle cx="195" cy="300" r="132" fill="url(#sr-disc)"/>
+        <!-- the light behind: a great white disc (flat, two colours: a logo) -->
+        <circle cx="195" cy="300" r="132" fill="#fff"/>
         <!-- the light cracked like glass where the rock is looking: an impact on
              the rim, a crush of tiny fractures there and a few chips knocked out,
              radial cracks running in (nearly straight, kinking, now and then
@@ -216,12 +196,11 @@
           <path class="crack" style="stroke-width:0.75" d="M247.2 223.5Q246.3 223.5 250.2 219.9"/>
           <path class="crack" style="stroke-width:0.60" d="M271.2 254.1Q260.7 256.7 253.1 250.8"/>
         </g>
-        <!-- the floor it lights, toward us from the horizon -->
-        <rect x="0" y="382" width="390" height="280" fill="url(#sr-floor)"/>
-        <!-- its long shadow, thrown down the floor toward us -->
+        <!-- the floor it lights: a flat half-ellipse toward us from the horizon -->
+        <path fill="#fff" d="M5 384A190 150 0 0 0 385 384Z"/>
         <!-- the long shadow, flat and true to the light behind: it widens as it
              comes toward us. The name lies in it (.name, below), cut out of it. -->
-        <g mask="url(#sr-shadow-fade)" filter="url(#sr-soft)">
+        <g clip-path="url(#sr-floor-clip)">
           <path fill="#000" d="M126 384 C150 379 240 378 264 384 L362 646 C300 664 90 664 28 646 Z"/>
         </g>
         <!-- the rock: black, leaning back, its eyes cut out and turned up to the light -->
