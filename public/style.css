@@ -265,6 +265,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu .map-scroll { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); color: var(--ink); }
 .map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; text-shadow: 0 0 14px rgba(255, 250, 244, .8); }   /* clear of the corner buttons */
 .map-head .sub { margin: 10px 0 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #map-progress { margin-top: 4px; letter-spacing: .26em; }
 
 .map { position: relative; width: 100%; }

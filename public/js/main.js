@@ -1884,6 +1884,8 @@ function renderDevAds() {
   $('#dev-ads-state').textContent = ads.enabled() ? 'on' : 'off';
   const tn = localStorage.getItem('strata.titleName') || 'lines';
   $('#dev-titlename-state').textContent = tn === titleName ? tn : `${tn} (next launch)`;
+  const tw = localStorage.getItem('strata.titleWall') || 'wall';
+  $('#dev-titlewall-state').textContent = (tw !== 'none') === titleWall ? tw : `${tw} (next launch)`;
 }
 
 // ---------------------------------------------------------------- developer panel
@@ -1908,7 +1910,7 @@ $('#version').addEventListener('pointerdown', () => {
 for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) $('#version').addEventListener(ev, () => clearTimeout(devPress.timer));
 $('#version').addEventListener('contextmenu', (e) => e.preventDefault());
 let titleTaps = [];
-$('.map-head h1').addEventListener('click', () => {
+$('#map-progress').addEventListener('click', () => {   // (the map's name went; its progress line keeps the five taps)
   const t = performance.now();
   titleTaps = titleTaps.filter((x) => t - x < 1500).concat(t);
   if (titleTaps.length >= 5) { titleTaps = []; openDev(); }
@@ -1925,6 +1927,10 @@ $('#dev-unlock').addEventListener('click', () => {
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
+$('#dev-titlewall').addEventListener('click', () => {
+  localStorage.setItem('strata.titleWall', (localStorage.getItem('strata.titleWall') || 'wall') === 'wall' ? 'none' : 'wall');
+  renderDevAds();
+});
 $('#dev-titlename').addEventListener('click', () => {
   const next = (localStorage.getItem('strata.titleName') || 'lines') === 'lines' ? 'negative' : 'lines';
   localStorage.setItem('strata.titleName', next);
@@ -2003,7 +2009,9 @@ const titleScreen = $('#title');
 // the name's style: a constellation along the letters, or the letters left dark
 // in a cloud of stars (developer panel, or ?name=negative)
 const titleName = new URLSearchParams(location.search).get('name') || localStorage.getItem('strata.titleName') || 'lines';
-const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName,
+// the wall under the stone (developer panel "Title wall", or ?wall=none)
+const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'wall') !== 'none';
+const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName, withWall: titleWall,
   onOpen: () => { sound.unlock(); sound.chisel(1); buzz(12); },   // the stone breaks as a block does
   onNamed: () => {
   titleScreen.classList.add('named');

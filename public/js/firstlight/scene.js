@@ -19,7 +19,8 @@ import { Shards, Ash } from '../atmosphere.js';
 
 // nameStyle: 'lines' (a constellation drawn along the letters) or 'negative'
 // (a dense cluster of stars around the letters, which are left dark)
-export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen = null, nameStyle = 'lines' }) {
+// withWall: false leaves the glowing stone alone in the night, no wall under it
+export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen = null, nameStyle = 'lines', withWall = true }) {
   const negative = nameStyle === 'negative';
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
@@ -92,11 +93,11 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen =
   const wall = new THREE.InstancedMesh(box, wallMat, cells.length);
   const m4 = new THREE.Matrix4();
   cells.forEach(([x, y, z, c], i) => { wall.setMatrixAt(i, m4.makeTranslation(x, y, z)); wall.setColorAt(i, c); });
-  scene.add(wall);
+  if (withWall) scene.add(wall);
   // behind the stones, the dark of the wall's core: the seams between them never show the sky
   const core = new THREE.Mesh(new THREE.PlaneGeometry(17, 24), new THREE.MeshBasicMaterial({ color: 0x08070d }));
   core.position.set(0, TOP - 11.5, -0.5);
-  scene.add(core);
+  if (withWall) scene.add(core);
 
   // ---------------------------------------------------------------- the glowing cube
   const glowMat = new THREE.ShaderMaterial({
