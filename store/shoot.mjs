@@ -142,7 +142,7 @@ const FRAMES = {
   async 6(browser, size) {
     const { ctx, page } = await open(browser, size);
     await page.waitForTimeout(1500);
-    await startLevel(page, process.env.ZERO || 'pocket-compass');
+    await startLevel(page, process.env.ZERO || 'orrery');
     await page.waitForTimeout(3500);
     // a pinch in, as a player leans close to chisel
     await page.evaluate((z) => { const c = window.strata.camera; c.zoom *= z; c.updateProjectionMatrix(); }, Number(process.env.ZOOM || 1.6));
