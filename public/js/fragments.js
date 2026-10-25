@@ -9,6 +9,7 @@ export const BREAK_TIME = 0.42;
 const TRAVEL = 0.32;                 // each piece's own flight
 const MAX_DELAY = BREAK_TIME - TRAVEL;
 const PIECE = 1 / 2;
+const SPARKS = 16;   // atmosphere.js SPARK_LIGHTS: the sparks light the pieces too
 
 const vertexShader = /* glsl */ `
   attribute vec3 aOrigin;     // piece centre at rest (world)
@@ -19,6 +20,7 @@ const vertexShader = /* glsl */ `
 
   uniform float uTime;
   varying vec3 vN;
+  varying vec3 vWP;
   varying float vHeight;
 
   vec3 rot(vec3 v, vec3 axis, float a) {
@@ -34,20 +36,33 @@ const vertexShader = /* glsl */ `
     if (size <= 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
     vN = normal;
     vHeight = aOrigin.y;
-    gl_Position = projectionMatrix * viewMatrix * vec4(aOrigin + position * size, 1.0);
+    vWP = aOrigin + position * size;
+    gl_Position = projectionMatrix * viewMatrix * vec4(vWP, 1.0);
   }
 `;
 
 const fragmentShader = /* glsl */ `
   uniform vec3 cTop, cLit, cShade, cUnder;
   uniform vec2 uLight;
+  uniform vec4 uSparks[${SPARKS}];
+  uniform vec3 uSparkCol;
   varying vec3 vN;
+  varying vec3 vWP;
   void main() {
     vec3 n = normalize(vN);
     vec3 c;
     if (n.y > 0.5) c = cTop;
     else if (n.y < -0.5) c = cUnder;
     else c = mix(cShade, cLit, smoothstep(0.1, 0.9, dot(normalize(n.xz + 1e-4), uLight) * 0.5 + 0.5));
+    // the sparks bursting out beside them light the pieces, as they light the stone (cubes.js)
+    for (int i = 0; i < ${SPARKS}; i++) {
+      vec4 s = uSparks[i];
+      if (s.w <= 0.0) continue;
+      vec3 d = s.xyz - vWP;
+      float r2 = dot(d, d);
+      float ndl = max(dot(n, d * inversesqrt(r2 + 1e-4)), 0.0);
+      c += uSparkCol * s.w * (0.25 + 0.75 * ndl) * 0.28 / (1.0 + r2 * 10.0);
+    }
     gl_FragColor = vec4(c, 1.0);
   }
 `;
@@ -77,6 +92,8 @@ export class Fragments {
       uTime: { value: 0 }, uLight: lightUniform,
       cTop: { value: new THREE.Color() }, cLit: { value: new THREE.Color() },
       cShade: { value: new THREE.Color() }, cUnder: { value: new THREE.Color() },
+      uSparks: { value: Array.from({ length: SPARKS }, () => new THREE.Vector4(0, 0, 0, 0)) },
+      uSparkCol: { value: new THREE.Color(1, 1, 1) },
     };
     this.mesh = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: this.uniforms }));
     this.mesh.frustumCulled = false;

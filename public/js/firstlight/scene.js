@@ -436,6 +436,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       fragments.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
       shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
       ash.step(dt, realT);
+      fragments.uniforms.uSparks.value = ash.lights; fragments.uniforms.uSparkCol.value = ash.lightColor;   // the sparks light the pieces
       swarm.material.uniforms.uTime.value = realT;
       far.material.uniforms.uA.value = smooth(9, 14, s);
       // the name: when its stars are all home, the constellation's lines draw in

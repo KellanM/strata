@@ -1627,7 +1627,8 @@ function draw() {
   rayBoost *= Math.exp(-dt * 1.6);
   ash.step(dt, t);
   // the sparks' light on the stone: the same vectors, shared each frame
-  cubes.uniforms.uSparks.value = ash.lights; cubes.uniforms.uSparkCol.value = ash.lightColor;
+  cubes.uniforms.uSparks.value = fragments.uniforms.uSparks.value = ash.lights;
+  cubes.uniforms.uSparkCol.value = fragments.uniforms.uSparkCol.value = ash.lightColor;
 
   // shared time / scale uniforms
   const unitPx = renderer.domElement.height / ((camera.top - camera.bottom) / camera.zoom);
