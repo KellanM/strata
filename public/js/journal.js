@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { CHAPTERS } from './shapes.js';
 import { PALETTES } from './palettes.js';
 import { recordStars } from './score.js';
-import { renderThumb, renderGlow } from './thumbs.js';
+import { renderThumb } from './thumbs.js';
 import { objectMesh, isoCamera } from './objectmesh.js';
 import { makeOrbit, SHOW_SPIN } from './orbit.js';
 
@@ -61,9 +61,9 @@ export function renderJournal(root, { entries, solved }) {
       b.className = 'jr-tile' + (rec ? ' found' : '') + (e.shape.bonus ? ' bonus' : '');
       if (rec) {
         const n = recordStars(e.shape, rec);
-        b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"><img class="obj-glow" alt="" draggable="false"></span><span class="nm">${esc(e.shape.name)}</span>${gems(n)}`;
+        b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"></span><span class="nm">${esc(e.shape.name)}</span>${gems(n)}`;
         b.setAttribute('aria-label', `${e.shape.name}, ${n} of 3 gems`);
-        Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; b.querySelector('.obj-glow').src = renderGlow(e.shape, e.palette, { size: 120 }); });
+        Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
         b.addEventListener('click', () => openView(root, e, n));
       } else {
         b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? 'shrine' : '&nbsp;'}</span>`;

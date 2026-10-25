@@ -2153,7 +2153,7 @@ if (splash) {
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const toMap = () => !!localStorage.getItem('strata.tutorial');
 const mapSheet = () => $('#menu .map-scroll');
-const DESCENT = { first: 1.0, again: 0.75 };   // seconds for a whole descent (decision 2, docs/map-study.md)
+const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {
   pull.k = k;
@@ -2166,7 +2166,7 @@ function setScroll(k) {
   const fade = Math.min(1, Math.max(0, (k / H - 0.4) / 0.45));
   canvas.style.transition = fade > 0 ? 'none' : '';
   canvas.style.opacity = fade > 0 ? (1 - fade * fade * (3 - 2 * fade)).toFixed(3) : '';
-  if (titleUp) canvas.style.opacity = '0';   // First light is the title; the old logo stays hidden
+  canvas.style.opacity = '0';   // First light is the title: the game's canvas (the old logo) stays hidden all the way down (titleUp goes false as the descent starts)
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
   if (toMap()) {
