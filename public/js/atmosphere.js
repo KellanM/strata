@@ -401,13 +401,12 @@ export class Ash {
     this.lit = false;
   }
 
-  // light skies take the deeper, normally blended look; dark ones the starlight
+  // light only, on every sky (Kellan, 2026-10-25): the sparks are always added,
+  // never laid on as paint, so they can only brighten what is behind them
   setPalette(p) {
-    const lum = (h) => { const c = new THREE.Color(h); return 0.3 * c.r + 0.59 * c.g + 0.11 * c.b; };
-    const pale = (lum(p.skyTop) + lum(p.skyBottom)) / 2 > 0.55;
-    this.uniforms.uPale.value = pale ? 1 : 0;
-    this.uniforms.uCool.value.set(pale ? p.shade : (p.motes ?? 0xe8ecff));
-    this.points.material.blending = pale ? THREE.NormalBlending : THREE.AdditiveBlending;
+    this.uniforms.uPale.value = 0;
+    this.uniforms.uCool.value.set(p.motes ?? 0xe8ecff);
+    this.points.material.blending = THREE.AdditiveBlending;
     this.points.material.needsUpdate = true;
   }
 

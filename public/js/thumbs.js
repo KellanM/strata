@@ -17,10 +17,8 @@ function tone(c, k, shade, mixAmt) {
  * Renders a solved shape as a small isometric picture and returns a data URL.
  * The view is the game's isometric one, looking down the +x +z diagonal.
  */
-// glow: a thin gold rim round the object's outline and a soft gold light beyond it
-// (an uncovered object on the map and in the journal; Kellan, 2026-10-25)
-export function renderThumb(shape, palette, { size = 160, glow = false } = {}) {
-  const key = `${shape.id}|${palette.shade}|${size}|${glow ? 'g' : ''}`;
+export function renderThumb(shape, palette, { size = 160, canvas: wantCanvas = false } = {}) {
+  const key = `${shape.id}|${palette.shade}|${size}${wantCanvas ? '|c' : ''}`;
   if (cache.has(key)) return cache.get(key);
 
   const [X, Y, Z] = shape.dims;
@@ -73,17 +71,20 @@ export function renderThumb(shape, palette, { size = 160, glow = false } = {}) {
     if (!has(x, y, z + 1)) quad([P(x, y + 1, z + 1), P(x + 1, y + 1, z + 1), P(x + 1, y, z + 1), P(x, y, z + 1)], tone(c, 0.96, palette.shade, 0.12));
     if (!has(x + 1, y, z)) quad([P(x + 1, y + 1, z), P(x + 1, y + 1, z + 1), P(x + 1, y, z + 1), P(x + 1, y, z)], tone(c, 0.7, palette.shade, 0.12));
   }
-  const url = (glow ? gild(canvas) : canvas).toDataURL('image/png');
+  const url = wantCanvas ? canvas : canvas.toDataURL('image/png');
   cache.set(key, url);
   return url;
 }
 
-// The light at its edge, as the sun's ring round the moon in an eclipse: the
-// object's silhouette in a pale warm gold, drawn the barest hair out in every
-// direction, with the faintest halo, and the object over it - so only a fine
-// lit line hugs its outline. Baked into the picture once, so the map pays
-// nothing for it as it scrolls.
-function gild(src) {
+// The light at an uncovered object's edge (map and journal; Kellan, 2026-10-25),
+// as the sun's ring round the moon in an eclipse: a pale warm line a hair
+// outside its outline, and the faintest halo. Its own picture, laid over the
+// object with screen blending (style.css .obj-glow), so it can only add light
+// - over any sky it brightens, never darkens into a brown edge.
+export function renderGlow(shape, palette, { size = 160 } = {}) {
+  const key = `glow|${shape.id}|${palette.shade}|${size}`;
+  if (cache.has(key)) return cache.get(key);
+  const src = renderThumb(shape, palette, { size, canvas: true });
   const n = src.width;
   const sil = document.createElement('canvas'); sil.width = sil.height = n;
   const sg = sil.getContext('2d');
@@ -93,12 +94,15 @@ function gild(src) {
   sg.fillRect(0, 0, n, n);
   const out = document.createElement('canvas'); out.width = out.height = n;
   const o = out.getContext('2d');
-  o.shadowColor = 'rgba(255, 214, 140, .45)';
+  o.shadowColor = 'rgba(255, 214, 140, .5)';
   o.shadowBlur = n * 0.018;
-  o.globalAlpha = 0.85;
   const r = Math.max(0.75, n * 0.0045);
   for (let k = 0; k < 8; k++) o.drawImage(sil, Math.cos(k * Math.PI / 4) * r, Math.sin(k * Math.PI / 4) * r);
-  o.shadowBlur = 0; o.globalAlpha = 1;
+  // only the light outside the object: its own shape is cut away
+  o.shadowBlur = 0;
+  o.globalCompositeOperation = 'destination-out';
   o.drawImage(src, 0, 0);
-  return out;
+  const url = out.toDataURL('image/png');
+  cache.set(key, url);
+  return url;
 }
