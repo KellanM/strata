@@ -78,25 +78,27 @@ export function renderThumb(shape, palette, { size = 160, glow = false } = {}) {
   return url;
 }
 
-// The gold: the object's silhouette in gold, drawn a hair out in every
-// direction (the rim) with a soft shadow of the same gold (the glow), and the
-// object itself over it. Baked into the picture once, so the map pays nothing
-// for it as it scrolls.
+// The light at its edge, as the sun's ring round the moon in an eclipse: the
+// object's silhouette in a pale warm gold, drawn the barest hair out in every
+// direction, with the faintest halo, and the object over it - so only a fine
+// lit line hugs its outline. Baked into the picture once, so the map pays
+// nothing for it as it scrolls.
 function gild(src) {
   const n = src.width;
   const sil = document.createElement('canvas'); sil.width = sil.height = n;
   const sg = sil.getContext('2d');
   sg.drawImage(src, 0, 0);
   sg.globalCompositeOperation = 'source-in';
-  sg.fillStyle = '#ffd98a';
+  sg.fillStyle = '#fff1cf';
   sg.fillRect(0, 0, n, n);
   const out = document.createElement('canvas'); out.width = out.height = n;
   const o = out.getContext('2d');
-  o.shadowColor = 'rgba(255, 196, 92, .85)';
-  o.shadowBlur = n * 0.045;
-  const r = Math.max(1, n * 0.009);
+  o.shadowColor = 'rgba(255, 214, 140, .45)';
+  o.shadowBlur = n * 0.018;
+  o.globalAlpha = 0.85;
+  const r = Math.max(0.75, n * 0.0045);
   for (let k = 0; k < 8; k++) o.drawImage(sil, Math.cos(k * Math.PI / 4) * r, Math.sin(k * Math.PI / 4) * r);
-  o.shadowBlur = 0;
+  o.shadowBlur = 0; o.globalAlpha = 1;
   o.drawImage(src, 0, 0);
   return out;
 }
