@@ -9,6 +9,7 @@ import { Finale } from './finale.js';
 import { Fragments } from './fragments.js';
 import { Cubes } from './cubes.js';
 import { Ash, Background, GodRays, Motes, Shards } from './atmosphere.js';
+import { createFirstLight } from './firstlight/scene.js';
 import { PeelHandles } from './handles.js';
 import { renderMap } from './map.js';
 import { MapWorld } from './mapworld.js';
@@ -1696,7 +1697,8 @@ function frame() {
   }
   const t = now();
   if (mapUp) { if (mapUpSince < 0) mapUpSince = t; } else mapUpSince = -1;
-  if (!(mapUp && t - mapUpSince > 0.6)) draw();
+  if (onTitle && titleBegun) fl.resume(); else fl.pause();
+  if (!(mapUp && t - mapUpSince > 0.6) && !onTitle) draw();
   requestAnimationFrame(frame);
 }
 
@@ -1982,6 +1984,15 @@ resize();
 // scroll off the top while the map comes up from below (the touch also lets the
 // sound start). The very first time, the swipe begins the first lesson instead.
 const titleScreen = $('#title');
+// The title is First light (js/firstlight/scene.js): it draws on its own
+// canvas inside the title, so it scrolls away with it; the game's canvas (the
+// old logo) stays hidden and undrawn while the title is up.
+const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), onNamed: () => {
+  titleScreen.classList.add('named');
+  mark('title: the name is written');
+} });
+let titleBegun = false;
+canvas.style.opacity = '0';
 // Sound from the first moment it's allowed: phones only let a page make sound
 // after a touch (on iPhone, a finger lifting), except where autoplay is granted
 // (e.g. an Android Home Screen app) - so set the audio up now, and it plays
@@ -2015,7 +2026,7 @@ function carveLogo() {
   if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
-const beginTitle = () => { if (reduceMotion) carveLogo(); else after(CARVE_AT, carveLogo); };
+const beginTitle = () => { titleBegun = true; };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
@@ -2071,6 +2082,7 @@ function setScroll(k) {
   const fade = Math.min(1, Math.max(0, (k / H - 0.4) / 0.45));
   canvas.style.transition = fade > 0 ? 'none' : '';
   canvas.style.opacity = fade > 0 ? (1 - fade * fade * (3 - 2 * fade)).toFixed(3) : '';
+  if (titleUp) canvas.style.opacity = '0';   // First light is the title; the old logo stays hidden
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
   if (toMap()) {
@@ -2155,6 +2167,7 @@ function finishPull() {
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
     titleUp = false;
+    after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true); }
   };
   // the last of the descent doesn't hold the player: the title lets touches
@@ -2202,6 +2215,9 @@ const endPull = (e) => {
   pull.id = null;
   if (!pull.live) {   // a tap: the whole descent, as a full swipe would
     if (e.type === 'pointercancel' || Math.abs(pull.dy) > 10 || pull.gliding) return;   // (a swipe down isn't a tap)
+    // First light: a tap opens the stone; while its light rises a tap waits;
+    // once the name is written, a tap goes on as before (a swipe always does)
+    if (!fl.named) { if (fl.tap(e.clientX, e.clientY)) sound.unlock(); return; }
     startPull();
     finishPull();
     return;
@@ -2222,6 +2238,7 @@ const atMapTop = () => !titleUp && !pull.gliding && toMap() && mapBuilt && !divi
   && !$('#menu').classList.contains('arriving') && !$('#menu').classList.contains('settling') && mapSheet().scrollTop <= 0;
 function beginAscent() {
   ascent.live = true;
+  fl.finish();   // coming back, the sky is already written
   stopGlide();
   mark('title: pull back up');
   if (game?.shape !== LOGO) {

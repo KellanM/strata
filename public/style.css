@@ -814,6 +814,20 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 #menu.pulling .map-backdrop { top: -55vh;
   -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh);
   mask-image: linear-gradient(180deg, transparent 0, rgba(0,0,0,.25) 18vh, rgba(0,0,0,.7) 36vh, #000 55vh); }
+/* First light (js/firstlight/scene.js): the title is a wall at night with one
+   glowing stone; its light writes the name in stars, so the lettered name is
+   for screen readers only, and "swipe up" waits until the name is written */
+#firstlight { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: -1; }
+#title.fl h1, #title.fl .sub { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#title.fl .tap { opacity: 0; transition: opacity 1.2s ease; }
+#title.fl.named .tap { opacity: 1; }
+#title.fl:not(.named) .tap, #title.fl:not(.named) .tap svg { animation: none; }
+/* the fingertip: where to touch, only after a long while of nothing */
+#fl-hint { position: absolute; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; pointer-events: none;
+  border: 1.5px solid rgba(255, 226, 180, .55); opacity: 0; transition: opacity 1.2s ease; }
+#fl-hint.show { opacity: 1; animation: fl-touch 2.8s ease-in-out infinite; }
+@keyframes fl-touch { 0% { transform: scale(1.35); opacity: 0; } 35% { transform: scale(.82); opacity: .85; } 55% { transform: scale(.78); opacity: .85; } 100% { transform: scale(1.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #fl-hint.show { animation: none; } }
 /* behind the title the block is only a backdrop */
 body.title-up .hud { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {

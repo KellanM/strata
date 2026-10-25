@@ -422,7 +422,7 @@ export class Ash {
       this.vel.set([vx, vy, vz], i3);
       this.axis.set([center.x, center.z, phase], i3);
       this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
-      this.life[i] = 0.55 + Math.random() * 0.55;   // brief: a quick puff, gone in about a second
+      this.life[i] = 0.82 + Math.random() * 0.83;   // brief: a quick puff, gone in a second or so
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
       if (tint) this.tint.set([tint.r, tint.g, tint.b], i3); else this.tint.fill(1, i3, i3 + 3);
     }
