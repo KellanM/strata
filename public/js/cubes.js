@@ -6,6 +6,7 @@ import * as THREE from 'three';
 
 const ATLAS_COLS = 8;
 const MAX_RIPPLES = 8;
+const SPARKS = 16;   // atmosphere.js SPARK_LIGHTS: the sparks that light the stone
 
 // Tile 0 is blank; tile 1 + count*3 + style is a clue.
 export function clueTile(line) {
@@ -63,6 +64,7 @@ const vertexShader = /* glsl */ `
 
   varying vec3 vN;
   varying vec3 vWN;
+  varying vec3 vWP;
   varying vec3 vLocal;
   varying vec2 vUv;
   varying float vTile;
@@ -179,6 +181,7 @@ const vertexShader = /* glsl */ `
     vHeight = height;
 
     vec3 p = position * 0.965 * scale + center + offset;
+    vWP = (modelMatrix * vec4(p, 1.0)).xyz;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   }
 `;
@@ -200,9 +203,12 @@ const fragmentShader = /* glsl */ `
   uniform vec3 pTop, pLit, pShade;
   uniform vec3 cHaze, cGlow, cMistake;
   uniform vec3 cFocus;     // the outline's tone where the stone is pale (a deeper glow of the same hue)
+  uniform vec4 uSparks[${SPARKS}];   // the sparks in the air: position, brightness
+  uniform vec3 uSparkCol;
 
   varying vec3 vN;
   varying vec3 vWN;
+  varying vec3 vWP;
   varying vec3 vLocal;
   varying vec2 vUv;
   varying float vTile;
@@ -337,6 +343,18 @@ const fragmentShader = /* glsl */ `
     // ripple light
     col += cGlow * vGlow * 0.22;
 
+    // each spark in the air lights the stone a little where it passes, like a
+    // firefly: a small warm pool on the faces turned toward it
+    vec3 sn = normalize(vWN);
+    for (int i = 0; i < ${SPARKS}; i++) {
+      vec4 s = uSparks[i];
+      if (s.w <= 0.0) continue;
+      vec3 d = s.xyz - vWP;
+      float r2 = dot(d, d);
+      float ndl = max(dot(sn, d * inversesqrt(r2 + 1e-4)), 0.0);
+      col += uSparkCol * s.w * (0.25 + 0.75 * ndl) * 0.28 / (1.0 + r2 * 10.0);
+    }
+
     gl_FragColor = vec4(col, 1.0);
   }
 `;
@@ -365,6 +383,8 @@ export class Cubes {
       pTop: { value: new THREE.Color() }, pLit: { value: new THREE.Color() }, pShade: { value: new THREE.Color() },
       cHaze: { value: new THREE.Color() }, cGlow: { value: new THREE.Color() },
       cMistake: { value: new THREE.Color(0xff5a5f) }, cFocus: { value: new THREE.Color() },
+      uSparks: { value: Array.from({ length: SPARKS }, () => new THREE.Vector4(0, 0, 0, 0)) },
+      uSparkCol: { value: new THREE.Color(1, 1, 1) },
     };
     this.material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: this.uniforms });
     this.mesh = null;

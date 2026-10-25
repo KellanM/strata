@@ -307,6 +307,7 @@ export class Shards {
 // blazes when it glints; it pops in with a little overshoot and twinkles
 // small as it goes. Over a pale sky additive light would vanish, so there it
 // is laid on normally over a faint shadow of the sky's shade (setPalette).
+export const SPARK_LIGHTS = 16;   // how many motes light the stone at once
 const ABC = (x, y, z, t, out) => {
   out[0] = Math.sin(z + t * 0.9) + 0.7 * Math.cos(y - t * 0.6);
   out[1] = 0.8 * Math.sin(x + t * 0.7) + Math.cos(z + t * 0.5);
@@ -394,6 +395,10 @@ export class Ash {
     this.points.frustumCulled = false;
     this.geo.setDrawRange(0, 0);
     this.f = [0, 0, 0];
+    // each mote is a small light on the stone, like a firefly (cubes.js uSparks)
+    this.lights = Array.from({ length: SPARK_LIGHTS }, () => new THREE.Vector4(0, 0, 0, 0));
+    this.lightColor = new THREE.Color(1, 1, 1);
+    this.lit = false;
   }
 
   // light skies take the deeper, normally blended look; dark ones the starlight
@@ -429,6 +434,7 @@ export class Ash {
       this.life[i] = k < 2 ? 2.2 + Math.random() * 0.9 : 0.6 + Math.random() * 0.45;
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
       if (tint) this.tint.set([tint.r, tint.g, tint.b], i3); else this.tint.fill(1, i3, i3 + 3);
+      if (tint && k === 0) this.lightColor.setRGB(1, 1, 1).lerp(tint, 0.55);   // the light they cast: the sparks' own colour
     }
     this.geo.attributes.aSeed.needsUpdate = true;
     this.geo.attributes.aTint.needsUpdate = true;
@@ -440,7 +446,7 @@ export class Ash {
     this.uniforms.uTime.value = t;
     // most of the time nothing is in the air: no motes to move, nothing to
     // upload, nothing to draw (the last waking frame already faded every one to 0)
-    if (!this.awake) return;
+    if (!this.awake) { if (this.lit) { this.lights.forEach((l) => l.setW(0)); this.lit = false; } return; }
     dt = Math.min(dt, 1 / 30);
     const P = this.pos, V = this.vel, A = this.axis, S = this.state, f = this.f;
     let alive = 0, waiting = 0;
@@ -469,6 +475,18 @@ export class Ash {
     }
     this.alive = alive;
     this.awake = alive + waiting > 0;
+    // the lights they cast (cubes.js uSparks): up to LIGHTS of the motes in the
+    // air, picked evenly through them, each as bright as it shows
+    const n = this.lights.length;
+    let seen = 0, slot = 0;
+    const every = Math.max(1, alive / n);
+    for (let i = 0; i < this.capacity && slot < n; i++) {
+      if (this.age[i] < 0 || this.age[i] >= this.life[i] || S[i * 2] <= 0) continue;
+      if (seen++ < slot * every) continue;
+      this.lights[slot++].set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2], S[i * 2] * (0.5 + 0.5 * S[i * 2 + 1]));
+    }
+    for (; slot < n; slot++) this.lights[slot].setW(0);
+    this.lit = true;
     if (!this.awake) this.geo.setDrawRange(0, 0);
     this.geo.attributes.position.needsUpdate = true;
     this.geo.attributes.aState.needsUpdate = true;
