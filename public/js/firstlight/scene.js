@@ -173,10 +173,10 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
       const cv = document.createElement('canvas'); cv.width = W2; cv.height = CH;
       const g = cv.getContext('2d');
       let size = 150;
-      g.font = `800 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
+      g.font = `500 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
       try { g.letterSpacing = '6px'; } catch { /* older engines */ }
       size *= CW / g.measureText(word).width;
-      g.font = `800 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
+      g.font = `500 ${size}px "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
       g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
       g.fillText(word, W2 / 2, CH / 2 + size * 0.04);
       const img = g.getImageData(0, 0, W2, CH).data;
@@ -205,7 +205,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, nameStyl
         const d = D[Math.min(CH - 1, Math.max(0, Math.round(y))) * W2 + Math.min(W2 - 1, Math.max(0, Math.round(x)))];
         if (d < 3.5) continue;                                            // the letters, and a hair's gap round them
         const edge = Math.min(x, W2 - x, y, CH - y) / PAD;                // the cloud's own soft outer edge
-        if (nr() > Math.exp(-(d - 3.5) / 13) * Math.min(1, edge * 1.3)) continue;
+        if (nr() > 0.6 * Math.exp(-(d - 3.5) / 17) * Math.min(1, edge * 1.3)) continue;   // a lighter cloud: fewer stars crowd the edges
         nameStars.push([ox + (x - W2 / 2) * u, oy + (CH / 2 - y) * u, -1]);
       }
     }
