@@ -1137,9 +1137,12 @@ function setTool(t) {
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 $('#menu-btn').addEventListener('click', () => (pausable() ? openPause() : openMenu()));
 
-// In a level the menu button opens a small card: Resume, Restart, Map. The
-// clock stops while it's up. A solved level, the title's logo, go straight to the map.
+// In a level the menu button stills the world: the stone rests, centred under a
+// veil of its own sky, with where you are, a ring to resume, and Restart and Map
+// beneath (docs/pause-study.md). The clock stops while it's up. A solved level,
+// the title's logo, go straight to the map.
 const pauseEl = $('#pause'), restartBtn = pauseEl.querySelector('[data-pause="restart"]');
+const restartLabel = restartBtn.querySelector('.pause-label');
 const pausable = () => !!game && !game.solved && game.shape.id !== 'logo' && !titleUp;
 const begun = (g) => g.broken.some(Boolean) || g.painted.some(Boolean);
 function openPause() {
@@ -1147,7 +1150,10 @@ function openPause() {
   game.pausedAt = now();
   saveProgress();
   restartBtn.classList.remove('confirm');
-  restartBtn.textContent = 'Restart';
+  restartLabel.textContent = 'Restart';
+  // where you are, as the HUD says it, without the clock
+  pauseEl.querySelector('.pause-chapter').textContent = $('#pz-meta').textContent;
+  pauseEl.querySelector('.pause-name').textContent = $('#pz-name').textContent;
   // the map is shut until the lessons are done; a lesson's only way out is skip
   pauseEl.querySelector('[data-pause="map"]').hidden = !!game.entry.lesson && !localStorage.getItem('strata.tutorial');
   show('#pause', true);
@@ -1163,7 +1169,7 @@ function restartLevel() {
   // a level with chisels in it asks once more: "Start over?"
   if (begun(g) && !restartBtn.classList.contains('confirm')) {
     restartBtn.classList.add('confirm');
-    restartBtn.textContent = 'Start over?';
+    restartLabel.textContent = 'Start over?';
     return;
   }
   closePause();
@@ -1176,7 +1182,7 @@ pauseEl.addEventListener('click', (e) => {
   const what = e.target.closest('[data-pause]')?.dataset.pause;
   if (what === 'restart') restartLevel();
   else if (what === 'map') { closePause(); saveProgress(); openMenu(); }
-  else if (what === 'resume' || !e.target.closest('.pause-card')) closePause();   // or a tap beside the card
+  else if (what === 'resume' || !e.target.closest('button')) closePause();   // or a tap anywhere else
 });
 window.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || !pauseEl.classList.contains('show')) return;

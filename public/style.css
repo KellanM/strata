@@ -941,27 +941,49 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .offer-card .row button.primary { font-size: 11px; padding: 10px 18px; }
 .offer-card .row button[hidden] { display: none; }
 
-/* the menu button's card in a level: Resume, Restart, Map. It unfolds from the
-   button; the block rests (and its clock stops) beneath a soft veil */
+/* the menu button in a level stills the world (docs/pause-study.md). No card:
+   the stone stays where it is, behind a veil of its own sky that is thickest at
+   the centre, where the words are. Where you are, a ring to resume, and Restart
+   and Map beneath it, all on one centred axis. A tap anywhere else resumes. */
 #pause { position: fixed; inset: 0; z-index: 8; pointer-events: none; opacity: 0;
-  background: color-mix(in srgb, var(--sky, #f7dccb) 28%, transparent);
-  transition: opacity var(--dur-base) var(--ease-in); }
-#pause.show { opacity: 1; pointer-events: auto; transition: opacity var(--dur-slow) var(--ease-fade); }
-.pause-card { position: absolute; left: 14px; top: calc(66px + var(--safe-t)); min-width: 168px;
-  display: flex; flex-direction: column; padding: 6px; border-radius: 22px;
-  background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 14px 40px rgba(40, 20, 60, 0.14);
-  transform-origin: 23px -20px; transform: scale(.86) translateY(-6px);
-  transition: transform var(--dur-base) var(--ease-in); }
-#pause.show .pause-card { transform: none; transition: transform var(--dur-slow) var(--ease-out); }
-.pause-card button { padding: 13px 18px; border-radius: 16px; text-align: left; font-size: 11px;
-  letter-spacing: .24em; text-transform: uppercase; background: none; box-shadow: none; }
-.pause-card button + button { border-top: 1px solid var(--line); border-radius: 0; }
-.pause-card button:last-child { border-radius: 0 0 16px 16px; }
-.pause-card button.confirm { background: var(--ink); color: var(--sky); border-radius: 16px; border-top-color: transparent; }
-.pause-card button.confirm + button { border-top-color: transparent; }
+  display: grid; place-items: center; padding: 24px 24px calc(24px + var(--safe-b));
+  background:
+    radial-gradient(ellipse 120% 70% at 50% 50%, color-mix(in srgb, var(--sky, #f7dccb) 74%, transparent) 0%,
+      color-mix(in srgb, var(--sky, #f7dccb) 46%, transparent) 55%, color-mix(in srgb, var(--sky, #f7dccb) 26%, transparent) 100%);
+  backdrop-filter: blur(3.5px); -webkit-backdrop-filter: blur(3.5px);
+  transition: opacity .35s var(--ease-in, ease-in); }
+#pause.show { opacity: 1; pointer-events: auto; transition: opacity .6s var(--ease-fade, ease-out); }
+body:has(#pause.show) :is(.hud, #coach) { opacity: 0; pointer-events: none; }
+body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
+.pause-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; color: var(--ink); }
+.pause-where { margin: 0 0 34px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.pause-chapter { font-size: 11px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase; color: var(--ink-soft); }
+.pause-name { font-size: clamp(24px, 7vw, 34px); font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+.pause-name:empty, .pause-chapter:empty { display: none; }
+/* a thin rule with a diamond, the axes' crystal, between the place and the choices */
+.pause-where::after { content: ""; width: 7px; height: 7px; margin-top: 12px; transform: rotate(45deg);
+  border: 1px solid var(--ink-soft); }
+.pause-resume { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--ink); color: var(--ink); background: color-mix(in srgb, var(--sky, #f7dccb) 40%, transparent);
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.4), background .3s; }
+.pause-resume svg { width: 34px; height: 34px; margin-left: 4px; fill: currentColor; stroke-width: 1.2; }
+.pause-row { display: flex; justify-content: center; gap: 36px; margin-top: 30px; }
+.pause-row button { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 92px; padding: 4px 0;
+  color: var(--ink); }
+.pause-row svg { width: 52px; height: 52px; padding: 14px; border-radius: 50%; border: 1px solid var(--line);
+  transition: background .3s, color .3s, border-color .3s, transform .25s cubic-bezier(.2,.9,.3,1.4); }
+.pause-label { font-size: 11px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; transition: color .3s; }
+.pause-resume:active, .pause-row button:active svg { transform: scale(.92); }
+/* "Start over?" asks in the same quiet voice: the ring fills, nothing turns red */
+.pause-row button.confirm svg { background: var(--ink); color: var(--sky); border-color: var(--ink); }
+.pause-row button.confirm .pause-label { color: var(--ink); }
 .pause-card button[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) { .pause-card, #pause.show .pause-card { transform: none; transition: none; } }
+/* it settles in from a breath below, one line after another, as the chapter card does */
+.pause-card > * { opacity: 0; transform: translateY(8px); transition: opacity .25s ease-in, transform .25s ease-in; }
+#pause.show .pause-card > * { opacity: 1; transform: none; transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1); }
+#pause.show .pause-card > :nth-child(2) { transition-delay: .08s; }
+#pause.show .pause-card > :nth-child(3) { transition-delay: .16s; }
+@media (prefers-reduced-motion: reduce) { .pause-card > *, #pause.show .pause-card > * { transform: none; transition: opacity .2s; } }
 
 /* Remove Ads, under the sound toggles in How to play */
 .support { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; }
