@@ -20,7 +20,8 @@ import { Shards, Ash } from '../atmosphere.js';
 // nameStyle: 'lines' (a constellation drawn along the letters) or 'negative'
 // (a dense cluster of stars around the letters, which are left dark)
 // withWall: false leaves the glowing stone alone in the night, no wall under it
-export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen = null, nameStyle = 'lines', withWall = true }) {
+// veil: an element over the sky behind the scene; black until the stone opens
+export function createFirstLight({ canvas, hint = null, veil = null, onNamed = null, onOpen = null, nameStyle = 'lines', withWall = true }) {
   const negative = nameStyle === 'negative';
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
@@ -320,6 +321,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen =
     return p;
   })();
   const fieldOn = nameField.geometry.attributes.aOn, fieldRand = rng(31);
+  let dawnAt = null;   // when the sky began to come (real time): the tap, or a swipe that left without one
   let fieldLeft = fieldOn.count;
   scene.add(nameField);
   swarmScene.add(swarm.points);
@@ -353,14 +355,14 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen =
   const FAST = 3;
   const pace = (s) => 1 + (FAST - 1) * (1 - smooth(3, 11, s));
   let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
-  let camY = CAM_FROM, tapReal = 0;
+  let camY = CAM_FROM, tapReal = 0, dawnSpan = 3.2;
   const sound = new Sound();
   let quiet = false;   // finish() runs the clock forward in silence
   swarm.onSettle = () => { if (!quiet) sound.star(); };
 
   function open() {
     if (tapAt !== null) return;
-    tapAt = simT; tapReal = realT;
+    tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
     // the break, as in a level: from the face toward the touch (the front)
     const t = realT, c = (h) => new THREE.Color(h);
     glowCube.visible = false;
@@ -395,6 +397,8 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen =
     lastReal = real;
     step(dt);
     render(dt);
+    // the sky: black behind the glowing stone until it opens, then it fades in as the light rises
+    if (veil) veil.style.opacity = dawnAt === null ? '1' : (1 - smooth(0, dawnSpan, realT - dawnAt)).toFixed(3);
     raf = requestAnimationFrame(frame);
   }
   function step(dt) {
@@ -497,10 +501,14 @@ export function createFirstLight({ canvas, hint = null, onNamed = null, onOpen =
     if (tapAt === null) { while (simT < 3.4) step(1 / 60); open(); }
     for (let i = 0; i < 60 * 30 && simT - tapAt <= 15; i++) step(1 / 60);
     quiet = false;
+    dawnAt = -1e3;   // the sky long since come
+    if (veil) veil.style.opacity = '0';
     lastReal = null;
   }
   return {
     tap, finish,
+    // the sky comes now, quickly (a swipe on to the map without opening the stone)
+    dawn() { if (dawnAt === null) { dawnAt = realT; dawnSpan = 0.6; } },
     get opened() { return tapAt !== null; },
     get named() { return nameAt !== null; },
     pause() { running = false; cancelAnimationFrame(raf); },

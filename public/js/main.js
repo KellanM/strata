@@ -2016,7 +2016,7 @@ const titleScreen = $('#title');
 const titleName = new URLSearchParams(location.search).get('name') || localStorage.getItem('strata.titleName') || 'lines';
 // the wall under the stone (developer panel "Title wall", or ?wall=none)
 const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'wall') !== 'none';
-const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), nameStyle: titleName, withWall: titleWall,
+const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), veil: $('#fl-night'), nameStyle: titleName, withWall: titleWall,
   onOpen: () => { sound.unlock(); sound.chisel(1); buzz(12); },   // the stone breaks as a block does
   onNamed: () => {
   titleScreen.classList.add('named');
@@ -2160,6 +2160,7 @@ function primeMap() {
   mark('title: map primed');
 }
 function startPull() {
+  fl.dawn();   // leaving without opening the stone: the sky comes up quickly, not black
   pull.live = true;
   stopGlide();
   mark('title: pull');
