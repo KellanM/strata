@@ -3,9 +3,28 @@
 // heightfield (not concentric rings): a concave summit set off-centre, one
 // ridge spur to one side, terraces of uneven depth. Ground caps sit only on
 // ledges wide enough to stand on; risers are bare rock; no per-voxel noise.
-import { grid } from './voxels.js';
+import { grid as coarseGrid } from './voxels.js';
 
 const STEPS = [1, 1, 2, 1, 3, 1, 2];   // terrace depths, uneven on purpose
+
+// Resolution. Every peak is designed in "design voxels" (the coordinates
+// below) and built at K cubes per design voxel: the same mountain, the same
+// size on the map, in finer cubes. The map renders each sprite at K times
+// fewer px per cube so its cubes come out the size of a stone's miniature
+// (peaks-export.html); K = 1 is the peak exactly as designed.
+let K = 1;
+const fine = (c) => Math.round(c * K);   // a design coordinate's first cube
+const design = (c) => {                   // and the design voxel a cube is part of
+  let d = Math.floor(c / K);
+  while (fine(d + 1) <= c) d++;
+  while (d > 0 && fine(d) > c) d--;
+  return d;
+};
+function grid(X, Y, Z) {
+  const g = coarseGrid(fine(X), fine(Y), fine(Z));
+  g.k = K;
+  return g;
+}
 
 /**
  * Fills columns up to a quantised height. peaks: [{ x, z, h, r, p, n }] (a
@@ -13,9 +32,10 @@ const STEPS = [1, 1, 2, 1, 3, 1, 2];   // terrace depths, uneven on purpose
  * [{ x0, z0, x1, z1, h0, h1, w }] (a ridge whose height runs h0 -> h1).
  */
 function terrain(g, { peaks = [], spurs = [], rock, rock2, steps = STEPS, floor = 1 }) {
+  // the terraces stand at the designed heights, counted in cubes
   const levels = [0];
-  for (let k = 0; levels[levels.length - 1] < g.Y; k++) levels.push(levels[levels.length - 1] + steps[k % steps.length]);
-  const q = (h) => { let v = 0; for (const l of levels) if (l <= h) v = l; return v; };
+  for (let k = 0; levels[levels.length - 1] < g.Y / K; k++) levels.push(levels[levels.length - 1] + steps[k % steps.length]);
+  const q = (h) => { let v = 0; for (const l of levels) if (l <= h) v = l; return fine(v); };
   const H = (x, z) => {
     let h = 0;
     for (const p of peaks) {
@@ -34,53 +54,90 @@ function terrain(g, { peaks = [], spurs = [], rock, rock2, steps = STEPS, floor 
   };
   const hf = [];
   for (let z = 0; z < g.Z; z++) for (let x = 0; x < g.X; x++) {
-    const h = Math.min(g.Y - 1, q(H(x, z)));
+    // the height of the design voxel this cube is part of: the mountain as it was
+    // drawn, every step and outcrop kept, built in K by K columns of cubes
+    const h = Math.min(g.Y - 1, q(H(design(x), design(z))));
     hf[x + g.X * z] = h;
-    if (h < floor) continue;
+    if (h < fine(floor)) continue;
     // rock: one tone, a second only every third level (a quiet strata, not stripes)
-    for (let y = 0; y < h; y++) g.set(x, y, z, Math.floor(y / 3) % 2 ? rock2 : rock);
+    for (let y = 0; y < h; y++) g.set(x, y, z, strata(y, rock, rock2));
   }
   g.hf = hf;
   return g;
 }
-const hAt = (g, x, z) => g.hf?.[Math.round(x) + g.X * Math.round(z)] ?? g.top(Math.round(x), Math.round(z)) + 1;
+const strata = (y, rock, rock2) => (Math.floor(y / (3 * K)) % 2 ? rock2 : rock);
+// the ground's height under a design voxel, in design voxels
+const hAt = (g, x, z) => {
+  const fx = fine(Math.round(x)), fz = fine(Math.round(z));
+  return (g.hf?.[fx + g.X * fz] ?? g.top(fx, fz) + 1) / K;
+};
 
-// ground on ledges wide enough to stand on; risers and narrow rims stay rock
+// ground on ledges wide enough to stand on; risers and narrow rims stay rock.
+// A cap is one design voxel deep (K cubes), as the mountain was drawn.
 function caps(g, ground, { snow, snowFrom = Infinity, ground2, minFlat = 2 } = {}) {
   const solid = (x, y, z) => !!g.get(x, y, z);
+  const deep = Math.max(1, fine(1));
   for (let z = 0; z < g.Z; z++) for (let y = 0; y < g.Y; y++) for (let x = 0; x < g.X; x++) {
     if (!solid(x, y, z) || solid(x, y + 1, z)) continue;
     const i = x + g.X * (y + g.Y * z);
     if (g.struct?.has(i) || g.glow.has(i)) continue;
     let flat = 0;
-    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (solid(x + dx, y, z + dz) && !solid(x + dx, y + 1, z + dz)) flat++;
-    if (y >= snowFrom) { g.set(x, y, z, snow); continue; }
-    if (flat >= minFlat || (minFlat <= 2 && y <= 1)) g.set(x, y, z, ground);
+    // (the neighbours one design voxel away, so a ledge is judged as it was drawn)
+    for (const [dx, dz] of [[deep, 0], [-deep, 0], [0, deep], [0, -deep]]) if (solid(x + dx, y, z + dz) && !solid(x + dx, y + 1, z + dz)) flat++;
+    const c = y >= fine(snowFrom) ? snow : flat >= minFlat || (minFlat <= 2 && y < fine(2)) ? ground : 0;
+    if (!c) continue;
+    for (let d = 0; d < deep && y - d >= 0; d++) {
+      const j = x + g.X * (y - d + g.Y * z);
+      if (!solid(x, y - d, z) || g.struct?.has(j) || g.glow.has(j)) break;
+      g.set(x, y - d, z, c);
+    }
   }
 }
 // no needles, posts or strays: terrain cubes above the first two layers need a
 // neighbour beside them, and nothing may float; repeated until nothing changes
 function tidy(g) {
+  const d = Math.max(1, fine(1));   // (judged a design voxel at a time)
   for (let pass = 0; pass < 4; pass++) {
     let changed = false;
-    for (let y = g.Y - 1; y >= 2; y--) for (let z = 0; z < g.Z; z++) for (let x = 0; x < g.X; x++) {
+    for (let y = g.Y - 1; y >= fine(2); y--) for (let z = 0; z < g.Z; z++) for (let x = 0; x < g.X; x++) {
       if (!g.get(x, y, z) || g.struct?.has(x + g.X * (y + g.Y * z))) continue;
-      const side = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dz]) => g.get(x + dx, y, z + dz)).length;
-      if (side === 0 || !g.get(x, y - 1, z)) { g.clear(x, y, z); changed = true; }
+      const side = [[d, 0], [-d, 0], [0, d], [0, -d]].filter(([dx, dz]) => g.get(x + dx, y, z + dz)).length;
+      if (side === 0 || !g.get(x, y - d, z)) { g.clear(x, y, z); changed = true; }
     }
     if (!changed) break;
   }
   return g;
 }
+// a design voxel of a structure: K by K by K cubes (y may be fractional when it
+// comes from hAt, so it is scaled before it's rounded). A lit one glows once,
+// from its centre (renderVoxels: g.glowAt).
 function put(g, x, y, z, c, lit = false) {
-  x = Math.round(x); y = Math.round(y); z = Math.round(z);
-  g.set(x, y, z, c, lit); (g.struct ??= new Set()).add(x + g.X * (y + g.Y * z));
+  x = Math.round(x); z = Math.round(z);
+  if (K === 1) y = Math.round(y);
+  const [x0, x1, y0, y1, z0, z1] = [fine(x), fine(x + 1), fine(y), fine(y + 1), fine(z), fine(z + 1)];
+  for (let zz = z0; zz < z1; zz++) for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) {
+    if (!g.ok(xx, yy, zz)) continue;
+    g.set(xx, yy, zz, c, lit && K === 1); (g.struct ??= new Set()).add(xx + g.X * (yy + g.Y * zz));
+  }
+  const key = `${x0},${y0},${z0}`;
+  if (K !== 1) {
+    g.glowAt ??= new Map();
+    if (lit && g.ok(x0, y0, z0)) g.glowAt.set(key, [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, c]);
+    else g.glowAt.delete(key);
+  }
+}
+// clears a design voxel's cubes, sparing a structure's
+function clearAt(g, x, y, z) {
+  for (let zz = fine(z); zz < fine(z + 1); zz++) for (let yy = fine(y); yy < fine(y + 1); yy++) for (let xx = fine(x); xx < fine(x + 1); xx++) {
+    if (!g.struct?.has(xx + g.X * (yy + g.Y * zz))) g.clear(xx, yy, zz);
+  }
 }
 // no lone ground cubes (they read as moss stuck on a cliff)
 function despeckle(g, ground, rock) {
   for (let z = 0; z < g.Z; z++) for (let y = 0; y < g.Y; y++) for (let x = 0; x < g.X; x++) {
     if (g.get(x, y, z) !== ground) continue;
-    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => g.get(x + dx, y, z + dz) === ground)) g.set(x, y, z, rock);
+    const d = Math.max(1, fine(1));   // one design voxel away
+    if (![[d, 0], [-d, 0], [0, d], [0, -d]].some(([dx, dz]) => g.get(x + dx, y, z + dz) === ground)) g.set(x, y, z, rock);
   }
 }
 // a cottage with its gable to the front-left (+z): walls wx by wz, two high;
@@ -228,9 +285,11 @@ const SIGNATURE = {
     despeckle(g, B.ground, B.rock);
     cottage(g, 2, 4, 3, 4, y);
     // the stair: from the door's threshold, one down per step, carved into the shelves
-    for (let z = 8, h = y - 1; z < g.Z && h >= 0; z++, h--) {
-      for (let yy = h + 1; yy < g.Y; yy++) if (!g.struct?.has(3 + g.X * (yy + g.Y * z))) g.clear(3, yy, z);
-      for (let yy = 0; yy < h; yy++) if (!g.get(3, yy, z)) g.set(3, yy, z, Math.floor(yy / 3) % 2 ? B.rock2 : B.rock);
+    for (let z = 8, h = y - 1; z < 16 && h >= 0; z++, h--) {
+      for (let yy = h + 1; yy < 16; yy++) clearAt(g, 3, yy, z);
+      for (let zz = fine(z); zz < fine(z + 1); zz++) for (let xx = fine(3); xx < fine(4); xx++) {
+        for (let yy = 0; yy < fine(h); yy++) if (!g.get(xx, yy, zz)) g.set(xx, yy, zz, strata(yy, B.rock, B.rock2));
+      }
       put(g, 3, h, z, 0xfbeee0);
     }
     return g;
@@ -371,18 +430,22 @@ const SIGNATURE = {
   },
 };
 
-/** The peaks for a biome: its signature summit first, then its own landforms. */
+/**
+ * The peaks for a biome: its signature summit first, then its own landforms.
+ * make(k) builds one at k cubes per design voxel (1: as designed).
+ */
 export function peaksFor(p) {
   const B = biomeOf(p);
   const sig = SIGNATURE[p.name];
   const [fa, fb] = (FAMILY[p.name] ?? ['hills', 'domes']).map((f) => LANDFORM[f]);
   const cap = (g) => { tidy(g); caps(g, B.ground, { snow: 0xffffff, snowFrom: snowy[p.name] ?? Infinity }); return g; };
+  const at = (build) => (k = 1) => { K = k; try { return build(); } finally { K = 1; } };
   return [
-    { kind: 'signature', make: () => tidy(sig ? sig(B) : cap(fa(B, 0))) },
-    { kind: 'landform', make: () => cap(fa(B, 0)) },
-    { kind: 'landform', make: () => cap(fb(B, 1)) },
-    { kind: 'far', make: () => cap(fa(B, 2)) },
-    { kind: 'far', make: () => cap(fb(B, 2)) },
+    { kind: 'signature', make: at(() => tidy(sig ? sig(B) : cap(fa(B, 0)))) },
+    { kind: 'landform', make: at(() => cap(fa(B, 0))) },
+    { kind: 'landform', make: at(() => cap(fb(B, 1))) },
+    { kind: 'far', make: at(() => cap(fa(B, 2))) },
+    { kind: 'far', make: at(() => cap(fb(B, 2))) },
   ];
 }
 

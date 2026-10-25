@@ -305,7 +305,7 @@ export function dispose() {
  * ppv: CSS px per voxel. Returns { url, w, h } with w/h in CSS px and the
  * sprite's anchor (where its base centre sits) as ax/ay fractions.
  */
-export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze, tint = null, fade = 0 } = {}) {
+export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze, tint = null, fade = 0, el = 0.56 } = {}) {
   setup();
   const THREE_ = THREE;
   const [X, Y, Z] = [g.X, g.Y, g.Z];
@@ -321,8 +321,8 @@ export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze, tint = null
   cubes.uniforms.uTime.value = 10; cubes.uniforms.uReveal.value = 1; cubes.uniforms.uIntro.value = -99;
   cubes.uniforms.uPeel.value.set(0, 999, 1);
   if (!mesh.parent) scene.add(mesh);
-  // the game's iso view: azimuth 45 degrees, elevation 0.56 rad
-  const az = Math.PI / 4, el = 0.56;
+  // the game's iso view: azimuth 45 degrees, elevation 0.56 rad (el: another elevation)
+  const az = Math.PI / 4;
   const dir = new THREE_.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
   camera.position.copy(dir).multiplyScalar(200);
   camera.up.set(0, 1, 0);
@@ -347,13 +347,15 @@ export function renderVoxels(g, palette, { ppv = 4.2, dpr = 2, haze, tint = null
   out.width = Math.round(w * dpr); out.height = Math.round(h * dpr);
   const ctx = out.getContext('2d');
   ctx.drawImage(renderer.domElement, 0, 0);
-  if (g.glow.size) {
+  // (g.glowAt: glows of a finer grid, one per lit block of g.k cubes, at its centre)
+  const glows = g.glowAt ? [...g.glowAt.values()]
+    : [...g.glow].map((i) => { const x = i % X, y = Math.floor(i / X) % Y, z = Math.floor(i / (X * Y)); return [x + 0.5, y + 0.5, z + 0.5, g.v[i]]; });
+  if (glows.length) {
     ctx.globalCompositeOperation = 'lighter';
-    for (const i of g.glow) {
-      const x = i % X, y = Math.floor(i / X) % Y, z = Math.floor(i / (X * Y));
-      const v = new THREE_.Vector3(x + 0.5 - X / 2, y + 0.5 - Y / 2, z + 0.5 - Z / 2).project(camera);
-      const px = (v.x * 0.5 + 0.5) * out.width, py = (-v.y * 0.5 + 0.5) * out.height, r = ppv * dpr * 1.8;
-      const col = C(g.v[i]);
+    for (const [x, y, z, c] of glows) {
+      const v = new THREE_.Vector3(x - X / 2, y - Y / 2, z - Z / 2).project(camera);
+      const px = (v.x * 0.5 + 0.5) * out.width, py = (-v.y * 0.5 + 0.5) * out.height, r = ppv * (g.k ?? 1) * dpr * 1.8;
+      const col = C(c);
       const grad = ctx.createRadialGradient(px, py, 0, px, py, r);
       const rgb = `${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)}`;
       grad.addColorStop(0, `rgba(${rgb},.26)`); grad.addColorStop(1, `rgba(${rgb},0)`);

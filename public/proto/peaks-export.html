@@ -16,6 +16,14 @@
     import { peaksFor } from './peaks.js';
     const lum = (h) => (0.2126 * ((h >> 16) & 255) + 0.7152 * ((h >> 8) & 255) + 0.0722 * (h & 255)) / 255;
     const DPR = 2;
+    // A cube on the map is drawn the size of a cube in a stone's miniature
+    // (thumbs.js on a 64 px stone: ~4.7 px tall and 8 wide across the levels),
+    // so the mountains and the objects read as built of the same blocks. Each
+    // peak keeps its size on the map (its design px per voxel, ppv) and is
+    // built in finer cubes to suit: k = ppv / CUBE cubes per design voxel.
+    const CUBE = 5;                       // px per cube edge (screen width of a cube: 1.41x)
+    // and the miniatures' view: true isometric, 35.3 degrees down (the block shader's own is 0.56 rad)
+    const EL = Math.atan(Math.SQRT1_2);
     const load = (url) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.src = url; });
     window.exportPeaks = async () => {
       const out = {};
@@ -25,7 +33,8 @@
         const want = [['sig', 0, 10, 0], ['lf1', 1, 7.5, 0], ['lf2', 2, 7.5, 0], ['far3', 3, 4.5, far], ['far4', 4, 4.5, far], ['ghost1', 1, 6, 0.2], ['ghost2', 2, 6, 0.2]];
         const parts = [];
         for (const [key, i, ppv, tint] of want) {
-          const r = renderVoxels(list[i % list.length].make(), p, { haze, ppv, fade: 0.5, tint: tint ? { color: mist, amount: tint } : null, dpr: DPR });
+          const k = Math.max(1, ppv / CUBE);
+          const r = renderVoxels(list[i % list.length].make(k), p, { haze, ppv: ppv / k, el: EL, fade: 0.5, tint: tint ? { color: mist, amount: tint } : null, dpr: DPR });
           parts.push({ key, r, img: await load(r.url) });
         }
         // one row, 2 px apart
