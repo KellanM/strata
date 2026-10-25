@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
-import { Puzzle, setClues, lineFits } from './puzzle.js';
+import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
@@ -728,8 +728,9 @@ const NUDGE_LESSON = 10;
 const LESSON_PAYOFF = 3.6, LESSON_TAP_AFTER = 1.8;
 let lessonNext = null;    // while a solved lesson is on show: move on now (if it's been long enough)
 
-function startTutorial(step = 0) {
-  tutorial = { step, hint: 0, open: !TUTORIAL[step].hints[0]?.wait };
+// single: one lesson replayed from the Learn stone's list; solved, it goes back to the map
+function startTutorial(step = 0, { single = false } = {}) {
+  tutorial = { step, hint: 0, open: !TUTORIAL[step].hints[0]?.wait, single };
   const lesson = TUTORIAL[step];
   const palette = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
   startPuzzle({ shape: lesson, palette, number: null, lesson: step + 1 });
@@ -744,7 +745,27 @@ function resetCoaching(entry, quiet) {
   if (!quiet && !entry.lesson && entry.number === 1 && !solvedStore[entry.shape.id]) {
     coachCard = { text: 'Numbers now sit on three faces. Each counts the object’s cubes in its row: across, down or back.', until: 'break' };
   }
+  // else, once ever, a word the first time a mark the lessons taught turns up
+  // in a level (docs/help-access-study.md): the notation needs a legend where
+  // it is met, and then it steps back for good
+  if (!quiet && !entry.lesson && !coachCard && game?.puzzle && !entry.shape.id.startsWith('random')) {
+    const seen = new Set(JSON.parse(localStorage.getItem('strata.reminded') || '[]'));
+    const r = REMINDERS.find((m) => !seen.has(m.key) && m.test(game.puzzle));
+    if (r) {
+      seen.add(r.key);
+      localStorage.setItem('strata.reminded', JSON.stringify([...seen]));
+      coachCard = { text: r.text, until: 'break' };
+    }
+  }
 }
+const REMINDERS = [
+  { key: 'circle', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_CIRCLE),
+    text: 'A circled number: that row’s cubes are in two groups, with a gap between.' },
+  { key: 'square', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_SQUARE),
+    text: 'A square: that row’s cubes are in three groups or more.' },
+  { key: 'blank', test: (p) => [0, 1, 2].some((ax) => { const ls = p.lines.filter((l) => l.axis === ax); return ls.length && ls.every((l) => l.hidden); }),
+    text: 'One face shows no numbers at all. The other two are enough.' },
+];
 
 // a mouse has no hold: its other tool is a right-click, so a hint may say so
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -769,11 +790,12 @@ function tutorialEvent(kind) {
     tutorial.hint = TUTORIAL[tutorial.step].hints.length;   // past the last hint
     tutorial.open = true;
     renderCoach();
-    const g = game, step = tutorial.step, t0 = now();
+    const g = game, step = tutorial.step, single = tutorial.single, t0 = now();
     const go = () => {
       if (game !== g || lessonNext !== next) return;
       lessonNext = null;
-      if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
+      if (single) { tutorial = null; renderCoach(); openMenu(); }
+      else if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
       else finishTutorial();
     };
     const next = () => { if (now() - t0 >= LESSON_TAP_AFTER) go(); };
@@ -1181,6 +1203,7 @@ function restartLevel() {
 pauseEl.addEventListener('click', (e) => {
   const what = e.target.closest('[data-pause]')?.dataset.pause;
   if (what === 'restart') restartLevel();
+  else if (what === 'rules') { helpFrom = 'pause'; show('#pause', false); renderSupport(); helpTab(0); show('#help', true); }   // the clock stays stopped
   else if (what === 'map') { closePause(); saveProgress(); openMenu(); }
   else if (what === 'resume' || !e.target.closest('button')) closePause();   // or a tap anywhere else
 });
@@ -1189,7 +1212,28 @@ window.addEventListener('keydown', (e) => {
   e.stopImmediatePropagation();
   closePause();
 }, true);
-$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); show('#help', true); });
+let helpFrom = null;   // 'pause' while How to play was opened from the pause: closing it goes back there
+$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); helpFrom = null; helpTab(2); show('#help', true); });
+
+// The Learn stone's long press: the twelve lessons, to replay just one (docs/help-access-study.md)
+function openLessons(fromEl) {
+  let el = $('#lessons');
+  if (!el) {
+    el = document.createElement('section');
+    el.id = 'lessons'; el.className = 'overlay'; el.setAttribute('aria-label', 'Lessons');
+    document.body.appendChild(el);
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-lesson]');
+      if (b) { show('#lessons', false); const k = +b.dataset.lesson; diveInto(fromEl ?? b, PALETTES[0], () => startTutorial(k, { single: true })); }
+      else if (e.target.closest('[data-close]') || e.target === el) show('#lessons', false);
+    });
+  }
+  el.innerHTML = `<div class="panel narrow lessons-panel"><h2>Lessons</h2><ol class="lesson-list">${TUTORIAL.map((l, k) =>
+    `<li><button data-lesson="${k}"><span class="n">${String(k + 1).padStart(2, '0')}</span><span class="nm">${l.name}</span></button></li>`).join('')}</ol>
+    <button class="primary" data-close>Close</button></div>`;
+  show('#lessons', true);
+  buzz(12);
+}
 
 // every level and bonus stone, each in its chapter's palette for the journal
 function journalEntries() {
@@ -1213,11 +1257,16 @@ window.addEventListener('keydown', (e) => {
   e.stopImmediatePropagation();   // don't also close the map beneath
   if (viewOpen()) closeView(); else closeJournal();
 }, true);
-$('#help [data-close]').addEventListener('click', () => show('#help', false));
+$('#help [data-close]').addEventListener('click', () => {
+  show('#help', false);
+  if (helpFrom === 'pause' && game?.pausedAt != null) show('#pause', true);
+  helpFrom = null;
+});
 // How to play's pages; a mouse reads "right-click" where a finger reads "hold"
 const helpTabs = [...document.querySelectorAll('#help [role="tab"]')];
 function helpTab(k) {
   $('#help .tabs').dataset.tab = k;
+  $('#help h2').textContent = k === 2 ? 'Settings' : 'How to play';
   helpTabs.forEach((t, i) => {
     t.setAttribute('aria-selected', i === k);
     const page = $('#' + t.getAttribute('aria-controls'));
@@ -1391,6 +1440,7 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
     scroll,
     celebrate,
     onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0)),
+    onLearnList: (el) => openLessons(el),
     onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
     onPlay: (entry, el) => { closeOffer(); diveInto(el, entry.palette, () => startPuzzle(entry)); },
     openedShrines: ads.openedShrines(),

@@ -988,11 +988,18 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
   border: 1.5px solid var(--ink); color: var(--ink); background: color-mix(in srgb, var(--sky, #f7dccb) 40%, transparent);
   transition: transform .25s cubic-bezier(.2,.9,.3,1.4), background .3s; }
 .pause-resume svg { width: 34px; height: 34px; margin-left: 4px; fill: currentColor; stroke-width: 1.2; }
-.pause-row { display: flex; justify-content: center; gap: 36px; margin-top: 30px; }
+.pause-row { display: flex; justify-content: center; gap: 14px; margin-top: 30px; }
 .pause-row button { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 92px; padding: 4px 0;
   color: var(--ink); }
 .pause-row svg { width: 52px; height: 52px; padding: 14px; border-radius: 50%; border: 1px solid var(--line);
   transition: background .3s, color .3s, border-color .3s, transform .25s cubic-bezier(.2,.9,.3,1.4); }
+.lesson-list { list-style: none; margin: 6px 0 18px; padding: 0; columns: 2; column-gap: 18px; }
+.lesson-list li { break-inside: avoid; }
+.lessons-panel { text-align: center; }
+.lessons-panel .primary { display: block; margin: 0 auto; }
+.lesson-list button { display: flex; gap: 10px; align-items: baseline; width: 100%; padding: 9px 2px; text-align: left; color: var(--ink); border-bottom: 1px solid var(--line); }
+.lesson-list .n { font-size: 10px; letter-spacing: .2em; color: var(--ink-soft); }
+.lesson-list .nm { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
 .pause-label { font-size: 11px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; transition: color .3s; }
 .pause-resume:active, .pause-row button:active svg { transform: scale(.92); }
 /* "Start over?" asks in the same quiet voice: the ring fills, nothing turns red */

@@ -429,7 +429,12 @@ export function renderMap(root, opts) {
     if (n.kind === 'learn') {
       num = '00'; name = 'Learn'; meta = `${lessons} lessons`;
       b.setAttribute('aria-label', `Learn: ${lessons} short lessons${learned ? ', completed' : ''}`);
-      b.addEventListener('click', () => opts.onLearn(b));
+      // a tap begins the lessons; a long press lists them, to replay just one
+      let held = false, timer = 0;
+      b.addEventListener('pointerdown', () => { held = false; clearTimeout(timer); timer = setTimeout(() => { held = true; opts.onLearnList?.(b); }, 520); });
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => clearTimeout(timer));
+      b.addEventListener('contextmenu', (e) => e.preventDefault());
+      b.addEventListener('click', () => { if (held) { held = false; return; } opts.onLearn(b); });
     } else if (n.kind === 'drift') {
       num = ''; name = `${n.n}³`; meta = 'drift';
       b.setAttribute('aria-label', `Drift: random ${n.n} by ${n.n} by ${n.n} puzzle`);
