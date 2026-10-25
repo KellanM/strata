@@ -451,7 +451,7 @@ export function renderMap(root, opts) {
       if (s) {
         // the stone has become the thing it was hiding
         const fresh = celebrate && !seenObjects.has(shape.id);
-        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}">`;
+        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<img class="obj" alt="" src="${renderThumb(shape, p, { size: 120, glow: true })}">`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
       b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +

@@ -63,7 +63,7 @@ export function renderJournal(root, { entries, solved }) {
         const n = recordStars(e.shape, rec);
         b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"></span><span class="nm">${esc(e.shape.name)}</span>${gems(n)}`;
         b.setAttribute('aria-label', `${e.shape.name}, ${n} of 3 gems`);
-        Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
+        Promise.resolve(renderThumb(e.shape, e.palette, { size: 120, glow: true })).then((url) => { b.querySelector('img').src = url; });
         b.addEventListener('click', () => openView(root, e, n));
       } else {
         b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? 'shrine' : '&nbsp;'}</span>`;
