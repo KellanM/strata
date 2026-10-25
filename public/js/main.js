@@ -1,4 +1,4 @@
-import { haptic } from './native.js';
+import { haptic, nativeApp as inStoreApp } from './native.js';
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
 import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
@@ -1950,6 +1950,7 @@ function renderDevAds() {
 // checks for updates), or tap the map's STRATA title five times.
 const devPress = { timer: 0, opened: false };
 function openDev() {
+  if (inStoreApp) return;   // the developer panel is for the web build only (the store app has no back door)
   devPress.opened = true;
   $('#dev-unlock-state').textContent = localStorage.getItem('strata.dev.unlock') === '1' ? 'on' : 'off';
   $('#dev .dev-version').textContent = $('#version').textContent;
