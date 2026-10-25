@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { Swarm, Trails, rng } from './swarm.js';
 import { Sound } from './sound.js';
+import { PALETTES } from '../palettes.js';
 
 export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -22,26 +23,25 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
   const CAM_Z = 24;
   // the camera's height on the wall, and at rest: only a little way up, so the
-  // wall's mossy top stays in view at the foot of the sky, a horizon under the name
+  // wall's top stays in view at the foot of the sky, a horizon under the name
   const CAM_FROM = 0.5, CAM_TO = 9;
   const scene = new THREE.Scene();
   const swarmScene = new THREE.Scene();
 
   // ---------------------------------------------------------------- the wall
-  // Old stone, a little uneven, a ruined top edge with moss. Lit by the night
-  // and by whatever light is near it (the glowing cube, then the rising swarm).
-  const STONE = [0xb4a998, 0xa89d8c, 0xbdb3a3, 0x9c9282];
+  // A low wall of the game's own stone (Kellan, 2026-10-24): coloured as a
+  // level's block is (palettes.js Dawn: a face's colour by the way it faces),
+  // level along its top, the glowing stone resting there. Lit by the night and
+  // by whatever light is near it (the glowing cube, then the rising swarm).
+  const P = PALETTES[0];
   const TOP = 1;   // the top row of stones
-  // the glowing stone rests on the wall's mossy top (Kellan, 2026-10-24), not set into it
   const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
   const rand = rng(11);
   const cells = [];
   for (let x = -8; x <= 8; x++) {
-    // the wall stops all at once, level, and the moss has taken its top (the shader)
     for (let y = -22; y <= TOP; y++) {
-      if (x === CUBE_AT.x && y === CUBE_AT.y) continue;
       const z = (rand() - 0.5) * 0.18 + (rand() < 0.06 ? 0.28 : 0) - (rand() < 0.05 ? 0.3 : 0);
-      const c = new THREE.Color(STONE[rand() * 4 | 0]).multiplyScalar(0.94 + rand() * 0.1);
+      const c = new THREE.Color(1, 1, 1).multiplyScalar(0.93 + rand() * 0.1);   // each stone a touch lighter or darker
       cells.push([x, y, z, c]);
     }
   }
@@ -52,7 +52,8 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
       uLc: { value: [new THREE.Color(1, 0.72, 0.42), new THREE.Color(1, 0.86, 0.66)] },
       uLi: { value: [0, 0] },
       uMoon: { value: 1 },
-      uTop: { value: TOP + 0.485 },   // the top faces' height
+      uTopC: { value: new THREE.Color(P.top) }, uLitC: { value: new THREE.Color(P.lit) },
+      uShadeC: { value: new THREE.Color(P.shade) }, uUnderC: { value: new THREE.Color(P.under) },
     },
     vertexShader: /* glsl */`
       varying vec3 vN, vW, vC; varying vec2 vUv;
@@ -62,24 +63,15 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
         gl_Position = projectionMatrix * viewMatrix * w;
       }`,
     fragmentShader: /* glsl */`
-      uniform vec3 uL[${MAX_LIGHTS}]; uniform vec3 uLc[${MAX_LIGHTS}]; uniform float uLi[${MAX_LIGHTS}]; uniform float uMoon, uTop;
+      uniform vec3 uL[${MAX_LIGHTS}]; uniform vec3 uLc[${MAX_LIGHTS}]; uniform float uLi[${MAX_LIGHTS}]; uniform float uMoon;
+      uniform vec3 uTopC, uLitC, uShadeC, uUnderC;
       varying vec3 vN, vW, vC; varying vec2 vUv;
-      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
       void main() {
         vec3 n = normalize(vN);
-        // moss: a deep cushion over the tops, creeping down the faces in an
-        // uneven, soft-edged fringe; darker and greener where it is thick
-        float along = vW.x * 1.7 + vW.z * 2.3;
-        float reach = 0.28 + 0.55 * noise(vec2(along, 0.5)) + 0.25 * noise(vec2(along * 3.1, 4.0));
-        float below = uTop - vW.y;
-        float m = n.y > 0.5 && vW.y > uTop - 0.1 ? 1.0 : smoothstep(reach + 0.06, reach - 0.06, below);
-        float tuft = noise(vW.xz * 6.0 + vW.y * 3.0);
-        vec3 moss = mix(vec3(0.30, 0.42, 0.22), vec3(0.47, 0.60, 0.33), tuft) * (0.85 + 0.25 * m);
-        vec3 base = mix(vC, moss, m);
+        // the block's colour script: tops pale, the faces toward us warm, the sides in shade
+        vec3 base = (n.y > 0.5 ? uTopC : n.y < -0.5 ? uUnderC : abs(n.z) > 0.5 ? uLitC : uShadeC) * vC;
         // the night: a cool, low fill, a little brighter on tops (the sky's light)
-        vec3 col = base * vec3(0.10, 0.11, 0.21) * (0.75 + 0.5 * max(n.y, 0.0)) * uMoon;
+        vec3 col = base * vec3(0.13, 0.13, 0.24) * (0.8 + 0.5 * max(n.y, 0.0)) * uMoon;
         for (int i = 0; i < ${MAX_LIGHTS}; i++) {
           vec3 d = uL[i] - vW; float r = length(d);
           float ndl = max(dot(n, d / r), 0.0) * 0.8 + 0.2;
@@ -87,9 +79,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
         }
         // carved edges: each block reads as its own stone
         vec2 e = min(vUv, 1.0 - vUv); float edge = smoothstep(0.0, 0.09, min(e.x, e.y));
-        col *= mix(0.62 + 0.38 * edge, 0.9 + 0.1 * edge, m);   // moss softens the stones' carved edges
-        // the sky's light on the moss's top: a cool sheen, so the cushion reads at night
-        col += moss * m * (0.16 + 0.14 * tuft) * max(n.y, 0.0) * uMoon + moss * m * 0.05;
+        col *= 0.62 + 0.38 * edge;
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
