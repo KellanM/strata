@@ -1061,3 +1061,6 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 .sim-buy.in { opacity: 1; }
 .sim-buy .offer-card { width: min(330px, 100%); }
 .sim-buy .sim-label { display: inline-block; margin-bottom: 12px; color: var(--ink-soft); border-color: var(--line); font-size: 10px; }
+
+/* the store app (js/native.js): no purchases in version 1, no web install prompt */
+.native-app #support, .native-app #install { display: none !important; }

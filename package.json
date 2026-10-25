@@ -7,9 +7,17 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test test/*.test.js",
-    "build": "node tools/build.mjs"
+    "build": "node tools/build.mjs",
+    "build:app": "node tools/build.mjs --app && npx cap sync ios"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/preferences": "^8.0.1",
     "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
   }
 }

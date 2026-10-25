@@ -22,6 +22,7 @@
 // test/ads.test.js runs it in node without a DOM.
 
 import { webProvider } from './ads-web.js';
+import { noAdsBuild } from './native.js';   // version 1 in the stores: no ads, no purchases; every gift is free
 
 // All the tuning numbers, in one place. Every one is a guess to be set from
 // the store build's own data (docs/ads-study.md, the hit list).
@@ -164,7 +165,7 @@ const noneProvider = {
 let provider = webProvider;
 export function setProvider(p) { provider = p; }
 
-export const enabled = () => store()?.getItem(KEY_OFF) !== '1';
+export const enabled = () => !noAdsBuild && store()?.getItem(KEY_OFF) !== '1';
 export function setEnabled(on) { store()?.setItem(KEY_OFF, on ? '0' : '1'); }
 const active = () => (enabled() ? provider : noneProvider);
 
@@ -186,7 +187,7 @@ export function log(event, placement, extra = {}) {
 
 // ---------------------------------------------------------------- the game's API
 
-export function adsRemoved() { return store()?.getItem(KEY_REMOVED) === '1'; }
+export function adsRemoved() { return noAdsBuild || store()?.getItem(KEY_REMOVED) === '1'; }
 
 // May this placement run now? Interstitials: every cap. Rewarded: a loaded ad
 // (a taken-back slip's own cap is asked through rewindOffer()).

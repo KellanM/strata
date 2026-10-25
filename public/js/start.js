@@ -1,0 +1,7 @@
+// The game's entry: in the store app, saves are restored from the app's own
+// storage first (js/native.js), so the game never reads an empty localStorage;
+// on the web this is immediate.
+import { restoreSaves } from './native.js';
+
+await restoreSaves();
+await import('./main.js');

@@ -13,6 +13,8 @@ const three = join(root, 'node_modules/three');
 
 rmSync(dist, { recursive: true, force: true });
 cpSync(join(root, 'public'), dist, { recursive: true });
+// the store app (--app): the developer pages (object gallery, prototypes) stay on the web
+if (process.argv.includes('--app')) for (const dir of ['gallery', 'proto']) rmSync(join(dist, dir), { recursive: true, force: true });
 for (const f of ['build/three.module.min.js', 'build/three.core.min.js', 'examples/jsm/controls/OrbitControls.js']) {
   const out = join(dist, 'vendor/three', f);
   mkdirSync(join(out, '..'), { recursive: true });

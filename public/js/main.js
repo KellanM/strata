@@ -1,3 +1,4 @@
+import { haptic } from './native.js';
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
 import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
@@ -489,6 +490,7 @@ if (iosHaptics) {
   document.addEventListener('click', flushTick, { capture: true });
 }
 function buzz(pattern) {
+  if (haptic(pattern)) return;   // the store app: the phone's own haptics (native.js)
   if (navigator.vibrate) { navigator.vibrate(pattern); return; }
   if (!iosHaptics) return;
   const type = window.event?.type;
