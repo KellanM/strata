@@ -53,7 +53,14 @@
       letter-spacing: -.01em; opacity: 0; white-space: nowrap; transform: translateY(8px);
       animation: rock-name .9s cubic-bezier(.2, .8, .2, 1) 1.25s forwards; }
     @keyframes rock-name { to { opacity: 1; transform: none; } }
-    #splash.quick * { animation-duration: .01s !important; animation-delay: 0s !important; }
+    /* a quick relaunch (an update's reload): just black, fading up into the game */
+    #splash.quick .mark { display: none; }
+    /* Leaving the app, the screen goes black first: iOS shows its last snapshot
+       of a home-screen app while it relaunches, and that snapshot should be
+       black (then the card animates in) rather than the old page popping up.
+       Coming back, the black lifts gently. */
+    #shroud { position: fixed; inset: 0; z-index: 1001; background: #000; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+    #shroud.on { opacity: 1; transition: none; }
     @media (prefers-reduced-motion: reduce) { #splash * { animation-duration: .01s !important; animation-delay: 0s !important; } }
   </style>
   <link rel="preload" href="fonts/fredoka-splash.woff2" as="font" type="font/woff2" crossorigin>
@@ -70,6 +77,7 @@
 <body class="title-up world-up">
   <!-- Unsupervised Rock: a pet rock with googly eyes, left to its own devices
        (silicon is rock, and the game was made by AI running unsupervised) -->
+  <div id="shroud" aria-hidden="true"></div>
   <div id="splash" role="img" aria-label="Unsupervised Rock">
     <div class="mark">
       <svg viewBox="0 0 120 100" aria-hidden="true">
@@ -90,6 +98,13 @@
     // when the card began (main.js holds it at least its length); a second
     // launch in the same session (an update's reload) skips the animation
     window.splashT0 = performance.now();
+    document.addEventListener('visibilitychange', () => {
+      const s = document.getElementById('shroud');
+      if (document.hidden) s.classList.add('on');
+      else requestAnimationFrame(() => requestAnimationFrame(() => s.classList.remove('on')));
+    });
+    window.addEventListener('pagehide', () => document.getElementById('shroud').classList.add('on'));
+    window.addEventListener('pageshow', () => requestAnimationFrame(() => document.getElementById('shroud').classList.remove('on')));
     try {
       if (sessionStorage.getItem('strata.splash') || /[?&]nosplash/.test(location.search)) document.getElementById('splash').classList.add('quick');
       sessionStorage.setItem('strata.splash', '1');
