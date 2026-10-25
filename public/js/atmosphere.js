@@ -323,12 +323,14 @@ export class Ash {
     this.life = new Float32Array(capacity).fill(1);
     this.state = new Float32Array(capacity * 2);  // fade (0..1), heat (1 hot .. 0 cooled)
     this.seeds = new Float32Array(capacity * 4);  // twinkle rate, phase, size, warmth
+    this.tint = new Float32Array(capacity * 3);   // the colour of the stone it came from
     this.alive = 0;
     this.awake = false;   // anything in the air (or about to be); asleep, step() does nothing
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('aState', new THREE.BufferAttribute(this.state, 2).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('aSeed', new THREE.BufferAttribute(this.seeds, 4).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aTint', new THREE.BufferAttribute(this.tint, 3).setUsage(THREE.DynamicDrawUsage));
     this.geo = geo;
     this.uniforms = {
       uTime: { value: 0 }, uUnitPx: { value: 30 }, uPale: { value: 0 },
@@ -340,8 +342,10 @@ export class Ash {
       vertexShader: /* glsl */ `
         attribute vec2 aState;   // fade, heat
         attribute vec4 aSeed;    // twinkle rate, phase, size, warmth
+        attribute vec3 aTint;
         uniform float uTime, uUnitPx;
         varying float vB, vSpike, vRot;
+        varying vec3 vTint;
         void main() {
           if (aState.x <= 0.0) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
           float ph = aSeed.y * 6.2832, age = -log(max(aState.y, 1e-4)) / 2.2;
@@ -352,6 +356,8 @@ export class Ash {
           // the cross flare: always faint on the big ones, full while glinting
           vSpike = (0.25 + 0.75 * glint) * smoothstep(0.7, 1.3, aSeed.z) + 0.5 * glint;
           vRot = ph + age * mix(-2.5, 2.5, aSeed.x);
+          // the stone's own colour, lit from within: mostly white, a breath of its tint
+          vTint = mix(vec3(1.0), aTint, 0.38);
           // it pops into being (a quick overshoot), and twinkles small as it goes
           float pop = smoothstep(0.0, 0.05, age) * (1.0 + 0.7 * exp(-age * 9.0));
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -361,6 +367,7 @@ export class Ash {
         uniform float uPale;
         uniform vec3 uCool;
         varying float vB, vSpike, vRot;
+        varying vec3 vTint;
         void main() {
           vec2 q = gl_PointCoord * 2.0 - 1.0;
           float d2 = dot(q, q);
@@ -374,10 +381,10 @@ export class Ash {
           if (uPale > 0.5) {
             // over a pale sky white needs an edge: a faint soft shadow of the sky's shade under it
             float shade = 0.22 * exp(-d2 * 3.5) * vB;
-            vec3 col = mix(uCool, vec3(1.0), clamp(a / max(a + shade, 1e-3) * 1.4, 0.0, 1.0));
+            vec3 col = mix(uCool, vTint, clamp(a / max(a + shade, 1e-3) * 1.4, 0.0, 1.0));
             gl_FragColor = vec4(col, min(1.0, a + shade));
           } else {
-            gl_FragColor = vec4(vec3(1.0) * a, a);
+            gl_FragColor = vec4(vTint * a, a);
           }
         }`,
     }));
@@ -398,7 +405,7 @@ export class Ash {
 
   // one cube's worth. `toward`: the way the touch came from (out of the tapped
   // face); the motes splash out that way in a cone, then the air takes them up
-  burst(center, count = 22, toward = null) {
+  burst(center, count = 22, toward = null, tint = null) {
     const phase = Math.random() * 20;
     for (let k = 0; k < count; k++) {
       const i = this.next++ % this.capacity, i3 = i * 3;
@@ -417,8 +424,10 @@ export class Ash {
       this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
       this.life[i] = 0.55 + Math.random() * 0.55;   // brief: a quick puff, gone in about a second
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
+      if (tint) this.tint.set([tint.r, tint.g, tint.b], i3); else this.tint.fill(1, i3, i3 + 3);
     }
     this.geo.attributes.aSeed.needsUpdate = true;
+    this.geo.attributes.aTint.needsUpdate = true;
     this.awake = true;
     this.geo.setDrawRange(0, this.capacity);
   }

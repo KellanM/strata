@@ -563,7 +563,7 @@ function act(i, which) {
   shards.burst(cellWorld(i), t, [c(p.top), c(p.lit), c(p.top)], reduceMotion ? 2 : 3, 0.3,
     { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
   // and its ash splashes out of the face that was touched, then rises
-  if (!reduceMotion) ash.burst(cellWorld(i), 30, from.clone().sub(cellWorld(i)).normalize());
+  if (!reduceMotion) ash.burst(cellWorld(i), 30, from.clone().sub(cellWorld(i)).normalize(), c(p.lit));
   rayBoost = Math.max(rayBoost, 0.35);
   buzz(12);
   const pz = game.puzzle;
