@@ -283,14 +283,15 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
   let camY = CAM_FROM;
   const sound = new Sound();
-  swarm.onSettle = () => sound.star();
+  let quiet = false;   // finish() runs the clock forward in silence
+  swarm.onSettle = () => { if (!quiet) sound.star(); };
 
   function open() {
     if (tapAt !== null) return;
     tapAt = simT;
     swarm.release(simT + 0.35);
     hint?.classList.remove('show');
-    sound.open(2.5);   // about the story's average pace over the swell
+    if (!quiet) sound.open(2.5);   // about the story's average pace over the swell
   }
 
   function layout() {
