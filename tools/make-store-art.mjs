@@ -18,8 +18,8 @@ const mark = `<svg viewBox="0 0 120 100" width="520" height="433">
   <path fill="#d8d3ca" d="M86 55c4 2 6 5 5 8-2-2-4-3-7-4 1-1 2-2 2-4z"/>
   <circle fill="#fff" stroke="#111" stroke-width="1.6" cx="49" cy="66" r="10"/>
   <circle fill="#fff" stroke="#111" stroke-width="1.6" cx="73" cy="64" r="8.5"/>
-  <circle fill="#111" cx="46.6" cy="68.6" r="4.6"/>
-  <circle fill="#111" cx="75.2" cy="62" r="4"/>
+  <circle fill="#111" cx="49" cy="70.5" r="4.6"/>
+  <circle fill="#111" cx="73" cy="67.6" r="4"/>
 </svg>`;
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 try {

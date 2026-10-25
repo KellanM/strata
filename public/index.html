@@ -24,29 +24,14 @@
       src: url(fonts/fredoka-splash.woff2) format("woff2"); }   /* only the name's letters (2 KB) */
     #splash svg { width: 150px; height: 125px; overflow: visible; }
     #splash svg * { stroke: none !important; }   /* style.css strokes the HUD's icons */
-    /* a pet rock: it drops in and settles, its googly eyes jiggling as it lands;
-       then (unsupervised) it gives one small wobble of its own, and the eyes
-       rattle again and come to rest looking two different ways */
-    #splash .rock { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%;
-      animation: rock-set .9s cubic-bezier(.2, .8, .25, 1) .25s forwards, rock-wobble 1s ease-in-out 1.45s; }
-    @keyframes rock-set { 0% { opacity: 0; transform: translateY(-14px) scale(.95, 1.05); }
-      55% { opacity: 1; transform: translateY(1px) scale(1.03, .97); } 100% { opacity: 1; transform: none; } }
-    @keyframes rock-wobble { 0% { opacity: 1; transform: none; } 25% { opacity: 1; transform: rotate(-6deg); }
-      55% { opacity: 1; transform: rotate(4deg); } 80% { opacity: 1; transform: rotate(-1.2deg); } 100% { opacity: 1; transform: none; } }
+    /* a pet rock, moved by a small physics simulation (the script after the
+       card): it falls, squashes, bounces and rocks on its round bottom; each
+       googly pupil is a loose weight inside its eye. Here only its pivot. */
+    #splash .rock { opacity: 0; transform-box: view-box; transform-origin: 60px 94px; }
     #splash .body { fill: #f1eee8; }
     #splash .shade { fill: #d8d3ca; }
     #splash .eye { fill: #fff; stroke: #111 !important; stroke-width: 1.6; }
     #splash .pupil { fill: #111; }
-    #splash .pl { animation: googly-l 2.4s linear .7s forwards; }
-    #splash .pr { animation: googly-r 2.4s linear .7s forwards; }
-    @keyframes googly-l { 0% { transform: translate(0, 3px); } 8% { transform: translate(-3px, -2px); } 16% { transform: translate(3px, 1px); }
-      24% { transform: translate(-2px, 2px); } 32% { transform: translate(1px, -1px); } 40% { transform: translate(-1px, 2.5px); }
-      52% { transform: translate(3px, -2px); } 62% { transform: translate(-3px, 1px); } 72% { transform: translate(1.5px, 2.5px); }
-      84% { transform: translate(-2px, 2px); } 100% { transform: translate(-2.4px, 2.6px); } }
-    @keyframes googly-r { 0% { transform: translate(0, 3px); } 8% { transform: translate(3px, -1px); } 16% { transform: translate(-3px, 2px); }
-      24% { transform: translate(2px, -2px); } 32% { transform: translate(-1px, 1px); } 40% { transform: translate(1.5px, 2px); }
-      52% { transform: translate(-3px, -1px); } 62% { transform: translate(2.5px, 2px); } 72% { transform: translate(-1px, -2.5px); }
-      84% { transform: translate(2px, -1.5px); } 100% { transform: translate(2.2px, -2px); } }
     /* the name: a chunky, friendly lowercase wordmark, as studio marks are
        (ustwo, Supercell, Nintendo): set tight, not spaced out */
     #splash .name { margin: 0; color: #fff; font: 600 30px/1 "Splash Fredoka", "Avenir Next", "Segoe UI", system-ui, sans-serif;
@@ -109,6 +94,89 @@
       if (sessionStorage.getItem('strata.splash') || /[?&]nosplash/.test(location.search)) document.getElementById('splash').classList.add('quick');
       sessionStorage.setItem('strata.splash', '1');
     } catch (e) { /* private mode */ }
+  </script>
+  <script>
+    // The pet rock's physics, simulated once up front (a few ms) and played
+    // back as Web Animations, which keep running smoothly while the game boots.
+    // Units are the SVG's; the rock's pivot is the middle of its flat bottom.
+    (() => {
+      const card = document.getElementById('splash');
+      if (!card || card.classList.contains('quick')) return;
+      const rock = card.querySelector('.rock'), pupils = [...card.querySelectorAll('.pupil')];
+      const eyes = [...card.querySelectorAll('.eye')].map((e) => ({ x: +e.getAttribute('cx'), y: +e.getAttribute('cy'), R: +e.getAttribute('r') }));
+      const PX = 60, PY = 94, G = 1400, DT = 1 / 480, END = 3.2, START = 0.2;
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // the rock: height above its rest (y < 0 is up), with a stiff, damped
+      // ground below it (the give is the squash); rocking on its round bottom
+      // is a damped pendulum, kicked a little as it lands and once more, a
+      // moment later, by nobody (it is unsupervised)
+      let y = -42, vy = 0, th = 0, w = 0, landed = false, kicked = false;
+      const K = 9000, C = 66, ROCK = 80, DAMP = 3.2;
+      // each pupil: a loose weight in the world, held inside its eye's rim
+      const P = pupils.map((el, k) => ({ el, r: +el.getAttribute('r'), x: eyes[k].x, y: eyes[k].y + y, vx: 0, vy: 0, L: eyes[k].R - +el.getAttribute('r') - 0.9 }));
+      const pose = () => {
+        const ry = Math.min(y, 0), squash = y > 0 ? Math.max(0.8, 1 - y / 36) : 1, sx = 1 + (1 - squash) * 0.7;
+        return { ry, sx, sy: squash, c: Math.cos(th), s: Math.sin(th) };
+      };
+      // a point of the rock (its own coordinates) in the world, and back
+      const toWorld = (q, lx, ly) => {
+        const dx = (lx - PX) * q.sx, dy = (ly - PY) * q.sy;
+        return [PX + q.c * dx - q.s * dy, PY + q.ry + q.s * dx + q.c * dy];
+      };
+      const toLocal = (q, wx, wy) => {
+        const dx = wx - PX, dy = wy - PY - q.ry;
+        return [PX + (q.c * dx + q.s * dy) / q.sx, PY + (-q.s * dx + q.c * dy) / q.sy];
+      };
+      const frames = { rock: [], pupils: P.map(() => []) };
+      let prevEye = null;
+      for (let t = 0, n = 0; t <= END + 1e-9; t += DT, n++) {
+        // the rock
+        vy += G * DT;
+        if (y > 0) vy += (-K * y - C * vy) * DT;
+        y += vy * DT;
+        if (!landed && y > 0) { landed = true; w += 0.9; }
+        if (!kicked && t > 1.25) { kicked = true; w -= 1.5; }
+        w += (-ROCK * th - DAMP * w) * DT; th += w * DT;
+        const q = pose();
+        // the pupils: gravity, a little drag against the eye's backing, the rim
+        const eyeNow = eyes.map((e) => toWorld(q, e.x, e.y));
+        P.forEach((p, k) => {
+          const [ex, ey] = eyeNow[k];
+          const evx = prevEye ? (ex - prevEye[k][0]) / DT : 0, evy = prevEye ? (ey - prevEye[k][1]) / DT : 0;
+          p.vy += G * DT;
+          const drag = 1 - Math.exp(-DT * 2.5);
+          p.vx += (evx - p.vx) * drag; p.vy += (evy - p.vy) * drag;
+          p.x += p.vx * DT; p.y += p.vy * DT;
+          let dx = p.x - ex, dy = p.y - ey; const d = Math.hypot(dx, dy);
+          if (d > p.L) {
+            dx /= d; dy /= d;
+            p.x = ex + dx * p.L; p.y = ey + dy * p.L;
+            const rvx = p.vx - evx, rvy = p.vy - evy, vn = rvx * dx + rvy * dy;
+            if (vn > 0) {   // off the rim: a little bounce, and a little friction along it
+              p.vx -= 1.3 * vn * dx; p.vy -= 1.3 * vn * dy;
+              const tx = -dy, ty = dx, vt = (p.vx - evx) * tx + (p.vy - evy) * ty;
+              p.vx -= 0.08 * vt * tx; p.vy -= 0.08 * vt * ty;
+            }
+          }
+        });
+        prevEye = eyeNow;
+        if (n % 8) continue;   // a frame every 1/60 s
+        const fade = Math.min(1, t / 0.14);
+        frames.rock.push({ opacity: fade, transform: `translate(0px, ${q.ry.toFixed(2)}px) rotate(${(th * 57.2958).toFixed(2)}deg) scale(${q.sx.toFixed(3)}, ${q.sy.toFixed(3)})` });
+        P.forEach((p, k) => {
+          const [lx, ly] = toLocal(q, p.x, p.y);
+          frames.pupils[k].push({ transform: `translate(${(lx - eyes[k].x).toFixed(2)}px, ${(ly - eyes[k].y).toFixed(2)}px)` });
+        });
+      }
+      const opts = { duration: END * 1000, delay: START * 1000, fill: 'both', easing: 'linear' };
+      if (still) {   // reduced motion: just the rock at rest
+        rock.style.opacity = 1;
+        P.forEach((p, k) => { p.el.style.transform = frames.pupils[k].at(-1).transform; });
+        return;
+      }
+      rock.animate(frames.rock, opts);
+      P.forEach((p, k) => p.el.animate(frames.pupils[k], opts));
+    })();
   </script>
   <div id="map-world" aria-hidden="true"></div>
   <canvas id="scene"></canvas>
