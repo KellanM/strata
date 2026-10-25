@@ -138,6 +138,72 @@ const FRAMES = {
     await page.waitForTimeout(6000);
     return { ctx, page };
   },
+  // 6: a row of 0s mid-break - a real double-tap on a 0 face, caught as the cascade runs
+  async 6(browser, size) {
+    const { ctx, page } = await open(browser, size);
+    await page.waitForTimeout(1500);
+    await startLevel(page, process.env.ZERO || 'pocket-compass');
+    await page.waitForTimeout(3500);
+    // a pinch in, as a player leans close to chisel
+    await page.evaluate((z) => { const c = window.strata.camera; c.zoom *= z; c.updateProjectionMatrix(); }, Number(process.env.ZOOM || 1.6));
+    await page.waitForTimeout(600);
+    // a long 0 line along the top (or front) face, tapped on its end turned toward the camera
+    const at = await page.evaluate(() => {
+      const { game: g, camera, cubes } = window.strata;
+      const p = g.puzzle, d = p.dims;
+      const V = camera.position.constructor;
+      const toCam = camera.getWorldDirection(new V()).negate();
+      const n = [new V(1, 0, 0), new V(0, 1, 0), new V(0, 0, 1)];
+      let best = null;
+      for (const line of p.lines) {
+        if (line.hidden || line.count !== 0) continue;
+        const ax = line.axis;
+        for (const side of [1, -1]) {
+          const facing = n[ax].clone().multiplyScalar(side).transformDirection(cubes.mesh?.matrixWorld ?? camera.matrixWorldInverse.clone().identity()).dot(toCam);
+          if (facing < 0.35) continue;
+          const cells = [...line.cells].filter((c) => !g.broken[c]);
+          if (cells.length < 6) continue;
+          const front = cells.reduce((a, c) => ((p.coords(c)[ax] - p.coords(a)[ax]) * side > 0 ? c : a));
+          // a row along the top or the front face cuts a groove you can see; one straight in only leaves a hole
+          const [cx, cy, cz] = p.coords(cells[0]);
+          const onTop = ax !== 1 && cy === d[1] - 1, onFront = ax !== 2 && cz === d[2] - 1;
+          const score = cells.length + facing * 3 + (onTop ? 12 : 0) + (onFront ? 6 : 0);
+          if (!best || score > best.score) best = { front, ax, side, score, n: cells.length };
+        }
+      }
+      if (!best) return { dbg: p.lines.filter((l) => l.count === 0 && !l.hidden).map((l) => [l.axis, l.cells.filter((c) => !g.broken[c]).length]).slice(0, 30), toCam: toCam.toArray(), mat: cubes.mesh?.matrixWorld.elements };
+      const [x, y, z] = p.coords(best.front);
+      const w = new V(x - (d[0] - 1) / 2, y - (d[1] - 1) / 2, z - (d[2] - 1) / 2);
+      w.setComponent(best.ax, w.getComponent(best.ax) + 0.48 * best.side);
+      if (cubes.mesh) w.applyMatrix4(cubes.mesh.matrixWorld);
+      w.project(camera);
+      return { x: (w.x + 1) / 2 * innerWidth, y: (1 - w.y) / 2 * innerHeight, n: best.n };
+    });
+    if (!at || at.dbg) throw new Error('no 0 line facing the camera ' + JSON.stringify(at));
+    const before = await page.evaluate(() => window.strata.game.broken.filter(Boolean).length);
+    await page.touchscreen.tap(at.x, at.y);
+    await page.waitForTimeout(140);
+    await page.touchscreen.tap(at.x, at.y);
+    await page.waitForTimeout(Number(process.env.CATCH || 200));
+    const after = await page.evaluate(() => window.strata.game.broken.filter(Boolean).length);
+    console.log(`zero row: ${at.n} cubes in line, ${after - before} broken at the shot`);
+    return { ctx, page };
+  },
+  // 7: the Journal, a shelf of uncovered things - the collection the stones are hiding
+  async 7(browser, size) {
+    const ids = (process.env.SHELF || 'steps,heart,teabag-pal,candle,toaster,key,bed,chair,rucksack,pocket-compass,heron,moss-tortoise,sloth,chestnut-cart,mother-tree,maple-bonsai,black-smoker,yeti-crab,jellyfish,meerkats,chameleon,kasbah,tea-house,summit-shrine,moai,geode,stone-golem,broken-column,pegasus,yak,mountain-goat,origami-fox,lantern-gate,kokeshi,maneki-neko,tin-frog,pocket-watch,clock-tower,aqueduct,alpaca,trilobite,orrery,coelacanth,frost-mammoth').split(',');
+    const solved = JSON.stringify(Object.fromEntries(ids.map((id) => [id, { time: 60, mistakes: 0, stars: 3, score: 1500 }])));
+    const { ctx, page } = await open(browser, size, { solved });
+    await page.evaluate((ids) => localStorage.setItem('strata.seen.objects', JSON.stringify(ids)), ids);
+    await page.waitForTimeout(1500);
+    await swipeUp(page, size);
+    await page.waitForTimeout(3500);
+    await page.click('#map-journal');
+    await page.waitForTimeout(2000);
+    if (process.env.JSCROLL) await page.evaluate((y) => { const el = [...document.querySelectorAll('#journal *')].find((e) => e.scrollHeight > e.clientHeight + 20) ?? document.querySelector('#journal'); el.scrollTop = y; }, Number(process.env.JSCROLL));
+    await page.waitForTimeout(800);
+    return { ctx, page };
+  },
 };
 
 await lock();
@@ -146,7 +212,7 @@ try {
   browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
     args: ['--use-angle=d3d11', '--enable-gpu'] });
   for (const s of sizes.length ? sizes : Object.keys(SIZES)) {
-    for (const f of [1, 2, 3, 4, 5]) {
+    for (const f of [1, 2, 3, 4, 5, 6, 7]) {
       if (!want(f)) continue;
       const { ctx, page } = await FRAMES[f](browser, SIZES[s]);
       const file = `${OUT}${process.env.PREFIX || ''}${s.replace('.', '_')}in-${f}.png`;
