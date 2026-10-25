@@ -16,61 +16,23 @@
        here, not in style.css), and held while the game boots behind it. -->
   <style>
     html { background: #000; }
-    /* A tiny stage play (docs/splash-study.md): house dark, a follow-spot
-       strikes on an empty stage, the pet rock drops into it - and then the
-       spot drifts off on its own (nobody is at the lighting desk), so the rock
-       hops after it, and the name lands with it. Everything moves by transform
-       and opacity (Web Animations, from the script after the card), so the
-       compositor keeps it smooth while the game boots on the main thread. */
+    /* The studio's card (Kellan, 2026-10-25): one still picture, black and
+       white, that fades in, holds, and fades out (main.js SPLASH_HOLD, .out).
+       The pet rock in silhouette against a great white backlight, leaning back
+       in a dramatic pose, its googly eyes cut out of it and looking up into the
+       light, its long shadow thrown down the lit floor toward us. */
     #splash { position: fixed; inset: 0; z-index: 1000; background: #000; overflow: hidden;
       transition: opacity .7s ease; -webkit-user-select: none; user-select: none; }
     #splash.out { opacity: 0; pointer-events: none; }
     @font-face { font-family: "Splash Fredoka"; font-weight: 600; font-display: block;
       src: url(fonts/fredoka-splash.woff2) format("woff2"); }   /* only the name's letters (2 KB) */
     #splash svg * { stroke: none !important; }   /* style.css strokes the HUD's icons */
-    /* a 390x844 phone frame, centred, fitted by the script (--fit) */
-    #splash .stage { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
-      transform: scale(var(--fit, 1)); }
-    #splash .cam, #splash .cam > *, #splash .rock > *, #splash .name { position: absolute; }
-    #splash .cam { inset: 0; transform-origin: 195px 478px; }   /* the camera: pans, pushes in, jolts */
-    /* the follow-spot: a soft haze cone hung above the frame, swung about its
-       lamp; its pool on the black floor; a few motes of dust in the beam */
-    #splash .beam { left: 45px; top: -264px; width: 300px; height: 760px; transform-origin: 150px 0; opacity: 0; }
-    #splash .beam svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    #splash .mote { width: 4px; height: 4px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,248,236,.9), transparent);
-      opacity: 0; animation: rock-mote 3.2s linear infinite; }
-    @keyframes rock-mote { 0% { opacity: 0; transform: translate(0, 0); } 30%, 70% { opacity: .7; } 100% { opacity: 0; transform: translate(-14px, 90px); } }
-    #splash .pool { left: 55px; top: 456px; width: 280px; height: 52px; border-radius: 50%; opacity: 0;
-      background: radial-gradient(closest-side, rgba(255,246,232,.36), rgba(255,246,232,.29) 64%, rgba(255,246,232,.1) 90%, transparent); }
-    #splash .shadow { left: 125px; top: 469px; width: 140px; height: 20px; border-radius: 50%; opacity: 0;
-      background: radial-gradient(closest-side, rgba(0,0,0,.9), rgba(0,0,0,.55) 55%, transparent); }
-    #splash .dust { left: 192px; top: 472px; width: 7px; height: 7px; border-radius: 50%; opacity: 0;
-      background: radial-gradient(closest-side, rgba(236,228,214,.8), transparent); }
-    /* the pet rock: lit from above (bright crown, darker belly), googly eyes
-       with a fixed glint on their plastic domes; each pupil is a loose weight,
-       moved by the simulation. .shade darkens it when the light leaves it -
-       all but its eyes, which stay white in the dark, as cartoon eyes do. */
-    #splash .rock { left: 110px; top: 344.8px; width: 170px; height: 141.7px; transform-origin: 85px 133.2px; }
-    #splash .rock svg { inset: 0; width: 100%; height: 100%; overflow: visible; }
-    #splash .eye { border-radius: 50%; background: radial-gradient(circle at 40% 34%, #fff 40%, #e9e7e3);
-      box-shadow: 0 0 0 2.3px #151515, 0 2px 3px 2px rgba(0,0,0,.35); }
-    #splash .pupil { border-radius: 50%; background: radial-gradient(circle at 38% 32%, #3a3a3a, #0c0c0c 60%); }
-    #splash .glint { border-radius: 50%; background: radial-gradient(closest-side, #fff 45%, rgba(255,255,255,0)); opacity: .9; }
-    #splash .shade { inset: 0; opacity: 0; background: linear-gradient(90deg, rgba(0,0,0,.97), rgba(0,0,0,.84));
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cpath d='M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z'/%3E%3C/svg%3E") 0 0 / 100% 100%;
-              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cpath d='M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z'/%3E%3C/svg%3E") 0 0 / 100% 100%; }
-    /* the name: a chunky, friendly lowercase wordmark (ustwo, Supercell,
-       Nintendo), set tight; a title over the picture, so outside the camera */
-    #splash .name { left: 0; right: 0; top: 548px; margin: 0; text-align: center; color: #fbf7f0;
-      font: 600 34px/1 "Splash Fredoka", "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -.01em;
-      white-space: nowrap; opacity: 0; text-shadow: 0 0 22px rgba(255,236,210,.25); }
-    /* film: a fine moving grain and a vignette, over everything */
-    #splash .grain { position: absolute; inset: -80px; opacity: .1; pointer-events: none; animation: rock-grain .5s steps(1) infinite;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.2 -1'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"); }
-    @keyframes rock-grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-37px, 21px); } 40% { transform: translate(23px, -45px); }
-      60% { transform: translate(-51px, -12px); } 80% { transform: translate(41px, 33px); } }
-    #splash .vignette { position: absolute; inset: 0; pointer-events: none;
-      background: radial-gradient(ellipse 75% 60% at 50% 52%, transparent 50%, rgba(0,0,0,.6)); }
+    #splash .art { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
+      transform: scale(var(--fit, 1)); opacity: 0; animation: card-in 1.1s ease .15s forwards; }
+    #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #splash .name { position: absolute; left: 0; right: 0; top: 590px; margin: 0; text-align: center; color: #fff;
+      font: 600 30px/1 "Splash Fredoka", "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: -.01em; white-space: nowrap; }
+    @keyframes card-in { to { opacity: 1; } }
     /* a quick relaunch (an update's reload): just black, fading up into the game */
     #splash.quick > * { display: none; }
     /* Leaving the app, the screen goes black first: iOS shows its last snapshot
@@ -79,7 +41,7 @@
        Coming back, the black lifts gently. */
     #shroud { position: fixed; inset: 0; z-index: 1001; background: #000; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
     #shroud.on { opacity: 1; transition: none; }
-    @media (prefers-reduced-motion: reduce) { #splash * { animation-duration: .01s !important; animation-delay: 0s !important; } }
+    @media (prefers-reduced-motion: reduce) { #splash .art { animation-duration: .01s; animation-delay: 0s; } }
   </style>
   <link rel="preload" href="fonts/fredoka-splash.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
@@ -97,65 +59,50 @@
        (silicon is rock, and the game was made by AI running unsupervised) -->
   <div id="shroud" aria-hidden="true"></div>
   <div id="splash" role="img" aria-label="Unsupervised Rock">
-    <div class="stage" aria-hidden="true">
-      <div class="cam">
-        <div class="beam">
-          <svg viewBox="0 0 300 760" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="sb-g" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#fff4e2" stop-opacity="0"/>
-                <stop offset=".4" stop-color="#fff4e2" stop-opacity=".06"/>
-                <stop offset=".95" stop-color="#fff4e2" stop-opacity=".2"/>
-                <stop offset="1" stop-color="#fff4e2" stop-opacity="0"/>
-              </linearGradient>
-              <filter id="sb-b" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur stdDeviation="6"/></filter>
-            </defs>
-            <g filter="url(#sb-b)" fill="url(#sb-g)">
-              <path d="M138 0h24l118 748H20z"/>
-              <path d="M145 0h10l62 748H83z" opacity=".6"/>
-              <path d="M141 0h3l-62 748H66z" opacity=".35"/>
-            </g>
-          </svg>
-          <i class="mote" style="left:150px;top:420px"></i>
-          <i class="mote" style="left:118px;top:520px;animation-delay:-1.1s;animation-duration:4s"></i>
-          <i class="mote" style="left:178px;top:470px;animation-delay:-2.3s"></i>
-          <i class="mote" style="left:96px;top:610px;animation-delay:-.6s;animation-duration:3.6s"></i>
-          <i class="mote" style="left:200px;top:590px;animation-delay:-1.8s;animation-duration:2.8s"></i>
-          <i class="mote" style="left:160px;top:330px;animation-delay:-2.9s;animation-duration:3.8s"></i>
-        </div>
-        <div class="pool"></div>
-        <div class="shadow"></div>
-        <div class="rock">
-          <svg viewBox="0 0 120 100">
-            <defs>
-              <linearGradient id="sb-r" x1="0" y1="0" x2="0" y2="1">
-                <stop offset=".46" stop-color="#fdfbf6"/>
-                <stop offset=".75" stop-color="#ebe6dd"/>
-                <stop offset=".97" stop-color="#bdb6aa"/>
-              </linearGradient>
-              <radialGradient id="sb-h" cx=".5" cy=".5" r=".5">
-                <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
-                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-              </radialGradient>
-            </defs>
-            <path fill="url(#sb-r)" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
-            <path fill="#a9a194" opacity=".45" d="M14 86c10 7 34 8 58 7 20-2 33-7 35-15 1 9-11 16-34 18-26 2-50 0-59-10z"/>
-            <path fill="#cfc8bc" d="M86 55c4 2 6 5 5 8-2-2-4-3-7-4 1-1 2-2 2-4z"/>
-            <ellipse fill="url(#sb-h)" cx="40" cy="54" rx="17" ry="4.5" transform="rotate(-12 40 54)"/>
-          </svg>
-          <i class="shade"></i>
-          <i class="eye" style="left:55.25px;top:79.33px;width:28.33px;height:28.33px"></i>
-          <i class="eye" style="left:91.38px;top:78.63px;width:24.08px;height:24.08px"></i>
-          <i class="pupil" style="left:62.9px;top:87px;width:13.03px;height:13.03px"></i>
-          <i class="pupil" style="left:97.75px;top:85px;width:11.33px;height:11.33px"></i>
-          <i class="glint" style="left:59.5px;top:83.5px;width:6px;height:6px"></i>
-          <i class="glint" style="left:95.2px;top:82.3px;width:5px;height:5px"></i>
-        </div>
-      </div>
+    <div class="art" aria-hidden="true">
+      <svg viewBox="0 0 390 844">
+        <defs>
+          <radialGradient id="sr-disc">
+            <stop offset=".86" stop-color="#fff"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="sr-bloom">
+            <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="sr-floor" cx="195" cy="382" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(195 382) scale(185 150) translate(-195 -382)">
+            <stop offset="0" stop-color="#fff" stop-opacity=".92"/>
+            <stop offset=".5" stop-color="#fff" stop-opacity=".42"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="sr-fade" x1="0" y1="382" x2="0" y2="560" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fff"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <mask id="sr-shadow-fade"><rect x="0" y="380" width="390" height="200" fill="url(#sr-fade)"/></mask>
+          <filter id="sr-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+        </defs>
+        <!-- the light behind: a great white disc and its bloom -->
+        <circle cx="195" cy="300" r="250" fill="url(#sr-bloom)"/>
+        <circle cx="195" cy="300" r="132" fill="url(#sr-disc)"/>
+        <!-- the floor it lights, toward us from the horizon -->
+        <rect x="0" y="382" width="390" height="280" fill="url(#sr-floor)"/>
+        <!-- its long shadow, thrown down the floor toward us -->
+        <g mask="url(#sr-shadow-fade)" filter="url(#sr-soft)">
+          <path fill="#000" transform="translate(195 384) rotate(8) scale(1.6 -2.6) translate(-60 -94)"
+            d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
+        </g>
+        <!-- the rock: black, leaning back, its eyes cut out and turned up to the light -->
+        <g transform="translate(195 386) rotate(-11) scale(1.72) translate(-60 -94)">
+          <path fill="#000" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
+          <circle fill="#fff" cx="49" cy="66" r="10"/>
+          <circle fill="#fff" cx="73" cy="64" r="8.5"/>
+          <circle fill="#000" cx="52.6" cy="59.6" r="4.6"/>
+          <circle fill="#000" cx="76.4" cy="58.4" r="4"/>
+        </g>
+      </svg>
       <p class="name">unsupervised rock</p>
     </div>
-    <div class="grain"></div>
-    <div class="vignette"></div>
   </div>
   <script>
     // when the card began (main.js holds it at least its length); a second
@@ -174,191 +121,9 @@
     } catch (e) { /* private mode */ }
   </script>
   <script>
-    // The card's little play, simulated once up front (a few ms) and played
-    // back as Web Animations, which run on the compositor and so stay smooth
-    // while the game boots. Units are the stage's px (390x844); the rock's
-    // pivot is the middle of its flat bottom, on the floor at y 478.
-    (() => {
-      const card = document.getElementById('splash');
-      if (!card || card.classList.contains('quick')) return;
-      card.style.setProperty('--fit', Math.min(innerWidth / 390, innerHeight / 700).toFixed(3));
-      const q$ = (s) => card.querySelector(s), all = (s) => [...card.querySelectorAll(s)];
-      const rock = q$('.rock'), shade = q$('.shade'), shadow = q$('.shadow'), beam = q$('.beam'), pool = q$('.pool'), cam = q$('.cam'), name = q$('.name');
-      const U = 170 / 120, PX = 60 * U, PY = 94 * U;   // svg unit -> px; the pivot in the rock's box
-      const eyes = [[49, 66, 10, 4.6], [73, 64, 8.5, 4]].map(([x, y, R, r]) => ({ x: x * U, y: y * U, L: (R - r - 0.9) * U }));
-      const pupils = all('.pupil');
-      const G = 4400, DT = 1 / 480, END = 3.4, LAMP = 742;   // LAMP: the spot's height above the floor
-      // the beats (s): the spot strikes; the rock drops in; the spot wanders off
-      // (DRIFT px, nobody at the desk); the rock leans after it, crouches, hops
-      const STRIKE = 0.28, DROP = 0.5, WANDER = [1.2, 1.78], DRIFT = 135, LEAN = 1.42, CROUCH = 1.94, HOP = 2.06, HIGH = 46;
-      const smooth = (a, b, t) => { const u = Math.min(1, Math.max(0, (t - a) / (b - a))); return u * u * (3 - 2 * u); };
-      const lerpK = (k, t) => {   // piecewise-linear through [[t, v], ...]
-        if (t <= k[0][0]) return k[0][1];
-        for (let i = 1; i < k.length; i++) if (t <= k[i][0]) return k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (t - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
-        return k.at(-1)[1];
-      };
-      // a tungsten follow-spot striking: catch, stutter, then full
-      const strike = (t) => lerpK([[STRIKE, 0], [STRIKE + .02, .95], [STRIKE + .05, .3], [STRIKE + .08, 1], [STRIKE + .11, .7], [STRIKE + .16, 1]], t);
-      // the spot drifts off with no hand on it: eases out, overshoots a hair, settles
-      const spotX = (t) => DRIFT * (smooth(WANDER[0], WANDER[1], t) + 0.06 * Math.sin(Math.PI * smooth(WANDER[1] - .25, WANDER[1] + .3, t)));
-      // the rock: x along the floor, y its height (y < 0 is up; y > 0 is the
-      // floor's give, its squash); it rocks on its round bottom (th)
-      let x = 0, vx = 0, y = -560, vy = 0, th = 0, w = 0, airborne = true, hopped = false;
-      const K = 9000, C = 95, ROCK = 90, DAMP = 3.6, lands = [];
-      const T_AIR = (Math.sqrt(2 * G * HIGH) + Math.sqrt(2 * G * HIGH + 2 * G * 10)) / G;   // takeoff from a 10 px crouch
-      const P = pupils.map((el, k) => ({ el, x: 0, y: 0, vx: 0, vy: 0, L: eyes[k].L }));
-      const pose = () => {
-        const ry = Math.min(y, 0), squash = y > 0 ? Math.max(0.76, 1 - y / 50) : 1;
-        return { x, ry, sx: 1 + (1 - squash) * 0.7, sy: squash, c: Math.cos(th), s: Math.sin(th) };
-      };
-      const toWorld = (q, lx, ly) => {
-        const dx = (lx - PX) * q.sx, dy = (ly - PY) * q.sy;
-        return [PX + q.x + q.c * dx - q.s * dy, PY + q.ry + q.s * dx + q.c * dy];
-      };
-      const toLocal = (q, wx, wy) => {
-        const dx = wx - PX - q.x, dy = wy - PY - q.ry;
-        return [PX + (q.c * dx + q.s * dy) / q.sx, PY + (-q.s * dx + q.c * dy) / q.sy];
-      };
-      const F = { rock: [], shade: [], shadow: [], beam: [], pool: [], cam: [], name: [], pupils: P.map(() => []) };
-      let prevEye = null;
-      for (let t = 0, n = 0; t <= END + 1e-9; t += DT, n++) {
-        // the rock
-        if (t >= DROP) {
-          vy += G * DT;
-          const crouch = t > CROUCH && !hopped ? 10 * smooth(CROUCH, HOP, t) : 0;
-          if (y > 0) vy += (-K * (y - crouch) - C * vy) * DT;
-          if (!hopped && t >= HOP) { hopped = true; vy = -Math.sqrt(2 * G * HIGH); vx = DRIFT / T_AIR; airborne = true; w += 0.6; }
-          y += vy * DT; x += vx * DT;
-          if (airborne && y > 0 && vy > 0) {   // touchdown: stone on wood, no slide
-            airborne = false; lands.push(t); w += hopped ? 1.5 : 1.1;
-            if (hopped) { vx = 0; x = DRIFT; }
-          }
-        }
-        // it cranes after the departing light
-        const lean = t < HOP ? -0.2 * smooth(LEAN, LEAN + .3, t) : 0;   // rears back, right side up: the loose pupils roll toward the light
-        w += (-ROCK * (th - lean) - DAMP * w) * DT; th += w * DT;
-        const q = pose();
-        // the pupils: gravity, a little drag against the eye's backing, the rim
-        const eyeNow = eyes.map((e) => toWorld(q, e.x, e.y));
-        P.forEach((p, k) => {
-          const [ex, ey] = eyeNow[k];
-          const evx = prevEye ? (ex - prevEye[k][0]) / DT : 0, evy = prevEye ? (ey - prevEye[k][1]) / DT : 0;
-          if (!prevEye) { p.x = ex; p.y = ey; }
-          p.vy += G * DT;
-          const drag = 1 - Math.exp(-DT * 2.5);
-          p.vx += (evx - p.vx) * drag; p.vy += (evy - p.vy) * drag;
-          p.x += p.vx * DT; p.y += p.vy * DT;
-          let dx = p.x - ex, dy = p.y - ey; const d = Math.hypot(dx, dy);
-          if (d > p.L) {
-            dx /= d; dy /= d;
-            p.x = ex + dx * p.L; p.y = ey + dy * p.L;
-            const rvx = p.vx - evx, rvy = p.vy - evy, vn = rvx * dx + rvy * dy;
-            if (vn > 0) {   // off the rim: a little bounce, and a little friction along it
-              p.vx -= 1.3 * vn * dx; p.vy -= 1.3 * vn * dy;
-              const tx = -dy, ty = dx, vt = (p.vx - evx) * tx + (p.vy - evy) * ty;
-              p.vx -= 0.08 * vt * tx; p.vy -= 0.08 * vt * ty;
-            }
-          }
-        });
-        prevEye = eyeNow;
-        if (n % 8) continue;   // a frame every 1/60 s
-        const sx = spotX(t), on = strike(t), h = -q.ry, f = (v) => v.toFixed(2);
-        const bloom = lands[1] ? Math.exp(-Math.max(0, t - lands[1]) / 0.25) * (t >= lands[1]) : 0;
-        F.rock.push({ transform: `translate(${f(q.x)}px, ${f(q.ry)}px) rotate(${f(th * 57.2958)}deg) scale(${q.sx.toFixed(3)}, ${q.sy.toFixed(3)})` });
-        F.shade.push({ opacity: f(Math.min(1, Math.max(0, (Math.abs(q.x - sx) - 45) / 95)) * on + (1 - on)) });
-        F.shadow.push({ opacity: f(Math.max(0, 1 - h / 420) * (t > DROP)), transform: `translateX(${f(q.x)}px) scale(${f(1 / (1 + h / 160))})` });
-        F.beam.push({ opacity: f(on * (0.86 + 0.14 * bloom)), transform: `rotate(${f(-Math.atan(sx / LAMP) * 57.2958)}deg)` });
-        F.pool.push({ opacity: f(on * (0.88 + 0.12 * bloom)), transform: `translateX(${f(sx)}px)` });
-        // the camera: a slow push in, a lazy pan after the action, a jolt at each landing
-        let jolt = 0;
-        lands.forEach((tl, i) => { if (t > tl) jolt += (i ? 3 : 2.2) * Math.exp(-(t - tl) / 0.07) * Math.sin(2 * Math.PI * 14 * (t - tl)); });
-        const zoom = 1.14 + 0.06 * smooth(0, END, t);
-        F.cam.push({ transform: `translate(${f(-DRIFT * zoom * smooth(1.4, 2.65, t))}px, ${f(jolt)}px) scale(${zoom.toFixed(4)})` });
-        // the name lands with the rock
-        const nu = lands[1] ? smooth(lands[1], lands[1] + 0.3, t) : 0;
-        F.name.push({ opacity: f(nu), transform: `translateY(${f(8 * (1 - nu))}px)` });
-        P.forEach((p, k) => {
-          const [lx, ly] = toLocal(q, p.x, p.y);
-          F.pupils[k].push({ transform: `translate(${f(lx - eyes[k].x)}px, ${f(ly - eyes[k].y)}px)` });
-        });
-      }
-      const opts = { duration: END * 1000, fill: 'both', easing: 'linear' };
-      const anims = [[rock, F.rock], [shade, F.shade], [shadow, F.shadow], [beam, F.beam], [pool, F.pool], [cam, F.cam], [name, F.name],
-        ...P.map((p, k) => [p.el, F.pupils[k]])].map(([el, kf]) => el.animate(kf, opts));
-      // a puff of dust where it lands, caught in the light
-      lands.forEach((tl, i) => {
-        for (let k = 0; k < 6; k++) {
-          const d = document.createElement('i'), side = k % 2 ? 1 : -1, x0 = (i ? DRIFT : 0) + side * (34 + 7 * k);
-          d.className = 'dust';
-          cam.appendChild(d);
-          anims.push(d.animate([{ opacity: .7, transform: `translate(${x0}px, 0) scale(.7)` },
-            { opacity: 0, transform: `translate(${x0 + side * (16 + 5 * k)}px, ${-6 - 3 * (k % 3)}px) scale(${1.6 + k * .15})` }],
-          { duration: 480, delay: tl * 1000, fill: 'forwards', easing: 'cubic-bezier(.1, .7, .3, 1)' }));
-        }
-      });
-      // main.js lifts the card SPLASH_HOLD after splashT0, by the wall clock; but
-      // the play's first frame can wait (style.css, the font, the boot's long
-      // task). Skip ahead by that lag - the opening is black, so a short lag
-      // costs only darkness - and the rock always lands its line before the lift.
-      anims[0].ready.then(() => {
-        const lag = anims[0].startTime - (window.splashT0 ?? 0);
-        if (lag > 16) anims.forEach((a) => { a.currentTime += lag; });
-      });
-      window.splashBeats = { strike: STRIKE, wander: WANDER, hop: HOP, lands, end: END };   // for the sound, if the app plays it
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) anims.forEach((a) => a.finish());   // just the last frame
-    })();
-  </script>
-  <script>
-    // The card's sound, sketched in WebAudio for whoever can play it: the native
-    // app, or a later launch after a touch. Nothing calls it at boot - browsers
-    // won't play before a gesture. splashSound(ac, at): `at` is the AudioContext
-    // time the card started; the beats come from the play (window.splashBeats).
-    // The design is in docs/splash-study.md: a follow-spot's clunk and hum, a
-    // pebble's tok with the plastic rattle of googly eyes, a lazy servo, and one
-    // warm two-note chime when it lands its mark.
-    window.splashSound = (ac, at = ac.currentTime) => {
-      const b = window.splashBeats || { strike: 0.28, wander: [1.2, 1.78], hop: 2.06, lands: [1.0, 2.22] }, out = ac.createGain();
-      out.gain.value = 0.7; out.connect(ac.destination);
-      const noise = ac.createBuffer(1, ac.sampleRate * 0.5, ac.sampleRate), nd = noise.getChannelData(0);
-      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-      const env = (g, t, a, peak, d) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(1e-4, t + a + d); };
-      const burst = (t, f, q, peak, d) => {   // filtered noise: clicks, scuffs, dust
-        const s = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
-        s.buffer = noise; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
-        s.connect(bp).connect(g).connect(out); env(g, t, 0.002, peak, d); s.start(t); s.stop(t + d + 0.05);
-      };
-      const tone = (t, f0, f1, type, peak, a, d) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + a + d);
-        o.connect(g).connect(out); env(g, t, a, peak, d); o.start(t); o.stop(t + a + d + 0.05);
-      };
-      const tok = (t, big) => {   // a pebble on boards, then its pupils rattling to a stop
-        tone(t, big ? 190 : 230, 80, 'sine', 0.5, 0.003, 0.12); burst(t, 1100, 1.2, 0.35, 0.05);
-        for (let k = 0, dt = 0.045; k < 6; k++, dt *= 0.8) burst(t + 0.03 + k * dt, 4200 + 600 * (k % 2), 6, 0.12 * (1 - k / 7), 0.012);
-      };
-      const T = (s) => at + s;
-      // the follow-spot strikes: a relay's clunk, the arc's flutter, then a low hum
-      burst(T(b.strike), 1800, 2, 0.5, 0.03); tone(T(b.strike), 90, 60, 'sine', 0.35, 0.002, 0.09);
-      burst(T(b.strike + 0.05), 700, 3, 0.2, 0.04);
-      const hum = ac.createOscillator(), hg = ac.createGain();
-      hum.type = 'triangle'; hum.frequency.value = 100; hum.connect(hg).connect(out);
-      hg.gain.setValueAtTime(0, T(b.strike)); hg.gain.linearRampToValueAtTime(0.025, T(b.strike + 0.2)); hg.gain.linearRampToValueAtTime(0, T(3.4));
-      hum.start(T(b.strike)); hum.stop(T(3.5));
-      tok(T(b.lands[0]), true);
-      // nobody at the desk: the spot's yoke drifts on a whining little servo
-      const sv = ac.createOscillator(), sf = ac.createBiquadFilter(), sg = ac.createGain();
-      sv.type = 'sawtooth'; const [w0, w1] = b.wander;
-      sv.frequency.setValueAtTime(140, T(w0)); sv.frequency.linearRampToValueAtTime(175, T(w1));
-      sf.type = 'lowpass'; sf.frequency.value = 900; sv.connect(sf).connect(sg).connect(out);
-      sg.gain.setValueAtTime(0, T(w0)); sg.gain.linearRampToValueAtTime(0.04, T(w0 + 0.1)); sg.gain.linearRampToValueAtTime(0, T(w1 + 0.05));
-      sv.start(T(w0)); sv.stop(T(w1 + 0.1));
-      burst(T(b.hop - 0.02), 2500, 1, 0.12, 0.08);   // the scuff of the hop
-      if (b.lands[1]) {
-        tok(T(b.lands[1]), false);
-        // and the name: two soft, bell-like notes, a fifth apart (E5, B5)
-        [[659.3, 0.02], [987.8, 0.1]].forEach(([f, d]) => { tone(T(b.lands[1] + d), f, f, 'sine', 0.16, 0.005, 1.4); tone(T(b.lands[1] + d), f * 2.01, f * 2.01, 'sine', 0.03, 0.005, 0.5); });
-      }
-    };
+    // the card is drawn for a phone; on a larger screen it is fitted, whole
+    (() => { const f = () => document.querySelector('#splash .art')?.style.setProperty('--fit', Math.min(innerWidth / 390, innerHeight / 844, 1.6).toFixed(3));
+      f(); addEventListener('resize', f); })();
   </script>
   <div id="map-world" aria-hidden="true"></div>
   <canvas id="scene"></canvas>

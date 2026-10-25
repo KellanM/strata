@@ -2063,7 +2063,7 @@ const buildMap = () => {
 // and the whole map is built. Then it lifts - no sooner than its own little
 // animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
 // the title begins under it, the logo carving as before.
-const SPLASH_HOLD = 3.1;   // s: the stones set, the light comes, the name settles
+const SPLASH_HOLD = 2.6;   // s: the card fades in (1.1 s) and holds
 const splash = $('#splash');
 if (splash) {
   requestAnimationFrame(() => requestAnimationFrame(() => {
