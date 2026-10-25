@@ -21,25 +21,26 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   renderer.setPixelRatio(DPR);
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
   const CAM_Z = 24;
-  const CAM_FROM = -3.2, CAM_TO = 15;   // the camera's height on the wall, and at rest in the sky
+  // the camera's height on the wall, and at rest: only a little way up, so the
+  // wall's mossy top stays in view at the foot of the sky, a horizon under the name
+  const CAM_FROM = -3.2, CAM_TO = 7;
   const scene = new THREE.Scene();
   const swarmScene = new THREE.Scene();
 
   // ---------------------------------------------------------------- the wall
   // Old stone, a little uneven, a ruined top edge with moss. Lit by the night
   // and by whatever light is near it (the glowing cube, then the rising swarm).
-  const STONE = [0xb4a998, 0xa89d8c, 0xbdb3a3, 0x9c9282], MOSS = [0x6f8a58, 0x7a9262, 0x617d50];
+  const STONE = [0xb4a998, 0xa89d8c, 0xbdb3a3, 0x9c9282];
+  const TOP = 1;   // the top row of stones
   const CUBE_AT = new THREE.Vector3(0, -5, 0);
   const rand = rng(11);
   const cells = [];
   for (let x = -8; x <= 8; x++) {
-    const top = 1 + Math.round(1.6 * Math.sin(x * 0.9 + 1.3) + 1.1 * Math.sin(x * 2.3) + rand() * 1.2);
-    for (let y = -22; y <= top; y++) {
+    // the wall stops all at once, level, and the moss has taken its top (the shader)
+    for (let y = -22; y <= TOP; y++) {
       if (x === CUBE_AT.x && y === CUBE_AT.y) continue;
-      if (y === top && rand() < 0.3) continue;
       const z = (rand() - 0.5) * 0.18 + (rand() < 0.06 ? 0.28 : 0) - (rand() < 0.05 ? 0.3 : 0);
-      const moss = y >= top - 1 && rand() < 0.4 || (rand() < 0.012);
-      const c = new THREE.Color(moss ? MOSS[rand() * 3 | 0] : STONE[rand() * 4 | 0]).multiplyScalar(0.94 + rand() * 0.1);
+      const c = new THREE.Color(STONE[rand() * 4 | 0]).multiplyScalar(0.94 + rand() * 0.1);
       cells.push([x, y, z, c]);
     }
   }
@@ -50,6 +51,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
       uLc: { value: [new THREE.Color(1, 0.72, 0.42), new THREE.Color(1, 0.86, 0.66)] },
       uLi: { value: [0, 0] },
       uMoon: { value: 1 },
+      uTop: { value: TOP + 0.485 },   // the top faces' height
     },
     vertexShader: /* glsl */`
       varying vec3 vN, vW, vC; varying vec2 vUv;
@@ -59,20 +61,34 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
         gl_Position = projectionMatrix * viewMatrix * w;
       }`,
     fragmentShader: /* glsl */`
-      uniform vec3 uL[${MAX_LIGHTS}]; uniform vec3 uLc[${MAX_LIGHTS}]; uniform float uLi[${MAX_LIGHTS}]; uniform float uMoon;
+      uniform vec3 uL[${MAX_LIGHTS}]; uniform vec3 uLc[${MAX_LIGHTS}]; uniform float uLi[${MAX_LIGHTS}]; uniform float uMoon, uTop;
       varying vec3 vN, vW, vC; varying vec2 vUv;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
       void main() {
         vec3 n = normalize(vN);
+        // moss: a deep cushion over the tops, creeping down the faces in an
+        // uneven, soft-edged fringe; darker and greener where it is thick
+        float along = vW.x * 1.7 + vW.z * 2.3;
+        float reach = 0.28 + 0.55 * noise(vec2(along, 0.5)) + 0.25 * noise(vec2(along * 3.1, 4.0));
+        float below = uTop - vW.y;
+        float m = n.y > 0.5 && vW.y > uTop - 0.1 ? 1.0 : smoothstep(reach + 0.06, reach - 0.06, below);
+        float tuft = noise(vW.xz * 6.0 + vW.y * 3.0);
+        vec3 moss = mix(vec3(0.30, 0.42, 0.22), vec3(0.47, 0.60, 0.33), tuft) * (0.85 + 0.25 * m);
+        vec3 base = mix(vC, moss, m);
         // the night: a cool, low fill, a little brighter on tops (the sky's light)
-        vec3 col = vC * vec3(0.10, 0.11, 0.21) * (0.75 + 0.5 * max(n.y, 0.0)) * uMoon;
+        vec3 col = base * vec3(0.10, 0.11, 0.21) * (0.75 + 0.5 * max(n.y, 0.0)) * uMoon;
         for (int i = 0; i < ${MAX_LIGHTS}; i++) {
           vec3 d = uL[i] - vW; float r = length(d);
           float ndl = max(dot(n, d / r), 0.0) * 0.8 + 0.2;
-          col += vC * uLc[i] * ndl * uLi[i] / (1.0 + 0.32 * r * r);
+          col += base * uLc[i] * ndl * uLi[i] / (1.0 + 0.32 * r * r);
         }
         // carved edges: each block reads as its own stone
         vec2 e = min(vUv, 1.0 - vUv); float edge = smoothstep(0.0, 0.09, min(e.x, e.y));
-        col *= 0.62 + 0.38 * edge;
+        col *= mix(0.62 + 0.38 * edge, 0.9 + 0.1 * edge, m);   // moss softens the stones' carved edges
+        // the sky's light on the moss's top: a cool sheen, so the cushion reads at night
+        col += moss * m * (0.16 + 0.14 * tuft) * max(n.y, 0.0) * uMoon + moss * m * 0.05;
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -81,6 +97,10 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   const m4 = new THREE.Matrix4();
   cells.forEach(([x, y, z, c], i) => { wall.setMatrixAt(i, m4.makeTranslation(x, y, z)); wall.setColorAt(i, c); });
   scene.add(wall);
+  // behind the stones, the dark of the wall's core: the seams between them never show the sky
+  const core = new THREE.Mesh(new THREE.PlaneGeometry(17, 24), new THREE.MeshBasicMaterial({ color: 0x08070d }));
+  core.position.set(0, TOP - 11.5, -0.5);
+  scene.add(core);
   // the dark socket left behind (a slightly recessed back face)
   const socket = new THREE.Mesh(new THREE.PlaneGeometry(0.97, 0.97), new THREE.MeshBasicMaterial({ color: 0x07060c }));
   socket.position.set(CUBE_AT.x, CUBE_AT.y, -0.46);
@@ -122,7 +142,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   for (let i = 0; i < 1800; i++) {
     const z = -14 * starRand() ** 1.5;
     const spread = 1 + -z / CAM_Z;   // farther stars spread wider, to fill the same view
-    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 7 + 19 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
+    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 3 + 15 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
   }
   // The name, written in stars: each letter a few strokes (in a 2 x 3 box),
   // stars along them a little apart, as a constellation is drawn. Placed where
@@ -196,7 +216,7 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
       const z = -2 - 12 * gr();
       on.set(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
       const x = rest.position.x + on.x * (z - rest.position.z) / on.z, y = rest.position.y + on.y * (z - rest.position.z) / on.z;
-      if (y < 4) continue;                                                    // the wall, not the sky
+      if (y < TOP + 1.2) continue;                                            // the wall, not the sky
       if (z > -4 && near(x, y, 0.5 * k)) continue;
       fieldStars.push(x, y, z);
     }
@@ -278,17 +298,17 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
   // the clock runs at FAST as the light leaves the stone, easing to real time as
   // the name's stars land (story s 3..11). Twinkles keep real time (realT) so the
   // settled sky stays calm.
-  const FAST = 4.5;
+  const FAST = 3;
   const pace = (s) => 1 + (FAST - 1) * (1 - smooth(3, 11, s));
   let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
-  let camY = CAM_FROM;
+  let camY = CAM_FROM, tapReal = 0;
   const sound = new Sound();
   let quiet = false;   // finish() runs the clock forward in silence
   swarm.onSettle = () => { if (!quiet) sound.star(); };
 
   function open() {
     if (tapAt !== null) return;
-    tapAt = simT;
+    tapAt = simT; tapReal = realT;
     swarm.release(simT + 0.35);
     hint?.classList.remove('show');
     if (!quiet) sound.open(2.5);   // about the story's average pace over the swell
@@ -375,8 +395,10 @@ export function createFirstLight({ canvas, hint = null, onNamed = null }) {
     far.material.uniforms.uTime.value = realT;
     // the camera: holds on the wall, then follows the flock up into the sky (a soft, lagging follow)
     if (tapAt !== null) {
-      const want = Math.min(CAM_TO, Math.max(CAM_FROM, swarm.lead.y - 2.5));
-      camY += (want - camY) * (1 - Math.exp(-sdt * 1.3 * smooth(0.6, 2.2, simT - tapAt)));
+      // a slow glide of its own, in real time (not the story's quick clock):
+      // it waits a breath, then eases up over about six seconds and settles
+      const k = Math.min(1, Math.max(0, (realT - tapReal - 0.6) / 6));
+      camY = CAM_FROM + (CAM_TO - CAM_FROM) * (0.5 - 0.5 * Math.cos(Math.PI * k));
     }
     const up = (camY - CAM_FROM) / (CAM_TO - CAM_FROM);
     camera.position.set(0, camY, CAM_Z);

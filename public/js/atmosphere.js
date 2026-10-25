@@ -357,11 +357,11 @@ export class Ash {
           vSpike = (0.25 + 0.75 * glint) * smoothstep(0.7, 1.3, aSeed.z) + 0.5 * glint;
           vRot = ph + age * mix(-2.5, 2.5, aSeed.x);
           // the stone's own colour, lit from within: mostly white, a breath of its tint
-          vTint = mix(vec3(1.0), aTint, 0.38);
+          vTint = mix(vec3(1.0), aTint, 0.55);
           // it pops into being (a quick overshoot), and twinkles small as it goes
           float pop = smoothstep(0.0, 0.05, age) * (1.0 + 0.7 * exp(-age * 9.0));
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = max(1.5, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.2 * uUnitPx);
+          gl_PointSize = max(1.5, aSeed.z * pop * (0.6 + 0.4 * aState.x) * (1.0 + 0.5 * glint) * 0.42 * uUnitPx);   // room for the glow; the star itself stays small
         }`,
       fragmentShader: /* glsl */ `
         uniform float uPale;
@@ -375,16 +375,19 @@ export class Ash {
           // a sparkle: a white-hot core, a soft bloom, and a turning four-point flare
           float c = cos(vRot), s = sin(vRot);
           vec2 r = mat2(c, -s, s, c) * q;
-          float core = exp(-d2 * 26.0), bloom = 0.22 * exp(-d2 * 6.0);
-          float spikes = (exp(-abs(r.x) * 30.0) * exp(-r.y * r.y * 4.0) + exp(-abs(r.y) * 30.0) * exp(-r.x * r.x * 4.0)) * vSpike;
-          float a = min(1.0, (core * 1.4 + bloom + spikes) * vB) * (1.0 - smoothstep(0.85, 1.0, d2));
+          // emissive: a small white-hot core, inside a wide glow in the stone's colour
+          float core = exp(-d2 * 70.0), glow = exp(-d2 * 7.0), haze = exp(-d2 * 2.5);
+          float spikes = (exp(-abs(r.x) * 60.0) * exp(-r.y * r.y * 3.0) + exp(-abs(r.y) * 60.0) * exp(-r.x * r.x * 3.0)) * vSpike;
+          float hot = min(1.0, (core * 2.4 + spikes * 1.4) * vB);
+          vec3 glowCol = mix(vTint, vTint * vTint, 0.5);   // the glow, a shade richer than the core
           if (uPale > 0.5) {
-            // over a pale sky white needs an edge: a faint soft shadow of the sky's shade under it
-            float shade = 0.22 * exp(-d2 * 3.5) * vB;
-            vec3 col = mix(uCool, vTint, clamp(a / max(a + shade, 1e-3) * 1.4, 0.0, 1.0));
-            gl_FragColor = vec4(col, min(1.0, a + shade));
+            // over a pale sky light can't add: the glow is laid on as colour, the core as white
+            float g = min(1.0, (0.55 * glow + 0.18 * haze) * vB);
+            vec3 col = mix(glowCol * 0.9, vec3(1.0), hot / max(hot + g, 1e-3));
+            gl_FragColor = vec4(col, min(1.0, hot + g));
           } else {
-            gl_FragColor = vec4(vTint * a, a);
+            float g = (0.5 * glow + 0.22 * haze) * vB;
+            gl_FragColor = vec4(vTint * hot + glowCol * g, min(1.0, hot + g));
           }
         }`,
     }));
@@ -422,7 +425,8 @@ export class Ash {
       this.vel.set([vx, vy, vz], i3);
       this.axis.set([center.x, center.z, phase], i3);
       this.age[i] = -Math.pow(Math.random(), 2) * 0.12;   // most at once, a short tail
-      this.life[i] = 0.82 + Math.random() * 0.83;   // brief: a quick puff, gone in a second or so
+      // brief: a quick puff, gone in well under a second; two of each burst linger as long sparks
+      this.life[i] = k < 2 ? 2.2 + Math.random() * 0.9 : 0.6 + Math.random() * 0.45;
       this.seeds.set([Math.random(), Math.random(), 0.55 + 0.9 * Math.random() ** 2.2, Math.random()], i * 4);
       if (tint) this.tint.set([tint.r, tint.g, tint.b], i3); else this.tint.fill(1, i3, i3 + 3);
     }

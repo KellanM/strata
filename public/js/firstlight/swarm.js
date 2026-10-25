@@ -147,7 +147,7 @@ export class Swarm {
       this.birth[i] = t + over * Math.pow(r(), 2.2);
       this.pos.set([this.src.x + (r() - 0.5) * size, this.src.y + (r() - 0.5) * size, this.src.z + 0.5 + r() * 0.3], i * 3);
       this.vel.set([(r() - 0.5) * 0.6, 0.6 + r() * 0.8, (r() - 0.2) * 0.8], i * 3);
-      this.ceiling[i] = this.src.y + 8 + 19 * Math.pow(r(), 0.7);
+      this.ceiling[i] = this.src.y + 8 + 14 * Math.pow(r(), 0.7);   // (the game's title: a lower sky)
       if (i < this.reserved) {   // the name: among the last to leave, the highest to climb
         this.birth[i] = t + over * (0.35 + 0.65 * r());
         this.ceiling[i] = this.stars[(this.free.length - this.reserved + i) * 3 + 1] - 1.5;
@@ -181,7 +181,7 @@ export class Swarm {
     if (t >= this.released) {
       const hl = L.y - src.y;
       curl(this.broad, L.x * 0.6, L.y, t, b);
-      const climb = 3.4 * (1 - smooth(20, 30, hl)) * smooth(0, 0.8, t - this.released);
+      const climb = 3.4 * (1 - smooth(13, 21, hl)) * smooth(0, 0.8, t - this.released);
       // low down it sways in a slow S, as smoke does on still air; higher, the broad field takes it
       const lean = Math.sin((t - this.released) * 1.25 + 0.6) * 1.5 * (1 - smooth(4, 10, hl));
       LV.set(lean + b[0] * 2.6 * smooth(0.5, 4, hl) + (src.x - L.x) * 0.08, climb + b[1] * 0.5, 0);
