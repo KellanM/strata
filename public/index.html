@@ -33,7 +33,7 @@
     #splash .gone { display: none; }
     #splash.shards .gone { display: inline; }   /* the test: ?splash=shards, or the developer panel */
     #splash .art { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
-      transform: scale(var(--fit, 1)); opacity: 0; animation: card-in 1.1s ease .15s forwards; }
+      transform: scale(calc(var(--fit, 1) * .74)); opacity: 0; animation: card-in 1.1s ease .15s forwards; }   /* the mark a little smaller in the frame */
     #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
     /* the name lies on the floor inside the shadow, cut out of it: the light
        shows through its letters. It is laid down in the shadow's own

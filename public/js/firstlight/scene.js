@@ -31,7 +31,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const CAM_Z = 24;
   // the camera's height on the wall, and at rest: only a little way up, so the
   // wall's top stays in view at the foot of the sky, a horizon under the name
-  const CAM_FROM = 0.5, CAM_TO = 9;
+  const CAM_FROM = 2, CAM_TO = 9;   // CAM_FROM is the stone's own height: it opens dead centre on every screen
   const scene = new THREE.Scene();
   const swarmScene = new THREE.Scene();
 
@@ -355,7 +355,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const FAST = 3;
   const pace = (s) => 1 + (FAST - 1) * (1 - smooth(3, 11, s));
   let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
-  let camY = CAM_FROM, tapReal = 0, dawnSpan = 3.2;
+  let camY = CAM_FROM, tapReal = 0, dawnSpan = 7.5;   // the sky comes slowly, over the whole rise
   const sound = new Sound();
   let quiet = false;   // finish() runs the clock forward in silence
   swarm.onSettle = () => { if (!quiet) sound.star(); };
