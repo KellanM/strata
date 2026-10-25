@@ -404,9 +404,20 @@
   </aside>
   <div id="pause" role="dialog" aria-label="Paused">
     <div class="pause-card">
-      <button data-pause="resume">Resume</button>
-      <button data-pause="restart">Restart</button>
-      <button data-pause="map">Map</button>
+      <p class="pause-where" aria-hidden="true"><span class="pause-chapter"></span><span class="pause-name"></span></p>
+      <button class="pause-resume" data-pause="resume" aria-label="Resume">
+        <svg viewBox="0 0 24 24"><path d="M9.5 7.2v9.6l7.5-4.8z"/></svg>
+      </button>
+      <div class="pause-row">
+        <button data-pause="restart">
+          <svg viewBox="0 0 24 24"><path d="M18.6 9.4A7 7 0 1 0 19 13"/><path d="M19.2 4.6v4.9h-4.9"/></svg>
+          <span class="pause-label">Restart</span>
+        </button>
+        <button data-pause="map">
+          <svg viewBox="0 0 24 24"><path d="M3.5 6.5 9 4.5l6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></svg>
+          <span class="pause-label">Map</span>
+        </button>
+      </div>
     </div>
   </div>
   <div id="loading" aria-live="polite"></div>
