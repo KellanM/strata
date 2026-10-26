@@ -163,3 +163,31 @@ Kellan wants each small stone to end on a simple, delightful object as its rewar
 - **Learn's extras** are now Wall, Cairn, Stair and Geode. Arch and Colonnade are replaced by Cherries and Crown.
 
 Evidence: `shots/lessons-v3/reveals.png` (the ten objects) and `play-b.png` (each stone after a pause). Checked in the browser only; no tester has played this version yet.
+
+## Iteration 3 (2026-10-26): objects from the game's world; numbers on top on their own
+
+**Feedback on iteration 2 (Kellan):**
+- The objects should be more interesting than a car and the like. They should fit the game but be obvious; the Heart is good.
+- Lesson 5 (the Mushroom: numbers on top, plus 1s picked out by a full column) "still sounds like a riddle".
+
+**What changed:**
+- **The objects:**
+  1. Heart.
+  2. Pine Tree.
+  3. Sea Chest: wood, iron corners, a gold lock.
+  4. Lantern: red paper between brass caps, lit.
+  5. Candle.
+  6. Cat: two ears for the circle, green eyes, a pink nose.
+  7. Crown.
+  8. Tortoise: a domed shell, its two legs the circled 2.
+  9. Throne: the Sofa's shape with a tall back.
+  10. Mushroom: a whole 3×3×3 stone, a spotted cap on a stalk.
+  - These lean on the favourites: heirlooms, calm creatures, regal and mythic things. A die was tried for lesson 4, but its five pips read as a checkerboard, so it was replaced by the Lantern.
+- **Lesson 5 now teaches one thing.**
+  - Numbers on top count straight down, the same as rows.
+  - It shows the column numbers only (0 4 0) on a candle whose picture shows through.
+  - Its card says it outright: "Numbers on top count straight down. 0: none stay, so tap that column away."
+  - Combining two directions is left to the Tortoise (lesson 8), where the words wait for a pause and a nudge glows if the player is stuck.
+- **The circle's level reminder** now says "like the cat's two ears".
+
+Evidence: `shots/lessons-v4/reveals.png` and `play-b.png`. Checked in the browser only.

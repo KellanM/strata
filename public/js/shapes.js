@@ -3392,16 +3392,20 @@ export const TUTORIAL = [
 // Three first-time players of about 50 found the old lessons "a riddle", and
 // then that abstract carved forms (a plinth, a rune, a dolmen) asked them to
 // imagine what they were looking at. Here every stone uncovers a thing anyone
-// can name at a glance - a heart, a goldfish, a cake - as its small reward,
-// and each teaches one idea, done before it is read: a ghost finger shows the
-// move (a hint's `demo`), the words wait for a pause (`wait`), a slip is
-// answered kindly (`mistake`) and costs nothing. The circle and the square are
-// taught on things whose gaps you can see: two cherries, a crown's points, a
-// car's wheels. What's left (marking, a blank face, depth, peeling) is met in
-// the levels as it first matters, and stays replayable from Learn's list.
+// can name at a glance, from the game's world - a pine, a sea chest, a crown,
+// a tortoise - as its small reward, and each teaches one idea, done before it
+// is read: a ghost finger shows the move (a hint's `demo`), the words wait for
+// a pause (`wait`), a slip is answered kindly (`mistake`) and costs nothing.
+// A new kind of number is first met with its picture showing through, so it
+// can be checked by counting. The circle and the square are taught on gaps
+// you can see: a cat's two ears, a crown's points, a tortoise's legs. What's
+// left (marking, a blank face, depth, peeling) is met in the levels as it
+// first matters, and stays replayable from Learn's list.
 const lessonOld = (id) => TUTORIAL.find((l) => l.id === id);
 const RED = 0xd94a5a, PINK = 0xe9798a, GOLD = 0xe2a93b, DEEP_GOLD = 0xc68a2a, CREAM = 0xf1e6cf;
-const LEAF = 0x6faa4f, INK = 0x343244, GLASS = 0x9ccbe6, WOOD = 0xb27a4c, DARK_WOOD = 0x83563a;
+const LEAF = 0x6faa4f, INK = 0x343244, WOOD = 0xb27a4c, DARK_WOOD = 0x83563a, IRON = 0x5d5f6b;
+const PINE = 0x3f7f5a, PINE_LIGHT = 0x58996b, FLAME = 0xf2a23a, WAX = 0xf0e2c4, BRASS = 0xb98a3e, FUR = 0xd99a52;
+const SHELL = 0x6f7f45, SHELL_LIGHT = 0x93a35c, SKIN = 0xb8a27a, STALK = 0xe8d9b8;
 export const TUTORIAL_V2 = [
   {
     // the goal at a glance: the thing in its colours, plain stone around it
@@ -3415,57 +3419,52 @@ export const TUTORIAL_V2 = [
   },
   {
     // the same, once more, with no words unless they're needed
-    id: 'v2-fish', name: 'Goldfish', sky: 'Lagoon', view: 0.3, handles: false, dims: [5, 3, 1], show: [0, 0, 0],
+    id: 'v2-pine', name: 'Pine Tree', sky: 'Lagoon', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
     ghost: 1,
-    cell: (x, y) => {
-      if (y === 1) return x === 1 ? INK : x < 4 ? 0xe8833a : 0xf2a65a;     // nose to tail, with an eye
-      return x === 4 ? 0xf2a65a : x === 1 || x === 2 ? 0xe8833a : 0;     // above and below: the body, a notch, the tail
-    },
+    cell: (x, y) => (y === 0 ? (x === 2 ? WOOD : 0) : Math.abs(x - 2) <= 3 - y ? (y === 2 ? PINE_LIGHT : PINE) : 0),
     hints: [
       { text: 'Knock away the white stone. Keep the coloured part.', wait: 7, until: 'solved',
         mistake: 'That cube is part of the picture, so it stays.' },
     ],
   },
   {
-    // a number: 0, seen beside a row while the picture still shows through
-    id: 'v2-present', name: 'Present', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 4, 1], show: [1, 0, 0],
+    // what a number is, said once, while the picture shows through to be counted
+    id: 'v2-chest', name: 'Sea Chest', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [5, 4, 1], show: [1, 0, 0],
     ghost: 0.55,
-    cell: (x, y) => (y === 3 ? 0 : x === 1 || y === 1 ? GOLD : RED),   // wrapped, a ribbon both ways
+    cell: (x, y) => (y === 3 ? 0 : x === 0 || x === 4 ? IRON : y === 1 && x === 2 ? GOLD : y === 2 ? DARK_WOOD : WOOD),   // a lid, iron corners, a lock
     hints: [
-      // what a number is, said once, while the picture shows through to be counted
       { text: 'Each number counts the cubes that stay in its row. 0: none stay, so tap them away.',
-        line: [0, 0, 3, 0], lines: [[0, 0, 2, 0]], demo: [2, 3, 0],
-        until: 'solved', mistake: 'That row says 3: count its coloured cubes. All 3 stay.' },
+        line: [0, 0, 3, 0], lines: [[0, 0, 2, 0]], demo: [4, 3, 0],
+        until: 'solved', mistake: 'That row says 5: count its coloured cubes. All 5 stay.' },
     ],
   },
   {
     // the 0 again, with nothing showing through, and its shortcut
-    id: 'v2-cake', name: 'Cake', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [4, 6, 1], show: [1, 0, 0],
-    cell: (x, y) => [0xe3b46e, 0xc94a5c, 0xe3b46e, 0xf4b8c8, 0, 0][y],   // sponge, jam, sponge, icing
+    id: 'v2-lantern', name: 'Lantern', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 6, 1], show: [1, 0, 0],
+    cell: (x, y) => (y > 3 ? 0 : y === 0 || y === 3 ? DEEP_GOLD : x === 1 ? FLAME : RED),   // paper between brass caps, lit
     hints: [
       { text: 'Quicker: double-tap a 0 to clear its whole row.', mouse: 'Quicker: double-click a 0 to clear its whole row.',
-        line: [0, 0, 5, 0], demo: { cell: [3, 5, 0], face: [1, 0, 0], taps: 2 }, until: 'solved',
-        mistake: 'That row says 4, so all 4 stay.' },
+        line: [0, 0, 5, 0], demo: { cell: [2, 5, 0], face: [1, 0, 0], taps: 2 }, until: 'solved',
+        mistake: 'That row says 3, so all 3 stay.' },
     ],
   },
   {
-    // numbers on top, counting down; a full column picks the one cube in each row
-    id: 'v2-mushroom', name: 'Mushroom', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
-    cell: (x, y) => (y === 2 ? (x === 1 ? CREAM : RED) : x === 1 ? 0xe8d9b8 : 0),   // a red cap with a spot, on a stalk
+    // numbers on top: the same count, straight down - nothing else new
+    id: 'v2-candle', name: 'Candle', sky: 'Night', view: 0.3, handles: false, dims: [3, 4, 1], show: [0, 1, 0],
+    ghost: 0.55,
+    cell: (x, y) => (x !== 1 ? 0 : y === 3 ? FLAME : y === 0 ? BRASS : WAX),   // a flame, the wax, a brass dish
     hints: [
-      { text: 'Numbers on top count straight down. This 3 keeps its whole column.', line: [1, 1, 0, 0], until: 'break',
-        mistake: 'That cube stays: its line is full.' },
-      { text: 'A row with 1 keeps one cube: the one in the full column.', lines: [[0, 0, 0, 0], [0, 0, 1, 0]], wait: 7, until: 'solved',
-        mistake: 'That cube stays: its line is full.' },
+      { text: 'Numbers on top count straight down. 0: none stay, so tap that column away.', line: [1, 0, 0, 0], demo: [0, 3, 0],
+        until: 'solved', mistake: 'That column says 4: all 4 stay.' },
     ],
   },
   {
     // a circle: two pieces, a gap between, seen while the picture shows through
-    id: 'v2-cherries', name: 'Cherries', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    id: 'v2-cat', name: 'Cat', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
     ghost: 0.55,
-    cell: (x, y) => (y === 2 ? (x === 1 ? LEAF : 0) : x === 1 ? 0 : y === 0 ? RED : LEAF),   // two cherries, their stalks meeting
+    cell: (x, y) => (y === 2 ? (x === 1 ? 0 : FUR) : y === 1 ? (x === 1 ? FUR : LEAF) : x === 1 ? PINK : FUR),   // ears, eyes, a nose
     hints: [
-      { text: 'A circle round a number means two pieces, with a gap between. Tap the gap.', line: [0, 0, 0, 0], demo: [1, 0, 0],
+      { text: 'A circle round a number means two pieces, with a gap between. Tap the gap.', line: [0, 0, 2, 0], demo: [1, 2, 0],
         wait: 3, until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
     ],
   },
@@ -3480,18 +3479,23 @@ export const TUTORIAL_V2 = [
     ],
   },
   {
-    // the circle again, with nothing showing through
-    id: 'v2-car', name: 'Little Car', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 1, 0],
-    cell: (x, y) => (y === 2 ? (x >= 1 && x <= 3 ? (x === 2 ? 0xd94a5a : GLASS) : 0) : y === 1 ? 0xd94a5a : x === 1 || x === 3 ? INK : 0),
+    // the circle again, with nothing showing through: its legs
+    id: 'v2-tortoise', name: 'Tortoise', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (y === 2 ? (x >= 1 && x <= 3 ? (x === 2 ? SHELL_LIGHT : SHELL) : 0)
+      : y === 1 ? (x === 4 ? SKIN : x % 2 ? SHELL_LIGHT : SHELL) : x === 1 || x === 3 ? SKIN : 0),   // a domed shell, head out, two legs
     hints: [
       { text: 'The circled 2: two pieces with a gap. The numbers on top show where.', line: [0, 0, 0, 0], wait: 8, until: 'solved',
         mistake: 'That cube stays: the numbers say so.' },
     ],
   },
   {
-    // turning: a sofa, its arms either side of the seat
-    id: 'v2-sofa', name: 'Sofa', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 2], show: [1, 1, 1],
-    cell: (x, y, z) => (y === 0 ? (z === 1 ? 0x7fb7a8 : 0x5f9a8c) : z === 0 || x === 0 || x === 3 ? 0x4f8a7c : 0),
+    // turning: a throne, its arms either side of the seat
+    id: 'v2-throne', name: 'Throne', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 3, 2], show: [1, 1, 1],
+    cell: (x, y, z) => {
+      if (y === 0) return z === 1 && (x === 1 || x === 2) ? RED : DEEP_GOLD;   // a cushion on the seat
+      if (y === 1) return z === 0 || x === 0 || x === 3 ? GOLD : 0;           // the back and two arms
+      return z === 0 ? (x === 1 || x === 2 ? GOLD : DEEP_GOLD) : 0;          // the tall back
+    },
     hints: [
       { text: 'Drag anywhere to turn the stone.', demo: { drag: true }, until: 'rotate' },
       { text: 'A circled 2 again: keep the two ends, tap away the gap.', line: [0, 0, 1, 1], wait: 6, until: 'solved',
@@ -3500,8 +3504,8 @@ export const TUTORIAL_V2 = [
   },
   {
     // the bridge to level 1: a whole small stone, on your own
-    ...lessonOld('lesson-stool'), id: 'v2-table', name: 'Table',
-    cell: (x, y, z) => (y === 2 ? WOOD : x !== 1 && z !== 1 ? DARK_WOOD : 0),   // a top on four legs
+    id: 'v2-mushroom', name: 'Mushroom', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
+    cell: (x, y, z) => (y === 2 ? ((x === 1) !== (z === 1) ? CREAM : RED) : x === 1 && z === 1 ? STALK : 0),   // a spotted cap on a stalk
     hints: [
       { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', wait: 2, until: 'solved' },
     ],

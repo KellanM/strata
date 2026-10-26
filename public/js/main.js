@@ -776,7 +776,7 @@ function resetCoaching(entry, quiet) {
 }
 const REMINDERS = [
   { key: 'circle', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_CIRCLE),
-    text: lessonsV2 ? 'A circled number: two pieces with a gap between, like the two cherries.' : 'A circled number: that row’s cubes are in two groups, with a gap between.' },
+    text: lessonsV2 ? 'A circled number: two pieces with a gap between, like the cat’s two ears.' : 'A circled number: that row’s cubes are in two groups, with a gap between.' },
   { key: 'square', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_SQUARE),
     text: lessonsV2 ? 'A squared number: three pieces or more, like the points of the crown.' : 'A square: that row’s cubes are in three groups or more.' },
   { key: 'blank', test: (p) => [0, 1, 2].some((ax) => { const ls = p.lines.filter((l) => l.axis === ax); return ls.length && ls.every((l) => l.hidden); }),
