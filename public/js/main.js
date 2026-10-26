@@ -67,12 +67,14 @@ let tool = 'break';
 const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
 let tutorial = null;          // { step, hint, open, list }: open = the current hint is showing (a `wait` hint holds back)
-// The rebuilt first run (docs/tutorial-study.md), behind ?lessons=new (remembered;
-// ?lessons=old goes back) until it ships after the store build
+// The rebuilt first run (docs/tutorial-study.md): the web's default; the store
+// app keeps the old lessons until its first build has shipped. ?lessons=old or
+// ?lessons=new picks one (remembered)
 const lessonsV2 = (() => {
   const q = new URLSearchParams(location.search).get('lessons');
   if (q) localStorage.setItem('strata.lessons', q);
-  return localStorage.getItem('strata.lessons') === 'new';
+  const pick = localStorage.getItem('strata.lessons');
+  return pick ? pick === 'new' : !inStoreApp;
 })();
 if (lessonsV2) document.documentElement.classList.add('lessons-v2');
 const LESSON_RUN = lessonsV2 ? TUTORIAL_V2 : TUTORIAL;                              // played in a row

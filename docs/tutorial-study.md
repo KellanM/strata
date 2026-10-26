@@ -201,3 +201,7 @@ Kellan noticed the new run never showed slicing (peeling). The Geode is now less
 - **The level reminder** for slicing uses the same words.
 
 Checked in the browser: dragging along the finger's path peels one layer and moves the lesson on (`shots/geode.mjs`, `shots/lessons-v4/geode.png`).
+
+## Shipped to the web (2026-10-26)
+
+At Kellan's request, the rebuilt run (11 stones) is now the web app's default. The store app keeps the old lessons until its first build has shipped (`main.js lessonsV2`, keyed on `inStoreApp`). `?lessons=old` or `?lessons=new` still picks one on any device, and the choice is remembered.
