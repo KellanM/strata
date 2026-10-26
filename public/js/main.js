@@ -784,7 +784,7 @@ const REMINDERS = [
   // the rebuilt run leaves these to the levels: said once, where first they help
   ...(lessonsV2 ? [
     { key: 'peel', test: (p) => p.dims.every((d) => d >= 3),
-      text: 'Some cubes are inside. Drag a diamond along its rail to slice layers away and see in.' },
+      text: 'Some cubes are inside. Slide a diamond along its line to lift layers off and see in.' },
     { key: 'mark', test: (p) => p.lines.some((l) => !l.hidden && l.count >= 3 && l.count === l.cells.length),
       text: 'Sure a cube stays? Hold it to mark it, and it can’t be chiselled by mistake.' },
   ] : []),
@@ -982,10 +982,20 @@ function showFinger(demo) {
     fingerEl.innerHTML = '<span class="ring"></span><span class="ring two"></span><span class="tip"></span>';
     document.body.appendChild(fingerEl);
   }
-  const kind = demo.drag ? 'drag' : demo.taps === 2 ? 'double' : 'tap';
+  const kind = demo.drag ? 'drag' : demo.handle !== undefined ? 'slide' : demo.taps === 2 ? 'double' : 'tap';
   if (kind !== fingerKind) { fingerEl.className = kind; fingerKind = kind; }
   let x = innerWidth / 2, y = innerHeight * 0.68;
-  if (!demo.drag) {
+  if (demo.handle !== undefined) {
+    // a peel diamond, slid one layer and a bit inward along its line
+    const it = handles.items[demo.handle];
+    if (!it.mesh.visible || it.k < 0.6) { fingerEl.classList.remove('show'); return; }
+    const toScreen = (v) => { const q = v.clone().project(camera); return [(q.x + 1) / 2 * innerWidth, (1 - q.y) / 2 * innerHeight]; };
+    const inward = new THREE.Vector3(); inward.setComponent(it.axis, -it.side * 1.3);
+    const [x0, y0] = toScreen(it.mesh.position), [x1, y1] = toScreen(it.mesh.position.clone().add(inward));
+    x = x0; y = y0;
+    fingerEl.style.setProperty('--dx', `${(x1 - x0).toFixed(1)}px`);
+    fingerEl.style.setProperty('--dy', `${(y1 - y0).toFixed(1)}px`);
+  } else if (!demo.drag) {
     const cell = Array.isArray(demo) ? demo : demo.cell;
     const i = game.puzzle.idx(...cell);
     if (game.broken[i]) { fingerEl.classList.remove('show'); return; }   // already done

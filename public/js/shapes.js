@@ -3399,7 +3399,7 @@ export const TUTORIAL = [
 // A new kind of number is first met with its picture showing through, so it
 // can be checked by counting. The circle and the square are taught on gaps
 // you can see: a cat's two ears, a crown's points, a tortoise's legs. What's
-// left (marking, a blank face, depth, peeling) is met in the levels as it
+// left (marking, a blank face, depth) is met in the levels as it
 // first matters, and stays replayable from Learn's list.
 const lessonOld = (id) => TUTORIAL.find((l) => l.id === id);
 const RED = 0xd94a5a, PINK = 0xe9798a, GOLD = 0xe2a93b, DEEP_GOLD = 0xc68a2a, CREAM = 0xf1e6cf;
@@ -3503,6 +3503,17 @@ export const TUTORIAL_V2 = [
     ],
   },
   {
+    // peeling: the inside is reached by lifting layers off with a diamond
+    ...lessonOld('lesson-peel'), id: 'v2-geode',
+    hints: [
+      { text: 'Some cubes are hidden inside. Slide the diamond down its line to lift a layer off.',
+        mouse: 'Some cubes are hidden inside. Drag the diamond down its line to lift a layer off.',
+        pulseHandle: true, demo: { handle: 1 }, until: 'peel' },
+      { text: 'Each row through the middle is a circled 2. Its gap is the middle cube: tap it.',
+        pulse: [1, 1, 1], wait: 5, until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
+    ],
+  },
+  {
     // the bridge to level 1: a whole small stone, on your own
     id: 'v2-mushroom', name: 'Mushroom', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
     cell: (x, y, z) => (y === 2 ? ((x === 1) !== (z === 1) ? CREAM : RED) : x === 1 && z === 1 ? STALK : 0),   // a spotted cap on a stalk
@@ -3512,7 +3523,7 @@ export const TUTORIAL_V2 = [
   },
 ];
 // the rest of the old run, for Learn's list
-export const LESSON_EXTRAS = ['lesson-mark', 'lesson-blank', 'lesson-depth', 'lesson-peel'].map(lessonOld);
+export const LESSON_EXTRAS = ['lesson-mark', 'lesson-blank', 'lesson-depth'].map(lessonOld);
 
 // a lesson that shows no number at all (it is solved by sight, through its ghost)
 export const cluesShown = (lesson) => !(lesson.show && lesson.show.every((v) => !v));

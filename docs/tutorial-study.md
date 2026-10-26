@@ -191,3 +191,13 @@ Evidence: `shots/lessons-v3/reveals.png` (the ten objects) and `play-b.png` (eac
 - **The circle's level reminder** now says "like the cat's two ears".
 
 Evidence: `shots/lessons-v4/reveals.png` and `play-b.png`. Checked in the browser only.
+
+## Iteration 3b (2026-10-26): the Geode is back, to teach slicing
+
+Kellan noticed the new run never showed slicing (peeling). The Geode is now lesson 10 of 11, before the Mushroom:
+- **The ghost finger** sits on the vertical diamond and slides it one layer inward (a new `demo: { handle: axis }`, `#finger.slide`).
+- **First card:** "Some cubes are hidden inside. Slide the diamond down its line to lift a layer off."
+- **Second card:** "Each row through the middle is a circled 2. Its gap is the middle cube: tap it."
+- **The level reminder** for slicing uses the same words.
+
+Checked in the browser: dragging along the finger's path peels one layer and moves the lesson on (`shots/geode.mjs`, `shots/lessons-v4/geode.png`).
