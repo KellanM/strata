@@ -534,7 +534,7 @@ Kellan approved a set of pieces, and they shipped in the web app with placeholde
 ## Kellan's decisions (2026-10-19)
 
 - **Gem fill: rejected.** "Feels pay to win." Gems keep meaning a clean hand, so no gem can be bought or watched for.
-- **Remove Ads:** $2.99 (was $3.99; Kellan lowered it 2026-10-19), framed as support: "Strata is free. Remove ads and support it."
+- **Remove Ads:** $1.99 (was $3.99, then $2.99; Kellan lowered it 2026-10-19 and again 2026-10-25), framed as support: "Strata is free. Remove ads and support it."
 - **Lantern flames are earned by play:** +1 each morning, +1 for a level's first flawless solve, +1 the first time a chapter is completed; start 3, cap 5.
 - **Interstitials between levels:** yes, at the caps as built.
 - **Shrines can be opened with an ad,** once the trail has reached their chapter (reversing the study's "no").
