@@ -3389,93 +3389,124 @@ export const TUTORIAL = [
   },
 ];
 // The first run, rebuilt (docs/tutorial-study.md; behind ?lessons=new for now).
-// Three first-time players of about 50 found every old lesson "a riddle". Here
-// each stone teaches one idea, done before it is read: a ghost finger shows the
-// move (a hint's `demo`), the words wait for a pause (`wait`), and an idea gets
-// a second stone with no words. A slip is answered kindly (`mistake`) and costs
-// nothing. What the old run taught beyond this (marking, circles and squares, a
-// blank face, depth, peeling) is met in the levels as it first matters, and
-// stays replayable from Learn's list (LESSON_EXTRAS).
+// Three first-time players of about 50 found the old lessons "a riddle", and
+// then that abstract carved forms (a plinth, a rune, a dolmen) asked them to
+// imagine what they were looking at. Here every stone uncovers a thing anyone
+// can name at a glance - a heart, a goldfish, a cake - as its small reward,
+// and each teaches one idea, done before it is read: a ghost finger shows the
+// move (a hint's `demo`), the words wait for a pause (`wait`), a slip is
+// answered kindly (`mistake`) and costs nothing. The circle and the square are
+// taught on things whose gaps you can see: two cherries, a crown's points, a
+// car's wheels. What's left (marking, a blank face, depth, peeling) is met in
+// the levels as it first matters, and stays replayable from Learn's list.
 const lessonOld = (id) => TUTORIAL.find((l) => l.id === id);
+const RED = 0xd94a5a, PINK = 0xe9798a, GOLD = 0xe2a93b, DEEP_GOLD = 0xc68a2a, CREAM = 0xf1e6cf;
+const LEAF = 0x6faa4f, INK = 0x343244, GLASS = 0x9ccbe6, WOOD = 0xb27a4c, DARK_WOOD = 0x83563a;
 export const TUTORIAL_V2 = [
   {
-    // the goal at a glance: the shape in its colour, plain stone around it
-    id: 'v2-gem', name: 'Gem', sky: 'Lagoon', view: 0.3, handles: false, dims: [3, 1, 1], show: [0, 0, 0],
+    // the goal at a glance: the thing in its colours, plain stone around it
+    id: 'v2-heart', name: 'Heart', sky: 'Dawn', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
     ghost: 1,
-    cell: (x) => (x === 1 ? TEAL : 0),
+    cell: (x, y) => [[0, 0, 1, 0, 0], [0, 1, 1, 1, 0], [1, 1, 1, 1, 1], [0, 1, 0, 1, 0]][y][x] ? (y === 3 ? PINK : RED) : 0,
     hints: [
-      { text: 'Tap the plain stone to chisel it away.', demo: [0, 0, 0], wait: 5, until: 'solved',
-        mistake: 'That one is the coloured shape, so it stays. Tap the plain stone.' },
+      { text: 'Tap the white stone to knock it away. The coloured part stays.', demo: [0, 0, 0], wait: 5, until: 'solved',
+        mistake: 'That cube is part of the picture, so it stays. Tap the white stone.' },
     ],
   },
   {
     // the same, once more, with no words unless they're needed
-    id: 'v2-pillar', name: 'Pillar', sky: 'Dawn', view: 0.3, handles: false, dims: [3, 3, 1], show: [0, 0, 0],
+    id: 'v2-fish', name: 'Goldfish', sky: 'Lagoon', view: 0.3, handles: false, dims: [5, 3, 1], show: [0, 0, 0],
     ghost: 1,
-    cell: (x, y) => (y === 1 ? (x === 1 ? CLAY : 0) : TERRACOTTA),
+    cell: (x, y) => {
+      if (y === 1) return x === 1 ? INK : x < 4 ? 0xe8833a : 0xf2a65a;     // nose to tail, with an eye
+      return x === 4 ? 0xf2a65a : x === 1 || x === 2 ? 0xe8833a : 0;     // above and below: the body, a notch, the tail
+    },
     hints: [
-      { text: 'Chisel away the plain stone. Keep the coloured shape.', wait: 7, until: 'solved',
-        mistake: 'That cube is part of the shape, so it stays.' },
+      { text: 'Knock away the white stone. Keep the coloured part.', wait: 7, until: 'solved',
+        mistake: 'That cube is part of the picture, so it stays.' },
     ],
   },
   {
-    // a number: 0, seen beside a row while the shape still shows through
-    id: 'v2-zero', name: 'Step', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
+    // a number: 0, seen beside a row while the picture still shows through
+    id: 'v2-present', name: 'Present', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 4, 1], show: [1, 0, 0],
     ghost: 0.55,
-    cell: (x, y) => (y === 0 ? [TEAL, 0x5fb0a8, TEAL][x] : 0),
+    cell: (x, y) => (y === 3 ? 0 : x === 1 || y === 1 ? GOLD : RED),   // wrapped, a ribbon both ways
     hints: [
-      { text: 'The 0 means no cube in its row belongs to the shape. Tap them away.', line: [0, 0, 1, 0], demo: [2, 1, 0],
-        wait: 4, until: 'solved', mistake: 'That row says 3: all of its cubes stay. Clear the 0 row.' },
+      { text: '0 means nothing in this row stays. Tap it all away.', line: [0, 0, 3, 0], demo: [2, 3, 0],
+        wait: 4, until: 'solved', mistake: 'That row says 3, so all 3 stay. Tap the 0 row.' },
     ],
   },
   {
-    // the 0 again, with no shape showing, and its shortcut
-    id: 'v2-ledge', name: 'Ledge', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 0 ? UMBER : 0),
+    // the 0 again, with nothing showing through, and its shortcut
+    id: 'v2-cake', name: 'Cake', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [4, 6, 1], show: [1, 0, 0],
+    cell: (x, y) => [0xe3b46e, 0xc94a5c, 0xe3b46e, 0xf4b8c8, 0, 0][y],   // sponge, jam, sponge, icing
     hints: [
       { text: 'Quicker: double-tap a 0 to clear its whole row.', mouse: 'Quicker: double-click a 0 to clear its whole row.',
-        line: [0, 0, 2, 0], demo: { cell: [2, 2, 0], face: [1, 0, 0], taps: 2 }, until: 'solved',
-        mistake: 'That row says 3: all of its cubes stay.' },
+        line: [0, 0, 5, 0], demo: { cell: [3, 5, 0], face: [1, 0, 0], taps: 2 }, until: 'solved',
+        mistake: 'That row says 4, so all 4 stay.' },
     ],
   },
   {
-    // a full row: every cube stays
-    id: 'v2-plinth', name: 'Plinth', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
-    cell: (x, y) => (y === 0 ? UMBER : y === 1 ? SAND : 0),
+    // numbers on top, counting down; a full column picks the one cube in each row
+    id: 'v2-mushroom', name: 'Mushroom', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (y === 2 ? (x === 1 ? CREAM : RED) : x === 1 ? 0xe8d9b8 : 0),   // a red cap with a spot, on a stalk
     hints: [
-      { text: 'A 3 in a row of 3: every cube stays. Only the 0 row goes.', line: [0, 0, 1, 0], wait: 6, until: 'solved',
-        mistake: 'That cube stays: its row says 3, so all 3 belong.' },
+      { text: 'Numbers on top count straight down. This 3 keeps its whole column.', line: [1, 1, 0, 0], until: 'break',
+        mistake: 'That cube stays: its line is full.' },
+      { text: 'A row with 1 keeps one cube: the one in the full column.', lines: [[0, 0, 0, 0], [0, 0, 1, 0]], wait: 7, until: 'solved',
+        mistake: 'That cube stays: its line is full.' },
     ],
   },
   {
-    // numbers on top, counting down; the two directions meet
-    id: 'v2-rune', name: 'Rune', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
-    cell: (x, y) => (x === 1 && y === 1 ? 0x8fb8f0 : x === 1 || y === 1 ? LAPIS : 0),
+    // a circle: two pieces, a gap between, seen while the picture shows through
+    id: 'v2-cherries', name: 'Cherries', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    ghost: 0.55,
+    cell: (x, y) => (y === 2 ? (x === 1 ? LEAF : 0) : x === 1 ? 0 : y === 0 ? RED : LEAF),   // two cherries, their stalks meeting
     hints: [
-      { text: 'Numbers on top count straight down their column.', line: [1, 1, 0, 0], until: 'break',
-        mistake: 'That cube stays: a 3 keeps its whole line.' },
-      { text: 'A 1 keeps just one cube. The 3s across and down show which one.', lines: [[0, 0, 0, 0], [1, 0, 0, 0]], wait: 7, until: 'solved',
-        mistake: 'That cube stays: a 3 keeps its whole line.' },
+      { text: 'A circle round a number means two pieces, with a gap between. Tap the gap.', line: [0, 0, 0, 0], demo: [1, 0, 0],
+        wait: 3, until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
     ],
   },
   {
-    // turning: a cube out of sight
-    ...lessonOld('lesson-turn'), id: 'v2-turn',
+    // a square: three pieces or more
+    id: 'v2-crown', name: 'Crown', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 0, 0],
+    ghost: 0.55,
+    cell: (x, y) => (y === 2 ? (x % 2 ? 0 : GOLD) : y === 1 ? [GOLD, RED, 0x4f7fc4, RED, GOLD][x] : DEEP_GOLD),
+    hints: [
+      { text: 'A square round a number means three pieces or more, with gaps between. Tap the gaps.', line: [0, 0, 2, 0], demo: [1, 2, 0],
+        wait: 3, until: 'solved', mistake: 'That cube is one of the pieces, so it stays.' },
+    ],
+  },
+  {
+    // the circle again, with nothing showing through
+    id: 'v2-car', name: 'Little Car', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (y === 2 ? (x >= 1 && x <= 3 ? (x === 2 ? 0xd94a5a : GLASS) : 0) : y === 1 ? 0xd94a5a : x === 1 || x === 3 ? INK : 0),
+    hints: [
+      { text: 'The circled 2: two pieces with a gap. The numbers on top show where.', line: [0, 0, 0, 0], wait: 8, until: 'solved',
+        mistake: 'That cube stays: the numbers say so.' },
+    ],
+  },
+  {
+    // turning: a sofa, its arms either side of the seat
+    id: 'v2-sofa', name: 'Sofa', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 2, 2], show: [1, 1, 1],
+    cell: (x, y, z) => (y === 0 ? (z === 1 ? 0x7fb7a8 : 0x5f9a8c) : z === 0 || x === 0 || x === 3 ? 0x4f8a7c : 0),
     hints: [
       { text: 'Drag anywhere to turn the stone.', demo: { drag: true }, until: 'rotate' },
-      { text: 'Three rows say 1, and they meet at one corner. Chisel that corner cube.', lines: [[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]], wait: 6, until: 'solved' },
+      { text: 'A circled 2 again: keep the two ends, tap away the gap.', line: [0, 0, 1, 1], wait: 6, until: 'solved',
+        mistake: 'That cube stays: the numbers say so.' },
     ],
   },
   {
     // the bridge to level 1: a whole small stone, on your own
-    ...lessonOld('lesson-stool'), id: 'v2-dolmen',
+    ...lessonOld('lesson-stool'), id: 'v2-table', name: 'Table',
+    cell: (x, y, z) => (y === 2 ? WOOD : x !== 1 && z !== 1 ? DARK_WOOD : 0),   // a top on four legs
     hints: [
       { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', wait: 2, until: 'solved' },
     ],
   },
 ];
 // the rest of the old run, for Learn's list
-export const LESSON_EXTRAS = ['lesson-mark', 'lesson-groups', 'lesson-square', 'lesson-blank', 'lesson-depth', 'lesson-peel'].map(lessonOld);
+export const LESSON_EXTRAS = ['lesson-mark', 'lesson-blank', 'lesson-depth', 'lesson-peel'].map(lessonOld);
 
 // a lesson that shows no number at all (it is solved by sight, through its ghost)
 export const cluesShown = (lesson) => !(lesson.show && lesson.show.every((v) => !v));

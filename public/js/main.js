@@ -661,7 +661,9 @@ function win() {
   const target = sphere.center.clone();
   target.y -= shiftPx / (pxPerUnit * zoom) / Math.cos(g.homeEl);
   // it whirls down onto the pose its map stone shows (thumbs use an azimuth of 45°), then holds still
-  g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson, pose: g.homeAz - Math.PI / 4 };
+  // (a flat picture in the rebuilt lessons lands nearly face-on, so it reads as the thing it is)
+  const face = lessonsV2 && g.entry.lesson && d[2] === 1 ? 0.3 : Math.PI / 4;
+  g.win = { t0: t, focus, target, zoom, framed: false, lesson: !!g.entry.lesson, pose: g.homeAz - face };
   document.body.classList.add('solved');   // the HUD steps aside; a lesson's too, for its name
   resetView();
 
@@ -675,7 +677,7 @@ function win() {
   // confetti in the object's own colours, thrown from all over it
   const hues = [...new Set(cells.map((i) => g.puzzle.colors[i] || 0xffffff))].slice(0, 5).map((h) => new THREE.Color(h));
   hues.push(new THREE.Color(g.palette.rays));
-  const bursts = reduceMotion ? 2 : g.entry.lesson ? 4 : 9;
+  const bursts = reduceMotion ? 2 : g.entry.lesson ? (lessonsV2 ? 7 : 4) : 9;   // a lesson's object is its reward too
   for (let k = 0; k < bursts; k++) {
     const at = cellWorld(cells[Math.floor(Math.random() * cells.length)]);
     shards.burst(at, t + 0.34 + k * 0.07, hues, g.entry.lesson ? 18 : 34, 1.7);
@@ -774,9 +776,9 @@ function resetCoaching(entry, quiet) {
 }
 const REMINDERS = [
   { key: 'circle', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_CIRCLE),
-    text: 'A circled number: that row’s cubes are in two groups, with a gap between.' },
+    text: lessonsV2 ? 'A circled number: two pieces with a gap between, like the two cherries.' : 'A circled number: that row’s cubes are in two groups, with a gap between.' },
   { key: 'square', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_SQUARE),
-    text: 'A square: that row’s cubes are in three groups or more.' },
+    text: lessonsV2 ? 'A squared number: three pieces or more, like the points of the crown.' : 'A square: that row’s cubes are in three groups or more.' },
   { key: 'blank', test: (p) => [0, 1, 2].some((ax) => { const ls = p.lines.filter((l) => l.axis === ax); return ls.length && ls.every((l) => l.hidden); }),
     text: 'One face shows no numbers at all. The other two are enough.' },
   // the rebuilt run leaves these to the levels: said once, where first they help
@@ -946,7 +948,7 @@ function findMove() {
 
 // every frame: a held-back hint opens on a pause; a stuck player gets a nudge
 function coachTick(t) {
-  if (!game || game.solved || titleUp || t < (game.introEnd ?? 0)) return;
+  if (!game || game.solved || titleUp || t < (game.introEnd ?? 0)) { showFinger(null); return; }
   if (document.querySelector('.overlay.show')) { idleFrom = t; return; }   // time away from the block doesn't count
   const idle = t - idleFrom;
   const h = currentHint();

@@ -115,10 +115,10 @@ test('isSolved requires every empty cell broken', () => {
 });
 
 test('tutorial lessons are solvable with exactly the clues they show', async () => {
-  const { TUTORIAL, cluesShown } = await import('../public/js/shapes.js');
+  const { TUTORIAL, TUTORIAL_V2, cluesShown } = await import('../public/js/shapes.js');
   const events = new Set(['break', 'paint', 'mistake', 'rotate', 'peel', 'solved', 'markrow']);
   const ids = new Set();
-  for (const lesson of TUTORIAL) {
+  for (const lesson of [...TUTORIAL, ...TUTORIAL_V2]) {
     const p = make(lesson);
     // a lesson with no numbers at all is solved by sight: its object must show through (ghost)
     if (!cluesShown(lesson)) assert.ok(lesson.ghost > 0.3, `${lesson.id} shows no clues and no ghost`);

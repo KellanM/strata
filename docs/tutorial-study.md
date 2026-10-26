@@ -125,3 +125,40 @@ What I checked, in the browser only (no player has tried it yet):
 Evidence: `shots/lessons-v2/sheet.png`; the top row is with the finger, the bottom row after a pause.
 
 **Next:** the same three testers play it cold (see the review method above).
+
+## Iteration 2 (2026-10-25): every stone uncovers a thing you can name
+
+**Feedback on iteration 1 (Kellan, from the same testers):**
+- It was still a little difficult.
+- Circles and squares weren't landing.
+- The names (Pillar, Plinth, Rune, Dolmen) confused people.
+- The abstract forms asked them to imagine what they were looking at.
+
+Kellan wants each small stone to end on a simple, delightful object as its reward.
+
+**What changed:**
+- **Every lesson hides an everyday thing,** named on its reveal:
+  1. Heart: tap away the plain stone.
+  2. Goldfish: the same again.
+  3. Present: a 0 row.
+  4. Cake: double-tap a 0.
+  5. Mushroom: numbers on top; a full column picks the one cube in each row.
+  6. Cherries: the circle.
+  7. Crown: the square.
+  8. Little Car: the circle again, with no picture showing.
+  9. Sofa: turning, plus a circled 2 between its arms.
+  10. Table: on your own; the old Dolmen's shape, now in wood.
+- **Circles and squares are back in the first run,** taught on gaps you can see.
+  - The cherries are two pieces with a gap.
+  - The crown's points are three pieces with gaps.
+  - The car's wheels are the circle again, with the picture hidden.
+  - The finger taps the gap.
+  - The level reminders now point back to the lessons: "like the two cherries" and "like the points of the crown".
+- **Plain words:** "white stone", "knock it away", "the coloured part", "pieces", "gap". The words "shape" and "belongs" are gone.
+- **The reveal is the reward:**
+  - Flat pictures now land almost face-on (`win()` pose), so a heart reads as a heart instead of a block seen at 45°.
+  - More confetti: 7 bursts, up from 4.
+- **Fixes:** the ghost finger no longer lingers over a solved stone. The lesson tests (`puzzle.test.js` and `uniqueness.test.js`) now cover the new run.
+- **Learn's extras** are now Wall, Cairn, Stair and Geode. Arch and Colonnade are replaced by Cherries and Crown.
+
+Evidence: `shots/lessons-v3/reveals.png` (the ten objects) and `play-b.png` (each stone after a pause). Checked in the browser only; no tester has played this version yet.
