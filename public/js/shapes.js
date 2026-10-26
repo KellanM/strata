@@ -3432,8 +3432,10 @@ export const TUTORIAL_V2 = [
     ghost: 0.55,
     cell: (x, y) => (y === 3 ? 0 : x === 1 || y === 1 ? GOLD : RED),   // wrapped, a ribbon both ways
     hints: [
-      { text: '0 means nothing in this row stays. Tap it all away.', line: [0, 0, 3, 0], demo: [2, 3, 0],
-        wait: 4, until: 'solved', mistake: 'That row says 3, so all 3 stay. Tap the 0 row.' },
+      // what a number is, said once, while the picture shows through to be counted
+      { text: 'Each number counts the cubes that stay in its row. 0: none stay, so tap them away.',
+        line: [0, 0, 3, 0], lines: [[0, 0, 2, 0]], demo: [2, 3, 0],
+        until: 'solved', mistake: 'That row says 3: count its coloured cubes. All 3 stay.' },
     ],
   },
   {

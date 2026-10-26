@@ -154,6 +154,7 @@ Kellan wants each small stone to end on a simple, delightful object as its rewar
   - The car's wheels are the circle again, with the picture hidden.
   - The finger taps the gap.
   - The level reminders now point back to the lessons: "like the two cherries" and "like the points of the crown".
+- **What a number is, said outright** (Kellan: "I don't think we explicitly state this"). The Present lesson now opens with "Each number counts the cubes that stay in its row. 0: none stay, so tap them away." It shows at once, not after a pause, while the picture shows through, so a 3 can be checked against 3 coloured cubes. A slip there gets "That row says 3: count its coloured cubes. All 3 stay."
 - **Plain words:** "white stone", "knock it away", "the coloured part", "pieces", "gap". The words "shape" and "belongs" are gone.
 - **The reveal is the reward:**
   - Flat pictures now land almost face-on (`win()` pose), so a heart reads as a heart instead of a block seen at 45°.
