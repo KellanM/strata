@@ -3388,5 +3388,94 @@ export const TUTORIAL = [
     ],
   },
 ];
+// The first run, rebuilt (docs/tutorial-study.md; behind ?lessons=new for now).
+// Three first-time players of about 50 found every old lesson "a riddle". Here
+// each stone teaches one idea, done before it is read: a ghost finger shows the
+// move (a hint's `demo`), the words wait for a pause (`wait`), and an idea gets
+// a second stone with no words. A slip is answered kindly (`mistake`) and costs
+// nothing. What the old run taught beyond this (marking, circles and squares, a
+// blank face, depth, peeling) is met in the levels as it first matters, and
+// stays replayable from Learn's list (LESSON_EXTRAS).
+const lessonOld = (id) => TUTORIAL.find((l) => l.id === id);
+export const TUTORIAL_V2 = [
+  {
+    // the goal at a glance: the shape in its colour, plain stone around it
+    id: 'v2-gem', name: 'Gem', sky: 'Lagoon', view: 0.3, handles: false, dims: [3, 1, 1], show: [0, 0, 0],
+    ghost: 1,
+    cell: (x) => (x === 1 ? TEAL : 0),
+    hints: [
+      { text: 'Tap the plain stone to chisel it away.', demo: [0, 0, 0], wait: 5, until: 'solved',
+        mistake: 'That one is the coloured shape, so it stays. Tap the plain stone.' },
+    ],
+  },
+  {
+    // the same, once more, with no words unless they're needed
+    id: 'v2-pillar', name: 'Pillar', sky: 'Dawn', view: 0.3, handles: false, dims: [3, 3, 1], show: [0, 0, 0],
+    ghost: 1,
+    cell: (x, y) => (y === 1 ? (x === 1 ? CLAY : 0) : TERRACOTTA),
+    hints: [
+      { text: 'Chisel away the plain stone. Keep the coloured shape.', wait: 7, until: 'solved',
+        mistake: 'That cube is part of the shape, so it stays.' },
+    ],
+  },
+  {
+    // a number: 0, seen beside a row while the shape still shows through
+    id: 'v2-zero', name: 'Step', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [3, 2, 1], show: [1, 0, 0],
+    ghost: 0.55,
+    cell: (x, y) => (y === 0 ? [TEAL, 0x5fb0a8, TEAL][x] : 0),
+    hints: [
+      { text: 'The 0 means no cube in its row belongs to the shape. Tap them away.', line: [0, 0, 1, 0], demo: [2, 1, 0],
+        wait: 4, until: 'solved', mistake: 'That row says 3: all of its cubes stay. Clear the 0 row.' },
+    ],
+  },
+  {
+    // the 0 again, with no shape showing, and its shortcut
+    id: 'v2-ledge', name: 'Ledge', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 ? UMBER : 0),
+    hints: [
+      { text: 'Quicker: double-tap a 0 to clear its whole row.', mouse: 'Quicker: double-click a 0 to clear its whole row.',
+        line: [0, 0, 2, 0], demo: { cell: [2, 2, 0], face: [1, 0, 0], taps: 2 }, until: 'solved',
+        mistake: 'That row says 3: all of its cubes stay.' },
+    ],
+  },
+  {
+    // a full row: every cube stays
+    id: 'v2-plinth', name: 'Plinth', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
+    cell: (x, y) => (y === 0 ? UMBER : y === 1 ? SAND : 0),
+    hints: [
+      { text: 'A 3 in a row of 3: every cube stays. Only the 0 row goes.', line: [0, 0, 1, 0], wait: 6, until: 'solved',
+        mistake: 'That cube stays: its row says 3, so all 3 belong.' },
+    ],
+  },
+  {
+    // numbers on top, counting down; the two directions meet
+    id: 'v2-rune', name: 'Rune', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 1, 0],
+    cell: (x, y) => (x === 1 && y === 1 ? 0x8fb8f0 : x === 1 || y === 1 ? LAPIS : 0),
+    hints: [
+      { text: 'Numbers on top count straight down their column.', line: [1, 1, 0, 0], until: 'break',
+        mistake: 'That cube stays: a 3 keeps its whole line.' },
+      { text: 'A 1 keeps just one cube. The 3s across and down show which one.', lines: [[0, 0, 0, 0], [1, 0, 0, 0]], wait: 7, until: 'solved',
+        mistake: 'That cube stays: a 3 keeps its whole line.' },
+    ],
+  },
+  {
+    // turning: a cube out of sight
+    ...lessonOld('lesson-turn'), id: 'v2-turn',
+    hints: [
+      { text: 'Drag anywhere to turn the stone.', demo: { drag: true }, until: 'rotate' },
+      { text: 'Three rows say 1, and they meet at one corner. Chisel that corner cube.', lines: [[0, 0, 0, 0], [1, 0, 0, 0], [2, 0, 0, 0]], wait: 6, until: 'solved' },
+    ],
+  },
+  {
+    // the bridge to level 1: a whole small stone, on your own
+    ...lessonOld('lesson-stool'), id: 'v2-dolmen',
+    hints: [
+      { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', wait: 2, until: 'solved' },
+    ],
+  },
+];
+// the rest of the old run, for Learn's list
+export const LESSON_EXTRAS = ['lesson-mark', 'lesson-groups', 'lesson-square', 'lesson-blank', 'lesson-depth', 'lesson-peel'].map(lessonOld);
+
 // a lesson that shows no number at all (it is solved by sight, through its ghost)
 export const cluesShown = (lesson) => !(lesson.show && lesson.show.every((v) => !v));

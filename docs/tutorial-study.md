@@ -102,3 +102,26 @@ All twelve current lessons stay replayable from Learn's list.
 
 - Should circles and squares become lessons 9 and 10 at the end of the first run, or appear only at first use?
 - The rock-and-object split in stones 1–2 is a new visual. It needs a styleframe before it is built.
+
+## Iteration 1 (2026-10-25): built behind `?lessons=new`
+
+Kellan approved iterating on the tutorial; it ships after the store build. Turn the new run on with `?lessons=new`, which is remembered; `?lessons=old` switches back.
+
+What was built:
+- **The run:** `shapes.js TUTORIAL_V2`, 8 stones: Gem, Pillar, Step, Ledge, Plinth, Rune, Cornerstone, Dolmen.
+- **Learn's long press** lists those 8, then the old Mark, Arch, Colonnade, Cairn, Stair and Geode (`LESSON_EXTRAS`).
+- **The ghost finger** (`main.js showFinger`) can tap, double-tap on a chosen face, or drag. It appears after 0.9 s of stillness, steps back once the player acts, and returns after 5 s idle.
+- **A hint's `mistake`** answers a slip kindly, until the next chisel.
+- **No clock during lessons.** Coach text is 18 px in full ink.
+- **Two new level reminders, in the new run only:** peeling (the first stone with an inside) and marking (the first full row).
+- **Lessons 1–2 use `ghost: 1`.** The shape shows in full colour and the stone around it stays plain white, so what to remove is visible at a glance. In the old Pillar the ghost was partial and the removable cubes glowed.
+
+What I checked, in the browser only (no player has tried it yet):
+- all 8 stones play with no page errors;
+- the finger lands on the 0's face in Step and Ledge;
+- a slip on Plinth shows "That cube stays: its row says 3, so all 3 belong.";
+- the old run is unchanged by default.
+
+Evidence: `shots/lessons-v2/sheet.png`; the top row is with the finger, the bottom row after a pause.
+
+**Next:** the same three testers play it cold (see the review method above).

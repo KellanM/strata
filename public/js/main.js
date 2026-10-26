@@ -2,7 +2,7 @@ import { haptic, nativeApp as inStoreApp } from './native.js';
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
 import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
-import { SHAPES, BONUS, CHAPTERS, TUTORIAL, randomShape, buildCells } from './shapes.js';
+import { SHAPES, BONUS, CHAPTERS, TUTORIAL, TUTORIAL_V2, LESSON_EXTRAS, randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
 import { sound } from './audio.js';
@@ -66,7 +66,17 @@ let tool = 'break';
 // peeled: whole layers (game logic). keepVisual: what the shader eases toward.
 const peel = { axis: 0, side: 1, peeled: 0, keepVisual: 99 };
 let rayBoost = 0;
-let tutorial = null;          // { step, hint, open }: open = the current hint is showing (a `wait` hint holds back)
+let tutorial = null;          // { step, hint, open, list }: open = the current hint is showing (a `wait` hint holds back)
+// The rebuilt first run (docs/tutorial-study.md), behind ?lessons=new (remembered;
+// ?lessons=old goes back) until it ships after the store build
+const lessonsV2 = (() => {
+  const q = new URLSearchParams(location.search).get('lessons');
+  if (q) localStorage.setItem('strata.lessons', q);
+  return localStorage.getItem('strata.lessons') === 'new';
+})();
+if (lessonsV2) document.documentElement.classList.add('lessons-v2');
+const LESSON_RUN = lessonsV2 ? TUTORIAL_V2 : TUTORIAL;                              // played in a row
+const LESSON_LIST = lessonsV2 ? [...TUTORIAL_V2, ...LESSON_EXTRAS] : TUTORIAL;       // Learn's long press
 let updateReady = false;      // a new version has taken over; reload at a calm moment
 let lastTouch = null;         // { i, point }: where the last pick met its cube
 let titleUp = true;           // the launch title is showing: the block is a backdrop, no HUD or handles
@@ -211,11 +221,12 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   // a lesson's object is a mystery until it's uncovered, as a level's is
   $('#pz-name').textContent = entry.lesson ? '?' : solvedStore[shape.id] ? shape.name : entry.bonus ? '✦ Shrine' : `No. ${entry.number ?? '—'}`;
   $('#pz-meta').textContent = entry.lesson
-    ? `lesson ${entry.lesson} of ${TUTORIAL.length}`
+    ? `lesson ${entry.lesson} of ${(tutorial?.list ?? LESSON_RUN).length}`
     : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
   updateStrikes();
   show('#menu', false);
   show('#win', false);
+  $('#timer').hidden = !!entry.lesson && lessonsV2;   // no clock while learning
   renderCoach();
   closeOffer();
   renderRewind();
@@ -732,8 +743,9 @@ let lessonNext = null;    // while a solved lesson is on show: move on now (if i
 
 // single: one lesson replayed from the Learn stone's list; solved, it goes back to the map
 function startTutorial(step = 0, { single = false } = {}) {
-  tutorial = { step, hint: 0, open: !TUTORIAL[step].hints[0]?.wait, single };
-  const lesson = TUTORIAL[step];
+  const list = single ? LESSON_LIST : LESSON_RUN;
+  tutorial = { step, hint: 0, open: !list[step].hints[0]?.wait, single, list };
+  const lesson = list[step];
   const palette = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
   startPuzzle({ shape: lesson, palette, number: null, lesson: step + 1 });
 }
@@ -767,6 +779,13 @@ const REMINDERS = [
     text: 'A square: that row’s cubes are in three groups or more.' },
   { key: 'blank', test: (p) => [0, 1, 2].some((ax) => { const ls = p.lines.filter((l) => l.axis === ax); return ls.length && ls.every((l) => l.hidden); }),
     text: 'One face shows no numbers at all. The other two are enough.' },
+  // the rebuilt run leaves these to the levels: said once, where first they help
+  ...(lessonsV2 ? [
+    { key: 'peel', test: (p) => p.dims.every((d) => d >= 3),
+      text: 'Some cubes are inside. Drag a diamond along its rail to slice layers away and see in.' },
+    { key: 'mark', test: (p) => p.lines.some((l) => !l.hidden && l.count >= 3 && l.count === l.cells.length),
+      text: 'Sure a cube stays? Hold it to mark it, and it can’t be chiselled by mistake.' },
+  ] : []),
 ];
 
 // a mouse has no hold: its other tool is a right-click, so a hint may say so
@@ -774,12 +793,13 @@ const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const hintText = (h) => (finePointer && h?.mouse) || h?.text;
 
 function currentHint() {
-  return tutorial && game?.entry.lesson ? TUTORIAL[tutorial.step].hints[tutorial.hint] : null;
+  return tutorial && game?.entry.lesson ? tutorial.list[tutorial.step].hints[tutorial.hint] : null;
 }
 
 // anything the player does restarts the quiet clock and lets a nudge go
 function poke() {
   idleFrom = now();
+  if (tutorial) tutorial.acted = true;   // the ghost finger steps back once the player has a go
   if (nudge) { nudge = null; applyCues(); }
 }
 
@@ -789,15 +809,15 @@ function tutorialEvent(kind) {
   if (!h) return;
   if (kind === 'solved') {
     // the coach steps aside: the object's name is the only words now (win())
-    tutorial.hint = TUTORIAL[tutorial.step].hints.length;   // past the last hint
+    tutorial.hint = tutorial.list[tutorial.step].hints.length;   // past the last hint
     tutorial.open = true;
     renderCoach();
-    const g = game, step = tutorial.step, single = tutorial.single, t0 = now();
+    const g = game, step = tutorial.step, single = tutorial.single, list = tutorial.list, t0 = now();
     const go = () => {
       if (game !== g || lessonNext !== next) return;
       lessonNext = null;
       if (single) { tutorial = null; renderCoach(); openMenu(); }
-      else if (step + 1 < TUTORIAL.length) startTutorial(step + 1);
+      else if (step + 1 < list.length) startTutorial(step + 1);
       else finishTutorial();
     };
     const next = () => { if (now() - t0 >= LESSON_TAP_AFTER) go(); };
@@ -805,10 +825,14 @@ function tutorialEvent(kind) {
     after(LESSON_PAYOFF, go);
     return;
   }
-  // a slip is the moment a held-back hint is worth reading
-  if (kind === 'mistake' && !tutorial.open && h.until !== 'mistake') { tutorial.open = true; renderCoach(); }
+  // a slip is the moment a held-back hint is worth reading; a hint may answer it
+  // kindly, saying why that cube stays, until the next chisel lands
+  if (kind === 'mistake' && h.mistake) { tutorial.open = true; tutorial.reply = h.mistake; renderCoach(); }
+  else if (kind === 'mistake' && !tutorial.open && h.until !== 'mistake') { tutorial.open = true; renderCoach(); }
+  if (kind === 'break' && tutorial.reply) { tutorial.reply = null; renderCoach(); }
   if (h.until !== kind) return;
   tutorial.hint++;
+  tutorial.reply = null; tutorial.acted = false;
   tutorial.open = !currentHint()?.wait;
   renderCoach();
 }
@@ -830,10 +854,10 @@ function renderCoach(override) {
   // a solved lesson's object has the stage to itself (its name is over it)
   if ((!lesson && !coachCard) || (lesson && game.solved)) { coach.classList.remove('show'); applyCues(); return; }
   const h = currentHint();
-  const text = override || (lesson ? (tutorial.open ? hintText(h) : '') : coachCard.text) || '';
+  const text = override || (lesson ? (tutorial.open ? tutorial.reply ?? hintText(h) : '') : coachCard.text) || '';
   const was = $('#coach-text').textContent, wasShown = coach.classList.contains('show');
   $('#coach-text').textContent = text;
-  $('#coach-dots').innerHTML = lesson ? TUTORIAL.map((_, k) =>
+  $('#coach-dots').innerHTML = lesson ? tutorial.list.map((_, k) =>
     `<i class="${k < tutorial.step ? 'done' : k === tutorial.step ? 'now' : ''}"></i>`).join('') : '';
   $('#coach-skip').hidden = !lesson;
   coach.classList.toggle('quiet', !text);     // between hints: just the dots and skip
@@ -847,7 +871,8 @@ function renderCoach(override) {
 
 // What the block and controls point at: the showing hint's cues, else a nudge.
 function applyCues() {
-  const h = tutorial && game?.entry.lesson && tutorial.open ? currentHint() : null;
+  // a demo's cues come with it, before any words: point first, name after
+  const h = tutorial && game?.entry.lesson && (tutorial.open || currentHint()?.demo) ? currentHint() : null;
   refreshFocus();
   document.querySelectorAll('.tool').forEach((b) =>
     b.classList.toggle('cue', !!h?.pulseTool && b.dataset.tool === h.pulseTool && tool !== h.pulseTool));
@@ -861,7 +886,7 @@ function applyCues() {
 const FOCUS_ROW = 0.6, FOCUS_CUBE = 1;
 function refreshFocus() {
   if (!game || game.introEnd === undefined) return;   // startPuzzle calls it once the assembly's timing is known
-  const h = tutorial && game.entry.lesson && tutorial.open && !game.solved ? currentHint() : null;
+  const h = tutorial && game.entry.lesson && (tutorial.open || currentHint()?.demo) && !game.solved ? currentHint() : null;
   const p = game.puzzle;
   const lines = h ? [h.line, ...(h.lines ?? [])].filter(Boolean) : nudge?.line ? [nudge.line] : [];
   const cells = h ? [h.pulse, ...(h.focus ?? [])].filter(Boolean) : nudge?.level > 1 ? [nudge.cell] : [];
@@ -879,7 +904,7 @@ function nudgeAfter() {
   if (e.lesson) {
     const h = currentHint();
     if (!tutorial || !h) return 0;
-    if (TUTORIAL[tutorial.step].nudge) return TUTORIAL[tutorial.step].nudge;
+    if (tutorial.list[tutorial.step].nudge) return tutorial.list[tutorial.step].nudge;
     // only once the lesson's own words are showing, and only if they point at nothing
     const quiet = !h.line && !h.pulse && !h.pulseTool && !h.pulseHandle;
     return tutorial.open && quiet && (h.until === 'solved' || h.until === 'break') ? NUDGE_LESSON : 0;
@@ -926,6 +951,7 @@ function coachTick(t) {
   const idle = t - idleFrom;
   const h = currentHint();
   if (h && !tutorial.open && h.wait && idle > h.wait) { tutorial.open = true; renderCoach(); }
+  showFinger(h?.demo && (!tutorial.acted ? idle > 0.9 : idle > 5) ? h.demo : null);
   const wait = nudgeAfter();
   const level = nudge?.level ?? 0;
   if (wait && level < 2 && idle > wait * (level + 1)) {
@@ -933,6 +959,45 @@ function coachTick(t) {
     if (move) { nudge = { level: level + 1, ...move }; applyCues(); mark(`nudge ${nudge.level}`); }
     else idleFrom = t;   // nothing to point at: wait another while
   }
+}
+
+// The ghost finger (docs/tutorial-study.md): a soft fingertip that shows a
+// lesson's move on the stone itself - a tap or a double-tap on a cube's face,
+// or a drag to turn - before any words. It comes after a breath of stillness,
+// steps back the moment the player has a go, and returns only if they stall.
+// demo: [x, y, z] (a tap on the face turned most toward the eye), or
+// { cell, face: [dx, dy, dz], taps: 2 }, or { drag: true }.
+let fingerEl = null, fingerKind = '';
+function showFinger(demo) {
+  if (!demo || !game || game.solved || titleUp || document.querySelector('.overlay.show')) {
+    if (fingerEl) fingerEl.classList.remove('show');
+    return;
+  }
+  if (!fingerEl) {
+    fingerEl = document.createElement('div');
+    fingerEl.id = 'finger';
+    fingerEl.setAttribute('aria-hidden', 'true');
+    fingerEl.innerHTML = '<span class="ring"></span><span class="ring two"></span><span class="tip"></span>';
+    document.body.appendChild(fingerEl);
+  }
+  const kind = demo.drag ? 'drag' : demo.taps === 2 ? 'double' : 'tap';
+  if (kind !== fingerKind) { fingerEl.className = kind; fingerKind = kind; }
+  let x = innerWidth / 2, y = innerHeight * 0.68;
+  if (!demo.drag) {
+    const cell = Array.isArray(demo) ? demo : demo.cell;
+    const i = game.puzzle.idx(...cell);
+    if (game.broken[i]) { fingerEl.classList.remove('show'); return; }   // already done
+    const toEye = camera.position.clone().sub(controls.target).normalize();
+    let face = demo.face;
+    if (!face) {   // the face turned most toward the eye
+      const a = [0, 1, 2].reduce((b, k) => (Math.abs(toEye.getComponent(k)) > Math.abs(toEye.getComponent(b)) ? k : b), 0);
+      face = [0, 0, 0]; face[a] = Math.sign(toEye.getComponent(a));
+    }
+    const p = cellWorld(i).add(new THREE.Vector3(...face).multiplyScalar(0.5)).project(camera);
+    x = (p.x + 1) / 2 * innerWidth; y = (1 - p.y) / 2 * innerHeight;
+  }
+  fingerEl.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+  fingerEl.classList.add('show');
 }
 
 // ---------------------------------------------------------------- input
@@ -1199,7 +1264,7 @@ function restartLevel() {
   closePause();
   clearProgress(g.shape.id);
   mark(`pause: restart ${g.shape.id}`);
-  if (g.entry.lesson) washInto(g.palette, () => startTutorial(g.entry.lesson - 1));
+  if (g.entry.lesson) { const single = !!tutorial?.single; washInto(g.palette, () => startTutorial(g.entry.lesson - 1, { single })); }
   else washInto(g.palette, () => startPuzzle(g.entry));
 }
 pauseEl.addEventListener('click', (e) => {
@@ -1230,7 +1295,7 @@ function openLessons(fromEl) {
       else if (e.target.closest('[data-close]') || e.target === el) show('#lessons', false);
     });
   }
-  el.innerHTML = `<div class="panel narrow lessons-panel"><h2>Lessons</h2><ol class="lesson-list">${TUTORIAL.map((l, k) =>
+  el.innerHTML = `<div class="panel narrow lessons-panel"><h2>Lessons</h2><ol class="lesson-list">${LESSON_LIST.map((l, k) =>
     `<li><button data-lesson="${k}"><span class="n">${String(k + 1).padStart(2, '0')}</span><span class="nm">${l.name}</span></button></li>`).join('')}</ol>
     <button class="primary" data-close>Close</button></div>`;
   show('#lessons', true);
@@ -1435,7 +1500,7 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
     entries,
     solved: solvedStore,
     learned: !!localStorage.getItem('strata.tutorial'),
-    lessons: TUTORIAL.length,
+    lessons: LESSON_RUN.length,
     drift: DRIFT_SIZES,
     driftPalette: PALETTES.find((p) => p.name === 'Night') ?? PALETTES[PALETTES.length - 1],
     fmt,
