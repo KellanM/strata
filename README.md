@@ -2,6 +2,8 @@
 
 Peel-the-layers picross in three.js with Monument Valley–style lighting.
 
+**Picking this up?** Start with [HANDOFF.md](HANDOFF.md): where things stand, what is left before the stores, and how we work.
+
 ```
 npm install
 npm start          # prints a LAN URL to open on phones on the same Wi-Fi
