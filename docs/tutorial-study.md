@@ -213,3 +213,9 @@ At Kellan's request, the rebuilt run now looks and sounds like the Frost Peaks c
 As in a chapter, each stone gets `variant(Frost, t)`, so the day moves on lesson by lesson. Learn's old extras keep their own skies.
 
 Evidence: `shots/lessons-frost/`.
+
+## Words at once (2026-10-26)
+
+Kellan noticed that the text didn't appear until a player made a mistake. The cause: a hint with `wait` opened only after that many seconds of stillness, and every tap restarted the clock, so a player tapping steadily never saw the words.
+
+Every hint in the rebuilt run now shows as soon as the block is whole, and the ghost finger still shows the move beside it. Checked with a scripted busy player: all 11 cards appear without a pause (`shots/words-now.mjs`).

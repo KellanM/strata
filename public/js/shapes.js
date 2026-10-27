@@ -3393,9 +3393,10 @@ export const TUTORIAL = [
 // then that abstract carved forms (a plinth, a rune, a dolmen) asked them to
 // imagine what they were looking at. Here every stone uncovers a thing anyone
 // can name at a glance, from the game's world - a pine, a sea chest, a crown,
-// a tortoise - as its small reward, and each teaches one idea, done before it
-// is read: a ghost finger shows the move (a hint's `demo`), the words wait for
-// a pause (`wait`), a slip is answered kindly (`mistake`) and costs nothing.
+// a tortoise - as its small reward, and each teaches one idea: a ghost finger
+// shows the move (a hint's `demo`) beside words shown at once (held back for a
+// pause, they never came to a player tapping steadily), and a slip is answered
+// kindly (`mistake`) and costs nothing.
 // A new kind of number is first met with its picture showing through, so it
 // can be checked by counting. The circle and the square are taught on gaps
 // you can see: a cat's two ears, a crown's points, a tortoise's legs. What's
@@ -3414,7 +3415,7 @@ export const TUTORIAL_V2 = [
     ghost: 1,
     cell: (x, y) => [[0, 0, 1, 0, 0], [0, 1, 1, 1, 0], [1, 1, 1, 1, 1], [0, 1, 0, 1, 0]][y][x] ? (y === 3 ? PINK : RED) : 0,
     hints: [
-      { text: 'Tap the white stone to knock it away. The coloured part stays.', demo: [0, 0, 0], wait: 5, until: 'solved',
+      { text: 'Tap the white stone to knock it away. The coloured part stays.', demo: [0, 0, 0], until: 'solved',
         mistake: 'That cube is part of the picture, so it stays. Tap the white stone.' },
     ],
   },
@@ -3424,7 +3425,7 @@ export const TUTORIAL_V2 = [
     ghost: 1,
     cell: (x, y) => (y === 0 ? (x === 2 ? WOOD : 0) : Math.abs(x - 2) <= 3 - y ? (y === 2 ? PINE_LIGHT : PINE) : 0),
     hints: [
-      { text: 'Knock away the white stone. Keep the coloured part.', wait: 7, until: 'solved',
+      { text: 'Knock away the white stone. Keep the coloured part.', until: 'solved',
         mistake: 'That cube is part of the picture, so it stays.' },
     ],
   },
@@ -3466,7 +3467,7 @@ export const TUTORIAL_V2 = [
     cell: (x, y) => (y === 2 ? (x === 1 ? 0 : FUR) : y === 1 ? (x === 1 ? FUR : LEAF) : x === 1 ? PINK : FUR),   // ears, eyes, a nose
     hints: [
       { text: 'A circle round a number means two pieces, with a gap between. Tap the gap.', line: [0, 0, 2, 0], demo: [1, 2, 0],
-        wait: 3, until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
+        until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
     ],
   },
   {
@@ -3476,7 +3477,7 @@ export const TUTORIAL_V2 = [
     cell: (x, y) => (y === 2 ? (x % 2 ? 0 : GOLD) : y === 1 ? [GOLD, RED, 0x4f7fc4, RED, GOLD][x] : DEEP_GOLD),
     hints: [
       { text: 'A square round a number means three pieces or more, with gaps between. Tap the gaps.', line: [0, 0, 2, 0], demo: [1, 2, 0],
-        wait: 3, until: 'solved', mistake: 'That cube is one of the pieces, so it stays.' },
+        until: 'solved', mistake: 'That cube is one of the pieces, so it stays.' },
     ],
   },
   {
@@ -3485,7 +3486,7 @@ export const TUTORIAL_V2 = [
     cell: (x, y) => (y === 2 ? (x >= 1 && x <= 3 ? (x === 2 ? SHELL_LIGHT : SHELL) : 0)
       : y === 1 ? (x === 4 ? SKIN : x % 2 ? SHELL_LIGHT : SHELL) : x === 1 || x === 3 ? SKIN : 0),   // a domed shell, head out, two legs
     hints: [
-      { text: 'The circled 2: two pieces with a gap. The numbers on top show where.', line: [0, 0, 0, 0], wait: 8, until: 'solved',
+      { text: 'The circled 2: two pieces with a gap. The numbers on top show where.', line: [0, 0, 0, 0], until: 'solved',
         mistake: 'That cube stays: the numbers say so.' },
     ],
   },
@@ -3499,7 +3500,7 @@ export const TUTORIAL_V2 = [
     },
     hints: [
       { text: 'Drag anywhere to turn the stone.', demo: { drag: true }, until: 'rotate' },
-      { text: 'A circled 2 again: keep the two ends, tap away the gap.', line: [0, 0, 1, 1], wait: 6, until: 'solved',
+      { text: 'A circled 2 again: keep the two ends, tap away the gap.', line: [0, 0, 1, 1], until: 'solved',
         mistake: 'That cube stays: the numbers say so.' },
     ],
   },
@@ -3511,7 +3512,7 @@ export const TUTORIAL_V2 = [
         mouse: 'Some cubes are hidden inside. Drag the diamond down its line to lift a layer off.',
         pulseHandle: true, demo: { handle: 1 }, until: 'peel' },
       { text: 'Each row through the middle is a circled 2. Its gap is the middle cube: tap it.',
-        pulse: [1, 1, 1], wait: 5, until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
+        pulse: [1, 1, 1], until: 'solved', mistake: 'That cube is one of the two pieces, so it stays.' },
     ],
   },
   {
@@ -3519,7 +3520,7 @@ export const TUTORIAL_V2 = [
     id: 'v2-mushroom', name: 'Mushroom', sky: 'Frost', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
     cell: (x, y, z) => (y === 2 ? ((x === 1) !== (z === 1) ? CREAM : RED) : x === 1 && z === 1 ? STALK : 0),   // a spotted cap on a stalk
     hints: [
-      { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', wait: 2, until: 'solved' },
+      { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', until: 'solved' },
     ],
   },
 ];
