@@ -201,6 +201,12 @@ const FRAMES = {
     await page.click('#map-journal');
     await page.waitForTimeout(2000);
     if (process.env.JSCROLL) await page.evaluate((y) => { const el = [...document.querySelectorAll('#journal *')].find((e) => e.scrollHeight > e.clientHeight + 20) ?? document.querySelector('#journal'); el.scrollTop = y; }, Number(process.env.JSCROLL));
+    // JCHAPTER: open the shelf at that chapter's header (e.g. 'Old Stones')
+    if (process.env.JCHAPTER) await page.evaluate((name) => {
+      const sec = [...document.querySelectorAll('#journal .jr-chapter')].find((x) => x.querySelector('h3').textContent === name);
+      let el = sec.parentElement; while (el && el.scrollHeight <= el.clientHeight + 20) el = el.parentElement;
+      el.scrollTop += sec.getBoundingClientRect().top - el.getBoundingClientRect().top;
+    }, process.env.JCHAPTER);
     await page.waitForTimeout(800);
     return { ctx, page };
   },

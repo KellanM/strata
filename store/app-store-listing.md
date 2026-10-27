@@ -139,8 +139,8 @@ These are in `store/screenshots/`. All are real gameplay, captured by `store/sho
 |---|---|---|---|
 | 1 | Origami Fox (Festival), revealed: the payoff | `6_9in-1.png` | `6_5in-1.png` |
 | 2 | Orrery (Clockwork Workshop): a row of 0s mid-break, from a real double-tap | `6_9in-2.png` | `6_5in-2.png` |
-| 3 | The Journal: a shelf of uncovered objects | `6_9in-3.png` | `6_5in-3.png` |
+| 3 | The Journal, opened at Old Stones: the Moai, Geode, Stone Golem and the rest of the chapter, uncovered | `6_9in-3.png` | `6_5in-3.png` |
 | 4 | Maple Bonsai (Autumn Woods), mid-solve | `6_9in-4.png` | `6_5in-4.png` |
 | 5 | Coelacanth (The Deep), revealed | `6_9in-5.png` | `6_5in-5.png` |
 
-To reshoot, run `PORT=5290 node server.js`, then `node store/shoot.mjs [6.9|6.5] [frame ...]`. The store order maps to frames: 1 = frame 3 with `SOLVE=origami-fox`, 2 = frame 6, 3 = frame 7, 4 = frame 2, 5 = frame 5 with `DARK=coelacanth`. Chosen 2026-10-25: lead with what you uncover, then the break, then the collection; the title and map were dropped as they show no play.
+To reshoot, run `PORT=5290 node server.js`, then `node store/shoot.mjs [6.9|6.5] [frame ...]`. The store order maps to frames: 1 = frame 3 with `SOLVE=origami-fox`, 2 = frame 6, 3 = frame 7 with `SHELF` = every level of chapters I–XI and `JCHAPTER='Old Stones'`, 4 = frame 2, 5 = frame 5 with `DARK=coelacanth`. Chosen 2026-10-25: lead with what you uncover, then the break, then the collection; the title and map were dropped as they show no play.
