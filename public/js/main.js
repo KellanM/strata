@@ -750,7 +750,9 @@ function startTutorial(step = 0, { single = false } = {}) {
   const list = single ? LESSON_LIST : LESSON_RUN;
   tutorial = { step, hint: 0, open: !list[step].hints[0]?.wait, single, list };
   const lesson = list[step];
-  const palette = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
+  const base = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
+  // the rebuilt run is one chapter's walk (Frost Peaks): its day moves on stone by stone, as a level's does
+  const palette = lessonsV2 && step < LESSON_RUN.length ? variant(base, step / (LESSON_RUN.length - 1), step + 1) : base;
   startPuzzle({ shape: lesson, palette, number: null, lesson: step + 1 });
 }
 

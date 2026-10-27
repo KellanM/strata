@@ -3400,7 +3400,8 @@ export const TUTORIAL = [
 // can be checked by counting. The circle and the square are taught on gaps
 // you can see: a cat's two ears, a crown's points, a tortoise's legs. What's
 // left (marking, a blank face, depth) is met in the levels as it
-// first matters, and stays replayable from Learn's list.
+// first matters, and stays replayable from Learn's list. The run is dressed
+// as Frost Peaks (its sky, stone, key and timbre), the day moving on as in a chapter.
 const lessonOld = (id) => TUTORIAL.find((l) => l.id === id);
 const RED = 0xd94a5a, PINK = 0xe9798a, GOLD = 0xe2a93b, DEEP_GOLD = 0xc68a2a, CREAM = 0xf1e6cf;
 const LEAF = 0x6faa4f, INK = 0x343244, WOOD = 0xb27a4c, DARK_WOOD = 0x83563a, IRON = 0x5d5f6b;
@@ -3409,7 +3410,7 @@ const SHELL = 0x6f7f45, SHELL_LIGHT = 0x93a35c, SKIN = 0xb8a27a, STALK = 0xe8d9b
 export const TUTORIAL_V2 = [
   {
     // the goal at a glance: the thing in its colours, plain stone around it
-    id: 'v2-heart', name: 'Heart', sky: 'Dawn', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
+    id: 'v2-heart', name: 'Heart', sky: 'Frost', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
     ghost: 1,
     cell: (x, y) => [[0, 0, 1, 0, 0], [0, 1, 1, 1, 0], [1, 1, 1, 1, 1], [0, 1, 0, 1, 0]][y][x] ? (y === 3 ? PINK : RED) : 0,
     hints: [
@@ -3419,7 +3420,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // the same, once more, with no words unless they're needed
-    id: 'v2-pine', name: 'Pine Tree', sky: 'Lagoon', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
+    id: 'v2-pine', name: 'Pine Tree', sky: 'Frost', view: 0.3, handles: false, dims: [5, 4, 1], show: [0, 0, 0],
     ghost: 1,
     cell: (x, y) => (y === 0 ? (x === 2 ? WOOD : 0) : Math.abs(x - 2) <= 3 - y ? (y === 2 ? PINE_LIGHT : PINE) : 0),
     hints: [
@@ -3429,7 +3430,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // what a number is, said once, while the picture shows through to be counted
-    id: 'v2-chest', name: 'Sea Chest', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [5, 4, 1], show: [1, 0, 0],
+    id: 'v2-chest', name: 'Sea Chest', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [5, 4, 1], show: [1, 0, 0],
     ghost: 0.55,
     cell: (x, y) => (y === 3 ? 0 : x === 0 || x === 4 ? IRON : y === 1 && x === 2 ? GOLD : y === 2 ? DARK_WOOD : WOOD),   // a lid, iron corners, a lock
     hints: [
@@ -3440,7 +3441,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // the 0 again, with nothing showing through, and its shortcut
-    id: 'v2-lantern', name: 'Lantern', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [3, 6, 1], show: [1, 0, 0],
+    id: 'v2-lantern', name: 'Lantern', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [3, 6, 1], show: [1, 0, 0],
     cell: (x, y) => (y > 3 ? 0 : y === 0 || y === 3 ? DEEP_GOLD : x === 1 ? FLAME : RED),   // paper between brass caps, lit
     hints: [
       { text: 'Quicker: double-tap a 0 to clear its whole row.', mouse: 'Quicker: double-click a 0 to clear its whole row.',
@@ -3450,7 +3451,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // numbers on top: the same count, straight down - nothing else new
-    id: 'v2-candle', name: 'Candle', sky: 'Night', view: 0.3, handles: false, dims: [3, 4, 1], show: [0, 1, 0],
+    id: 'v2-candle', name: 'Candle', sky: 'Frost', view: 0.3, handles: false, dims: [3, 4, 1], show: [0, 1, 0],
     ghost: 0.55,
     cell: (x, y) => (x !== 1 ? 0 : y === 3 ? FLAME : y === 0 ? BRASS : WAX),   // a flame, the wax, a brass dish
     hints: [
@@ -3460,7 +3461,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // a circle: two pieces, a gap between, seen while the picture shows through
-    id: 'v2-cat', name: 'Cat', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
+    id: 'v2-cat', name: 'Cat', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [3, 3, 1], show: [1, 0, 0],
     ghost: 0.55,
     cell: (x, y) => (y === 2 ? (x === 1 ? 0 : FUR) : y === 1 ? (x === 1 ? FUR : LEAF) : x === 1 ? PINK : FUR),   // ears, eyes, a nose
     hints: [
@@ -3470,7 +3471,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // a square: three pieces or more
-    id: 'v2-crown', name: 'Crown', sky: 'Dawn', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 0, 0],
+    id: 'v2-crown', name: 'Crown', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 0, 0],
     ghost: 0.55,
     cell: (x, y) => (y === 2 ? (x % 2 ? 0 : GOLD) : y === 1 ? [GOLD, RED, 0x4f7fc4, RED, GOLD][x] : DEEP_GOLD),
     hints: [
@@ -3480,7 +3481,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // the circle again, with nothing showing through: its legs
-    id: 'v2-tortoise', name: 'Tortoise', sky: 'Lagoon', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 1, 0],
+    id: 'v2-tortoise', name: 'Tortoise', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [5, 3, 1], show: [1, 1, 0],
     cell: (x, y) => (y === 2 ? (x >= 1 && x <= 3 ? (x === 2 ? SHELL_LIGHT : SHELL) : 0)
       : y === 1 ? (x === 4 ? SKIN : x % 2 ? SHELL_LIGHT : SHELL) : x === 1 || x === 3 ? SKIN : 0),   // a domed shell, head out, two legs
     hints: [
@@ -3490,7 +3491,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // turning: a throne, its arms either side of the seat
-    id: 'v2-throne', name: 'Throne', sky: 'Mint', view: Math.PI / 4, handles: false, dims: [4, 3, 2], show: [1, 1, 1],
+    id: 'v2-throne', name: 'Throne', sky: 'Frost', view: Math.PI / 4, handles: false, dims: [4, 3, 2], show: [1, 1, 1],
     cell: (x, y, z) => {
       if (y === 0) return z === 1 && (x === 1 || x === 2) ? RED : DEEP_GOLD;   // a cushion on the seat
       if (y === 1) return z === 0 || x === 0 || x === 3 ? GOLD : 0;           // the back and two arms
@@ -3504,7 +3505,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // peeling: the inside is reached by lifting layers off with a diamond
-    ...lessonOld('lesson-peel'), id: 'v2-geode',
+    ...lessonOld('lesson-peel'), id: 'v2-geode', sky: 'Frost',
     hints: [
       { text: 'Some cubes are hidden inside. Slide the diamond down its line to lift a layer off.',
         mouse: 'Some cubes are hidden inside. Drag the diamond down its line to lift a layer off.',
@@ -3515,7 +3516,7 @@ export const TUTORIAL_V2 = [
   },
   {
     // the bridge to level 1: a whole small stone, on your own
-    id: 'v2-mushroom', name: 'Mushroom', sky: 'Dawn', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
+    id: 'v2-mushroom', name: 'Mushroom', sky: 'Frost', dims: [3, 3, 3], fraction: 0.5, seed: 4, nudge: 9,
     cell: (x, y, z) => (y === 2 ? ((x === 1) !== (z === 1) ? CREAM : RED) : x === 1 && z === 1 ? STALK : 0),   // a spotted cap on a stalk
     hints: [
       { text: 'A whole stone, on your own. Stuck? Wait a moment and a row you can solve will glow.', wait: 2, until: 'solved' },

@@ -205,3 +205,11 @@ Checked in the browser: dragging along the finger's path peels one layer and mov
 ## Shipped to the web (2026-10-26)
 
 At Kellan's request, the rebuilt run (11 stones) is now the web app's default. The store app keeps the old lessons until its first build has shipped (`main.js lessonsV2`, keyed on `inStoreApp`). `?lessons=old` or `?lessons=new` still picks one on any device, and the choice is remembered.
+
+## Dressed as Frost Peaks (2026-10-26)
+
+At Kellan's request, the rebuilt run now looks and sounds like the Frost Peaks chapter. Every stone uses the `Frost` palette, which sets the sky, the stone shading and the snow motes, and through `sound.setKey` the music key (G# major) and the glass timbre.
+
+As in a chapter, each stone gets `variant(Frost, t)`, so the day moves on lesson by lesson. Learn's old extras keep their own skies.
+
+Evidence: `shots/lessons-frost/`.
