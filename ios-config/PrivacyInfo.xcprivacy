@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Strata's own privacy manifest (docs/compliance-study.md). tools/ios-configure.mjs
+     copies it into ios/App/App/ and adds it to the app's resources.
+     No tracking, no data collected (v1: no ads, analytics or accounts).
+     UserDefaults, CA92.1: @capacitor/preferences keeps the saves there, read and
+     written only by the app itself; the plugin ships no manifest of its own.
+     When ads arrive (AppLovin MAX), the tracking keys and collected data change. -->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

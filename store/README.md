@@ -15,6 +15,8 @@ Everything that goes into the App Store listing lives here.
 | Fox icon comparison | `icon/compare-fox-at-phone-sizes.png` | The current icon, the Sloth on green and the four foxes at 180 and 60 px |
 | App icon, 3×3×3 stone candidates | `icon/stone-3x3x3-lime.png`, `icon/stone-3x3x3-cloud-isles.png`; compared in `icon/compare-stone-at-phone-sizes.png` | The Mushroom lesson's unsolved stone with its clues (`NOSOLVE=1 ID=v2-mushroom` in `tools/render-icon.mjs`). Not picked |
 | Icon references | `icon/reference-icons-33-games.png` | 33 successful game icons at the same sizes; the study is `../docs/icon-study.md` |
+| Version, build, devices | `release.json` | Read by `../tools/ios-configure.mjs`. Bump `build` before every upload. iPhone-only (Kellan, 2026-10-27) |
+| Privacy manifest | `../ios-config/PrivacyInfo.xcprivacy` | Copied into the Xcode project by `ios-configure.mjs` |
 | Privacy and support pages | `../public/privacy.html`, `../public/support.html` | Deployed with the site |
 | App preview video | not made yet | `tools/trailer/v5`, cut `preview` (see `../HANDOFF.md`) |
 

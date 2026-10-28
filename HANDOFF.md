@@ -67,14 +67,14 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
    - **Name: decided, "Strata: Stone Puzzles"** (Kellan, 2026-10-27; plain "Strata" is taken). The home-screen label stays "Strata".
 
 **Then the agent's part, on the Mac:**
-1. `npm ci`, then `npx cap add ios`, then `npm run build:app`.
-2. In `ios/App/App/Info.plist`:
-   - `ITSAppUsesNonExemptEncryption` = NO;
-   - portrait only;
-   - status bar hidden;
-   - the black launch screen (`resources/splash*.png`);
-   - the icon (`npx @capacitor/assets generate` from `resources/`);
-   - version 1.0, build 1.
+1. `npm ci`, then `npx cap add ios` (first time only), then `npm run build:app`.
+2. `npm run build:app` ends with `tools/ios-configure.mjs`, which sets up the Xcode project every time (tested against Capacitor's template in `test/ios-configure.test.js`):
+   - **iPhone-only** (Kellan, 2026-10-27): `TARGETED_DEVICE_FAMILY = 1`, no iPad orientations, so no iPad screenshots are needed;
+   - `ITSAppUsesNonExemptEncryption` = NO, so the export question isn't asked per build;
+   - portrait only, status bar hidden, Home Screen name "Strata";
+   - the privacy manifest `ios-config/PrivacyInfo.xcprivacy` (UserDefaults, CA92.1), added to the app's resources;
+   - the version and build number from **`store/release.json`. Bump `build` before every upload.** Build 1 is used.
+   By hand: the icon and launch screen (`npx @capacitor/assets generate` from `resources/`).
 3. Archive and upload with `xcodebuild` and the API key (`-allowProvisioningUpdates -authenticationKeyPath … -authenticationKeyID … -authenticationKeyIssuerID …`). Then TestFlight on Kellan's iPhone before submitting for review.
 4. Before submitting, run the device checks in `docs/launch-checklist.md` §8: first launch through the lessons, offline, backgrounding mid-level, save survival after a relaunch.
 
