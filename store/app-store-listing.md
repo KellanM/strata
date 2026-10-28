@@ -58,9 +58,9 @@ Find a quiet minute, pick up a stone, and see what it has been keeping.
 ## Keywords (100)
 
 ```
-nonogram,picross,logic,voxel,griddlers,hanjie,cube,relaxing,zen,offline,numbers,brain,chisel,carve,stone
+nonogram,picross,logic,voxel,griddlers,hanjie,cube,relaxing,zen,offline,numbers,brain,chisel,carve
 ```
-(104; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
+(98; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
 
 ## Category
 
