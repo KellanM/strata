@@ -11,6 +11,8 @@ Everything that goes into the App Store listing lives here.
 | App icon, current | `../resources/icon.png` | The pastel cubes, to be replaced |
 | App icon, candidates | `icon/sloth-green.png`, `icon/sloth-cloud-isles.png`, `icon/sloth-blue.png` | 1024 px, the Sloth's win state. Green is Kellan's favourite (2026-10-27); not installed yet |
 | Icon comparison | `icon/compare-at-phone-sizes.png` | Each candidate at 180 and 60 px, on light and dark grounds |
+| App icon, fox candidates | `icon/origami-fox-green.png`, `icon/origami-fox-cloud-isles.png`, `icon/origami-fox-blue.png`, `icon/origami-fox-lantern-festival.png` | 1024 px, the Origami Fox's win state. Not picked yet |
+| Fox icon comparison | `icon/compare-fox-at-phone-sizes.png` | The current icon, the Sloth on green and the four foxes at 180 and 60 px |
 | Icon references | `icon/reference-icons-33-games.png` | 33 successful game icons at the same sizes; the study is `../docs/icon-study.md` |
 | Privacy and support pages | `../public/privacy.html`, `../public/support.html` | Deployed with the site |
 | App preview video | not made yet | `tools/trailer/v5`, cut `preview` (see `../HANDOFF.md`) |

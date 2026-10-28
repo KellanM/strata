@@ -68,3 +68,19 @@ Green was "the clear winner", then Kellan asked to see all three.
 - **Untested: the leaf tip on green.** Possible fixes are a darker leaf, or a slightly bluer green background.
 - **Liquid Glass layers:** to separate the foreground (the Sloth) from the background for iOS 26, render it with `omitBackground`.
 - **To ship:** install the chosen file as `resources/icon.png`, update `tools/make-store-art.mjs` so a re-run doesn't overwrite it with the SVG, and run `npx @capacitor/assets generate`.
+
+## Origami Fox (2026-10-27)
+
+**Settings:**
+- `ID=origami-fox DPR=4 ZOOM=1.7 TAG=-hi node tools/render-icon.mjs`, at the reveal's own angle (no `AZ`).
+- One crop for all four: (355, 53, 1733, 1431) → 1024. The fox is about 80% of the tile's height and 71% of its width.
+- **Backgrounds:** green (the Sloth's, `#ccff66` → `#4db04f`), Cloud Isles (`Clouds`), blue (`#6fb6ff` → `#2d62d8`), and its own chapter sky, Lantern Festival (`Festival`).
+- **Outputs, in `store/icon/`:** `origami-fox-green.png`, `origami-fox-cloud-isles.png`, `origami-fox-blue.png`, `origami-fox-lantern-festival.png`, and `compare-fox-at-phone-sizes.png` (with the current icon and the Sloth on green).
+
+**My reading at 60 px:**
+- **Blue:** the strongest fox. Orange on blue is complementary, the lightness gap is clear, and the two dark eyes and white muzzle still read.
+- **Lantern Festival:** the biggest lightness contrast (a bright fox on a dark plum sky) and on-story. The white tail tip stands out best here. But the tile is dark as a whole, so on a dark home screen its edge fades.
+- **Green:** the hue contrast holds, but the yellow-green glow behind the ears is close to the orange tops in lightness, so the ears soften.
+- **Cloud Isles:** the saturated fox does better here than the Sloth did. The white tail tip merges into the white sky.
+
+**Versus the Sloth on green:** the fox has the stronger colour, but the Sloth reads better as a creature. At this angle, the fox's two ears and its upright tail make three equal columns. At 60 px it reads as an orange crown or castle with two dark squares more than as a fox. The Sloth's hanging silhouette and eye patches say "animal" at once. A turn (`AZ`) that pulls the tail away from the ears would probably fix this, but Kellan asked to keep the reveal's angle.
