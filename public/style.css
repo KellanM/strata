@@ -942,7 +942,6 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .map-node.bonus.open .shrine-gem { filter: none; }
 .map-node.bonus.open .shrine-gem svg { filter: drop-shadow(0 4px 8px rgba(120, 80, 20, .25)); }
 .map-node.bonus .obj { width: 56px; height: 56px; }
-.map-node.bonus.far .label { opacity: .75; }
 
 /* the companion carries a small gold light */
 .companion { top: -54px; height: 57px; }

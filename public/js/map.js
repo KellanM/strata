@@ -22,7 +22,7 @@ const GAP = 190;           // a chapter boundary: room for the cloud's edge and 
 const COL = 420;           // max width of the trail column
 const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
 // Chapters past the next one still under cloud are folded into a short stretch
-// (name, signature peak, shrine light) and open to full length when they become
+// (name, signature peak) and open to full length when they become
 // the next. false: every chapter keeps its full length under cloud.
 export const FOLD_LATER_CHAPTERS = false;
 const FOLDED_H = 300;
@@ -148,6 +148,14 @@ export function namesShown(reached) {
   return reached.map((r, i) => r || i === next);
 }
 
+// Whether a node is drawn on the map: a chapter the trail hasn't reached is
+// all cloud - its stones and its shrine come with it as its cloud parts (its
+// name, for the next one, and its peak stay; the world draws those). The
+// lessons and the Drift are always there.
+export function onMap(n) {
+  return !n.region || n.region.reached;
+}
+
 export function progress(entries, solved) {
   const later = Shapes.ADDED_LATER ?? new Set();
   let furthest = -1, first = -1, gap = 0;
@@ -253,7 +261,7 @@ export function renderMap(root, opts) {
     r.top = y;
     r.nodes = [];
     if (r.folded) {
-      // a short stretch of cloud: the name, its peak, its shrine's light
+      // a short stretch of cloud: the name and its peak
       r.labelY = y + 96;
       k += r.items.length;
       y += FOLDED_H;
@@ -430,8 +438,8 @@ export function renderMap(root, opts) {
   let current = null;
   const newlySeen = [];
   for (const n of nodes) {
-    // stones of a chapter under cloud aren't there yet (its shrine's light is)
-    if (n.kind === 'puzzle' && !n.region.reached) continue;
+    // stones and shrine of a chapter under cloud aren't there yet
+    if (!onMap(n)) continue;
     const p = n.palette;
     const b = document.createElement('button');
     const side = n.kind === 'drift' ? '' : n.x > x0 + colW / 2 ? ' lbl-left' : ' lbl-right';
@@ -466,7 +474,6 @@ export function renderMap(root, opts) {
         name = s ? shape.name : 'Shrine';
         meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${shrineStars(n.region)} ★` : 'open';
         if (!s) art = shrine(n.region.base, n.state);
-        if (!n.region.reached) b.classList.add('far');
       } else {
         name = s ? shape.name : n.state === 'locked' ? '' : '???';
         meta = s ? starRow(recordStars(shape, s)) : '';
@@ -477,7 +484,7 @@ export function renderMap(root, opts) {
         art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120 })}"></span>`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
-      b.setAttribute('aria-label', `${isBonus ? (n.region.named ? `${n.region.name} shrine` : 'Locked world shrine') : `Puzzle ${number}`}` +
+      b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +
         (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} stars` : ', locked') : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
