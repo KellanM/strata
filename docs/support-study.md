@@ -75,7 +75,7 @@ This is my reading of the page at phone size; no player has tested it.
 
 ### Open (Kellan's call)
 
-- **Name the human?** The research's strongest trust signal, as in "Email studio director Adriaan". It would be something like "Kellan reads every message". The page leaves names out until Kellan decides.
+- **Name the human: done** (Kellan, 2026-10-28): "Kellan, who makes Strata, reads every message." First name only on Strata's page; mythen.io uses the full name.
 - **Legal contact details:** Apple's field note mentions an address and phone "as may be required by local law". That ties to the EU trader-status decision (`compliance-study.md`).
 - **Keep the known-problems line current.** Update its date whenever something is fixed or found.
 
