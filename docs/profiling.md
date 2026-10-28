@@ -141,6 +141,10 @@ Learned the hard way across three sessions. Read this before planning a capture.
 
 - **`xctrace export` output uses reference compression.** A cell may carry `ref="N"` pointing at an earlier element with `id="N"`. Parse it without resolving those and a 178-row table looks like 2 rows. Resolve by indexing every element with an `id` first.
 
+- **A Release build emits no console output, so it cannot report `STRATA_BENCH`.** Capacitor's default `loggingBehavior` is `debug` (`CAPInstanceDescriptor.m:38`), which enables the console bridge only when the native target was built with `DEBUG` (`CAPInstanceConfiguration.m:25`). Measure a Release build with Instruments, or add `"loggingBehavior": "production"` to `capacitor.config.json` for the run and take it out again.
+
+- **Debug vs Release does not move a hang that sits in system frameworks.** Measured: the map-start hang is 689.66 ms in Debug and 688.60 ms in Release, a 0.15% difference, because 96% of it is inside WebKit and UIKit — shipped optimised and identical either way. A Debug build only deoptimises the app's own code. Check where the weight is before spending a build on the question.
+
 - **Hand-play must use a plain build.** With `STRATA_AUTOBENCH` set, a robot plays alongside the human and nothing in the trace can be attributed. The first session's hand-play trace was lost this way.
 
 - **Energy and Allocations cannot be read from the CLI here** (issue #13). `Power Profiler` records but exports as `Document Missing Template Error`; `Allocations` with `--launch` yields a trace with no allocation table. Both need the Instruments GUI.

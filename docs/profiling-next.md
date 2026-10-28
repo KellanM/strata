@@ -1,26 +1,26 @@
 # Do this next — the performance work, in order
 
-2026-10-28, after three profiling passes on an iPhone 13 Pro Max. The evidence is in `perf/2026-10-28-*`; the issues carry the detail. **This file is the short version: what to do, in what order, and what not to bother with.**
+2026-10-28, after four profiling passes on an iPhone 13 Pro Max. The evidence is in `perf/2026-10-28-*`; the issues carry the detail. **This file is the short version: what to do, in what order, and what not to bother with.**
 
 ## There is one defect
 
 **Starting a level freezes the app's main thread for ~1.4 seconds.** Twice ~700 ms, back to back, on every level start from the map. 96% of each hang is one call — `-[UIView _web_setSubviews:]` — tearing down the **2,254 off-screen `<canvas>` veil sprites** the map keeps for chapters not yet reached. Worst for a new player, because the veil is largest when nothing is uncovered yet.
 
-Everything else found in three passes is small, is a decision for Kellan, or is already closed.
+**It fades as the player progresses.** The veil is built only for chapters not yet reached, so the sprite count falls ~147 per chapter solved: **2,222 canvases on a fresh save, 156 once the map is open** — 14x fewer. The defect is at its worst in a player's first session and in the App Store reviewer's first minutes, and it heals itself. The fresh-save count is the number a fix has to move, and it can be re-measured in a browser without a device.
 
-## Two cheap tests before any code changes
+Everything else found in four passes is small, is a decision for Kellan, or is already closed.
 
-Both can invalidate the plan, so they come first.
+## Test 1 is done — the map work is unblocked
 
-1. **[#12] Does the hang survive a Release build?** Every number so far came from a **Debug** build, which forwards the page console over the Capacitor bridge and marks the web view inspectable. Build Release + `STRATA_AUTOBENCH=1`, install, record `Time Profiler`, read `potential-hangs`. **Expect ~690 ms if the veil is the cause.** No human needed. The Release build is known to compile and sign.
-2. **[#12] One map→level transition on the live web app**, https://kellanm.github.io/strata/, on the same phone. Kellan reports the web is flawless. If it stalls there too, the veil is the whole story. Ten seconds of someone's time.
+1. **[#12] Does the hang survive a Release build? Yes, unchanged.** Debug 689.66 ms vs **Release 688.60 ms** — a difference of **1.06 ms, 0.15%** — same stack, same leaves, same 96% in `-[UIView _web_setSubviews:]`. A 55 s Release pass over the whole bench still finds exactly one hang over 250 ms. **Every number in the four reports stands**, and the gate on the mist rewrite is lifted. In hindsight it could not have gone otherwise: 96% of the hang is in WebKit and UIKit, which ship optimised and identical in both configurations. Detail: [`perf/2026-10-28-release-vs-debug.md`](../perf/2026-10-28-release-vs-debug.md).
+2. **[#12, still open] One map->level transition on the live web app**, https://kellanm.github.io/strata/, on the same phone. Ten seconds of someone's time. **Check the save state on both sides when you do** — if Safari has progress and the phone's save was fresh, "the web is flawless" may just be the progress curve above, not a difference between Safari and WKWebView at all.
 
-**Do not rewrite the map's mist until test 1 has run.**
+**A Release build is mute**: Capacitor only forwards the page console in Debug (`CAPInstanceDescriptor.m:38`), so any Release measurement has to come from Instruments, never from `STRATA_BENCH`.
 
 ## Then the fix
 
 3. **[#2] Cut the veil's element count.** Options and their costs are in the issue. Recommended path:
-   - First, a **one-line experiment**: in `mapworld.js:393` change the veil loop's `z += 58` to `z += 120` and widen the x step. That roughly quarters the sprite count. **Prediction: the hang falls from ~700 ms to ~175 ms.** This is the only thing that tests the causal chain by changing it — everything so far is a matching stack plus a dose-response.
+   - First, a **one-line experiment**: in `mapworld.js:393` change the veil loop's `z += 58` to `z += 120` and widen the x step. That roughly quarters the sprite count. **Prediction: the hang falls from ~700 ms to ~175 ms.** This is the only thing that tests the causal chain by changing it — everything so far is a matching stack plus a dose-response. Count `canvas.mw-spr` in a browser on a fresh save first: the fix is working if that 2,222 drops, and that check costs no device time.
    - If that holds, build the real fix: **one composited canvas per chapter** instead of ~150 sprites (2,254 → ~15). `.mw-wall` already carries most of the look; the cost is the per-lobe parallax in `veil.kids`.
 4. **[#11] Find out why it is two hangs, not one.** If only one is fixed, a player still pays ~700 ms. It is **not** a DOM teardown — the canvases stay in place across a tap (2,413 before and after). The candidate is the staged hide: `.show`, `world-up` and `#map-world`'s display all change at ~520 ms, and `#menu` carries `transition: visibility 0s .5s`, so its visibility flips half a second later. **If the two commits can be coalesced into one frame, the cost may halve without touching the veil at all** — the cheapest win available, but it alters the dive, so the visual call is Kellan's.
 5. **[#8] Make the bench measure a player's transition.** Today only run 1 of a 3-run bench starts from the map, and the robot's direct `startPuzzle()` shows **one** hang where a player gets two — so **the bench reports about half the real cost**. Without this, a correct fix will look twice as good as it is. **[#9]** pin the save state in the census while in here, or two measurements will not be comparable.
@@ -43,7 +43,9 @@ Both can invalidate the plan, so they come first.
 
 ## Still unmeasured, and say so
 
-**[#13]** Energy and Allocations cannot be read from the CLI on this setup. So **the idle battery target has no measurement**, and the veil's **~202 MiB is a calculation, not a measurement** — it has never been confirmed as retained memory. Don't put that number in a plan as fact.
+**[#13]** Energy and Allocations cannot be read from the CLI on this setup. So **the idle battery target has no measurement**, and the veil's **~204 MiB is a calculation, not a measurement** — reproduced twice from pixel dimensions by two different methods, but never confirmed as retained memory. Don't put that number in a plan as fact.
+
+**Whether the hang scales linearly with the sprite count** is also unknown. One device point gives 0.31 ms per sprite, which would put a finished player at ~48 ms — but that extrapolates from a single point through the origin, and hash-table growth is not linear. Confirming it needs a device run against a progressed save, and there is no way to seed one yet (the dev panel's unlock is web-only).
 
 Also open: row clear, mark and peel still have no bench coverage (#6), and everything here is from **one device** — a 2,254-element teardown would hurt more on an iPhone 11 or SE 2.
 
