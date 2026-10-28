@@ -11,13 +11,13 @@ Content counts come from `public/js/shapes.js`: `SHAPES` has 182 levels across `
 
 **Strata: Stone Puzzles** (21)
 
-Kellan's pick, 2026-10-27: "Strata" alone is taken on the App Store. The home-screen label (`appName` in `capacitor.config.json`) stays **Strata**. The name has no genre search words, so the subtitle should carry "3D" and "nonogram".
+Kellan's pick, 2026-10-27: "Strata" alone is taken on the App Store. The home-screen label (`appName` in `capacitor.config.json`) stays **Strata**. The name has no genre search words, so the subtitle carries "3D" and "puzzle".
 
 ## Subtitle (30)
 
-**Peel the stone, find its shape** (30)
+**A calm 3D puzzle game** (21)
 
-Alternative: *A quiet 3D picross in stone* (27)
+Kellan's pick, 2026-10-28, the same line mythen.io uses for Strata. "3D" and "puzzle" are in it for search; "nonogram" moves to the keywords.
 
 ## Promotional text (170)
 
@@ -58,9 +58,9 @@ Find a quiet minute, pick up a stone, and see what it has been keeping.
 ## Keywords (100)
 
 ```
-nonogram,picross,3d,puzzle,logic,voxel,griddlers,hanjie,cube,relaxing,calm,zen,offline,numbers,brain
+nonogram,picross,logic,voxel,griddlers,hanjie,cube,relaxing,zen,offline,numbers,brain,chisel,carve,stone
 ```
-(100; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
+(104; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
 
 ## Category
 
