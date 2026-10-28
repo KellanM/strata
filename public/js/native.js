@@ -51,11 +51,20 @@ if (Prefs) {
   setTimeout(mirror, 5000);
 }
 
-// true if the app's haptics took it (main.js buzz falls back to the web's)
-export function haptic(pattern) {
+// true if the app's haptics took it (main.js buzz falls back to the web's).
+// kind 'tick': the selection tick, the lightest the iPhone has (a date-picker
+// wheel's click), for a block breaking. 'slip': the error notification.
+// 'win': the success notification (it used to be the error one, like a slip).
+// Otherwise a light impact, or medium from 14 up.
+let selecting = false;
+export function haptic(pattern, kind) {
   if (!Haptics) return false;
   try {
-    if (Array.isArray(pattern)) Haptics.notification({ type: 'ERROR' });           // a slip
+    if (kind === 'tick') {
+      if (!selecting) { selecting = true; Haptics.selectionStart(); }   // the generator lives on, ready
+      Haptics.selectionChanged();
+    } else if (kind === 'win') Haptics.notification({ type: 'SUCCESS' });
+    else if (kind === 'slip' || Array.isArray(pattern)) Haptics.notification({ type: 'ERROR' });
     else Haptics.impact({ style: pattern >= 14 ? 'MEDIUM' : 'LIGHT' });
   } catch { /* */ }
   return true;

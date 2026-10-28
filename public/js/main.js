@@ -503,8 +503,13 @@ if (iosHaptics) {
   document.addEventListener('touchend', flushTick, { capture: true, passive: true });
   document.addEventListener('click', flushTick, { capture: true });
 }
-function buzz(pattern) {
-  if (haptic(pattern)) return;   // the store app: the phone's own haptics (native.js)
+// kind: 'tick' for the lightest touch the phone has (a block breaking, many times a
+// level); 'slip' and 'win' for the moments that should be felt. Vibration can be
+// switched off in Settings (strata.haptics = '0').
+const hapticsOn = () => localStorage.getItem('strata.haptics') !== '0';
+function buzz(pattern, kind) {
+  if (!hapticsOn()) return;
+  if (haptic(pattern, kind)) return;   // the store app: the phone's own haptics (native.js)
   if (navigator.vibrate) { navigator.vibrate(pattern); return; }
   if (!iosHaptics) return;
   const type = window.event?.type;
@@ -561,7 +566,7 @@ function act(i, which) {
     cubes.setState(i, 1, t + 0.25, undefined, t);
     cubes.ripple(cell, t, 1.5, 9);
     rayBoost = Math.max(rayBoost, 0.5);
-    buzz([30, 40, 30]);
+    buzz([30, 40, 30], 'slip');
     sound.mistake();
     updateStrikes();
     saveProgress();
@@ -582,7 +587,7 @@ function act(i, which) {
   // and its ash splashes out of the face that was touched, then rises
   if (!reduceMotion) ash.burst(cellWorld(i), 30, from.clone().sub(cellWorld(i)).normalize(), c(p.lit));
   rayBoost = Math.max(rayBoost, 0.35);
-  buzz(12);
+  buzz(12, 'tick');   // the lightest tick: it comes with every block, often several a second
   const pz = game.puzzle;
   let left = 0, total = 0;
   for (let k = 0; k < pz.size; k++) if (!pz.solid[k]) { total++; if (!game.broken[k]) left++; }
@@ -673,7 +678,7 @@ function win() {
   cubes.ripple([(d[0] - 1) / 2, (d[1] - 1) / 2, (d[2] - 1) / 2], t + 0.3, 2.2, 5);
   cubes.ripple([(d[0] - 1) / 2, -1, (d[2] - 1) / 2], t + 1.0, 1.4, 8);   // the landing
   rayBoost = 2.6;
-  buzz([12, 50, 30, 908, 60]);   // the last pulse is the landing, 1.0 s in
+  buzz([12, 50, 30, 908, 60], 'win');   // the last pulse is the landing, 1.0 s in
   sound.win();
   $('#pz-name').textContent = g.shape.name;
 
@@ -1861,9 +1866,15 @@ document.addEventListener('click', (e) => {
 function renderSoundToggles() {
   $('#toggle-sfx').classList.toggle('on', sound.sfxOn);
   $('#toggle-music').classList.toggle('on', sound.musicOn);
+  $('#toggle-haptics').classList.toggle('on', hapticsOn());
 }
 $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); renderSoundToggles(); });
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
+$('#toggle-haptics').addEventListener('click', () => {
+  localStorage.setItem('strata.haptics', hapticsOn() ? '0' : '1');
+  renderSoundToggles();
+  buzz(12, 'tick');   // switched on: one tick, so you feel what it is
+});
 renderSoundToggles();
 
 // ---------------------------------------------------------------- ads, a slip taken back, Remove Ads
@@ -2087,7 +2098,7 @@ $('#dev-ads-reset').addEventListener('click', () => {
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
 $('#dev-reset').addEventListener('click', () => {
   if (!confirm('Reset all progress? Stars, scores and the journal will be cleared.')) return;
-  for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && k !== 'strata.sfx' && k !== 'strata.music') localStorage.removeItem(k);
+  for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && k !== 'strata.sfx' && k !== 'strata.music' && k !== 'strata.haptics') localStorage.removeItem(k);
   location.reload();
 });
 
