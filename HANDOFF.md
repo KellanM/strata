@@ -251,5 +251,6 @@ Don't use `wait` in first-run lessons: every tap resets its idle timer, so a ste
 | `store/README.md` | Index of every store asset (screenshots, icons, listing, release.json) |
 | `docs/compliance-study.md` | Apple's compliance rules for this app (encryption, privacy manifest, label, age rating, EU trader) and a ranked build list |
 | `docs/icon-study.md` | What makes game icons read at 60 px; how the icon candidates were made, and the stone chosen |
+| **mythen.io** (Kellan's site, for AppLovin/AdMob onboarding) | Repo **KellanM/mythen.io**, preview https://kellanm.github.io/mythen.io/. The custom domain waits on Kellan's DNS approval; plan in its README. The repo is owned by KellanM, so the work account KMythenWave can't push to it unless invited |
 | `docs/support-study.md` | The support page (what the best game support pages do) and the App Store description study, with drafts |
 | `docs/profiling.md`, `perf/` | Profiling on iPhone with the Mac session: `strata.bench()`, Web Inspector, Instruments, and where results go |
