@@ -140,6 +140,14 @@ function segment(p0, p1, p2, p3, move = true) {
 // gaps, so a returning player keeps the trail they had walked and the new
 // stones behind it open. For a save made on an unchanged trail this is the
 // same as the furthest solved stone.
+// Which chapter names the map shows: every chapter the trail has reached, and
+// the next one still under cloud; the ones beyond it keep their names until
+// they become the next (reached: one boolean per chapter, in trail order).
+export function namesShown(reached) {
+  const next = reached.indexOf(false);
+  return reached.map((r, i) => r || i === next);
+}
+
 export function progress(entries, solved) {
   const later = Shapes.ADDED_LATER ?? new Set();
   let furthest = -1, first = -1, gap = 0;
@@ -223,6 +231,8 @@ export function renderMap(root, opts) {
     r.awaken = r.complete && celebrate && !seenChapters.has(r.name);
   }
   const nextLocked = regions.find((r) => !r.reached);
+  const shown = namesShown(regions.map((r) => r.reached));
+  regions.forEach((r, i) => { r.named = shown[i]; });
   for (const r of regions) {
     r.folded = FOLD_LATER_CHAPTERS && !r.reached && r !== nextLocked;
     r.parting = r.reached && !!parted && !parted.has(r.name) && celebrate;
@@ -399,10 +409,13 @@ export function renderMap(root, opts) {
     const el = document.createElement('div');
     const dark = lum(r.base.skyTop) < 0.45;
     const left = r.labelSide < 0;
-    el.className = `map-region ${left ? 'at-left' : 'at-right'}${dark ? ' on-dark' : ''}${r.reached ? '' : ' veiled'}${r.awaken ? ' awaken' : ''}`;
+    el.className = `map-region ${left ? 'at-left' : 'at-right'}${dark ? ' on-dark' : ''}${r.reached ? '' : ' veiled'}${r.named ? '' : ' unnamed'}${r.awaken ? ' awaken' : ''}`;
     el.style.top = `${r.labelY}px`;
     el.style.setProperty('--edge', `${x0 + 8}px`);
-    el.innerHTML = `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub">${r.stars} / ${r.items.length * 3} ★</span>`;
+    // past the next chapter, the cloud keeps the name: only its numeral shows
+    el.innerHTML = r.named
+      ? `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub">${r.stars} / ${r.items.length * 3} ★</span>`
+      : `<span class="r-num">${esc(r.numeral)}</span><span class="r-name" aria-hidden="true">?</span><span class="sr-only">Locked world</span>`;
     root.appendChild(el);
     r.el = el;
   }
@@ -464,7 +477,7 @@ export function renderMap(root, opts) {
         art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120 })}"></span>`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
-      b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +
+      b.setAttribute('aria-label', `${isBonus ? (n.region.named ? `${n.region.name} shrine` : 'Locked world shrine') : `Puzzle ${number}`}` +
         (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} stars` : ', locked') : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
