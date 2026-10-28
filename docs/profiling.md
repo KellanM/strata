@@ -93,7 +93,15 @@ For a session that can't operate Safari or the Instruments window (added 2026-10
 2. Install and launch the Debug build, and read the log. Capacitor passes the page's `console.log` to the native log in Debug builds, so either works:
    - launch with `xcrun devicectl device process launch --console --device <id> com.unsupervisedrock.strata` and keep stdout;
    - or stream the device log (e.g. `log stream` / Console.app filtered on `STRATA_BENCH`).
-3. Record Instruments around it from the CLI: `xcrun xctrace record --template 'Animation Hitches' --device <id> --attach <pid> --time-limit 60s --output ~/strata-traces/…`. Repeat with Time Profiler and Metal System Trace, and use `xctrace export` to read the results.
+3. Record Instruments around it from the CLI. **Use `--launch`, not `--attach`** (see "What works with xctrace" below):
+
+   ```sh
+   xcrun xctrace record --template 'Time Profiler' --device <udid> \
+     --time-limit 25s --output ~/strata-traces/run.trace \
+     --launch -- com.unsupervisedrock.strata
+   ```
+
+   Then read it with `xctrace export` (see the same section for the `ref=` trap).
 4. Rebuild without the flag before anything else is built from that checkout.
 
 In a desktop Chrome check, a fresh launch went through the title and ran the benchmark unattended, with no page errors.
@@ -112,6 +120,33 @@ Desktop Chrome: `js` 165, `first-frame` 975, `title-interactive` 2623 ms; the ca
 **These times start when the web view begins loading the page, not at the icon tap.** For icon-to-title, add the native launch time from the device log (the process launch to Capacitor's `WebView loaded`).
 
 **In a Release build, Capacitor doesn't forward the page's console by default** (`loggingBehavior` is `debug`). To read `STRATA_BOOT` from a Release cold start, set `"loggingBehavior": "production"` in `capacitor.config.json` for that measurement build only, and revert it.
+
+## What works with xctrace (2026-10-28, Xcode 27.1, iPhone 13 Pro Max)
+
+Learned the hard way across three sessions. Read this before planning a capture.
+
+- **`--launch` works. `--attach` does not.** `--attach <pid>` and `--attach <name>` both fail with `Cannot find process matching name: App` on this device, which the first session mistook for "only `--all-processes` works". `--launch -- com.unsupervisedrock.strata` launches the app under the instrument and traces just it:
+
+  | | `--all-processes` | `--launch` |
+  |---|---|---|
+  | trace size | 1.4–2.4 GB | 252 KB – 5 MB |
+  | save time | minutes, sometimes wedged | seconds |
+  | `DTServiceHub` inflating the numbers | yes (130 ms inside a 726 ms hang) | no |
+
+  The catch: `--launch` traces **only** the launched process, so `com.apple.WebKit.WebContent` and `com.apple.WebKit.GPU` are missing unless the template records system-wide anyway (Metal System Trace does).
+
+- **Instruments can be combined on one recording**, so one play session yields several views: `--template 'Metal System Trace' --instrument 'Hitches' --instrument 'Time Profiler'`. `xctrace list instruments` lists the names.
+
+- **The phone must be unlocked, and stay unlocked.** Locked, `xctrace` prints `will start recording when … is unlocked`, waits out the time limit and saves a trace that fails to export with `Trace is malformed - run data is missing`. Asleep, `devicectl install` fails with `not able to fulfill the requested usage assertion requirements`. Set Auto-Lock to Never for long captures.
+
+- **`xctrace export` output uses reference compression.** A cell may carry `ref="N"` pointing at an earlier element with `id="N"`. Parse it without resolving those and a 178-row table looks like 2 rows. Resolve by indexing every element with an `id` first.
+
+- **Hand-play must use a plain build.** With `STRATA_AUTOBENCH` set, a robot plays alongside the human and nothing in the trace can be attributed. The first session's hand-play trace was lost this way.
+
+- **Energy and Allocations cannot be read from the CLI here** (issue #13). `Power Profiler` records but exports as `Document Missing Template Error`; `Allocations` with `--launch` yields a trace with no allocation table. Both need the Instruments GUI.
+
+- **Useful schemas, once exported:** `potential-hangs` (the hangs and their durations), `time-profile` (stacks, with `tagged-backtrace`/`frame` children), `hitches` (what the player feels), `displayed-surfaces-per-second` (what the display actually showed), `gpu-performance-state-intervals` (whether the GPU is even busy), `graphics-compiler-activity-intervals` (shader compiles).
+
 
 ## Reporting back
 
