@@ -251,4 +251,5 @@ Don't use `wait` in first-run lessons: every tap resets its idle timer, so a ste
 | `store/README.md` | Index of every store asset (screenshots, icons, listing, release.json) |
 | `docs/compliance-study.md` | Apple's compliance rules for this app (encryption, privacy manifest, label, age rating, EU trader) and a ranked build list |
 | `docs/icon-study.md` | What makes game icons read at 60 px; how the Sloth icon was made and chosen |
+| `docs/support-study.md` | The support page (what the best game support pages do) and the App Store description study, with drafts |
 | `docs/profiling.md`, `perf/` | Profiling on iPhone with the Mac session: `strata.bench()`, Web Inspector, Instruments, and where results go |
