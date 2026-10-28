@@ -98,3 +98,13 @@ Kellan picked **the Sloth on lime** (`store/icon/sloth-lime.png`, installed as `
 - `public/icons/icon-maskable-512.png`, for Android: the icon at 78% on a gradient sampled from its own edges, so the Sloth stays inside the safe circle.
 
 An iPhone that already has Strata on its Home Screen keeps the old icon until it is removed and added again from Safari. Progress is kept.
+
+## Decision, revised (2026-10-28): the 3×3×3 stone
+
+Kellan put the 3×3×3 stone on lime (`store/icon/stone-3x3x3-lime.png`) on the support page, then made it the icon everywhere in place of the Sloth.
+
+- **What it is:** the Mushroom lesson's unsolved stone, with its clues, at the lime sky (`NOSOLVE=1 ID=v2-mushroom`, zoom 1.5, the whole frame). See the 3×3×3 section of `store/README.md`.
+- **Installed in:** `store/icon/app-icon.png`, `resources/icon.png`, and `public/icons/` (180, 192, 512, `favicon-64.png`).
+- **Android's round icon** (`icon-maskable-512.png`): the stone at 82% with a soft rounded blend (blur 22) into a gradient sampled from the icon's own sides. The Sloth's square feather left a visible seam on this one.
+- **Trade-off, from the study above:** the stone says what kind of game this is (as Nonogram.com and Sudoku.com do), where the Sloth showed the reward (as Picture Cross and Monument Valley do). At 60 px the clue numbers become dots, but the numbered-cube shape still reads.
+- **Untested:** iOS's dark and tinted icon modes, which flatten colour. The stone's pale faces against the lime should hold up better there than the Sloth's beige did, but no one has looked.

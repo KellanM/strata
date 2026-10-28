@@ -44,7 +44,7 @@ Written 2026-10-26, at commit d13e1f4; brought up to date 2026-10-27. Read this 
 **In App Store Connect (a separate agent on Kellan's Mac does the submission):**
 - **Build 1.0 (1) is uploaded and processed.** It needed the export-compliance answer by hand ("None of the algorithms mentioned above").
 - **Build 1.0 (2) is next.** From then on the repo sets the Xcode project up itself (`tools/ios-configure.mjs`, §4A).
-- **The app icon is the Sloth on lime** (`store/icon/app-icon.png`, Kellan's pick 2026-10-27). It's installed for the web (`public/icons/`) and the App Store (`resources/icon.png`).
+- **The app icon is the 3×3×3 stone on lime**: an unsolved stone with its clues (`store/icon/app-icon.png`, Kellan's pick 2026-10-28, replacing the Sloth chosen the day before). It's installed for the web (`public/icons/`) and the App Store (`resources/icon.png`).
 - **iPhone-only** (Kellan, 2026-10-27).
 - Support email: **support@mythen.io**. It's on the privacy and support pages, which have no placeholders left. A "Privacy · Support" link sits in Settings, as Apple 5.1.1(i) requires.
 - The compliance research and a ranked build list are in `docs/compliance-study.md`. Items 1 and 2 (the configure script and the privacy manifest) are built; 3 to 5 are not.
@@ -128,7 +128,7 @@ The plan is `docs/gtm-study.md`, researched 2026-10-20. Read its "5 highest-leve
 | Store badges | `tools/trailer/badges/` (App Store SVG, Google Play PNG) | For end cards once the listings are live |
 | Hook research | `docs/ad-hooks-study.md`, `docs/ad-hooks-renders.md`, `docs/trailer-study.md`, `docs/trailer-v2-study.md` | Six hook-study ads exist on the Saturday branch |
 | Store screenshots | `store/screenshots/` | Lead with the reveal, then the break, then the collection |
-| App icon | `store/icon/app-icon.png` (installed: the Sloth on lime), candidates beside it; `docs/icon-study.md` | Made with `tools/render-icon.mjs` from the real win state |
+| App icon | `store/icon/app-icon.png` (installed: the 3×3×3 stone on lime), candidates beside it; `docs/icon-study.md` | Made with `tools/render-icon.mjs` from the real win state |
 | Icon, splash art | `resources/`, `public/icons/` | |
 | Press kit | not made yet | A GTM Phase 1 item: logo (the rock), key art, trailer, fact sheet |
 
@@ -250,6 +250,6 @@ Don't use `wait` in first-run lessons: every tap resets its idle timer, so a ste
 | `store/app-store-listing.md` | Paste-ready App Store Connect text |
 | `store/README.md` | Index of every store asset (screenshots, icons, listing, release.json) |
 | `docs/compliance-study.md` | Apple's compliance rules for this app (encryption, privacy manifest, label, age rating, EU trader) and a ranked build list |
-| `docs/icon-study.md` | What makes game icons read at 60 px; how the Sloth icon was made and chosen |
+| `docs/icon-study.md` | What makes game icons read at 60 px; how the icon candidates were made, and the stone chosen |
 | `docs/support-study.md` | The support page (what the best game support pages do) and the App Store description study, with drafts |
 | `docs/profiling.md`, `perf/` | Profiling on iPhone with the Mac session: `strata.bench()`, Web Inspector, Instruments, and where results go |

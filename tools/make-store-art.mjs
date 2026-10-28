@@ -2,7 +2,7 @@
 // `npx @capacitor/assets generate` turns it into every icon and launch-screen
 // size iOS and Android ask for:
 //   resources/icon.png           1024x1024, the app icon: a copy of store/icon/app-icon.png
-//                                (the Sloth on lime, docs/icon-study.md; no longer public/icon.svg)
+//                                (the 3x3x3 stone on lime, docs/icon-study.md; no longer public/icon.svg)
 //   resources/splash.png         2732x2732, the native launch screen: plain black,
 //   resources/splash-dark.png    the first frame of the web card (index.html #splash),
 //                                which opens on a dark house before its spot strikes
