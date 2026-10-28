@@ -9,11 +9,9 @@ Content counts come from `public/js/shapes.js`: `SHAPES` has 182 levels across `
 
 ## App name (30)
 
-**Strata** (6)
+**Strata: Stone Puzzles** (21)
 
-Fallbacks, if the name is taken:
-1. **Strata: 3D Nonograms** (20)
-2. **Strata – Peel the Stone** (23; en dash)
+Kellan's pick, 2026-10-27: "Strata" alone is taken on the App Store. The home-screen label (`appName` in `capacitor.config.json`) stays **Strata**. The name has no genre search words, so the subtitle should carry "3D" and "nonogram".
 
 ## Subtitle (30)
 

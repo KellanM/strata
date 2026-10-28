@@ -64,7 +64,7 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
 6. The release date. This also drives the GTM timeline: featuring wants about 12 weeks' notice.
 7. Decisions on the open listing items:
    - **Subtitle:** the listing has "Peel the stone, find its shape". The last recommendation was "3D picross, carved in stone"; `gtm-study.md` suggested "Calm picross puzzles in 3D".
-   - **Name:** "Strata" alone, or "Strata: 3D Nonogram"? A 2013 game called *Strata* exists, and the trademark check hasn't been run.
+   - **Name: decided, "Strata: Stone Puzzles"** (Kellan, 2026-10-27; plain "Strata" is taken). The home-screen label stays "Strata".
 
 **Then the agent's part, on the Mac:**
 1. `npm ci`, then `npx cap add ios`, then `npm run build:app`.
