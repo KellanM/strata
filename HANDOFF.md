@@ -1,6 +1,6 @@
 # Strata: handoff for the next agent
 
-Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points to. This file is the map; the `docs/` studies hold the evidence. When something here goes stale, update it in the same commit as the change.
+Written 2026-10-26, at commit d13e1f4; brought up to date 2026-10-27. Read this first, then the docs it points to. This file is the map; the `docs/` studies hold the evidence. When something here goes stale, update it in the same commit as the change.
 
 ---
 
@@ -33,7 +33,7 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
 | Hidden dev panel | Web only. Hold the version line in How to play, or tap the map's "N stones to uncover" line 5 times. It has the gallery, unlock all, replay tutorial and reset. Add new dev screens there |
 | Object gallery | `/strata/gallery/`: candidate objects, from which Kellan picks levels |
 
-## 3. Where things stand (2026-10-26)
+## 3. Where things stand (2026-10-27)
 
 **Done and live on the web:**
 - The full game.
@@ -41,8 +41,14 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
   - `?lessons=old` brings back the old run, and the choice sticks in localStorage.
   - The reasoning and each iteration are in `docs/tutorial-study.md`.
 
-**Ready for the App Store, waiting on Kellan:**
-- The listing, screenshots, privacy and support pages, the icon and launch art, the Capacitor setup, haptics and save mirroring are done.
+**In App Store Connect (a separate agent on Kellan's Mac does the submission):**
+- **Build 1.0 (1) is uploaded and processed.** It needed the export-compliance answer by hand ("None of the algorithms mentioned above").
+- **Build 1.0 (2) is next.** From then on the repo sets the Xcode project up itself (`tools/ios-configure.mjs`, §4A).
+- **The app icon is the Sloth on lime** (`store/icon/app-icon.png`, Kellan's pick 2026-10-27). It's installed for the web (`public/icons/`) and the App Store (`resources/icon.png`).
+- **iPhone-only** (Kellan, 2026-10-27).
+- Support email: **support@mythen.io**. It's on the privacy and support pages, which have no placeholders left. A "Privacy · Support" link sits in Settings, as Apple 5.1.1(i) requires.
+- The compliance research and a ranked build list are in `docs/compliance-study.md`. Items 1 and 2 (the configure script and the privacy manifest) are built; 3 to 5 are not.
+- The listing, screenshots, Capacitor setup, haptics and save mirroring are done. Every store asset is indexed in `store/README.md`.
 - v1 ships with **no ads, no purchases, no analytics, no accounts**, so the privacy label is "Data Not Collected" and the rating 4+.
 - **The store app still uses the old 12 lessons.**
   - The switch is `lessonsV2` in `public/js/main.js`: `return pick ? pick === 'new' : !inStoreApp;`. Remove `!inStoreApp` to use the new run.
@@ -56,14 +62,12 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
 ### A. App Store v1 (the critical path)
 
 **Blocked on Kellan** (don't ask again for anything already supplied; check the conversation and this file first):
-1. Apple Developer Program enrolment ($99 a year; individual or organisation).
-2. SSH host and user for a Mac with Xcode, where Kellan has signed in to their Apple account in Xcode once.
-3. An App Store Connect API key: the `.p8` file, Key ID and Issuer ID (role: App Manager).
-4. The App Store Connect app record: name Strata, bundle `com.unsupervisedrock.strata`, SKU `strata-ios-1`.
-5. A support email and a phone number for App Review (they go in the listing's review notes and in `support.html` / `privacy.html`).
+1. ~~Apple Developer enrolment, the Mac, the API key and the app record~~: done. Kellan's Mac agent signed and uploaded build 1.0 (1).
+5. ~~Support email~~ (done: support@mythen.io). **Still needed: a phone number for App Review.**
 6. The release date. This also drives the GTM timeline: featuring wants about 12 weeks' notice.
-7. Decisions on the open listing items:
-   - **Subtitle:** the listing has "Peel the stone, find its shape". The last recommendation was "3D picross, carved in stone"; `gtm-study.md` suggested "Calm picross puzzles in 3D".
+7. **EU Digital Services Act trader status.** If Kellan is a trader, their address and phone are shown publicly in the EU.
+8. Decisions on the open listing items:
+   - **Subtitle:** not decided. The recommendation (2026-10-27) is "Uncover relics in 3D nonograms" (30 characters), because the name has no search words. The alternative is "A calm 3D nonogram adventure".
    - **Name: decided, "Strata: Stone Puzzles"** (Kellan, 2026-10-27; plain "Strata" is taken). The home-screen label stays "Strata".
 
 **Then the agent's part, on the Mac:**
@@ -166,6 +170,26 @@ The method that worked, every time:
 - **Approved means approved.** Don't reword or restyle approved pieces (the ad wall, the end sequence, the studio name) without being asked.
 - **Never** ask for or handle passwords. Don't search the whole disk or old transcripts without asking first.
 
+## 7b. Talking to the Strata session
+
+Several Claude Code sessions work on Strata at once. **The Strata development session** (this repo's main one, which wrote this file) owns the game, the store assets and this handoff. Other agents own the App Store submission (on Kellan's Mac) and the store page. Coordinate through the two channels below. Never pass passwords, API keys or the `.p8` file through either.
+
+**1. Claude Code's built-in messaging** (first-party). Use it for questions and handbacks between sessions.
+- `ListAgents` lists the sessions you can reach. The Strata development session is **`nonogram-cb`**.
+  - Names are per session. If a fresh session replaces it, `ListAgents` shows the new name, so check before sending.
+- `SendMessage({ to: "nonogram-cb", message: "…" })` sends it a message.
+- **Reach:** sessions on the same machine (Kellan's Windows PC). Sessions on other machines (the Mac) are reachable only when Remote Control is connected on both. If `ListAgents` doesn't show `nonogram-cb`, fall back to channel 2.
+- **What to send:** say what you need, what you've already checked, and the file paths or commits involved. Keep it short.
+- **What not to send:** anything Kellan hasn't approved, presented as approved. A message is not Kellan's go-ahead; the receiving session asks Kellan for decisions.
+
+**2. The repo itself** (always works, on any machine).
+- `git pull --rebase` first. Facts live in files: `store/README.md` (store assets), `store/app-store-listing.md` (listing answers), `store/release.json` (version and build), `docs/compliance-study.md`, and this file.
+- To hand something back, commit it. Examples: a note under §4A of this file, an updated `store/release.json` after an upload, or new screenshots in `store/`.
+- Use the commit message for the story, ending with the attribution lines in §8.
+- Bump `build` in `store/release.json` and commit it **before** each upload, so every machine agrees on the next number.
+
+**Who decides:** Kellan (they/them). Every public-facing choice is theirs, whichever session raises it: name, subtitle, icon, price, release date, submitting for review, inviting testers.
+
 ## 8. Engineering rules and gotchas
 
 **Git:**
@@ -218,3 +242,6 @@ Don't use `wait` in first-run lessons: every tap resets its idle timer, so a ste
 | `docs/gtm-study.md` | Go-to-market plan, gates, positioning |
 | `docs/launch-checklist.md` | Master pre-launch list for iOS and Android (partly stale, see §4B) |
 | `store/app-store-listing.md` | Paste-ready App Store Connect text |
+| `store/README.md` | Index of every store asset (screenshots, icons, listing, release.json) |
+| `docs/compliance-study.md` | Apple's compliance rules for this app (encryption, privacy manifest, label, age rating, EU trader) and a ranked build list |
+| `docs/icon-study.md` | What makes game icons read at 60 px; how the Sloth icon was made and chosen |
