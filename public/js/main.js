@@ -18,6 +18,7 @@ import { renderJournal, closeView, viewOpen } from './journal.js';
 import { rate as motionRate, after, mark, reveal, prepareReveal, devFlags, ease, DUR, BEAT } from './motion.js';
 import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
+import * as perf from './perf.js';   // frame timing and strata.bench() for profiling (docs/profiling.md)
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -2536,4 +2537,5 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes };
+window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, bench: (o) => perf.bench(window.strata, o) };
+if (new URLSearchParams(location.search).has('perf') || localStorage.getItem('strata.perf') === '1') perf.showHud();
