@@ -36,7 +36,7 @@ Strata is a quiet puzzle about finding it. Each level is a block of stone with a
 It is a nonogram (picross) in three dimensions. Turn the stone in your hands, peel back its layers to see inside, and work row by row until only the object remains.
 
 A JOURNEY ACROSS FIFTEEN LANDS
-182 stones across 15 chapters, from First Light and the Moss Garden to the Lantern Festival, the Deep and Starfall. Each chapter is a place with its own light and colour, and each stone you uncover takes its place on the map as a small sculpture. A bonus stone waits in every chapter for those who earn their stars.
+182 stones across 15 chapters, from First Light and the Moss Garden to the Lantern Festival, the Deep and Starfall. Each chapter is a place with its own light and color, and each stone you uncover takes its place on the map as a small sculpture. A bonus stone waits in every chapter for those who earn their stars.
 
 GENTLE TO LEARN
 Twelve short lessons teach everything as you play: how to read the numbers, how to chisel, how to mark the cubes you mean to keep. Stones grow larger and their clues fewer as you travel, but the rules never change. If you are stuck, wait a moment and a row with a move will softly glow.
@@ -135,7 +135,7 @@ If a later version adds ads (AppLovin MAX), purchases or analytics, this label a
 ## App Review notes
 
 ```
-Strata is a single-player puzzle game: a 3D nonogram (picross) where you chisel away cubes from a block of stone to uncover a hidden object. No login or account is needed, and there is nothing to configure. To play: on the title screen, tap the glowing stone in the centre, then swipe up; the first time, twelve short interactive lessons teach the rules step by step, and afterwards the map leads from level to level. The full rules are always available under Settings on the map, or from the pause menu (≡) during a puzzle. The app works entirely offline. This version contains no in-app purchases, no advertising, no tracking and no third-party SDKs, and it collects no data.
+Strata is a single-player puzzle game: a 3D nonogram (picross) where you chisel away cubes from a block of stone to uncover a hidden object. No login or account is needed, and there is nothing to configure. To play: on the title screen, tap the glowing stone in the center, then swipe up; the first time, twelve short interactive lessons teach the rules step by step, and afterwards the map leads from level to level. The full rules are always available under Settings on the map, or from the pause menu (≡) during a puzzle. The app works entirely offline. This version contains no in-app purchases, no advertising, no tracking and no third-party SDKs, and it collects no data.
 ```
 
 Contact for App Review: Kellan Mythen, [phone], support@mythen.io.
