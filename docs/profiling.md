@@ -60,6 +60,22 @@ Each row shows fps, the p50/p95/p99 frame time in ms, the worst frame, and janks
    - **Allocations** across three or four levels in a row, to catch a leak.
 5. **Cold start:** time from tapping the icon to the title three times, after force-quitting each time. For the game's own boot timeline, set the motion log on (`localStorage.setItem('strata.dev.motionlog', '1')`, then relaunch): `mark()` in `motion.js` lists each boot step on screen.
 
+## Headless: the benchmark runs itself (no one at Web Inspector)
+
+For a session that can't operate Safari or the Instruments window (added 2026-10-28, after the Mac's first report):
+
+1. `STRATA_AUTOBENCH=3 npm run build:app` makes a **profiling build**.
+   - About 4 s after launch it goes past the title by itself, waits, then runs `strata.bench()` 3 times.
+   - It logs each result as one line: `STRATA_BENCH {json}` (run, device, DPR, viewport and the per-segment table), then `STRATA_BENCH_DONE`.
+   - The build prints a loud warning. **Never upload it.** A plain `npm run build:app` removes it again, and `test/perf.test.js` checks that the flag never sits in the source page.
+2. Install and launch the Debug build, and read the log. Capacitor passes the page's `console.log` to the native log in Debug builds, so either works:
+   - launch with `xcrun devicectl device process launch --console --device <id> com.unsupervisedrock.strata` and keep stdout;
+   - or stream the device log (e.g. `log stream` / Console.app filtered on `STRATA_BENCH`).
+3. Record Instruments around it from the CLI: `xcrun xctrace record --template 'Animation Hitches' --device <id> --attach <pid> --time-limit 60s --output ~/strata-traces/…`. Repeat with Time Profiler and Metal System Trace, and use `xctrace export` to read the results.
+4. Rebuild without the flag before anything else is built from that checkout.
+
+In a desktop Chrome check, a fresh launch went through the title and ran the benchmark unattended, with no page errors.
+
 ## Reporting back
 
 Commit one file per run to `perf/YYYY-MM-DD-<device>-<what>.md` containing:

@@ -2539,3 +2539,17 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
 window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, bench: (o) => perf.bench(window.strata, o) };
 if (new URLSearchParams(location.search).has('perf') || localStorage.getItem('strata.perf') === '1') perf.showHud();
+// A profiling build (STRATA_AUTOBENCH=n npm run build:app, docs/profiling.md): past the
+// title on its own, then the benchmark n times, each table logged as one line the Mac
+// can read off the device's log. Never in a normal build: build.mjs only injects it on request.
+if (window.STRATA_AUTOBENCH) (async () => {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  await wait(4000);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  await wait(6000);
+  for (let run = 1; run <= window.STRATA_AUTOBENCH; run++) {
+    const report = await perf.bench(window.strata);
+    console.log('STRATA_BENCH ' + JSON.stringify({ run, of: window.STRATA_AUTOBENCH, ua: navigator.userAgent, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, report }));
+  }
+  console.log('STRATA_BENCH_DONE');
+})();

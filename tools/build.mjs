@@ -34,6 +34,16 @@ const htmlPath = join(dist, 'index.html');
 writeFileSync(htmlPath, readFileSync(htmlPath, 'utf8').replace('<p id="version" class="version">dev</p>', `<p id="version" class="version">${stamp}</p>`));
 console.log(`stamped ${stamp}`);
 
+// a profiling build only (docs/profiling.md): the benchmark runs itself n times after launch.
+// Never upload one; a normal build has no STRATA_AUTOBENCH anywhere (test/perf.test.js)
+const autobench = Number(process.env.STRATA_AUTOBENCH || 0);
+if (autobench > 0) {
+  writeFileSync(htmlPath, readFileSync(htmlPath, 'utf8').replace('</head>', `<script>window.STRATA_AUTOBENCH = ${autobench};</script></head>`));
+  console.log(`
+*** PROFILING BUILD: the benchmark runs itself ${autobench}x. Do not upload this build. ***
+`);
+}
+
 const files = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {

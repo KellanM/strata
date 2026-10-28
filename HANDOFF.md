@@ -195,6 +195,12 @@ Several Claude Code sessions work on Strata at once. **The Strata development se
 **Git:**
 - Commit to master, then `git pull --rebase` (or fetch) and push. Never force-push, never stash or discard someone else's uncommitted work, and stage only your own files.
 - Commit style: `feat(lessons): …`, `fix(app): …`, `store: …`, `docs: …`. The subject says what the player gets, in plain words.
+- **Attribution:** every commit message ends with these two lines:
+  ```
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01RJB5cDdXvcLAwaz3VUAMoh
+  ```
+  (A session with its own attribution lines from its harness uses those instead.)
 
 **After editing `main.js`:**
 - Load the page and check for `pageerror` at boot. A top-level `let` read during boot once crashed the whole module (v0.3.38).
