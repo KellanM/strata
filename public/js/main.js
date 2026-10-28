@@ -19,6 +19,7 @@ import { rate as motionRate, after, mark, reveal, prepareReveal, devFlags, ease,
 import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
 import * as perf from './perf.js';   // frame timing and strata.bench() for profiling (docs/profiling.md)
+perf.boot('js');   // cold-start milestones for the CLI (issue #7): js, first-frame, map-built, splash-lifted, title-interactive
 
 // Palette hexes are display colours; pass them through untouched.
 THREE.ColorManagement.enabled = false;
@@ -1827,7 +1828,9 @@ function draw() {
 // canvas fades out while the map is up (diving included: until the new level
 // is built under the veil, the canvas only holds the old one), and the level
 // stops drawing once it's hidden.
+let firstFrame = false;
 function frame() {
+  if (!firstFrame) { firstFrame = true; perf.boot('first-frame'); }
   const onTitle = titleEl.classList.contains('show');
   const mapUp = !onTitle && menuEl.classList.contains('show');
   const worldUp = onTitle || menuEl.classList.contains('show');
@@ -2206,7 +2209,7 @@ function carveLogo() {
   if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
-const beginTitle = () => { titleBegun = true; };   // First light starts (frame() resumes it)
+const beginTitle = () => { titleBegun = true; perf.boot('title-interactive'); };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
@@ -2218,6 +2221,7 @@ const buildMap = () => {
   renderMenu(false, false, false);
   mapSheet().scrollTop = 0;
   mark('title: map built');
+  perf.boot('map-built');
   primeMap();
 };
 // The studio's card (index.html #splash) holds the screen while the heavy
@@ -2235,6 +2239,7 @@ if (splash) {
     setTimeout(() => {
       splash.classList.add('out');
       mark('splash: lifted');
+      perf.boot('splash-lifted');
       setTimeout(() => splash.remove(), 800);
       beginTitle();
     }, left);
@@ -2560,7 +2565,7 @@ if (window.STRATA_AUTOBENCH) (async () => {
   await wait(6000);
   for (let run = 1; run <= window.STRATA_AUTOBENCH; run++) {
     const report = await perf.bench(window.strata);
-    console.log('STRATA_BENCH ' + JSON.stringify({ run, of: window.STRATA_AUTOBENCH, ua: navigator.userAgent, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, report }));
+    console.log('STRATA_BENCH ' + JSON.stringify({ run, of: window.STRATA_AUTOBENCH, ua: navigator.userAgent, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, power: perf.powerCheck(report), context: perf.lastContext(), report }));
   }
   console.log('STRATA_BENCH_DONE');
 })();

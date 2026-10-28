@@ -6,7 +6,10 @@
 //   strata.perf.report()        per segment: fps, p50 / p95 / p99 frame ms, worst,
 //                               and janks (frames over 34 ms, i.e. a missed 30 fps beat)
 //   strata.bench()              the same play every run: a level's intro, steady
-//                               chiselling, the reveal, then idle; resolves to the report
+//                               chiselling to the last cube, the player's reveal, idle,
+//                               then a burst completion as a stress case; resolves to the report
+//   powerCheck(report)          flags a run capped at 30 fps (Low Power Mode, issue #4)
+//   boot(name)                  STRATA_BOOT lines for cold-start timing (issue #7)
 //   ?perf (or localStorage strata.perf = '1')   a small live readout, top left
 //
 // Nothing here runs unless asked: the monitor starts on the first mark().
@@ -66,25 +69,126 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // The benchmark: one level, played the same way each time. `strata` is main.js's
 // window.strata (startPuzzle, journalEntries, act, game).
-export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs = 120 } = {}) {
+//
+// Two completions, kept apart (issue #5):
+//   reveal        the player's: every cube but one chiselled at the same steady
+//                 cadence, then the last one alone, and the reveal measured from that tap
+//   reveal-burst  a stress case, not a player number: the stone restarted and every
+//                 cube broken in one loop (a hundred breaks in one frame), then the reveal.
+//                 Skip it with { burst: false }.
+// The run is also checked for Low Power Mode (issue #4): iOS pins
+// requestAnimationFrame to 30 fps there, so an idle p50 near 33 ms means the
+// whole run is capped and its numbers can't be compared. JS can't read the
+// power state, so this is an inference from the frames; it is logged with the result.
+export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs = 120, burst = true } = {}) {
   reset();
   const e = strata.journalEntries().find((x) => x.shape.id === id);
   if (!e) throw new Error(`bench: no level "${id}"`);
+  const openCells = () => {
+    const g = strata.game, out = [];
+    for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i] && !g.broken[i]) out.push(i);
+    return out;
+  };
+
+  // Issue #2: the first-launch hang is the app applying a big layer update as the
+  // level starts. Count the layer-prone elements either side of it, and say what
+  // the level was started from (a lesson, the map, the title), since the bench
+  // doesn't start it the way a player does (a tap on the map's stone).
+  const from = where(strata);
+  const layersBefore = layerCensus();
   mark('intro');                       // the block assembling, the camera settling
   strata.startPuzzle(e);
   await wait(3000);
+  mark('census');                      // not a measurement: the census itself costs a frame
+  const layersAfter = layerCensus();
+  await wait(100);
   mark('chisel');                      // steady taps, each breaking one cube that doesn't belong
-  const g = strata.game;
-  const open = [];
-  for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) open.push(i);
+  let open = openCells();
   for (const i of open.slice(0, chisels)) { strata.act(i, 'break'); await wait(gapMs); }
-  mark('reveal');                      // the rest at once: the win, the whirl, the rays, the gems
-  for (const i of open.slice(chisels)) strata.act(i, 'break');
+  mark('chisel-rest');                 // the same cadence, down to the last cube
+  open = openCells();
+  for (const i of open.slice(0, -1)) { strata.act(i, 'break'); await wait(gapMs); }
+  mark('reveal');                      // the last tap, as a player makes it: the win, the whirl, the rays, the gems
+  for (const i of openCells()) strata.act(i, 'break');
   await wait(6000);
-  mark('idle');                        // nothing moving but the sky: the battery case
+  mark('idle');                        // nothing moving but the sky: the battery case, and the power check
   await wait(5000);
+
+  if (burst) {
+    mark('restart');                   // the same stone again (warm), then the stress case
+    strata.startPuzzle(e);
+    await wait(3000);
+    mark('reveal-burst');              // every cube at once: NOT a player number
+    for (const i of openCells()) strata.act(i, 'break');
+    await wait(6000);
+  }
   mark('done');
-  const r = report();
+  const r = report().filter((x) => x.segment !== 'census');
+  last_ = { from, layersBefore, layersAfter };
   console.table(r);
+  const power = powerCheck(r);
+  if (power.lowPowerSuspected) console.warn(`STRATA_BENCH_WARNING ${power.note}`);
   return r;
+}
+
+// what the last bench started its level from, and the layer census either side
+let last_ = null;
+export const lastContext = () => last_;
+
+function where(strata) {
+  const show = (id) => document.getElementById(id)?.classList.contains('show') ?? false;
+  return { level: strata.game?.shape?.id ?? null, lesson: !!strata.game?.entry?.lesson, title: show('title'), map: show('menu') };
+}
+
+// Elements on screen whose style tends to make WebKit give them their own native
+// layer: will-change, backdrop-filter, a 3D transform, a running animation, or a
+// canvas or video. A proxy for the layer tree (JS can't see the real one), grouped
+// by the nearest element with an id, so a jump between two censuses says where.
+export function layerCensus() {
+  const groups = {};
+  let total = 0, rendered = 0;
+  for (const el of document.querySelectorAll('body *')) {
+    if (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : !el.getClientRects().length) continue;
+    rendered++;
+    const cs = getComputedStyle(el);
+    const prone = cs.willChange !== 'auto' || (cs.backdropFilter && cs.backdropFilter !== 'none') ||
+      (cs.webkitBackdropFilter && cs.webkitBackdropFilter !== 'none') || /matrix3d|translateZ|translate3d/.test(cs.transform) ||
+      (cs.animationName !== 'none' && cs.animationPlayState !== 'paused') || /^(CANVAS|VIDEO|IFRAME)$/.test(el.tagName);
+    if (!prone) continue;
+    total++;
+    const key = el.id ? '#' + el.id : el.parentElement?.closest('[id]') ? '#' + el.parentElement.closest('[id]').id : el.tagName.toLowerCase();
+    groups[key] = (groups[key] ?? 0) + 1;
+  }
+  const top = Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  return { layerProne: total, rendered, all: document.querySelectorAll('body *').length, top: Object.fromEntries(top) };
+}
+
+// Low Power Mode, inferred: idle p50 near 33 ms (30 fps) instead of ~17 (60 fps).
+// Only a suspicion - a display or OS cap could look the same - but a run carrying
+// it must not be compared with one that doesn't.
+export function powerCheck(r) {
+  const idle = r.find((x) => x.segment === 'idle');
+  if (!idle) return { lowPowerSuspected: null, note: 'no idle segment to check' };
+  const capped = idle.p50 > 25;
+  return {
+    lowPowerSuspected: capped,
+    idleP50: idle.p50,
+    note: capped
+      ? `idle p50 ${idle.p50} ms: frames capped near 30 fps - Low Power Mode is probably on. Discard this run.`
+      : `idle p50 ${idle.p50} ms: not capped at 30 fps (Low Power Mode looks off)`,
+  };
+}
+
+// Boot milestones a CLI can read (issue #7): one console line each, which
+// Capacitor forwards to the device log in Debug builds. Times are ms since the
+// page's navigation started (performance.now()). Logged in the store app, and on
+// the web only with ?perf, so normal web play stays quiet.
+const bootLog = (() => {
+  try { return !!window.Capacitor?.isNativePlatform?.() || new URLSearchParams(location.search).has('perf') || !!window.STRATA_AUTOBENCH; } catch { return false; }
+})();
+const booted = new Set();
+export function boot(name) {
+  if (!bootLog || booted.has(name)) return;
+  booted.add(name);
+  console.log(`STRATA_BOOT ${name} ${Math.round(performance.now())}`);
 }

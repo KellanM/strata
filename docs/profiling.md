@@ -8,6 +8,8 @@ They're on different machines, so **the repo is the channel**: the Mac pulls, me
 
 ## Targets (docs/launch-checklist.md §4)
 
+**Turn Low Power Mode off before measuring, and say so in the report** (issue #4). It pins `requestAnimationFrame` to 30 fps and roughly doubles every hitch. On 2026-10-28 it silently turned a passing baseline into a failing one. Each `STRATA_BENCH` line now carries `power`: if `idle` p50 sits near 33 ms, the run is flagged `lowPowerSuspected` and a `STRATA_BENCH_WARNING` line is logged. Discard such a run. JS can't read the power state, so this is inferred from the frames.
+
 - **60 fps while playing.** p95 frame time 16.7–17 ms, with no janks in `chisel`.
 - **No hitch over 100 ms** after the studio card lifts.
 - **Cold start under 4 s** from tapping the icon to the title.
@@ -22,12 +24,24 @@ They're on different machines, so **the repo is the channel**: the Mac pulls, me
 |---|---|
 | `intro` | the level's block assembles, the camera settles (3 s) |
 | `chisel` | 40 steady taps, one every 120 ms, each breaking a cube that doesn't belong |
-| `reveal` | the rest broken at once: the win, the whirl, the rays and the gems (6 s) |
-| `idle` | nothing but the sky (5 s) |
+| `chisel-rest` | the same cadence down to the last cube (about 13 s on `maple-bonsai`) |
+| `reveal` | **the player's completion:** the last cube alone, then the win, the whirl, the rays and the gems (6 s) |
+| `idle` | nothing but the sky (5 s); also the Low Power Mode check |
+| `restart` | the same stone started again, warm (3 s) |
+| `reveal-burst` | **a stress case, not a player number:** every cube broken in one loop (about 100 in one frame), then the reveal (6 s). Skip it with `{ burst: false }` |
+
+**Why `reveal` and `reveal-burst` are separate** (issue #5, 2026-10-28): before this, `reveal` broke every remaining cube in one loop, and its 108–135 ms hitch on the iPhone may have been that harness artefact rather than something a player sees. Desktop Chrome, one run: `reveal` worst 33–50 ms, `reveal-burst` 150–167 ms. **Only the iPhone can settle #1.**
+
+**The start context and a layer census** (issue #2): each run also records `context`:
+- `from`: what was on screen when `startPuzzle()` ran (`level`, `lesson`, `title`, `map`). The bench doesn't start a level the way a player does, with a tap on the map's stone and its dive. On a fresh install, dismissing the title leads into the first lesson, so the first `startPuzzle()` replaces a lesson.
+- `layersBefore` / `layersAfter`: `layerCensus()` on either side of `startPuzzle()`. This counts the on-screen elements whose style tends to give them a native layer (`will-change`, `backdrop-filter`, a 3D transform, a running animation, canvas/video), grouped by the nearest element with an id.
+  - It's a proxy: JS can't see WebKit's real layer tree.
+  - Desktop shows no change (19 of 188 rendered, both sides). If the iPhone's numbers jump, the `top` groups say where.
+  - The census runs outside any measured segment. Call `strata.perf.layerCensus()` from Web Inspector at any time.
 
 Each row shows fps, the p50/p95/p99 frame time in ms, the worst frame, and janks (frames over 34 ms).
 
-**Options:** `strata.bench({ id: 'dragon-head', chisels: 40, gapMs: 120 })`.
+**Options:** `strata.bench({ id: 'dragon-head', chisels: 40, gapMs: 120, burst: true })`.
 
 **Other tools:**
 - `strata.perf.mark('label')` starts your own segment; `strata.perf.report()` reads every segment.
@@ -75,6 +89,21 @@ For a session that can't operate Safari or the Instruments window (added 2026-10
 4. Rebuild without the flag before anything else is built from that checkout.
 
 In a desktop Chrome check, a fresh launch went through the title and ran the benchmark unattended, with no page errors.
+
+## Cold start: boot milestones (issue #7)
+
+The store app logs one `STRATA_BOOT <name> <ms>` line per milestone, in ms since the page started loading (`performance.now()`). On the web they appear only with `?perf`. The milestones:
+- `js`: main.js running;
+- `first-frame`;
+- `map-built`;
+- `splash-lifted`: the studio card goes;
+- `title-interactive`: the title takes a tap.
+
+Desktop Chrome: `js` 165, `first-frame` 975, `title-interactive` 2623 ms; the card holds for at least 2.6 s by design (`SPLASH_HOLD`).
+
+**These times start when the web view begins loading the page, not at the icon tap.** For icon-to-title, add the native launch time from the device log (the process launch to Capacitor's `WebView loaded`).
+
+**In a Release build, Capacitor doesn't forward the page's console by default** (`loggingBehavior` is `debug`). To read `STRATA_BOOT` from a Release cold start, set `"loggingBehavior": "production"` in `capacitor.config.json` for that measurement build only, and revert it.
 
 ## Reporting back
 
