@@ -76,6 +76,7 @@ Answer **None** to every frequency question:
 - Profanity or crude humour; mature or suggestive themes; sexual content or nudity; graphic sexual content
 - Horror or fear themes; medical or treatment information; alcohol, tobacco or drug use
 - Simulated gambling; contests
+- Guns or other weapons; health or wellness topics (added to Apple's questionnaire in 2025; docs/compliance-study.md)
 
 Answer **No** to the yes/no questions:
 - Unrestricted web access
@@ -84,6 +85,7 @@ Answer **No** to the yes/no questions:
 - Messaging or chat
 - Advertising
 - Loot boxes
+- Social media (added in 2025); its follow-up, "disabled for users under 13", then does not apply
 - Age assurance and parental controls (not applicable)
 
 **Expected rating: 4+**
@@ -127,7 +129,7 @@ If a later version adds ads (AppLovin MAX), purchases or analytics, this label a
 Strata is a single-player puzzle game: a 3D nonogram (picross) where you chisel away cubes from a block of stone to uncover a hidden object. No login or account is needed, and there is nothing to configure. To play: on the title screen, tap the glowing stone in the centre, then swipe up; the first time, twelve short interactive lessons teach the rules step by step, and afterwards the map leads from level to level. The full rules are always available under Settings on the map, or from the pause menu (≡) during a puzzle. The app works entirely offline. This version contains no in-app purchases, no advertising, no tracking and no third-party SDKs, and it collects no data.
 ```
 
-Contact for App Review: Kellan Mythen, [phone], [support email].
+Contact for App Review: Kellan Mythen, [phone], support@mythen.io.
 
 ## Screenshots
 

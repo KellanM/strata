@@ -764,6 +764,8 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* the build stamps this; it tells which version a phone is running */
 .version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
+.legal { margin: 6px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: .7; }
+.legal a { color: var(--ink-soft); text-decoration: none; }
 
 /* ---------- add to home screen ---------- */
 #install {
