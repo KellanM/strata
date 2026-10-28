@@ -71,6 +71,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // window.strata (startPuzzle, journalEntries, act, game).
 //
 // Two completions, kept apart (issue #5):
+//   rotate, zoom  a one-finger turn and a two-finger pinch on the half-chiselled stone (issue #6)
 //   reveal        the player's: every cube but one chiselled at the same steady
 //                 cadence, then the last one alone, and the reveal measured from that tap
 //   reveal-burst  a stress case, not a player number: the stone restarted and every
@@ -105,6 +106,21 @@ export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs =
   mark('chisel');                      // steady taps, each breaking one cube that doesn't belong
   let open = openCells();
   for (const i of open.slice(0, chisels)) { strata.act(i, 'break'); await wait(gapMs); }
+  // Issue #6: turning and pinching, replayed as real pointer events on the canvas,
+  // so they go through the game's own handler and OrbitControls as a finger does
+  const canvas = document.getElementById('scene');   // the game's WebGL canvas
+  if (canvas) {
+    // start where no peel diamond is (the game's own hit test), or the touch peels instead of turning
+    const r = canvas.getBoundingClientRect(), cx = r.left + r.width / 2;
+    const clear = (y) => [cx - 160, cx - 140, cx + 140, cx + 160].every((x) => !strata.handles?.hit?.(x, y, strata.camera, r, 34));
+    const cy = [0.85, 0.8, 0.9, 0.75, 0.3].map((f) => r.top + r.height * f).find(clear) ?? r.top + r.height * 0.85;
+    mark('rotate');                    // one finger: 280 px right over 1.5 s, and back
+    await gesture(canvas, 1500, (k) => [[cx - 140 + 280 * tri(k), cy]]);
+    await wait(800);                   // the turn's damping settling
+    mark('zoom');                      // two fingers: spread from 120 to 320 px apart over 1.5 s, and back
+    await gesture(canvas, 1500, (k) => { const h = 60 + 100 * tri(k); return [[cx - h, cy], [cx + h, cy]]; });
+    await wait(800);
+  }
   mark('chisel-rest');                 // the same cadence, down to the last cube
   open = openCells();
   for (const i of open.slice(0, -1)) { strata.act(i, 'break'); await wait(gapMs); }
@@ -129,6 +145,30 @@ export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs =
   const power = powerCheck(r);
   if (power.lowPowerSuspected) console.warn(`STRATA_BENCH_WARNING ${power.note}`);
   return r;
+}
+
+// A gesture as touch pointer events on the canvas: path(k) gives each finger's
+// [x, y] for k in 0..1 over `ms` there and the same again back (tri), one step a frame.
+// Synthetic pointers can't be captured, so setPointerCapture is a no-op meanwhile.
+const tri = (k) => (k < 0.5 ? k * 2 : 2 - k * 2);
+const nextFrame = () => new Promise((r) => requestAnimationFrame(r));
+export async function gesture(el, ms, path) {
+  const capture = el.setPointerCapture, release = el.releasePointerCapture;
+  el.setPointerCapture = el.releasePointerCapture = () => {};
+  const send = (type, pts) => pts.forEach(([x, y], n) => el.dispatchEvent(new PointerEvent(type, {
+    pointerId: 900 + n, pointerType: 'touch', isPrimary: n === 0, clientX: x, clientY: y,
+    button: 0, buttons: type === 'pointerup' ? 0 : 1, bubbles: true, cancelable: true, composed: true })));
+  try {
+    send('pointerdown', path(0));
+    const t0 = performance.now();
+    for (;;) {
+      await nextFrame();
+      const k = Math.min(1, (performance.now() - t0) / (ms * 2));
+      send('pointermove', path(k));
+      if (k >= 1) break;
+    }
+    send('pointerup', path(1));
+  } finally { el.setPointerCapture = capture; el.releasePointerCapture = release; }
 }
 
 // what the last bench started its level from, and the layer census either side

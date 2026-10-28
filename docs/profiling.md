@@ -24,11 +24,19 @@ They're on different machines, so **the repo is the channel**: the Mac pulls, me
 |---|---|
 | `intro` | the level's block assembles, the camera settles (3 s) |
 | `chisel` | 40 steady taps, one every 120 ms, each breaking a cube that doesn't belong |
+| `rotate` | a one-finger turn on the half-chiselled stone: 280 px out over 1.5 s and back, then 0.8 s of damping (issue #6) |
+| `zoom` | a two-finger pinch: fingers 120 → 320 px apart over 1.5 s and back, then 0.8 s (issue #6) |
 | `chisel-rest` | the same cadence down to the last cube (about 13 s on `maple-bonsai`) |
 | `reveal` | **the player's completion:** the last cube alone, then the win, the whirl, the rays and the gems (6 s) |
 | `idle` | nothing but the sky (5 s); also the Low Power Mode check |
 | `restart` | the same stone started again, warm (3 s) |
 | `reveal-burst` | **a stress case, not a player number:** every cube broken in one loop (about 100 in one frame), then the reveal (6 s). Skip it with `{ burst: false }` |
+
+**How `rotate` and `zoom` are driven:** as touch pointer events dispatched on the game's canvas, so they go through the game's own pointer handler and OrbitControls (with its damping), as a finger does. Two details:
+- The turn starts at a spot the game's hit test finds clear of the peel diamonds; a touch on a diamond peels instead of turning.
+- `setPointerCapture` is a no-op during the gesture, because synthetic pointers can't be captured.
+
+Checked in desktop Chrome: the turn moves the camera a quarter turn, the pinch zooms ×2.66 and back, and no cube is broken and no slip counted. Row clear, mark and peel segments are still to do.
 
 **Why `reveal` and `reveal-burst` are separate** (issue #5, 2026-10-28): before this, `reveal` broke every remaining cube in one loop, and its 108–135 ms hitch on the iPhone may have been that harness artefact rather than something a player sees. Desktop Chrome, one run: `reveal` worst 33–50 ms, `reveal-burst` 150–167 ms. **Only the iPhone can settle #1.**
 
