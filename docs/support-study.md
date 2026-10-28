@@ -49,7 +49,7 @@ It had no "is my progress safe" answer, no "won't open" answer, and no reply tim
 ### Revision (shipped)
 
 `support-frames/before-after.jpg`, middle and right.
-- **The top:** the app icon (the Sloth), STRATA and HELP in the game's letter-spaced type, on the icon's lime fading to the game's cream.
+- **The top:** the 3×3×3 stone on lime (`public/icons/stone-3x3x3-240.png`, Kellan's pick 2026-10-28), STRATA and HELP in the game's letter-spaced type, on the icon's lime fading to the game's cream.
 - **The contact card, on the first screen:**
   - "Something not right, or a question?";
   - the email as a button;
