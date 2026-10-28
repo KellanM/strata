@@ -40,5 +40,5 @@ A small static site: a home for Kellan's games and the developer website ad netw
 
 ## Open decisions (Kellan's)
 
-- **Whose site is mythen.io:** Kellan personally, or the studio, or an LLC? The site currently says "Unsupervised Rock", the studio name already used in Strata's listing and © line, and names no company. If an LLC exists, give its exact legal name before the site says it publishes Strata.
+- **Whose site is mythen.io: decided** (Kellan, 2026-10-28). It is Kellan's own: "Unsupervised Rock is Kellan Mythen", © Kellan Mythen. The family's Mythen LLC is not involved and must not be named. A new LLC for the studio is being considered. If it's formed, its exact legal name replaces the © line and becomes the App Store seller (an organisation account, with a D-U-N-S number). Do it before v1.1's ads earn money.
 - **The App Store seller name** shown on Strata's listing (individual account: Kellan's name). Ad networks compare it with this site, so the site may need to name the person or company the store shows.
