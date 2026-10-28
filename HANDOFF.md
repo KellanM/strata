@@ -27,7 +27,7 @@ Written 2026-10-26, at commit d13e1f4. Read this first, then the docs it points 
 | Store app | Capacitor 8. `capacitor.config.json` has appId `com.unsupervisedrock.strata`, which is permanent once published. `npm run build:app` builds `dist/` without the gallery and prototypes, then runs `cap sync ios` |
 | Native bridge | `public/js/native.js`: `nativeApp`, saves mirrored to Capacitor Preferences, real haptics, `noAdsBuild` (store v1 has no ads and no purchases) |
 | Store listing | `store/app-store-listing.md`: ready to paste into App Store Connect (name, subtitle, text, keywords, age rating, privacy label, review notes) |
-| Store screenshots | `store/screenshots/` (6.9" and 6.5", 5 each). To reshoot: `node store/shoot.mjs` (see the listing) |
+| Store assets | **`store/README.md` indexes them all**: screenshots (`store/screenshots/`, named by order and subject), icon candidates (`store/icon/`), the listing. To reshoot screenshots: `node store/shoot.mjs` (see the listing) |
 | Legal pages | `public/privacy.html` and `public/support.html`, deployed with the site |
 | Icon and launch art | `resources/` (made by `tools/make-store-art.mjs`) |
 | Hidden dev panel | Web only. Hold the version line in How to play, or tap the map's "N stones to uncover" line 5 times. It has the gallery, unlock all, replay tutorial and reset. Add new dev screens there |
@@ -124,6 +124,7 @@ The plan is `docs/gtm-study.md`, researched 2026-10-20. Read its "5 highest-leve
 | Store badges | `tools/trailer/badges/` (App Store SVG, Google Play PNG) | For end cards once the listings are live |
 | Hook research | `docs/ad-hooks-study.md`, `docs/ad-hooks-renders.md`, `docs/trailer-study.md`, `docs/trailer-v2-study.md` | Six hook-study ads exist on the Saturday branch |
 | Store screenshots | `store/screenshots/` | Lead with the reveal, then the break, then the collection |
+| App icon candidates | `store/icon/` (`sloth-green.png` and others; `docs/icon-study.md`) | Made with `tools/render-icon.mjs` from the real win state |
 | Icon, splash art | `resources/`, `public/icons/` | |
 | Press kit | not made yet | A GTM Phase 1 item: logo (the rock), key art, trailer, fact sheet |
 

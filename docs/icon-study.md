@@ -46,13 +46,13 @@ Green was "the clear winner", then Kellan asked to see all three.
 
 ## Experiment
 
-- **How the renders were made:** `shots/icon-study/sloth.mjs` renders the real game. It opens the Sloth with a chosen palette, solves it and waits for the reveal to settle. It then hides the UI and the finale's gems and score, zooms the camera ×1.7, and renders at 2048 px.
+- **How the renders were made:** `tools/render-icon.mjs` renders the real game. It opens the Sloth with a chosen palette, solves it and waits for the reveal to settle. It then hides the UI and the finale's gems and score, zooms the camera ×1.7, and renders at 2048 px.
 - **Crop:** all three use one crop, (331, 43, 1806, 1518) → 1024, so the Sloth and its branch fill about 80% of the tile.
 - **Backgrounds:**
   - Cloud Isles: the `Clouds` palette;
   - green: sky `#ccff66` → `#4db04f`;
   - blue: `#6fb6ff` → `#2d62d8`.
-- **Outputs:** `icon-sloth-{green,clouds,blue}.png` and `candidates-2.png` (each at 180 and 60 px, on light and dark grounds).
+- **Outputs, in the repo under `store/icon/`:** `sloth-green.png`, `sloth-cloud-isles.png`, `sloth-blue.png` (1024 px), `compare-at-phone-sizes.png` (each next to the current icon at 180 and 60 px, on light and dark grounds; made by `tools/icon-sheet.py`) and `reference-icons-33-games.png`.
 
 ## Result (my reading at 60 px, not a player test)
 
