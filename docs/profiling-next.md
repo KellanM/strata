@@ -25,7 +25,7 @@ Everything else found in four passes is small, is a decision for Kellan, or is a
 
 3. **[#2] Cut the veil's element count.** Options and their costs are in the issue. Recommended path:
    - First, a **one-line experiment**: in `mapworld.js:393` change the veil loop's `z += 58` to `z += 120` and widen the x step. That roughly quarters the sprite count. **Prediction, from the measured linear fit: a player's frozen time falls from ~3,344 ms to ~810 ms, and the robot's `intro` from ~700 ms to ~175 ms.** Count `canvas.mw-spr` in a browser on a fresh save first: the fix is working if that 2,222 drops, and that check costs no device time.
-   - If that holds, build the real fix: **one composited canvas per chapter** instead of ~150 sprites (2,254 → ~15). `.mw-wall` already carries most of the look; the cost is the per-lobe parallax in `veil.kids`.
+   - If that holds, build the real fix: **one composited canvas per chapter** instead of ~150 sprites (2,222 → ~15). `.mw-wall` already carries most of the look; the cost is the per-lobe parallax in `veil.kids`.
 4. **[#11] Find out why it is four or five long frames, not one.** If only one is fixed, a player still pays ~700 ms. It is **not** a DOM teardown — the canvases stay in place across a tap (2,413 before and after). The candidate is the staged hide: `.show`, `world-up` and `#map-world`'s display all change at ~520 ms, and `#menu` carries `transition: visibility 0s .5s`, so its visibility flips half a second later. **If the two commits can be coalesced into one frame, the cost may halve without touching the veil at all** — the cheapest win available, but it alters the dive, so the visual call is Kellan's.
 5. **[#8] Make the bench measure a player's transition — do this before any before/after.** Measured: the robot's direct `startPuzzle()` reports **4.8-6.5x less** than a player's real tap. A working probe (scroll `.map-scroll`, dispatch pointerdown/up/click on `[aria-label^="Puzzle "]`, log every frame over 100 ms) is written up in the issue and in `perf/2026-10-28-player-path-and-scaling.md`; port it as a `tap-start` segment, not as a redefined `intro`. **Report the count and the sum of long frames, never the max** - a max turns five frozen frames into one. Without this, a correct fix will look twice as good as it is. **[#9]** pin the save state in the census while in here, or two measurements will not be comparable.
 
@@ -51,7 +51,7 @@ Everything else found in four passes is small, is a decision for Kellan, or is a
 
 **Whether the hang scales linearly with the sprite count** is also unknown. One device point gives 0.31 ms per sprite, which would put a finished player at ~48 ms — but that extrapolates from a single point through the origin, and hash-table growth is not linear. Confirming it needs a device run against a progressed save, and there is no way to seed one yet (the dev panel's unlock is web-only).
 
-Also open: row clear, mark and peel still have no bench coverage (#6), and everything here is from **one device** — a 2,254-element teardown would hurt more on an iPhone 11 or SE 2.
+Also open: row clear, mark and peel still have no bench coverage (#6), and everything here is from **one device** — a 2,222-element teardown would hurt more on an iPhone 11 or SE 2.
 
 ## Working method
 
