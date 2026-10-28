@@ -32,6 +32,14 @@ against a player's **total** time in frames over 100 ms:
 level**, in four or five separate long frames — not the 0.7 s every report before
 this one said, and not the ~1.4 s of two hangs that hand-play suggested.
 
+**On comparing those two columns fairly.** The left is a maximum, the right a sum,
+which is not like-for-like — so the multiplier deserves a check. The robot's `intro`
+reported **1-2 janks** (frames over 34 ms) at these same save states, against the
+player's **4-5 frames over 100 ms**. So the robot genuinely encounters far fewer long
+frames, and its total long-frame time cannot exceed roughly 700-750 ms. The
+comparison holds on counts as well as on magnitude; it is not an artefact of the two
+statistics.
+
 A `worst` figure cannot represent this. Four frames of 1098 / 774 / 729 / 628 ms
 reduce to a single "1098 ms", which is why the shape of the problem stayed hidden.
 **Report the count and the sum, not the max.**
