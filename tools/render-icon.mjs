@@ -4,7 +4,8 @@
 //   DPR=4 ZOOM=1.7 TAG=-hi node tools/render-icon.mjs
 //   env: ID (level, default sloth), VARIANTS (JSON: name -> palette name, or sky
 //   overrides on Clouds), ZOOM, AZ (turn, radians), DPR, RAW=1 (also a frame with UI),
-//   RECOLOR (JSON: colour -> colour, decimal, for the icon only)
+//   RECOLOR (JSON: colour -> colour, decimal, for the icon only), NOSOLVE=1 (the unsolved
+//   stone with its clues; ID may be a lesson, e.g. v2-mushroom, the 3x3x3 stones)
 // then crop to 1024 (see docs/icon-study.md) and compare with tools/icon-sheet.py
 import { chromium } from 'file:///C:/Users/Kellan/AppData/Roaming/npm/node_modules/playwright/index.mjs';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -38,7 +39,9 @@ try {
     await page.waitForTimeout(4000);
     await page.evaluate(async ({ id, pal, recolor }) => {
       const { PALETTES } = await import('/js/palettes.js');
-      const e = window.strata.journalEntries().find((x) => x.shape.id === id);
+      // a level, or a lesson (the only 3x3x3 stones), played as a plain level
+      let e = window.strata.journalEntries().find((x) => x.shape.id === id);
+      if (!e) { const S = await import('/js/shapes.js'); e = { shape: { ...[...S.TUTORIAL_V2, ...S.TUTORIAL].find((x) => x.id === id), handles: false } }; }   // no peel diamonds
       const base = PALETTES.find((p) => p.name === (typeof pal === 'string' ? pal : 'Clouds'));
       const palette = typeof pal === 'string' ? base : { ...base, ...pal };
       // RECOLOR: for the icon only, swap a colour (e.g. a leaf that merges into the sky)
@@ -47,8 +50,12 @@ try {
       window.strata.startPuzzle({ ...e, shape, palette });
     }, { id: ID, pal, recolor: process.env.RECOLOR ? JSON.parse(process.env.RECOLOR) : null });
     await page.waitForTimeout(2500);
-    await page.evaluate(() => { const g = window.strata.game; for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break'); });
-    await page.waitForTimeout(6500);
+    // NOSOLVE=1: the stone as a player first meets it, clues and all
+    if (process.env.NOSOLVE) await page.waitForTimeout(3000);   // let the camera settle
+    else {
+      await page.evaluate(() => { const g = window.strata.game; for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break'); });
+      await page.waitForTimeout(6500);
+    }
     // the finale's gems and score (a Group of 9), and the handles: hidden, so the object stands alone
     await page.evaluate(() => { for (const c of window.strata.cubes.mesh.parent.children) if (c.type === 'Group') c.visible = false; });
     // framing for an icon: closer (ZOOM), and the object turned about its vertical axis (AZ, radians)
