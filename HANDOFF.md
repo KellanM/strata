@@ -65,7 +65,7 @@ Written 2026-10-26, at commit d13e1f4; brought up to date 2026-10-27. Read this 
 1. ~~Apple Developer enrolment, the Mac, the API key and the app record~~: done. Kellan's Mac agent signed and uploaded build 1.0 (1).
 5. ~~Support email~~ (done: support@mythen.io). **Still needed: a phone number for App Review.**
 6. The release date. This also drives the GTM timeline: featuring wants about 12 weeks' notice.
-7. **EU Digital Services Act trader status.** If Kellan is a trader, their address and phone are shown publicly in the EU.
+7. **EU Digital Services Act trader status: decided** (Kellan, 2026-10-28). v1 is declared **not a trader**. **Switch to trader before v1.1 ships ads**: Apple then shows a name, address and phone publicly in the EU, and verifying them takes days, so start early. Decide first whose address is shown; it must match the seller on mythen.io. It's an account setting, so it changes without a new build.
 8. Decisions on the open listing items:
    - **Subtitle:** not decided. The recommendation (2026-10-27) is "Uncover relics in 3D nonograms" (30 characters), because the name has no search words. The alternative is "A calm 3D nonogram adventure".
    - **Name: decided, "Strata: Stone Puzzles"** (Kellan, 2026-10-27; plain "Strata" is taken). The home-screen label stays "Strata".
