@@ -2553,7 +2553,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, bench: (o) => perf.bench(window.strata, o) };
+window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, openMenu, bench: (o) => perf.bench(window.strata, o) };
 if (new URLSearchParams(location.search).has('perf') || localStorage.getItem('strata.perf') === '1') perf.showHud();
 // A profiling build (STRATA_AUTOBENCH=n npm run build:app, docs/profiling.md): past the
 // title on its own, then the benchmark n times, each table logged as one line the Mac
@@ -2563,8 +2563,9 @@ if (window.STRATA_AUTOBENCH) (async () => {
   await wait(4000);
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
   await wait(6000);
+  // every run from the map (issue #8): intro is then a map start each time, not only in run 1
   for (let run = 1; run <= window.STRATA_AUTOBENCH; run++) {
-    const report = await perf.bench(window.strata);
+    const report = await perf.bench(window.strata, { fromMap: true });
     console.log('STRATA_BENCH ' + JSON.stringify({ run, of: window.STRATA_AUTOBENCH, ua: navigator.userAgent, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, power: perf.powerCheck(report), context: perf.lastContext(), report }));
   }
   console.log('STRATA_BENCH_DONE');

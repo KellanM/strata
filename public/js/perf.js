@@ -7,7 +7,9 @@
 //                               and janks (frames over 34 ms, i.e. a missed 30 fps beat)
 //   strata.bench()              the same play every run: a level's intro, steady
 //                               chiselling to the last cube, the player's reveal, idle,
-//                               then a burst completion as a stress case; resolves to the report
+//                               then a burst completion as a stress case, and last a
+//                               player's own level start from the map (tap-start, issue #8);
+//                               resolves to the report
 //   powerCheck(report)          flags a run capped at 30 fps (Low Power Mode, issue #4)
 //   boot(name)                  STRATA_BOOT lines for cold-start timing (issue #7)
 //   ?perf (or localStorage strata.perf = '1')   a small live readout, top left
@@ -49,6 +51,7 @@ export function report() {
       segment: label, frames: d.length, fps: +(1000 * d.length / total).toFixed(1),
       p50: +pct(s, 0.5).toFixed(1), p95: +pct(s, 0.95).toFixed(1), p99: +pct(s, 0.99).toFixed(1),
       worst: +s[s.length - 1].toFixed(1), janks: d.filter((x) => x > 34).length,
+      ...(label === 'tap-start' ? longFrames(d) : {}),
     };
   });
 }
@@ -81,7 +84,14 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // requestAnimationFrame to 30 fps there, so an idle p50 near 33 ms means the
 // whole run is capped and its numbers can't be compared. JS can't read the
 // power state, so this is an inference from the frames; it is logged with the result.
-export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs = 120, burst = true } = {}) {
+//
+// Issue #8: `intro` calls startPuzzle() directly, so it never taps a stone and
+// under-reports a player's level start 4.8-6.5x. It is kept as it was, so the
+// reports in perf/2026-10-28-* stay comparable; `tap-start` (the run's last
+// segment, see tapStart below) is the player's number. { fromMap: true } brings
+// the map back up before `intro` too, so every run's intro starts from the map
+// (context.from.map says whether it did); { tap: false } skips tap-start.
+export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs = 120, burst = true, tap = true, fromMap = false } = {}) {
   reset();
   const e = strata.journalEntries().find((x) => x.shape.id === id);
   if (!e) throw new Error(`bench: no level "${id}"`);
@@ -95,7 +105,9 @@ export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs =
   // level starts. Count the layer-prone elements either side of it, and say what
   // the level was started from (a lesson, the map, the title), since the bench
   // doesn't start it the way a player does (a tap on the map's stone).
+  if (fromMap && !where(strata).map) await backToMap(strata);
   const from = where(strata);
+  const save = saveState();
   const layersBefore = layerCensus();
   mark('intro');                       // the block assembling, the camera settling
   strata.startPuzzle(e);
@@ -138,13 +150,93 @@ export async function bench(strata, { id = 'maple-bonsai', chisels = 40, gapMs =
     for (const i of openCells()) strata.act(i, 'break');
     await wait(6000);
   }
+  const tapCtx = tap ? await tapStart(strata) : null;
   mark('done');
-  const r = report().filter((x) => x.segment !== 'census');
-  last_ = { from, layersBefore, layersAfter };
+  const r = report().filter((x) => !QUIET.has(x.segment));
+  last_ = { from, save, layersBefore, layersAfter, tap: tapCtx };
+  if (!from.map) console.warn(`STRATA_BENCH_WARNING intro did not start from the map (from ${JSON.stringify(from)}): this run's intro is not a #2 measurement`);
   console.table(r);
   const power = powerCheck(r);
   if (power.lowPowerSuspected) console.warn(`STRATA_BENCH_WARNING ${power.note}`);
   return r;
+}
+
+// segments that are not measurements: the census costs a frame, and tap-scroll
+// is scrollTop driven from script (a finger scrolls on the compositor instead)
+const QUIET = new Set(['census', 'tap-scroll']);
+
+// Back to the map the way a player gets there from a level (main.js openMenu,
+// the pull-back), then long enough for it to settle. Needs strata.openMenu.
+export async function backToMap(strata) {
+  if (where(strata).map) return true;
+  if (typeof strata.openMenu !== 'function') return false;
+  strata.openMenu();
+  await wait(2500);
+  return where(strata).map;
+}
+
+// Issue #8: a player's level start, as a player makes it. Bring the map up if
+// it isn't, ease .map-scroll to the first stone that will open (12 steps, as a
+// finger's scroll arrives), then tap it: pointerdown, 90 ms (a tap, not the
+// 420 ms long-press), pointerup, click - through map.js's own click handler,
+// the dive and the map's hide. Every frame for 5 s after is kept: on a new save
+// a level start is four or five frozen frames, and a max would show only one,
+// so the report carries their count and sum (longFrames), not just the worst.
+export async function tapStart(strata, { holdMs = 5000 } = {}) {
+  const ctx = { from: null, stone: null, save: null, layersBefore: null, layersAfter: null, tapToFrame: null, long: null };
+  await backToMap(strata);
+  ctx.from = where(strata);
+  const scroller = document.querySelector('#menu .map-scroll');
+  const stone = [...document.querySelectorAll('[aria-label^="Puzzle "]')].filter((b) => b.getAttribute('aria-disabled') !== 'true')[0];
+  if (!ctx.from.map || !scroller || !stone) {
+    ctx.skipped = !ctx.from.map ? 'the map is not up' : 'no open stone on the map';
+    console.warn(`STRATA_BENCH_WARNING tap-start skipped: ${ctx.skipped}`);
+    return ctx;
+  }
+  ctx.stone = stone.getAttribute('aria-label');
+  ctx.save = saveState();
+  ctx.layersBefore = layerCensus();
+  mark('tap-scroll');
+  const to = Math.max(0, stone.offsetTop - scroller.clientHeight * 0.45);
+  for (let s = 0; s <= 12; s++) { scroller.scrollTop += (to - scroller.scrollTop) * (s / 12); await wait(40); }
+  await wait(300);
+  const b = stone.getBoundingClientRect();
+  const o = { bubbles: true, cancelable: true, composed: true, clientX: b.left + b.width / 2, clientY: b.top + b.height / 2, button: 0 };
+  const p = { ...o, pointerId: 950, pointerType: 'touch', isPrimary: true };
+  mark('tap-start');
+  stone.dispatchEvent(new PointerEvent('pointerdown', { ...p, buttons: 1 }));
+  await wait(90);
+  stone.dispatchEvent(new PointerEvent('pointerup', { ...p, buttons: 0 }));
+  const t0 = performance.now();
+  stone.dispatchEvent(new MouseEvent('click', o));
+  await nextFrame();
+  ctx.tapToFrame = Math.round(performance.now() - t0);
+  await wait(holdMs);
+  const seg = cur;
+  mark('census');
+  ctx.layersAfter = layerCensus();
+  ctx.long = longFrames(seg.d);
+  return ctx;
+}
+
+// A transition's long frames: every frame over `over` ms, how many, and their
+// sum - the time a player spends looking at a frozen screen.
+export function longFrames(d, over = 100) {
+  const framesOver100 = d.filter((x) => x > over).map((x) => Math.round(x));
+  return { over100count: framesOver100.length, sumOver100: framesOver100.reduce((a, b) => a + b, 0), framesOver100 };
+}
+
+// Issue #9: the save a measurement was taken on. The map's veil is built only
+// over chapters not yet reached, so the layer count - and the level-start hang -
+// depends on progress: two runs compare only if these match.
+export function saveState() {
+  let solved = null;
+  try { solved = Object.keys(JSON.parse(localStorage.getItem('strata.solved') || '{}')).length; } catch {}
+  const regions = [...document.querySelectorAll('#map .map-region:not(.at-centre)')];
+  return {
+    solved, chapters: regions.length, chaptersReached: regions.filter((r) => !r.classList.contains('veiled')).length,
+    sprites: document.querySelectorAll('canvas.mw-spr').length, veil: document.querySelectorAll('canvas.mw-spr.veil').length,
+  };
 }
 
 // A gesture as touch pointer events on the canvas: path(k) gives each finger's
@@ -200,7 +292,9 @@ export function layerCensus() {
     groups[key] = (groups[key] ?? 0) + 1;
   }
   const top = Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  return { layerProne: total, rendered, all: document.querySelectorAll('body *').length, top: Object.fromEntries(top) };
+  // the map's mist sprites, rendered or not (issue #9: they pin the save state)
+  const sprites = document.querySelectorAll('canvas.mw-spr').length, veil = document.querySelectorAll('canvas.mw-spr.veil').length;
+  return { layerProne: total, rendered, all: document.querySelectorAll('body *').length, sprites, veil, top: Object.fromEntries(top) };
 }
 
 // Low Power Mode, inferred: idle p50 near 33 ms (30 fps) instead of ~17 (60 fps).
