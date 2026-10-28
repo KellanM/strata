@@ -2,6 +2,21 @@
 
 2026-10-28, after four profiling passes on an iPhone 13 Pro Max. The evidence is in `perf/2026-10-28-*`; the issues carry the detail. **This file is the short version: what to do, in what order, and what not to bother with.**
 
+## Update, later on 2026-10-28: #8 and #2 are in, waiting on the device
+
+- **#8 / #9, the bench.** `perf.bench()` now ends every run with **`tap-start`**: back to the map (`strata.openMenu`), ease `.map-scroll` to the first open stone, pointerdown / 90 ms / pointerup / click, every frame for 5 s, reported as **`over100count`, `sumOver100`, `framesOver100`**. `intro` is unchanged (the direct `startPuzzle()`), so the history stays comparable. The autobench passes `{ fromMap: true }`, so every run's `intro` is a map start, and a run that isn't logs a `STRATA_BENCH_WARNING`. `context.save` and the layer census now pin the save state: stones solved, chapters reached, `canvas.mw-spr` and veil counts.
+- **The browser regression measure is one command:** `node tools/veil-count.mjs` (WebKit, fresh save, 390×844; add `--shot f.png`, `--tap`, `DPR=3` or `SOLVED=n`).
+- **#2, the fix.** Every veil except one that is lifting right now is drawn once into a few tall canvases (`MapWorld.flatten`, at most 2,048 px tall, cropped to the screen's width). A chapter whose cloud is parting still gets its ~150 separate billows, so `setPart`'s lift is unchanged. Fresh save, WebKit, 390×844:
+
+  | | `canvas.mw-spr` | veil | layer-prone | sprite Mpx | predicted frozen on device |
+  |---|---|---|---|---|---|
+  | before | 2,222 | 2,063 | 2,248 | 51.0 | 3,344 ms (measured) |
+  | `z += 120`, x step 300–400 (experiment, not kept) | 741 | 582 | 767 | 16.3 | ~1,110 ms |
+  | **composited (shipped)** | **174** | **15** | **200** | **12.3** | **~290–480 ms** |
+
+  The prediction comes from the linear fit, not from a measurement. 290 ms is the line; 476 ms is what the device measured at 209 prone layers, which sits above the line. A fresh save now carries fewer layer-prone elements than a player near the end did before. The veil looks the same: before and after differ by at most 3/255 at DPR 1, and by at most 5/255 inside the veil at DPR 3 (`perf/2026-10-28-veil/`). The experiment visibly thinned the veil's top edge, so it was not kept. Most of what remains are 80 ambient far-layer bands and ~80 bands at the feet of peaks. The ambient bands are the next lever if the device still shows a floor.
+- **Next, on the Mac:** run an autobench and one hand-played level start on a fresh save, and read `tap-start`'s `sumOver100` against the 3,344 ms above. That is device verification, so #2 stays open until it's done.
+
 ## There is one defect
 
 **Starting a level freezes the app's main thread for ~3.3 seconds on a new player's save.** Measured on the real path — scroll the map, tap a stone — as **four or five** separate frozen frames (1098 / 774 / 729 / 628 / 115 ms), not the two hand-play suggested. 96% of each hang is one call — `-[UIView _web_setSubviews:]` — tearing down the **2,222 off-screen `<canvas>` veil sprites** the map keeps for chapters not yet reached.
@@ -23,11 +38,11 @@ Everything else found in four passes is small, is a decision for Kellan, or is a
 
 ## Then the fix
 
-3. **[#2] Cut the veil's element count.** Options and their costs are in the issue. Recommended path:
+3. **[#2] Cut the veil's element count.** *(Done in the browser, 2,222 → 174 sprites. See the update at the top; device verification is pending.)* Options and their costs are in the issue. Recommended path:
    - First, a **one-line experiment**: in `mapworld.js:393` change the veil loop's `z += 58` to `z += 120` and widen the x step. That roughly quarters the sprite count. **Prediction, from the measured linear fit: a player's frozen time falls from ~3,344 ms to ~810 ms, and the robot's `intro` from ~700 ms to ~175 ms.** Count `canvas.mw-spr` in a browser on a fresh save first: the fix is working if that 2,222 drops, and that check costs no device time.
    - If that holds, build the real fix: **one composited canvas per chapter** instead of ~150 sprites (2,222 → ~15). `.mw-wall` already carries most of the look; the cost is the per-lobe parallax in `veil.kids`.
 4. **[#11] Find out why it is four or five long frames, not one.** If only one is fixed, a player still pays ~700 ms. It is **not** a DOM teardown — the canvases stay in place across a tap (2,413 before and after). The candidate is the staged hide: `.show`, `world-up` and `#map-world`'s display all change at ~520 ms, and `#menu` carries `transition: visibility 0s .5s`, so its visibility flips half a second later. **If the two commits can be coalesced into one frame, the cost may halve without touching the veil at all** — the cheapest win available, but it alters the dive, so the visual call is Kellan's.
-5. **[#8] Make the bench measure a player's transition — do this before any before/after.** Measured: the robot's direct `startPuzzle()` reports **4.8-6.5x less** than a player's real tap. A working probe (scroll `.map-scroll`, dispatch pointerdown/up/click on `[aria-label^="Puzzle "]`, log every frame over 100 ms) is written up in the issue and in `perf/2026-10-28-player-path-and-scaling.md`; port it as a `tap-start` segment, not as a redefined `intro`. **Report the count and the sum of long frames, never the max** - a max turns five frozen frames into one. Without this, a correct fix will look twice as good as it is. **[#9]** pin the save state in the census while in here, or two measurements will not be comparable.
+5. **[#8] Make the bench measure a player's transition — do this before any before/after.** *(Done: `tap-start`, see the update at the top.)* Measured: the robot's direct `startPuzzle()` reports **4.8-6.5x less** than a player's real tap. A working probe (scroll `.map-scroll`, dispatch pointerdown/up/click on `[aria-label^="Puzzle "]`, log every frame over 100 ms) is written up in the issue and in `perf/2026-10-28-player-path-and-scaling.md`; port it as a `tap-start` segment, not as a redefined `intro`. **Report the count and the sum of long frames, never the max** - a max turns five frozen frames into one. Without this, a correct fix will look twice as good as it is. **[#9]** pin the save state in the census while in here, or two measurements will not be comparable.
 
 ## Kellan's decisions, not work
 

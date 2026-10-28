@@ -322,7 +322,7 @@ export function renderMap(root, opts) {
       opts.world.build({
         regions: regions.map((r) => ({
           index: r.index, name: r.name, base: r.base, folded: r.folded, reached: r.reached,
-          bank: !r.reached || r.parting,
+          bank: !r.reached || r.parting, parting: !!r.parting,
           top: headH + r.top, bottom: headH + r.bottom, labelZ: headH + r.labelY, labelSide: r.labelSide,
           shrine: r.shrine ? { x: r.shrine.x - cx, z: headH + r.shrine.y } : null,
         })),

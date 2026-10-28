@@ -278,6 +278,29 @@ export class MapWorld {
     return out;
   }
 
+  // Billows ({ rb: a ribbon, x, z: its centre }) drawn in order into canvases of
+  // at most TILE px tall, each where the billows would have stood one by one
+  // (the same whole-px corners as place()), so the veil looks as it did. Only
+  // the screen's width is kept: these never move, and the world is rebuilt
+  // when the width changes (map.js's layout key).
+  flatten(billows, TILE = 2048) {
+    if (!billows.length) return [];
+    const at = billows.map((b) => ({ ...b, left: +(b.x - b.rb.w * 0.5).toFixed(0), top: +(b.z - b.rb.h * 0.5).toFixed(0) }));
+    const half = Math.ceil(this.w / 2) + 8;
+    const x0 = Math.max(-half, Math.min(...at.map((b) => b.left))), x1 = Math.min(half, Math.max(...at.map((b) => b.left + b.rb.w)));
+    const y0 = Math.min(...at.map((b) => b.top)), y1 = Math.max(...at.map((b) => b.top + b.rb.h));
+    const out = [];
+    for (let ty = y0; ty < y1; ty += TILE) {
+      const h = Math.min(TILE, y1 - ty), c = document.createElement('canvas');
+      c.width = x1 - x0; c.height = h;
+      c.setAttribute('aria-hidden', 'true');
+      const g = c.getContext('2d');
+      for (const b of at) if (b.top < ty + h && b.top + b.rb.h > ty && b.left < x1 && b.left + b.rb.w > x0) g.drawImage(b.rb.canvas, b.left - x0, b.top - ty);
+      out.push({ el: c, x: x0, z: ty, w: x1 - x0, h });
+    }
+    return out;
+  }
+
   // a peak's box on the page: the sprite, and the mist band across its cut
   box(r, key, x, z) {
     const s = this.sprite(r, key);
@@ -411,11 +434,27 @@ export class MapWorld {
       wall.style.background = `linear-gradient(180deg, ${rgba(mist, 0)} 0, ${rgba(mist, 0.94)} 110px, ${rgba(mist, 0.97)} 100%)`;
       this.layers.near.appendChild(wall); chunk.els.push(wall);
       const veil = { wall, base: wall.style.transform, kids: [] };
+      // ~150 billows per chapter. Only a chapter lifting now (setPart) needs them
+      // apart, each to drift off on its own; every other veil is the same
+      // billows drawn once into a few tall canvases (issue #2: a canvas each was
+      // 2,063 native layers on a new save, and the app froze for seconds
+      // rehanging them as a level started)
+      const billows = [];
       for (let z = r.top + 10; z < r.bottom + 40; z += 58) {
         for (let x = -420; x <= 420; x += 150 + rand() * 50) {
-          const img = band('near', x + (rand() - 0.5) * 50, z + (rand() - 0.5) * 30, 280 * (0.8 + rand() * 0.5), 80, 0.85, 'veil', Math.floor(rand() * 8));
-          veil.kids.push({ el: img, base: img.style.transform, x, seed: rand() });
+          const bx = x + (rand() - 0.5) * 50, bz = z + (rand() - 0.5) * 30, bw = 280 * (0.8 + rand() * 0.5), seed = Math.floor(rand() * 8);
+          if (r.parting) {
+            const img = band('near', bx, bz, bw, 80, 0.85, 'veil', seed);
+            veil.kids.push({ el: img, base: img.style.transform, x, seed: rand() });
+          } else {
+            drift(null); rand();   // the same draws as a lone billow, so the scenery after it is unchanged
+            billows.push({ rb: this.ribbon(mist, seed, Math.round(bw), 80, 0.85), x: bx, z: bz });
+          }
         }
+      }
+      for (const t of this.flatten(billows)) {
+        place('near', t.el, t.x, t.z, t.w, t.h, 0, 0, 'mist veil');
+        veil.kids.push({ el: t.el, base: t.el.style.transform, x: 0, seed: 0.5 });   // were it ever lifted: as one
       }
       // more lies inside: two faint silhouettes, and a soft glow of the chapter's light
       for (const [k, key] of [[0.45, 'ghost1'], [0.75, 'ghost2']]) {
