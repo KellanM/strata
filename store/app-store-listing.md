@@ -113,6 +113,15 @@ If a later version adds ads (AppLovin MAX), purchases or analytics, this label a
   With this key set, App Store Connect skips the export compliance question on each build.
 - If you're asked in App Store Connect instead: "Does your app use encryption?" → **No** (or "only exempt encryption"). No documentation is needed.
 
+## Content rights
+
+**"Does your app contain, show, or access third-party content?" Yes. "Do you have the necessary rights?" Yes.**
+
+- Third-party content: one font, Anton (SIL Open Font License 1.1, from Google Fonts), for the studio card's lettering; and open-source code, three.js and Capacitor (MIT).
+- Everything else is original to Strata: the 182 objects, the map art, the icon and the screenshots. All the music and sound is synthesised by the game's own code, with no audio files.
+- Nothing is fetched at runtime; the app is fully offline.
+- The licence texts ship in the app as `licenses.txt` (`public/licenses.txt`).
+
 ## Copyright
 
 **© 2026 Unsupervised Rock**
