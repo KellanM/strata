@@ -84,3 +84,17 @@ Green was "the clear winner", then Kellan asked to see all three.
 - **Cloud Isles:** the saturated fox does better here than the Sloth did. The white tail tip merges into the white sky.
 
 **Versus the Sloth on green:** the fox has the stronger colour, but the Sloth reads better as a creature. At this angle, the fox's two ears and its upright tail make three equal columns. At 60 px it reads as an orange crown or castle with two dark squares more than as a fox. The Sloth's hanging silhouette and eye patches say "animal" at once. A turn (`AZ`) that pulls the tail away from the ears would probably fix this, but Kellan asked to keep the reveal's angle.
+
+## Decision (2026-10-27)
+
+Kellan picked **the Sloth on lime** (`store/icon/sloth-lime.png`, installed as `store/icon/app-icon.png`).
+- Background: sky `#d8ff6a` → `#5fb83a` (`VARIANTS='{"lime2":{"skyTop":14221162,"skyBottom":6273082,"glow":16777164}}'`), the same crop box as the other Sloths.
+- It was tried to fix the leaf tip merging into the green. The yellower lime sets the branch's blue-green leaf apart.
+- A darker leaf on the original green (`RECOLOR` in `tools/render-icon.mjs`) was also rendered, but not chosen.
+
+**Installed in:**
+- `resources/icon.png`, the App Store source (`tools/make-store-art.mjs` now copies it from `store/icon/app-icon.png`);
+- `public/icons/icon-180.png` (iOS Home Screen), `icon-192.png` and `icon-512.png` (manifest), and `favicon-64.png`;
+- `public/icons/icon-maskable-512.png`, for Android: the icon at 78% on a gradient sampled from its own edges, so the Sloth stays inside the safe circle.
+
+An iPhone that already has Strata on its Home Screen keeps the old icon until it is removed and added again from Safari. Progress is kept.

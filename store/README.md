@@ -8,8 +8,8 @@ Everything that goes into the App Store listing lives here.
 | Screenshots, iPhone 6.9" (1320×2868) | `screenshots/6_9in-<order>-<subject>.png` | Upload in the order of the number |
 | Screenshots, iPhone 6.5" (1284×2778) | `screenshots/6_5in-<order>-<subject>.png` | Same five frames |
 | Screenshot script | `shoot.mjs` | Real gameplay only. The listing explains how to reshoot each frame |
-| App icon, current | `../resources/icon.png` | The pastel cubes, to be replaced |
-| App icon, candidates | `icon/sloth-green.png`, `icon/sloth-cloud-isles.png`, `icon/sloth-blue.png` | 1024 px, the Sloth's win state. Green is Kellan's favourite (2026-10-27); not installed yet |
+| **App icon (installed)** | `icon/app-icon.png` (= `icon/sloth-lime.png`) | Kellan's pick, 2026-10-27: the Sloth's win state on lime. Copied to `../resources/icon.png` (App Store source) and `../public/icons/` (web: 180, 192, 512, a maskable 512 for Android, a 64 px favicon) |
+| App icon, candidates | `icon/sloth-green.png`, `icon/sloth-cloud-isles.png`, `icon/sloth-blue.png` | 1024 px, the Sloth's win state; the lime version (above) was chosen over these |
 | Icon comparison | `icon/compare-at-phone-sizes.png` | Each candidate at 180 and 60 px, on light and dark grounds |
 | App icon, fox candidates | `icon/origami-fox-green.png`, `icon/origami-fox-cloud-isles.png`, `icon/origami-fox-blue.png`, `icon/origami-fox-lantern-festival.png` | 1024 px, the Origami Fox's win state. Not picked yet |
 | Fox icon comparison | `icon/compare-fox-at-phone-sizes.png` | The current icon, the Sloth on green and the four foxes at 180 and 60 px |

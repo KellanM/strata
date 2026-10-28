@@ -124,7 +124,7 @@ The plan is `docs/gtm-study.md`, researched 2026-10-20. Read its "5 highest-leve
 | Store badges | `tools/trailer/badges/` (App Store SVG, Google Play PNG) | For end cards once the listings are live |
 | Hook research | `docs/ad-hooks-study.md`, `docs/ad-hooks-renders.md`, `docs/trailer-study.md`, `docs/trailer-v2-study.md` | Six hook-study ads exist on the Saturday branch |
 | Store screenshots | `store/screenshots/` | Lead with the reveal, then the break, then the collection |
-| App icon candidates | `store/icon/` (`sloth-green.png` and others; `docs/icon-study.md`) | Made with `tools/render-icon.mjs` from the real win state |
+| App icon | `store/icon/app-icon.png` (installed: the Sloth on lime), candidates beside it; `docs/icon-study.md` | Made with `tools/render-icon.mjs` from the real win state |
 | Icon, splash art | `resources/`, `public/icons/` | |
 | Press kit | not made yet | A GTM Phase 1 item: logo (the rock), key art, trailer, fact sheet |
 

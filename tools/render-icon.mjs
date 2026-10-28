@@ -3,7 +3,8 @@
 //   PORT=5290 node server.js   then
 //   DPR=4 ZOOM=1.7 TAG=-hi node tools/render-icon.mjs
 //   env: ID (level, default sloth), VARIANTS (JSON: name -> palette name, or sky
-//   overrides on Clouds), ZOOM, AZ (turn, radians), DPR, RAW=1 (also a frame with UI)
+//   overrides on Clouds), ZOOM, AZ (turn, radians), DPR, RAW=1 (also a frame with UI),
+//   RECOLOR (JSON: colour -> colour, decimal, for the icon only)
 // then crop to 1024 (see docs/icon-study.md) and compare with tools/icon-sheet.py
 import { chromium } from 'file:///C:/Users/Kellan/AppData/Roaming/npm/node_modules/playwright/index.mjs';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -35,13 +36,16 @@ try {
     for (let i = 0; i < 12; i++) { y -= 28; await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 256, y }] }); await page.waitForTimeout(16); }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await page.waitForTimeout(4000);
-    await page.evaluate(async ({ id, pal }) => {
+    await page.evaluate(async ({ id, pal, recolor }) => {
       const { PALETTES } = await import('/js/palettes.js');
       const e = window.strata.journalEntries().find((x) => x.shape.id === id);
       const base = PALETTES.find((p) => p.name === (typeof pal === 'string' ? pal : 'Clouds'));
       const palette = typeof pal === 'string' ? base : { ...base, ...pal };
-      window.strata.startPuzzle({ ...e, palette });
-    }, { id: ID, pal });
+      // RECOLOR: for the icon only, swap a colour (e.g. a leaf that merges into the sky)
+      const swap = recolor ? Object.fromEntries(Object.entries(recolor).map(([k, v]) => [Number(k), v])) : null;
+      const shape = swap ? { ...e.shape, cell: (x, y, z) => { const c = e.shape.cell(x, y, z); return swap[c] ?? c; } } : e.shape;
+      window.strata.startPuzzle({ ...e, shape, palette });
+    }, { id: ID, pal, recolor: process.env.RECOLOR ? JSON.parse(process.env.RECOLOR) : null });
     await page.waitForTimeout(2500);
     await page.evaluate(() => { const g = window.strata.game; for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break'); });
     await page.waitForTimeout(6500);
