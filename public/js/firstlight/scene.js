@@ -31,7 +31,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const CAM_Z = 24;
   // the camera's height on the wall, and at rest: only a little way up, so the
   // wall's top stays in view at the foot of the sky, a horizon under the name
-  const CAM_FROM = 2, CAM_TO = 9;   // CAM_FROM is the stone's own height: it opens dead centre on every screen
+  let CAM_FROM = 2; const CAM_TO = 9;   // CAM_FROM is the glowing cube's height (set below): it opens dead centre on every screen
   const scene = new THREE.Scene();
   const swarmScene = new THREE.Scene();
 
@@ -43,6 +43,24 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const P = PALETTES[0];
   const TOP = 1;   // the top row of stones
   const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
+  // The logo's stone (Kellan, 2026-10-28): a 3x3x3 block turned corner-on, as the app
+  // icon shows it - three faces meeting in the middle. The glowing cube is its front
+  // corner, (1, 1, 1), turned to face us; the touch opens it, the other 26 fly apart.
+  const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.atan(1 / Math.SQRT2))
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4));
+  const stoneCells = [];
+  for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+    if (x === 1 && y === 1 && z === 1) continue;   // the glowing one
+    stoneCells.push(new THREE.Vector3(x - 1, y - 1, z - 1).applyQuaternion(ISO));   // from the glowing cube
+  }
+  {
+    // rest the stone's lowest point on the wall's top
+    let low = 0;
+    for (let x = -0.5; x <= 2.5; x += 3) for (let y = -0.5; y <= 2.5; y += 3) for (let z = -0.5; z <= 2.5; z += 3)
+      low = Math.min(low, new THREE.Vector3(x - 2, y - 2, z - 2).applyQuaternion(ISO).y);
+    CUBE_AT.y = Math.max(CUBE_AT.y, TOP + 0.5 - low);
+    CAM_FROM = CUBE_AT.y;
+  }
   const rand = rng(11);
   const cells = [];
   for (let x = -8; x <= 8; x++) {
@@ -117,7 +135,38 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   });
   const glowCube = new THREE.Mesh(box, glowMat);
   glowCube.position.copy(CUBE_AT);
+  glowCube.quaternion.copy(ISO);
   scene.add(glowCube);
+  // the other 26 stones of the logo, lit by the glowing one as the wall is
+  const stoneRand = rng(23);
+  const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
+  const stoneFly = stoneCells.map((off) => {
+    const dir = off.clone().normalize().add(new THREE.Vector3(stoneRand() - 0.5, stoneRand() * 0.6, stoneRand() - 0.5).multiplyScalar(0.5)).normalize();
+    return { off, dir, axis: new THREE.Vector3(stoneRand() - 0.5, stoneRand() - 0.5, stoneRand() - 0.5).normalize(),
+      spin: 2 + 3 * stoneRand(), far: 5 + 3 * stoneRand(),
+      // the outer stones go first, the ones nearest the light last
+      delay: 0.16 * (1 - off.length() / 3.5) + 0.06 * stoneRand() };
+  });
+  const sq = new THREE.Quaternion(), sp = new THREE.Vector3(), ss = new THREE.Vector3();
+  function placeStones(k) {   // k: seconds since the touch (null: at rest)
+    let any = false;
+    stoneFly.forEach((f, i) => {
+      const t = k === null ? 0 : Math.min(1, Math.max(0, (k - f.delay) / 0.85));
+      const e = 1 - (1 - t) ** 3;   // fast away, then slowing
+      sp.copy(CUBE_AT).add(f.off).addScaledVector(f.dir, f.far * e);
+      sp.y -= 2.2 * t * t;          // and falling
+      sq.setFromAxisAngle(f.axis, f.spin * e).multiply(ISO);
+      ss.setScalar(Math.max(0.0001, 1 - t * t));
+      stones.setMatrixAt(i, m4.compose(sp, sq, ss));
+      if (k === null) stones.setColorAt(i, new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1));
+      if (t < 1) any = true;
+    });
+    stones.instanceMatrix.needsUpdate = true;
+    if (stones.instanceColor) stones.instanceColor.needsUpdate = true;
+    stones.visible = any;
+  }
+  placeStones(null);
+  scene.add(stones);
   // its halo
   const haloTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -363,6 +412,13 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   function open() {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
+    breakAt = realT + BREAK_AFTER;   // the 26 stones fly first (step), then the glowing cube breaks
+    hint?.classList.remove('show');
+    if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
+  }
+  const BREAK_AFTER = 0.42;   // s: the stones are mostly away
+  let breakAt = null;
+  function breakGlow() {
     // the break, as in a level: from the face toward the touch (the front)
     const t = realT, c = (h) => new THREE.Color(h);
     glowCube.visible = false;
@@ -371,8 +427,6 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.25, 1).normalize(), c(GLOW.lit));
     // and the light it held leaves as the swarm
     swarm.release(simT + 0.12);
-    hint?.classList.remove('show');
-    if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
 
   function layout() {
@@ -422,6 +476,9 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         hint.classList.add('show');
       }
     } else {
+      // the logo's stones fly apart, and then the glowing cube breaks
+      if (stones.visible) placeStones(realT - tapReal);
+      if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
       glowMat.uniforms.uB.value = 1 + 1.2 * flare;
