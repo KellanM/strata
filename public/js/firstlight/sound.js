@@ -57,7 +57,7 @@ export class Sound {
   }
   // The stone breaking (Kellan, 2026-10-29): just the impact, dry - no echo (the
   // night's delay made each hit sound three times) and no notes. At the touch a
-  // deep soft thoom as it gives way and a sharp crack; then each of the 26 stones
+  // deep soft thoom as it gives way (no crack, Kellan 2026-10-29); then each of the 26 stones
   // a short knock, panned where it is.
   release() {
     if (!this.ctx) return;
@@ -67,9 +67,6 @@ export class Sound {
     o.frequency.setValueAtTime(96, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.45);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.42, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
     o.connect(g); g.connect(this.out); o.start(t); o.stop(t + 0.65);
-    // the crack: a bright snap over a gritty break
-    this.burst(t, 0.035, 0.5, 5200, 0.9, 'highpass');
-    this.burst(t, 0.14, 0.26, 1500, 2.2);
   }
   // one stone of the 26 going: k its place in the run (0..1), pan -1..1
   stone(k, pan = 0) {
