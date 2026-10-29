@@ -45,7 +45,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
   // The logo's stone (Kellan, 2026-10-28): a 3x3x3 block turned corner-on, as the app
   // icon shows it - three faces meeting in the middle. The glowing cube is its front
-  // corner, (1, 1, 1), turned to face us; the touch opens it, the other 26 fly apart.
+  // corner, (1, 1, 1), turned to face us; the touch opens it, and the other 26 are
+  // chiselled away round it as blocks are in a level (Kellan, 2026-10-28).
   const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.atan(1 / Math.SQRT2))
     .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4));
   const stoneCells = [];
@@ -137,29 +138,24 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   glowCube.position.copy(CUBE_AT);
   glowCube.quaternion.copy(ISO);
   scene.add(glowCube);
-  // the other 26 stones of the logo, lit by the glowing one as the wall is
+  // the other 26 stones of the logo, lit by the glowing one as the wall is. The
+  // touch chisels them away as a level's blocks go (breakStone, below): the
+  // outer ones first, closing in on the light, each one quickly after the last
   const stoneRand = rng(23);
   const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
-  const stoneFly = stoneCells.map((off) => {
-    const dir = off.clone().normalize().add(new THREE.Vector3(stoneRand() - 0.5, stoneRand() * 0.6, stoneRand() - 0.5).multiplyScalar(0.5)).normalize();
-    return { off, dir, axis: new THREE.Vector3(stoneRand() - 0.5, stoneRand() - 0.5, stoneRand() - 0.5).normalize(),
-      spin: 2 + 3 * stoneRand(), far: 5 + 3 * stoneRand(),
-      // the outer stones go first, the ones nearest the light last
-      delay: 0.16 * (1 - off.length() / 3.5) + 0.06 * stoneRand() };
-  });
-  const sq = new THREE.Quaternion(), sp = new THREE.Vector3(), ss = new THREE.Vector3();
+  const CHISEL_SPAN = 0.5;   // s from the first stone's break to the last
+  const outmost = Math.max(...stoneCells.map((o) => o.length())), inmost = Math.min(...stoneCells.map((o) => o.length()));
+  const stoneBreaks = stoneCells.map((off) => ({ off, at: CHISEL_SPAN * (1 - (off.length() - inmost) / (outmost - inmost)) * (0.8 + 0.2 * stoneRand()), done: false }));
+  const sq = new THREE.Quaternion().copy(ISO), sp = new THREE.Vector3(), ss = new THREE.Vector3();
   function placeStones(k) {   // k: seconds since the touch (null: at rest)
     let any = false;
-    stoneFly.forEach((f, i) => {
-      const t = k === null ? 0 : Math.min(1, Math.max(0, (k - f.delay) / 0.85));
-      const e = 1 - (1 - t) ** 3;   // fast away, then slowing
-      sp.copy(CUBE_AT).add(f.off).addScaledVector(f.dir, f.far * e);
-      sp.y -= 2.2 * t * t;          // and falling
-      sq.setFromAxisAngle(f.axis, f.spin * e).multiply(ISO);
-      ss.setScalar(Math.max(0.0001, 1 - t * t));
+    stoneBreaks.forEach((f, i) => {
+      if (k === null) { f.done = false; stones.setColorAt(i, new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1)); }
+      else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f.off); }
+      sp.copy(CUBE_AT).add(f.off);
+      ss.setScalar(f.done ? 0.0001 : 1);
       stones.setMatrixAt(i, m4.compose(sp, sq, ss));
-      if (k === null) stones.setColorAt(i, new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1));
-      if (t < 1) any = true;
+      if (!f.done) any = true;
     });
     stones.instanceMatrix.needsUpdate = true;
     if (stones.instanceColor) stones.instanceColor.needsUpdate = true;
@@ -188,7 +184,20 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   fragments.setPalette(GLOW);
   const shards = new Shards(), ash = new Ash();
   ash.setPalette({ skyTop: 0x121731, skyBottom: 0x2a2f5c, shade: GLOW.shade, motes: 0xfff1d6 });
-  scene.add(fragments.mesh, shards.points, ash.points);
+  // the 26 stones' pieces, in their own colours as the glowing stone lights them at night
+  const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() });
+  const warm = (h, k) => new THREE.Color(h).multiply(new THREE.Color(1, 0.78, 0.56)).multiplyScalar(k).getHex();
+  const STONE = { top: warm(P.top, 0.62), lit: warm(P.lit, 0.55), shade: warm(P.shade, 0.4), under: warm(P.under, 0.3) };
+  stoneFrags.setPalette(STONE);
+  scene.add(fragments.mesh, stoneFrags.mesh, shards.points, ash.points);
+  // a stone chiselled away, as main.js act does it: 8 pieces shrinking away from the
+  // touch's side, a few chips, and a small puff of sparks out of its open face
+  function breakStone(at, off) {
+    const t = realT, c = (h) => new THREE.Color(h), out = off.clone().normalize();
+    stoneFrags.burst(at, at.clone().addScaledVector(out, 0.5), t);
+    shards.burst(at, t, [c(STONE.top), c(STONE.lit), c(STONE.top)], 2, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
+    if (!quiet) ash.burst(at, 9, out.add(new THREE.Vector3(0, 0.3, 0.6)).normalize(), c(GLOW.shade));
+  }
   let unitPx = 30;   // device px per world unit at the stone's depth (the shards' and sparks' size)
 
   // ---------------------------------------------------------------- the sky's places for stars
@@ -412,11 +421,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   function open() {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
-    breakAt = realT + BREAK_AFTER;   // the 26 stones fly first (step), then the glowing cube breaks
+    breakAt = realT + BREAK_AFTER;   // the 26 stones are chiselled first (step), then the glowing cube breaks
     hint?.classList.remove('show');
     if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
-  const BREAK_AFTER = 0.42;   // s: the stones are mostly away
+  const BREAK_AFTER = 0.62;   // s: the stones are all chiselled (CHISEL_SPAN) and their pieces mostly gone
   let breakAt = null;
   function breakGlow() {
     // the break, as in a level: from the face toward the touch (the front)
@@ -476,7 +485,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         hint.classList.add('show');
       }
     } else {
-      // the logo's stones fly apart, and then the glowing cube breaks
+      // the logo's stones are chiselled away, and then the glowing cube breaks
       if (stones.visible) placeStones(realT - tapReal);
       if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
       // the stone opens: a held breath of brightness, then it gives its light away
@@ -490,10 +499,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);
       swarm.step(simT, sdt);
       // the break's own pieces keep real time, as in a level
-      fragments.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
+      fragments.uniforms.uTime.value = stoneFrags.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
       shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
       ash.step(dt, realT);
-      fragments.uniforms.uSparks.value = ash.lights; fragments.uniforms.uSparkCol.value = ash.lightColor;   // the sparks light the pieces
+      fragments.uniforms.uSparks.value = stoneFrags.uniforms.uSparks.value = ash.lights;   // the sparks light the pieces
+      fragments.uniforms.uSparkCol.value = stoneFrags.uniforms.uSparkCol.value = ash.lightColor;
       swarm.material.uniforms.uTime.value = realT;
       far.material.uniforms.uA.value = smooth(9, 14, s);
       // the name: when its stars are all home, the constellation's lines draw in
