@@ -2186,8 +2186,9 @@ const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), vei
 let titleBegun = false;
 // a returning player (the lessons done) finds the title already written: the
 // stone's opening belongs to the first launch; later ones are a still breath,
-// one tap from the map (docs/flow-study.md F2)
-if (localStorage.getItem('strata.tutorial')) fl.finish();
+// one tap from the map (docs/flow-study.md F2). ?title=fresh plays the opening
+// anyway, to review it on a phone that has done the lessons.
+if (localStorage.getItem('strata.tutorial') && new URLSearchParams(location.search).get('title') !== 'fresh') fl.finish();
 canvas.style.opacity = '0';
 // Sound from the first moment it's allowed: phones only let a page make sound
 // after a touch (on iPhone, a finger lifting), except where autoplay is granted
