@@ -216,7 +216,12 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     R: [[[0, 0], [0, 3], [1.3, 3], [1.85, 2.55], [1.85, 2.05], [1.3, 1.6], [0, 1.6]], [[0.9, 1.6], [1.9, 0]]],
     A: [[[0, 0], [1, 3], [2, 0]]],   // no crossbar: a peak, as the old title's A reads in stars
   };
-  const nameStars = [], nameLines = [], nameGlow = new THREE.Vector4(), fieldStars = [];
+  const nameStars = [], nameLines = [], nameGlow = new THREE.Vector4(), fieldStars = [], sprayStars = [];
+  // where the name settles (screen height, -1 bottom .. 1 top) and how many stars
+  // are sprayed across the sky behind it, a band like the Milky Way (Kellan,
+  // 2026-10-28: it settled high, over a wide empty sky). ?namey= and ?spray= to try others
+  const q = new URLSearchParams(globalThis.location?.search ?? '');
+  const NAME_Y = +(q.get('namey') ?? 0.35), SPRAY = +(q.get('spray') ?? 3000);
   {
     const word = 'STRATA', GAP = 1.15, W = word.length * 2 + (word.length - 1) * GAP;
     // the camera's resting pose (as step() leaves it at the top)
@@ -229,7 +234,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       const d = new THREE.Vector3(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
       return rest.position.clone().addScaledVector(d, (-1 - rest.position.z) / d.z);
     };
-    const left = at(-0.78, 0.6), right = at(0.78, 0.6), k = (right.x - left.x) / W;
+    const left = at(-0.78, NAME_Y), right = at(0.78, NAME_Y), k = (right.x - left.x) / W;
     const base = left.y - 1.5 * k;
     const place = (gx, gy) => {
       const x = left.x + gx * k, y = base + gy * k;
@@ -336,6 +341,19 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       if (near(x, y, 0.75 * k)) continue;
       fieldStars.push(x, y, -1.5 - 2 * gr()); n++;
     }
+    // the spray: a broad band of small stars sweeping through the name, from the
+    // lower left of the screen to the upper right, densest along its spine
+    const sp = rng(41), TILT = 0.55;   // the band's slope on screen
+    for (let n = 0, tries = 0; n < SPRAY && tries < SPRAY * 6; tries++) {
+      const t = sp() * 2.6 - 1.3, across = (sp() + sp() + sp() - 1.5) * 0.3 * (0.5 + sp());
+      const nx = t / Math.hypot(1, TILT) - across * TILT / Math.hypot(1, TILT), ny = NAME_Y - 0.15 + t * TILT / Math.hypot(1, TILT) * 2 + across / Math.hypot(1, TILT);
+      if (Math.abs(nx) > 1.1 || ny < -1.2 || ny > 1.1) continue;
+      const z = -3 - 10 * sp();
+      on.set(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
+      const x = rest.position.x + on.x * (z - rest.position.z) / on.z, y = rest.position.y + on.y * (z - rest.position.z) / on.z;
+      if (y < TOP + 1.2 || near(x, y, 0.45 * k)) continue;
+      sprayStars.push(x, y, z); n++;
+    }
     for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
   }
   const swarm = new Swarm({ count: 1200, source: CUBE_AT, stars: new Float32Array(starPlaces), px: DPR, reserved: nameStars.length, nameSpeed: 2.5,
@@ -401,6 +419,22 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     return p;
   })();
   scene.add(far);
+  // the spray behind the name (sprayStars): small and dim, like the far stars, coming out as the name is written
+  const spray = (() => {
+    const n = sprayStars.length / 3, seed = new Float32Array(n), r = rng(43);
+    for (let i = 0; i < n; i++) seed[i] = r() ** 1.6;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(sprayStars), 3));
+    g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: { uA: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: 'attribute float aSeed; uniform float uTime, uPx; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vA = (0.3 + 0.7 * aSeed) * (0.75 + 0.25 * sin(uTime * (0.4 + aSeed) + aSeed * 40.0)); gl_PointSize = (1.3 + 2.6 * aSeed * aSeed) * uPx; gl_Position = projectionMatrix * mv; }',
+      fragmentShader: 'uniform float uA; varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * uA); gl_FragColor = vec4(vec3(0.95, 0.93, 1.0) * a, a); }',
+    });
+    const p = new THREE.Points(g, m); p.frustumCulled = false;
+    return p;
+  })();
+  scene.add(spray);
 
   // ---------------------------------------------------------------- timeline
   const smooth = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
@@ -506,6 +540,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       fragments.uniforms.uSparkCol.value = stoneFrags.uniforms.uSparkCol.value = ash.lightColor;
       swarm.material.uniforms.uTime.value = realT;
       far.material.uniforms.uA.value = smooth(9, 14, s);
+      spray.material.uniforms.uA.value = 1.6 * smooth(5, 12, s);
       // the name: when its stars are all home, the constellation's lines draw in
       let home = 0;
       for (let i = 0; i < swarm.reserved; i++) home += swarm.state[i * 3 + 1] >= 1;
@@ -525,7 +560,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         fieldOn.needsUpdate = true;
       }
     }
-    far.material.uniforms.uTime.value = realT;
+    far.material.uniforms.uTime.value = spray.material.uniforms.uTime.value = realT;
     // the camera: holds on the wall, then follows the flock up into the sky (a soft, lagging follow)
     if (tapAt !== null) {
       // a slow glide of its own, in real time (not the story's quick clock):
