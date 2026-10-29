@@ -608,7 +608,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     // the light leaves the hollow as the swarm, a puff of its sparks with it
     const c = (h) => new THREE.Color(h);
     orbFrom = realT;
-    if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.6, 0.8).normalize(), c(GLOW.lit));
+    if (!quiet) ash.burst(CUBE_AT, 12, new THREE.Vector3(0, 0.6, 0.8).normalize(), c(GLOW.lit));
     swarm.release(simT + 0.12);
   }
 
@@ -669,24 +669,23 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       // the logo's stones are chiselled away, and then the glowing cube breaks
       if (stones.visible) placeStones(realT - tapReal);
       if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
-      // the stone opens: a held breath of brightness, then it gives its light away
-      const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
-      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.4 + 0.2 * flare);
-      rayK = 0.8 * (1 - smooth(0, 0.3, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
+      // the stone opens and gives its light away - no burst of brightness first
+      // (Kellan, 2026-10-28: the flash before the break was too much)
+      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.2);
+      rayK = 0.6 * (1 - smooth(0, 0.2, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
       hollow.visible = orbFrom === null || realT - orbFrom < 0.25;   // the hollow's light has gone into the ball
-      // a gentle swell as the light is released, not a flash (Kellan, 2026-10-28)
-      halo.material.opacity = (0.3 + 0.12 * flare) * (1 - smooth(1.2, 3.5, s));
-      halo.scale.setScalar(5.6 + 0.8 * flare);
-      wallMat.uniforms.uLi.value[0] = (0.7 + 0.3 * flare) * (1 - smooth(1, 3.8, s));
+      halo.material.opacity = 0.3 * (1 - smooth(0.2, 2.5, s));
+      halo.scale.setScalar(5.6);
+      wallMat.uniforms.uLi.value[0] = 0.7 * (1 - smooth(0.5, 3, s));
       // the ball: a held breath as the stone opens, then it streams away as the swarm (release over 2.6 s), smaller and smaller
       const gone = orbFrom === null ? 0 : smooth(0, 2.4, realT - orbFrom);
-      orb.material.opacity = (1 - gone) * (0.75 + 0.15 * flare);
-      orb.scale.setScalar((1.2 + 0.25 * flare) * (1 - 0.8 * gone));
+      orb.material.opacity = (1 - gone) * 0.75;
+      orb.scale.setScalar(1.2 * (1 - 0.8 * gone));
       orb.position.y = CUBE_AT.y + 0.35 * gone;
       orb.visible = gone < 1;
       // the rising light lights the wall as it passes
       wallMat.uniforms.uL.value[1].copy(swarm.centre).setZ(swarm.centre.z + 1.5);
-      wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);
+      wallMat.uniforms.uLi.value[1] = 1.2 * swarm.flying * smooth(0.3, 1.2, s);   // softly: the stones beside it mustn't flare white
       swarm.step(simT, sdt);
       // the break's own pieces keep real time, as in a level
       stoneFrags.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
