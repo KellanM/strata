@@ -302,15 +302,18 @@ const fragmentShader = /* glsl */ `
       base = mix(base, mix(vec3(1.0), cFocus * 0.92, pale), a * seam * 0.85);
     }
 
-    // clue glyph, inked in a darker (or lighter) tone of the face itself
+    // clue glyph, inked in a darker (or lighter) tone of the face itself; a finished line's (every
+    // cube in it that isn't the object chiselled away: tile + 1000, updateDone) faded to about a third,
+    // so what's left to do reads at a glance (docs/experience-study.md H1, Kellan 2026-10-29)
     vec3 col = base;
-    if (vTile > 0.5) {
-      float col8 = mod(vTile, 8.0), row8 = floor(vTile / 8.0);
+    float done = step(999.5, vTile), tile = vTile - done * 1000.0;
+    if (tile > 0.5) {
+      float col8 = mod(tile, 8.0), row8 = floor(tile / 8.0);
       vec2 auv = vec2((col8 + vUv.x) / 8.0, 1.0 - (row8 + 1.0 - vUv.y) / 8.0);
       float g = texture2D(uAtlas, auv).a;
       float lum = dot(base, vec3(0.299, 0.587, 0.114));
       vec3 ink = lum > 0.5 ? base * vec3(0.36, 0.33, 0.42) : mix(base, vec3(1.0, 0.97, 0.92), 0.78);
-      col = mix(col, ink, g * 0.92 * (1.0 - uReveal));
+      col = mix(col, ink, g * 0.92 * (1.0 - uReveal) * (1.0 - 0.62 * done));
     }
 
     // solved: the true colours sweep upward, lit by the same ramp
@@ -433,7 +436,10 @@ export class Cubes {
     this.focusEdge = new Float32Array(n * 2);
 
     geo.setAttribute('aCell', new THREE.InstancedBufferAttribute(cell, 3));
-    geo.setAttribute('aClue', new THREE.InstancedBufferAttribute(clue, 3));
+    this.clue = clue; this.clueBase = clue.slice();
+    this.clueAttr = new THREE.InstancedBufferAttribute(clue, 3);
+    this.clueAttr.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('aClue', this.clueAttr);
     geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(color, 3));
     this.stateAttr = new THREE.InstancedBufferAttribute(this.state, 4);
     this.stateAttr.setUsage(THREE.DynamicDrawUsage);
@@ -461,6 +467,24 @@ export class Cubes {
     this.mesh.position.set(0, 0, 0);
     for (const r of this.uniforms.uRip.value) r.w = -99;
     return this.mesh;
+  }
+
+  // A line is finished when every cube in it that isn't the object has been chiselled away; its clue
+  // is marked (+1000) on every cube along it, and the shader fades it. A line that is wholly the
+  // object has nothing to do and stays as it is.
+  updateDone(puzzle, broken) {
+    if (!this.clue) return;
+    let changed = false;
+    for (const line of puzzle.lines) {
+      let empties = 0, left = 0;
+      for (const c of line.cells) if (!puzzle.solid[c]) { empties++; if (!broken[c]) left++; }
+      const done = empties > 0 && left === 0;
+      for (const c of line.cells) {
+        const k = c * 3 + line.axis, base = this.clueBase[k], v = base > 0 && done ? base + 1000 : base;
+        if (this.clue[k] !== v) { this.clue[k] = v; changed = true; }
+      }
+    }
+    if (changed) this.clueAttr.needsUpdate = true;
   }
 
   // present(i) -> whether cell i currently occupies space (alive and not peeled).

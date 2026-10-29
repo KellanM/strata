@@ -387,7 +387,7 @@ function inPeel(i) {
 
 function present(i) { return !game.broken[i] && inPeel(i); }
 
-function refreshAO() { cubes.updateAO(game.puzzle, present); refreshFocus(); }
+function refreshAO() { cubes.updateAO(game.puzzle, present); cubes.updateDone(game.puzzle, game.broken); refreshFocus(); }
 
 // Switches the peel axis/side. Layers peeled on the old axis fold back in.
 function setPeelAxis(axis, side) {
