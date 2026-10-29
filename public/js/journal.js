@@ -1,5 +1,5 @@
 // The journal (Finds, to the player): every object you've uncovered, gathered by
-// chapter like the map, each chapter on its own sky, each sky out of the one before;
+// chapter like the map, each chapter its own page on its own sky, a hairline between;
 // the worlds not yet reached are only named, at the end. Found objects sit in a little pool of
 // light with their gems (the same gold diamonds as the win screen); the rest
 // are a soft dark blur, waiting. Each chapter shows how much of it has been
@@ -44,15 +44,13 @@ export function renderJournal(root, { entries, solved }) {
   }).filter((c) => c.items.length);
   const next = chapters.findIndex((c) => !c.have);
   const ahead = next < 0 ? [] : chapters.slice(next + 1).filter((c) => !c.have);
-  let prev = '#f3d7d0';   // the head's foot: the first chapter's sky comes out of it
+  let prev = '#f3d7d0';   // the last sky drawn: the head's, then each chapter's foot
   chapters.forEach(({ ch, items, have }) => {
     if (ahead.some((c) => c.ch === ch)) return;
     const p = PALETTES.find((q) => q.name === ch.palette) ?? PALETTES[0];
     const complete = have === items.length;
     const sec = document.createElement('section');
     sec.className = 'jr-chapter' + (complete ? ' complete' : '');
-    // each chapter's sky comes out of the one before, not against it in a hard line
-    sec.style.setProperty('--prev', prev);
     prev = hex(p.skyBottom);
     sec.style.setProperty('--sky-top', hex(p.skyTop));
     sec.style.setProperty('--sky-bottom', hex(p.skyBottom));

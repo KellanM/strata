@@ -727,11 +727,10 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #journal-close { position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 2; }
 #journal-grid { width: 100%; }
 /* each chapter is a band of its own sky, as on the map */
-.jr-chapter { color: var(--ink); padding: 26px 18px 30px;
-  background: linear-gradient(180deg, var(--prev, var(--sky-top)) 0, var(--sky-top) 36px, var(--sky-bottom));
-  /* each chapter its own page, the seam between them soft: a short blend, mixed in OKLab so two
-     skies don't meet in a grey-brown (Kellan, 2026-10-29: "a little muddy") */
-  background: linear-gradient(in oklab 180deg, var(--prev, var(--sky-top)) 0, var(--sky-top) 36px, var(--sky-bottom)); }
+.jr-chapter { color: var(--ink); padding: 26px 18px 30px; background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom)); }
+/* each chapter its own page, and between them a hairline, as the rings' and the pause's
+   (Kellan, 2026-10-29: blended, the skies had gone muddy) */
+.jr-chapter + .jr-chapter, .jr-chapter + .jr-later { border-top: 1px solid rgba(255, 255, 255, .42); }
 /* the worlds not reached yet: named only, sinking to the map's night (journal.js) */
 .jr-later { padding: 40px 18px 70px; text-align: center; color: #eef0ff; }
 .jr-later h3 { margin: 0 0 6px; font-size: 13px; font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; opacity: .85; }
