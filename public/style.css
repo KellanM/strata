@@ -554,13 +554,6 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 }
 
 /* ---------- win celebration ---------- */
-#flash {
-  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 252, 240, 0.95), rgba(255, 245, 225, 0.35) 38%, rgba(255, 245, 225, 0) 70%);
-  mix-blend-mode: screen;
-}
-#flash.go { animation: win-flash 1.3s cubic-bezier(.2,.7,.3,1) both; }
-@keyframes win-flash { 0% { opacity: 0; } 26% { opacity: 0.85; } 100% { opacity: 0; } }
 
 #win-title {
   position: fixed; z-index: 2; left: 0; right: 0; top: calc(86px + var(--safe-t));
@@ -624,7 +617,6 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #win.result-mode .row button { opacity: 0; transition: opacity .4s; }
 #win.result-mode.done .row button { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  #flash.go { animation-duration: .01s; }
   #win-title.show .sub, #win-title.show .name span { animation: none; opacity: 1; }
 }
 

@@ -699,9 +699,6 @@ function win() {
     r.mesh.position.set(focus.x, -d[1] / 2 - 0.05, focus.z);
   }
 
-  const flash = $('#flash');
-  flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
-
   // the payoff, lessons too: the object is named over it ("you uncovered ...")
   const title = $('#win-title');
   const letters = [...g.shape.name];
