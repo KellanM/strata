@@ -191,12 +191,17 @@ export class MapWorld {
     this.firstSeaHex = seaColour(regions[0].base);
     this.firstSea = rgba(this.firstSeaHex);
     const stops = [`${this.firstSea} 0px`];
+    this.seaKeys = [[0, this.firstSeaHex]];   // the same, as numbers (skyAt)
     for (const r of regions) {
       const [a, b] = seaEnds(r.base);
       // (the first begins at its plain sea colour: the dawn above sinks into that)
-      stops.push(`${rgba(r.index === 0 ? this.firstSeaHex : a)} ${(r.top + 120).toFixed(0)}px`, `${rgba(b)} ${Math.max(r.top + 121, r.bottom - 120).toFixed(0)}px`);
+      const a0 = r.index === 0 ? this.firstSeaHex : a, z0 = r.top + 120, z1 = Math.max(r.top + 121, r.bottom - 120);
+      stops.push(`${rgba(a0)} ${z0.toFixed(0)}px`, `${rgba(b)} ${z1.toFixed(0)}px`);
+      this.seaKeys.push([z0, a0], [z1, b]);
     }
-    this.lastSea = rgba(seaEnds(regions[regions.length - 1].base)[1]);
+    const last = seaEnds(regions[regions.length - 1].base)[1];
+    this.lastSea = rgba(last);
+    this.seaKeys.push([model.end, last]);
     stops.push(`${this.lastSea} ${model.end}px`);
     this.seaStrip.style.background = `linear-gradient(180deg, ${stops.join(', ')})`;
     for (const r of regions) this.buildChunk(r);
@@ -220,6 +225,7 @@ export class MapWorld {
     // the Drift, or the last sea) rather than whatever lay behind (Kellan, 2026-10-29: a pink)
     // (set on its parent, #menu: the descent clears the scroller's own inline style when it lands)
     this.scroller.parentElement.style.setProperty('--map-foot', this.model.driftTop ? '#121731' : this.lastSea);
+    this.scroller.dispatchEvent(new Event('scroll'));   // (anything reading the sky at the scroll - main.js ringInk - reads it afresh)
     // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
     const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
     this.layers.far.style.setProperty('--par', `${(range * (1 - FAR_RATE)).toFixed(1)}px`);
@@ -236,6 +242,7 @@ export class MapWorld {
     const hex = (c, a) => [ch(c, 16), ch(c, 8), ch(c, 0), a];
     const keys = [[0, hex(0xeabfbf, 0)], [0.4 * h, hex(0xd2a6bd, 0.35)], [at(m.driftTop) - 0.2 * h, hex(0x8f7fae, 0.8)],
       [at(m.driftTop), hex(0x4c5187, 1)], [at(m.driftLabel) + 40, hex(0x323a68, 1)], [at(m.driftStones), hex(0x232a52, 1)], [len, hex(0x121731, 1)]];
+    this.duskKeys = keys.map(([z, c]) => [z + top, c]);   // (skyAt)
     // eased between keys and sampled finely, so no corner shows as a band
     const stops = [];
     for (let i = 0; i < keys.length - 1; i++) {
@@ -272,6 +279,23 @@ export class MapWorld {
       fg.fillRect(x * w, y * fh, r, r);
     }
     this.scroller.parentElement.style.setProperty('--map-foot-stars', `url(${f.toDataURL()})`);
+  }
+
+  // the colour of the map's sky at a point down the page: the sea's gradient, the Drift's dusk
+  // over it, and night past the end - eased between keys as the page draws them (near enough)
+  skyAt(z) {
+    const lerp = (keys, get) => {
+      if (!keys?.length) return null;
+      if (z <= keys[0][0]) return get(keys[0][1]);
+      for (let i = 0; i < keys.length - 1; i++) {
+        const [z0, c0] = keys[i], [z1, c1] = keys[i + 1];
+        if (z <= z1) { const t = z1 > z0 ? (z - z0) / (z1 - z0) : 1, a = get(c0), b = get(c1); return a.map((v, j) => v + (b[j] - v) * t); }
+      }
+      return get(keys[keys.length - 1][1]);
+    };
+    const sea = lerp(this.seaKeys, (h) => [ch(h, 16), ch(h, 8), ch(h, 0)]) ?? [212, 179, 187];
+    const dusk = this.model?.driftTop && this.duskKeys && z >= this.duskKeys[0][0] ? lerp(this.duskKeys, (c) => c) : null;
+    return dusk ? sea.map((v, j) => v + (dusk[j] - v) * dusk[3]) : sea;
   }
 
   // what shows behind the map while it dives into a level or pulls back from one

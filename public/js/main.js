@@ -2328,6 +2328,26 @@ if (splash) {
 let glidedThisLaunch = false;   // the launch's swoop to the current stone (glideToStone)
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const mapSheet = () => $('#menu .map-scroll');
+// The map's rings read the sky behind them: their ink eases from the dark to the light as the
+// sky under them darkens, by its colour where they are - Menu and Finds at the head of the
+// screen, Resume at its foot - so it shades over as the page scrolls, never flips (Kellan,
+// 2026-10-29: the rings were lost on the dark worlds; then, "gradual, not a quick flip")
+function ringInk() {
+  const sc = mapSheet();
+  if (!mapWorld.model?.regions) return;
+  const ink = (y) => {
+    // the sky's lightness over a span around the ring (so the change is spread over half a screen
+    // of scrolling, not the quarter where one world's colour turns into the next)
+    let L = 0;
+    for (let i = -4; i <= 4; i++) { const [r, g, b] = mapWorld.skyAt(y + i * 50); L += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 / 9; }
+    const k = Math.min(1, Math.max(0, (0.7 - L) / 0.34)), t = k * k * (3 - 2 * k);   // light skies dark ink, dark skies light
+    return [74, 61, 99].map((v, i) => Math.round(v + ([238, 240, 255][i] - v) * t)).join(',');
+  };
+  $('#menu').style.setProperty('--ink-head', ink(sc.scrollTop + 60));
+  $('#menu').style.setProperty('--ink-foot', ink(sc.scrollTop + sc.clientHeight - 60));
+}
+let ringInkFrame = 0;
+mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); }); }, { passive: true });
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {
