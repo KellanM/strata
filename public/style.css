@@ -294,18 +294,21 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu:not(.show) * { animation-play-state: paused; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
-  /* behind the map's content, seen only where it isn't painted: a fling faster than the phone can
-     paint, or the bounce past either end. The map's own sky where you are (main.js ringInk keeps
-     --map-here), and near the foot its night and stars (Kellan, 2026-10-29: a fast scroll had shown
-     a pink top over a starry bottom - this, fixed for the foot alone) */
-  background: var(--map-here, transparent);
+  /* (behind it, where a fling outruns its painting, .map-backdrop's stand-in of the map; and near
+     the foot, for the bounce past the end, the night and stars: #menu.at-foot below) */
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   scrollbar-width: none; touch-action: pan-y;
 }
 .map-scroll::-webkit-scrollbar { display: none; }
-#menu.at-foot .map-scroll { background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, var(--map-here, transparent) 50%, var(--map-foot, transparent) 50%); }
+#menu.at-foot .map-scroll { background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, transparent 50%, var(--map-foot, transparent) 50%); }
 /* the map's world (mapworld.js) is its own fixed layers behind the canvas: no veil, no blur */
 .map-backdrop { position: fixed; inset: 0; background: none; pointer-events: none; }
+/* a stand-in of the map where you are - its sky's gradient across the screen and its trail -
+   seen only where a fling outruns the painting (Kellan, 2026-10-29: a flat colour flickering from
+   one to the next, and no trail) */
+.mb-sky, .mb-trail { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mb-trail path { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-opacity: .45; }
+#menu.pulling .map-backdrop > * { display: none; }
 /* the map keeps its own ink: names sit on each chapter's cloud, not on the level's sky */
 #menu .map-scroll { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); color: var(--ink); }
 .map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; text-shadow: 0 0 14px rgba(255, 250, 244, .8); }   /* clear of the corner buttons */

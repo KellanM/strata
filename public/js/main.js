@@ -2372,9 +2372,20 @@ function ringInk() {
   };
   $('#menu').style.setProperty('--ink-head', ink(sc.scrollTop + 60));
   $('#menu').style.setProperty('--ink-foot', ink(sc.scrollTop + sc.clientHeight - 60));
-  // and what shows behind the content where it isn't painted yet (style.css .map-scroll): the sky here
-  $('#menu').style.setProperty('--map-here', `rgb(${mapWorld.skyAt(sc.scrollTop + sc.clientHeight / 2).map(Math.round).join(',')})`);
-  $('#menu').classList.toggle('at-foot', sc.scrollTop > sc.scrollHeight - 2 * sc.clientHeight);
+  // and what shows behind the content where it isn't painted yet: a stand-in of the map here, its
+  // sky's gradient down the screen and its trail (style.css .mb-sky, .mb-trail)
+  const m = mapWorld.model, top = sc.scrollTop, H = sc.clientHeight, W = sc.clientWidth;
+  const rgb = (y) => `rgb(${mapWorld.skyAt(y).map(Math.round).join(',')})`;
+  $('#menu .mb-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${rgb(top + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
+  if (m.trailX) {
+    const pts = [];
+    for (let y = top - 40; y <= top + H + 40; y += 24) pts.push(`${(W / 2 + m.trailX(y)).toFixed(1)},${(y - top).toFixed(1)}`);
+    const here = m.regions.find((r) => top + H / 2 >= r.top && top + H / 2 < r.bottom) ?? m.regions[m.regions.length - 1];
+    const path = $('#menu .mb-trail path');
+    path.setAttribute('d', `M${pts.join('L')}`);
+    path.setAttribute('stroke', `#${(here.base.under ?? 0x4a3d63).toString(16).padStart(6, '0')}`);
+  }
+  $('#menu').classList.toggle('at-foot', top > sc.scrollHeight - 2 * H);
 }
 let ringInkFrame = 0;
 mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); }); }, { passive: true });
