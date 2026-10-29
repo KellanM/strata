@@ -405,7 +405,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .stars-mini .o { fill: none; stroke: currentColor; stroke-width: 1; opacity: .45; }
 .stars-mini i:not(.on) .l, .stars-mini i:not(.on) .r { display: none; }
 .stars-mini i.on .o { display: none; }
-.stars-mini i.on .l { fill: #fff2c2; }
+.stars-mini i.on .l { fill: #e9b949; }   /* one colour, the gem's shaded side (Kellan, 2026-10-29: not two tones) */
 .stars-mini i.on .r { fill: #e9b949; }
 .gem-ic { font-weight: 400; color: #e9b949; font-size: .9em; }   /* the gem in a count: ◆ 40 / 48 */
 .map-node .nm:empty { display: none; }
@@ -672,19 +672,26 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .toggle.on { opacity: 1; }
 .toggle.on::before { background: currentColor; }
 
-/* after a solve: three quiet words, no panel; the result lives in the scene */
+/* after a solve: one ring, Next - the pause's voice - with Map and Again as plain words either
+   side of it; no panel, the result lives in the scene (Kellan, 2026-10-29; experience-study H2) */
 #actions {
-  position: fixed; left: 0; right: 0; bottom: calc(26px + var(--safe-b)); z-index: 3;
-  display: flex; justify-content: center; align-items: center; gap: 6px;
+  position: fixed; left: 0; right: 0; bottom: calc(34px + var(--safe-b)); z-index: 3;
+  display: flex; justify-content: center; align-items: center; gap: 0;
   opacity: 0; transform: translateY(8px); pointer-events: none;
   transition: opacity .6s ease, transform .6s var(--ease-out);
 }
 #actions.show { opacity: 1; transform: none; pointer-events: auto; }
 #actions button {
-  background: none; border: 0; box-shadow: none; color: var(--ink); padding: 12px 16px;
-  font-size: 12px; letter-spacing: .3em; text-transform: uppercase; opacity: .7;
+  background: none; border: 0; box-shadow: none; color: var(--ink); padding: 12px 0; width: 96px;
+  font-size: 11px; letter-spacing: .26em; text-transform: uppercase; opacity: .62;
 }
-#actions button.primary { opacity: 1; border: 1px solid currentColor; border-radius: 999px; padding: 11px 22px; background: none; color: var(--ink); }
+#actions button.primary { position: relative; width: auto; padding: 0; margin: 0 14px; opacity: 1; display: flex; flex-direction: column; align-items: center; }
+#actions .ring {
+  width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent); background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+#actions .ring svg { width: 26px; height: 26px; fill: currentColor; }
+#actions .lb { position: absolute; top: 100%; margin-top: 9px; padding-left: .26em; }
 
 /* ---------- chapter title card ---------- */
 #chapter-card {
@@ -713,7 +720,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* ---------- story line under the solved object's name ---------- */
 #win-title .story {
-  max-width: min(320px, calc(100% - 48px)); margin-top: 6px; font-size: 13px; line-height: 1.45; letter-spacing: .03em;
+  max-width: min(300px, calc(100% - 48px)); margin-top: 6px; font-size: 15px; line-height: 1.45; letter-spacing: .02em;
   opacity: 0; text-shadow: 0 0 18px rgba(255, 250, 235, 0.8);
 }
 #win-title.show .story { animation: win-story 1.2s ease both; animation-delay: var(--d, 1.2s); }

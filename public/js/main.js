@@ -1537,7 +1537,9 @@ function showResult(g, result, isBest) {
     t += Math.round(BEAT * 1000);   // on the music's beat
   }
   if (isBest) at(t + 80, () => { finale.setScore(result.total, true); sound.best(); });
-  at(t + 200, () => actions.classList.add('show'));
+  // Next comes with the name, not after the last gem: they keep filling around it (it had been
+  // some 4 s of waiting for the buttons: Kellan, 2026-10-29; experience-study H2)
+  at(1000, () => actions.classList.add('show'));
 
   resultFinish = () => {
     clearResult();
@@ -1804,7 +1806,7 @@ function draw() {
     if (game.win) {
       stepCelebration(t);
       const H = canvas.clientHeight;
-      finale.update(t, camera, H, H - 215, H - 154);   // gems, then score, above the actions
+      finale.update(t, camera, H, H - 259, H - 206);   // gems, then score, well above the Next ring
     }
 
     camDir.copy(camera.position).sub(controls.target).normalize();

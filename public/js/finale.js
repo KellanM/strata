@@ -188,17 +188,20 @@ export class Finale {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = this.ink ?? '#4a3d63';
-    // a soft halo in the opposite tone keeps the digits clear of the rays
+    // the score quieter than the object and its gems - about half the size it was, at 62% ink
+    // (Kellan, 2026-10-29; experience-study H2), a soft halo in the opposite tone over the rays
     const light = parseInt((this.ink ?? '#000000').slice(1, 3), 16) > 128;
-    g.shadowColor = light ? 'rgba(20, 16, 40, 0.75)' : 'rgba(255, 252, 245, 0.7)';
-    g.shadowBlur = 24;
+    g.shadowColor = light ? 'rgba(20, 16, 40, 0.6)' : 'rgba(255, 252, 245, 0.6)';
+    g.shadowBlur = 16;
     const font = '"Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif';
-    g.font = `500 120px ${font}`;
-    g.letterSpacing = '22px';
-    g.fillText(this.text.score.toLocaleString(), W / 2 + 11, H * 0.42);
+    g.font = `400 64px ${font}`;
+    g.letterSpacing = '18px';
+    g.globalAlpha = 0.62;
+    g.fillText(this.text.score.toLocaleString(), W / 2 + 9, H * 0.42);
+    g.globalAlpha = 1;
     if (this.text.best) {
-      g.globalAlpha = 0.85;
-      g.font = `600 40px ${font}`;
+      g.globalAlpha = 0.62;
+      g.font = `500 30px ${font}`;
       g.letterSpacing = '16px';
       g.fillText('BEST', W / 2 + 8, H * 0.86);      // just under the number
       g.globalAlpha = 1;
