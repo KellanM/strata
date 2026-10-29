@@ -1,6 +1,11 @@
 // Colour script: each puzzle is lit with its own palette, the way Monument
 // Valley gives every chapter a hand-picked scheme instead of physical lighting.
 // Faces take a colour from a ramp keyed to the direction they face.
+// The light skies follow First Light's (Kellan, 2026-10-28): a mid-toned top
+// lightening toward a warmer horizon, as a real sky does at sunrise (in OKLCH:
+// top L ~0.66-0.70, horizon ~0.80-0.86, chroma ~0.05-0.11, the hue turning toward
+// warm on the way down) - Beacon, Mint, Orchard, Autumn, Lagoon and Desert were
+// redrawn on it; Stones, Frost and Clouds keep their own pale skies by choice.
 export const PALETTES = [
   {
     name: 'Dawn', rayGain: 0.8,
@@ -11,7 +16,7 @@ export const PALETTES = [
   },
   {
     name: 'Lagoon', rayGain: 0.5,
-    skyTop: 0xcdeae4, skyBottom: 0x7aa5c2, glow: 0xfdfbea,
+    skyTop: 0x6a99b5, skyBottom: 0x9bddcf, glow: 0xfdfbea,
     top: 0xfff5e2, lit: 0xf3cf9c, shade: 0x6f9cb4, under: 0x4b6c8e,
     paintTop: 0xffb1a0, paintLit: 0xe6726b, paintShade: 0xa24f64,
     rays: 0xfffbe6, motes: 0xffffff,
@@ -25,7 +30,7 @@ export const PALETTES = [
   },
   {
     name: 'Mint', rayGain: 0.55,
-    skyTop: 0xeaf2df, skyBottom: 0xaed0c0, glow: 0xfffdf2,
+    skyTop: 0x7aa9a8, skyBottom: 0xc9d5a1, glow: 0xfffdf2,
     top: 0xfffaf0, lit: 0xf3d6c0, shade: 0x93b5ab, under: 0x67898a,
     paintTop: 0xf6b3c2, paintLit: 0xdb7b97, paintShade: 0x9a527a,
     rays: 0xfffbea, motes: 0xffffff,
@@ -33,7 +38,7 @@ export const PALETTES = [
   {
     // late afternoon in the orchard: warm gold sky, apricot light, sage shadow
     name: 'Orchard', rayGain: 0.75,
-    skyTop: 0xfbe3b6, skyBottom: 0xd9a77c, glow: 0xfff3d6,
+    skyTop: 0x87a98d, skyBottom: 0xedc889, glow: 0xfff3d6,
     top: 0xfdf1dc, lit: 0xf2c89a, shade: 0x9fae8a, under: 0x6f7f62,
     paintTop: 0xf6a98c, paintLit: 0xe0785f, paintShade: 0xa4524f,
     rays: 0xffe9bf, motes: 0xfff6dc,
@@ -58,7 +63,7 @@ export const PALETTES = [
     // Beacon Hills (chapter II since it replaced Teatime): slate hills going to
     // ember, cool stone in the shade so the fire reads brightest, an ember mark
     name: 'Beacon', rayGain: 0.9,
-    skyTop: 0xc3c8de, skyBottom: 0xefae8a, glow: 0xffe4c4,
+    skyTop: 0x8e8eb3, skyBottom: 0xebaf86, glow: 0xffe4c4,
     top: 0xfbf2e8, lit: 0xf0c0a0, shade: 0x8e93b0, under: 0x565a7e,
     paintTop: 0xffc27e, paintLit: 0xee7a4c, paintShade: 0xa8443c,
     rays: 0xffdcb8, motes: 0xfff0de,
@@ -75,7 +80,7 @@ export const PALETTES = [
   {
     // leaf fall and woodsmoke: amber sky, russet stone, a cool moss mark
     name: 'Autumn', rayGain: 0.8,
-    skyTop: 0xf6d2a2, skyBottom: 0xb8654a, glow: 0xffe9c4,
+    skyTop: 0xa3788b, skyBottom: 0xeba66d, glow: 0xffe9c4,
     top: 0xfdecd2, lit: 0xf0b383, shade: 0x9a6a5c, under: 0x5e3f45,
     paintTop: 0x9fd4b8, paintLit: 0x5ea88a, paintShade: 0x3a7064,
     rays: 0xffdcb0, motes: 0xffe6c6,
@@ -91,7 +96,7 @@ export const PALETTES = [
   {
     // heat shimmer: sand-gold sky, terracotta shade, oasis-water mark
     name: 'Desert', rayGain: 0.85,
-    skyTop: 0xfde7b8, skyBottom: 0xe59a5c, glow: 0xfff4d0,
+    skyTop: 0xc1908f, skyBottom: 0xefcc8c, glow: 0xfff4d0,
     top: 0xfff1d8, lit: 0xf6c48e, shade: 0xc27f62, under: 0x8a4f4a,
     paintTop: 0x8fe0dc, paintLit: 0x45b4b8, paintShade: 0x2a7a8c,
     rays: 0xfff0c8, motes: 0xfff8e4,
