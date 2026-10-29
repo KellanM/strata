@@ -697,8 +697,6 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #actions button.primary .ring { width: 72px; height: 72px; border-color: color-mix(in srgb, var(--ink) 55%, transparent); background: color-mix(in srgb, var(--ink) 7%, transparent); }
 #actions button.primary .ring svg { width: 30px; height: 30px; }
 #actions button.primary .lb { opacity: 1; }
-/* (the smaller rings sit level with the middle of Next's) */
-#actions button:not(.primary) { margin-top: 10px; }
 
 /* ---------- chapter title card ---------- */
 #chapter-card {
