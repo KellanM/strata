@@ -260,6 +260,18 @@ export class MapWorld {
       g.globalAlpha = ramp * (r > 1.5 ? 1 : r > 1 ? 0.8 : 0.55) * (0.5 + 0.5 * rand());
       g.fillRect(x * w, y * sh, r, r);
     }
+    // and past the foot (a bounce at the bottom: layoutScene's --map-foot), the same sky at its
+    // fullest, so the stars go on rather than stopping at the map's last pixel (Kellan, 2026-10-29)
+    const fh = this.h / 2, f = document.createElement('canvas');
+    f.width = Math.round(w * d); f.height = Math.round(fh * d);
+    const fg = f.getContext('2d'), frand = rng('dusk-foot');
+    fg.setTransform(d, 0, 0, d, 0, 0); fg.fillStyle = '#eef0ff';
+    for (let i = 0, n = Math.round(1100 * fh / sh); i < n; i++) {
+      const x = frand(), y = frand(), k = frand(), r = k > 0.93 ? 1.9 : k > 0.7 ? 1.3 : 0.9;
+      fg.globalAlpha = (r > 1.5 ? 1 : r > 1 ? 0.8 : 0.55) * (0.5 + 0.5 * frand());
+      fg.fillRect(x * w, y * fh, r, r);
+    }
+    this.scroller.parentElement.style.setProperty('--map-foot-stars', `url(${f.toDataURL()})`);
   }
 
   // what shows behind the map while it dives into a level or pulls back from one
