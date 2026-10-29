@@ -121,7 +121,11 @@ export class MapWorld {
     });
     // the map's world (in the scroller, under the stones)
     this.scene = document.createElement('div'); this.scene.className = 'mw-scene'; this.scene.setAttribute('aria-hidden', 'true');
-    this.seaStrip = document.createElement('div'); this.seaStrip.className = 'mw-strip';
+    // the sea: a small canvas of the whole page's sky, stretched down it - one small layer the phone
+    // keeps drawn and only scales, so a fling that outruns the painting shows the sky beneath, never
+    // a blank (the fling audit: a gradient 24,000 px tall was painted in tiles like the rest)
+    this.seaStrip = document.createElement('canvas'); this.seaStrip.className = 'mw-strip';
+    this.seaStrip.width = 64; this.seaStrip.height = 1024;
     this.dawn = document.createElement('div'); this.dawn.className = 'mw-dawn';
     this.scene.append(this.seaStrip, this.dawn);
     this.layers = {};
@@ -158,6 +162,13 @@ export class MapWorld {
     this.sky.style.height = `${Hs + h + DAWN}px`;
     this.sky.style.background = `${g.css} 0 0 / 100% ${g.height.toFixed(1)}px no-repeat, ${rgba(sea)}`;
     this.starWrap.style.height = `${Hs}px`;
+    this.drawStars();
+  }
+  // (the title's three star sheets, some 22 MB: drawn while its sky shows, emptied while the map is
+  // up - setView - and drawn again on the pull back up)
+  drawStars() {
+    const { w, h } = this, Hs = this.Hs, d = Math.min(2, this.dpr);
+    this.starsDrawn = true;
     for (const L of this.stars) {
       L.c.width = Math.round(w * d); L.c.height = Math.round(Hs * d);
       L.c.style.width = `${w}px`; L.c.style.height = `${Hs}px`;
@@ -203,7 +214,6 @@ export class MapWorld {
     this.lastSea = rgba(last);
     this.seaKeys.push([model.end, last]);
     stops.push(`${this.lastSea} ${model.end}px`);
-    this.seaStrip.style.background = `linear-gradient(180deg, ${stops.join(', ')})`;
     for (const r of regions) this.buildChunk(r);
     this.layoutSky();
     this.layoutScene();
@@ -220,6 +230,7 @@ export class MapWorld {
     // its foot fades into the first chapter's gradient below (a hard line showed there once the chapters had gradients)
     this.dawn.style.webkitMaskImage = this.dawn.style.maskImage = 'linear-gradient(180deg, #000 45%, transparent)';
     this.layoutDusk();
+    this.paintSea();
     // past the end - iOS's bounce at the foot of the scroll - the map's last colour goes on (the
     // scroller's own background, under the half of the screen the bounce opens; the night of
     // the Drift, or the last sea) rather than whatever lay behind (Kellan, 2026-10-29: a pink)
@@ -281,9 +292,19 @@ export class MapWorld {
     this.scroller.parentElement.style.setProperty('--map-foot-stars', `url(${f.toDataURL()})`);
   }
 
+  // the sea's canvas: the sky down the whole page (skyAt: the sea and the Drift's dusk), a row a step
+  paintSea() {
+    const c = this.seaStrip, g = c.getContext('2d'), end = this.model?.end ?? 1;
+    for (let y = 0; y < c.height; y++) {
+      const [r, gg, b] = this.skyAt(((y + 0.5) / c.height) * end, true).map(Math.round);
+      g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, y, c.width, 1);
+    }
+  }
   // the colour of the map's sky at a point down the page: the sea's gradient, the Drift's dusk
   // over it, and night past the end - eased between keys as the page draws them (near enough)
-  skyAt(z) {
+  // (under: what lies beneath the dusk's own layer - the sea, or where the dusk is wholly opaque, the
+  // dusk - for the sea's canvas, so the dusk drawn over it isn't laid on twice)
+  skyAt(z, under = false) {
     const lerp = (keys, get) => {
       if (!keys?.length) return null;
       if (z <= keys[0][0]) return get(keys[0][1]);
@@ -295,6 +316,7 @@ export class MapWorld {
     };
     const sea = lerp(this.seaKeys, (h) => [ch(h, 16), ch(h, 8), ch(h, 0)]) ?? [212, 179, 187];
     const dusk = this.model?.driftTop && this.duskKeys && z >= this.duskKeys[0][0] ? lerp(this.duskKeys, (c) => c) : null;
+    if (under) return dusk && dusk[3] >= 0.999 ? dusk.slice(0, 3) : sea;
     return dusk ? sea.map((v, j) => v + (dusk[j] - v) * dusk[3]) : sea;
   }
 
@@ -303,6 +325,37 @@ export class MapWorld {
     if (!p || typeof p.skyTop !== 'number') return;
     this.backCol = rgba(seaColour(p));
     if (this.u >= 1) this.root.style.backgroundColor = this.backCol;
+  }
+
+  // The mist's canvases made plain images, a few at a quiet moment at a time,
+  // once the title is up (main.js): a canvas is a layer of its own, and everything drawn over one
+  // became one too - some 230 layers on the map, the fling audit found, multiplying the memory a
+  // fast scroll takes. The same pixels, so nothing shows the change.
+  lighten(idle = (f) => setTimeout(f, 50)) {
+    const todo = [...this.scene.querySelectorAll('canvas:not(.mw-strip):not(.mw-dusk-stars)')];   // (the dusk's stars are redrawn on a resize)
+    const next = () => {
+      const batch = todo.splice(0, 4);
+      if (!batch.length) return;
+      let left = batch.length;
+      const done = () => { if (--left === 0) idle(next); };
+      for (const c of batch) {
+        if (!c.isConnected || !c.width || !c.height) { done(); continue; }
+        c.toBlob((blob) => {
+          if (!blob || !c.isConnected) { done(); return; }
+          const img = new Image();
+          img.src = URL.createObjectURL(blob);
+          img.decode().then(() => {
+            if (c.isConnected) {
+              img.className = c.className; img.style.cssText = c.style.cssText; img.setAttribute('aria-hidden', 'true');
+              img.width = c.width; img.height = c.height; img.draggable = false;
+              c.replaceWith(img);
+            }
+            done();
+          }, done);
+        });
+      }
+    };
+    idle(next);
   }
 
   sprite(r, key) {
@@ -558,10 +611,15 @@ export class MapWorld {
     const was = this.u;
     this.u = u;
     if (u >= 1) {
-      if (was < 1) { this.sky.style.display = 'none'; this.root.style.backgroundColor = this.backCol ?? this.firstSea ?? NIGHT; }
+      if (was < 1) {
+        this.sky.style.display = 'none'; this.root.style.backgroundColor = this.backCol ?? this.firstSea ?? NIGHT;
+        for (const L of this.stars) { L.c.width = L.c.height = 0; }
+        this.starsDrawn = false;
+      }
       return;
     }
     if (was >= 1 || was < 0) { this.sky.style.display = ''; this.root.style.backgroundColor = NIGHT; }
+    if (!this.starsDrawn && this.Hs) this.drawStars();
     const { h } = this;
     const horizon = h + DAWN - h * u;   // as the map's page slides up (main.js setScroll)
     this.sky.style.transform = `translate3d(0, ${(horizon - this.Hs).toFixed(1)}px, 0)`;

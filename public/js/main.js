@@ -2274,6 +2274,8 @@ const beginTitle = () => {
   titleBegun = true; perf.boot('title-interactive');
   // the streaks of the launch's swoop and a fast fling down the map (mapRush): drawn while they look at the title
   setTimeout(() => whenIdle(warmStreaks), 1200);
+  // and the map's mist made plain images, a few at a time in quiet moments (mapworld.js lighten)
+  setTimeout(() => mapWorld.built?.then(() => mapWorld.lighten(whenIdle)), 2500);
 };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
@@ -2378,13 +2380,7 @@ function ringInk() {
   const head = ink(top + 60), foot = ink(top + H - 60);
   if (head !== ringInk.head) { ringInk.head = head; $('#map-help').style.setProperty('--ink-head', head); $('#map-journal').style.setProperty('--ink-head', head); }
   if (foot !== ringInk.foot) { ringInk.foot = foot; $('#map-close').style.setProperty('--ink-foot', foot); }
-  // and what shows behind the content where it isn't painted yet: the sky's gradient down the screen
-  // (style.css .mb-sky) - redrawn as the map moves on by a sixth of a screen, not every frame
-  if (Math.abs(top - (ringInk.skyAt ?? -1e9)) > H / 6) {
-    ringInk.skyAt = top;
-    const rgb = (y) => `rgb(${mapWorld.skyAt(y).map(Math.round).join(',')})`;
-    $('#menu .mb-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${rgb(top + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
-  }
+  // (what shows where a fling outruns the painting is the sea's own canvas: mapworld.js seaStrip)
   const atFoot = top > full - 2 * H;
   if (atFoot !== $('#menu').classList.contains('at-foot')) $('#menu').classList.toggle('at-foot', atFoot);
 }
@@ -2397,7 +2393,26 @@ function ringInk() {
 // scrolling stops (a little loop of frames while it shows, not a timer that fired between slow frames),
 // and never under the map's own half-second fade (the fling audit). The first fast move shows every
 // stone still waiting to make its entrance at once, so the map is all there as it slows.
-const rush = { y: null, t: 0, v: 0, skyAt: null, shown: 0, target: 0, moved: 0, loop: 0 };
+const rush = { y: null, t: 0, v: 0, skyAt: null, shown: 0, target: 0, moved: 0, loop: 0, stretch: 0.6, phase: 0, canvas: null };
+function rushStreaks(W, H) {
+  if (rush.canvas?.dataset.key === `${W}x${H}`) return rush.canvas;
+  const cv = rush.canvas ?? document.createElement('canvas');
+  cv.className = 'rush-streaks'; cv.dataset.key = `${W}x${H}`;
+  cv.width = Math.round(W / 2); cv.height = Math.round(1.5 * H);   // half size: shown 3H tall
+  cv.style.cssText = `position:absolute; left:0; top:0; width:${W}px; height:${3 * H}px; transform-origin:0 0; will-change:transform`;
+  const g = cv.getContext('2d'); g.setTransform(0.5, 0, 0, 0.5, 0, 0);
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 70; i++) {
+    const x = rnd() * W, len = (0.08 + rnd() * 0.22) * H, y = rnd() * H, a = 0.35 + rnd() * 0.5, w = 0.8 + rnd() * 1.4;
+    for (let k = -1; k <= 3; k++) {   // the one-screen pattern, three times over and across its seams
+      const y0 = y + k * H, gr = g.createLinearGradient(0, y0, 0, y0 + len);
+      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.7, `rgba(255,255,255,${a})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(x - w / 2, y0, w, len);
+    }
+  }
+  if (!rush.canvas) { $('#menu .map-rush .rush-streaks')?.replaceWith(cv); rush.canvas = cv; }
+  return cv;
+}
 function rushFrame(now) {
   const el = $('#menu .map-rush');
   if (now - rush.moved > 220) rush.target = 0;   // still
@@ -2443,9 +2458,13 @@ function mapRush() {
     rush.skyAt = y;
     $('#menu .rush-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${sky(y + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
   }
-  const st = $('#menu .rush-streaks');
-  if (!st.style.backgroundImage) { st.style.backgroundImage = `url(${streakTile(W, H)})`; st.style.backgroundSize = `${W}px ${2 * H}px`; }
-  st.style.backgroundPosition = `0 ${(-(y * 1.5) % (2 * H)).toFixed(1)}px`;   // half as fast again as the map
+  // the streaks: short as it gathers speed, longer the faster (Kellan, 2026-10-29) - a canvas three
+  // screens tall of a one-screen pattern, drawn once at half size, slid and stretched by the
+  // compositor alone (transform: no paint); the pattern travels half as fast again as the map
+  const st = rushStreaks(W, H);
+  rush.stretch = rush.stretch * 0.7 + Math.min(3, Math.max(0.5, 0.12 * speed + 0.1)) * 0.3;   // about half at 4 screens a second, whole at 8, twice at 16
+  rush.phase = (((rush.phase + (1.5 * dy) / rush.stretch) % H) + H) % H;
+  st.style.transform = `translateY(${(-rush.phase * rush.stretch).toFixed(1)}px) scaleY(${rush.stretch.toFixed(3)})`;
   st.style.opacity = t.toFixed(3);
 }
 let ringInkFrame = 0;
@@ -2581,7 +2600,7 @@ function finishPull() {
 // audit); drawn on the spot only if it is wanted before it is ready
 let streakCache = null;
 function streakCanvas(W, H) {
-  const dpr = Math.min(2, devicePixelRatio || 1), TH = 2 * H, cv = document.createElement('canvas');
+  const dpr = 0.5, TH = 2 * H, cv = document.createElement('canvas');   // half the page's pixels: the streaks are soft, and it is shown enlarged (it had been 780 x 3376, 10.5 MB)
   cv.width = W * dpr; cv.height = TH * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;

@@ -294,8 +294,8 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu:not(.show) * { animation-play-state: paused; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
-  /* (behind it, where a fling outruns its painting, .map-backdrop's stand-in of the map; and near
-     the foot, for the bounce past the end, the night and stars: #menu.at-foot below) */
+  /* (where a fling outruns its painting, the sea's own canvas shows - mapworld.js; and near the
+     foot, for the bounce past the end, the night and stars: #menu.at-foot below) */
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   scrollbar-width: none; touch-action: pan-y;
 }
@@ -303,17 +303,11 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu.at-foot .map-scroll { background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, transparent 50%, var(--map-foot, transparent) 50%); }
 /* the map's world (mapworld.js) is its own fixed layers behind the canvas: no veil, no blur */
 .map-backdrop { position: fixed; inset: 0; background: none; pointer-events: none; }
-/* the map's sky where you are, its gradient across the screen - seen only where a fling outruns the
-   painting (Kellan, 2026-10-29: a flat colour had flickered from one to the next; a stand-in trail
-   drawn over it looked wrong) */
-.mb-sky { position: absolute; inset: 0; }
 /* flung fast, the map rushes past as the launch's swoop does: its colours smeared by the speed,
    streaks flying by - over the map, under its rings; gone as it slows (main.js mapRush) */
-.map-rush { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.map-rush { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; }   /* (z: over the stones' .map, z-index 1 in the same context; the rings, later, stay over it) */
 #menu > .map-rush { transition: none; }   /* its showing is main.js's own (rushFrame); under #menu > *'s half-second fade it came late and left late */
 .rush-sky, .rush-streaks { position: absolute; inset: 0; }
-.rush-streaks { background-repeat: repeat-y; transform-origin: 50% 50%; }
-#menu.pulling .map-backdrop > * { display: none; }
 /* the map keeps its own ink: names sit on each chapter's cloud, not on the level's sky */
 #menu .map-scroll { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); color: var(--ink); }
 .map-head { text-align: center; padding: calc(78px + var(--safe-t)) 20px 6px; text-shadow: 0 0 14px rgba(255, 250, 244, .8); }   /* clear of the corner buttons */
@@ -345,7 +339,7 @@ body.world-up #map-world { display: block; }
    capture the far layer's scroll timeline */
 .mw-scene { position: absolute; left: 0; top: 0; width: 100%; overflow: clip; pointer-events: none; z-index: 0; }
 .map-head, .map { position: relative; z-index: 1; }
-.mw-strip { position: absolute; inset: 0; }
+.mw-strip { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }   /* a small canvas of the page's sky, stretched down it (mapworld.js) */
 .mw-dawn { position: absolute; left: 0; top: 0; width: 100%; }
 .mw-dusk { position: absolute; left: 0; width: 100%; }   /* over the mist layers, under the stones */
 .mw-dusk-stars { position: absolute; left: 0; }
