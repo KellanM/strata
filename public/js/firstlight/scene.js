@@ -183,7 +183,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         sp.addScaledVector(d.multiplyScalar(0.6).add(UP), env * 0.16);
         scale *= 1 - 0.07 * env;
         // and its light: a warm brightening that travels with the wave (cubes.js, ripple light)
-        stones.setColorAt(i, rc.copy(f.c).lerp(RIPPLE_GLOW, Math.min(1, env * 0.5)).multiplyScalar(1 + 0.9 * env));
+        // (as a level's: cubes.js adds a fifth of its glow; it was far stronger here, a flash at the touch)
+        stones.setColorAt(i, rc.copy(f.c).lerp(RIPPLE_GLOW, Math.min(1, env * 0.15)).multiplyScalar(1 + 0.2 * env));
       }
       ss.setScalar(scale);
       stones.setMatrixAt(i, m4.compose(sp, sq, ss));
@@ -673,7 +674,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       // (Kellan, 2026-10-28: the flash before the break was too much)
       coreMat.color.copy(CORE).lerp(CORE_HOT, 0.2);
       rayK = 0.6 * (1 - smooth(0, 0.2, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
-      hollow.visible = orbFrom === null || realT - orbFrom < 0.25;   // the hollow's light has gone into the ball
+      hollow.visible = false;   // the hollow's light has gone into the ball at the touch (lingering, its flat face showed through the first stone's gap)
       halo.material.opacity = 0.3 * (1 - smooth(0.2, 2.5, s));
       halo.scale.setScalar(5.6);
       wallMat.uniforms.uLi.value[0] = 0.7 * (1 - smooth(0.5, 3, s));
