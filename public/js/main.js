@@ -2279,7 +2279,7 @@ if (splash) {
 
 // the scroll: k px up. The title moves with it, the logo too (by shifting the
 // camera's view), and the map sheet follows from just below the screen.
-let glidedThisLaunch = false, swoopVeil = null;   // the launch's swoop to the current stone (glideToStone)
+let glidedThisLaunch = false;   // the launch's swoop to the current stone (glideToStone)
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const mapSheet = () => $('#menu .map-scroll');
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
@@ -2301,7 +2301,6 @@ function setScroll(k) {
   {
     const sheet = mapSheet();
     sheet.style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
-    if (swoopVeil) swoopVeil.style.transform = sheet.style.transform;
     // the soft top edge (style.css #menu.pulling) slides up out of the sheet as it arrives
     sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.5 * H * Math.min(1, k / H)).toFixed(1)}px`;
   }
@@ -2384,7 +2383,6 @@ function finishPull() {
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
-    if (swoopVeil) swoopVeil.style.transform = swoopVeil.style.webkitMaskImage = swoopVeil.style.maskImage = '';   // the stand-in keeps to the sheet, now at rest
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
@@ -2421,7 +2419,7 @@ function glideToStone() {
   const stop = () => {
     cancelAnimationFrame(stoneGlide); sheet.style.filter = '';
     if (!leapt && far) sheet.scrollTop = to;
-    veil?.remove(); swoopVeil = null;
+    veil?.remove();
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
   };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
@@ -2455,14 +2453,18 @@ function glideToStone() {
   band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${4 * H}px; will-change:transform;
     background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1.5px, transparent 1.5px 23px, rgba(255,255,255,.04) 23px 25px, transparent 25px 61px), linear-gradient(180deg, ${grad.join(', ')})`;
   veil.appendChild(band);
-  sheet.parentNode.insertBefore(veil, sheet.nextSibling);
-  swoopVeil = veil; veil.style.transform = sheet.style.transform;   // setScroll moves it with the sheet while the descent runs
-  if ($('#menu').classList.contains('pulling'))   // coming up out of the night, its top edge soft as the sheet's (style.css #menu.pulling)
-    veil.style.webkitMaskImage = veil.style.maskImage = 'linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 15vh, #000 40vh)';
+  if ($('#menu').classList.contains('pulling')) {
+    // from the title: over the whole screen, the title included, so the night dissolves into
+    // the sweep instead of its edge sliding up over it (Kellan, 2026-10-29)
+    Object.assign(veil.style, { position: 'fixed', top: '0', height: '100%', zIndex: '8' });
+    document.body.appendChild(veil);
+  } else sheet.parentNode.insertBefore(veil, sheet.nextSibling);
   const T = 1250 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again
   band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: 'cubic-bezier(.55, 0, .25, 1)', fill: 'forwards' });
-  veil.animate([{ opacity: 0 }, { opacity: 1, offset: 0.28 }, { opacity: 1, offset: 0.66 }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
+  // (from the title it covers quickly, before the title's lower edge has risen into view)
+  const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;
+  veil.animate([{ opacity: 0 }, { opacity: 1, offset: cover }, { opacity: 1, offset: 0.66 }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
   const BLUR = 7;
   const step = (now_) => {
     t0 ??= now_;
