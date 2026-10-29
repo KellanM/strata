@@ -2394,26 +2394,46 @@ function finishPull() {
     menuEl.addEventListener('pointerdown', handOff, true);
   });
 }
-// After the descent, the map glides from its head down to the current stone, a
-// calm camera move; a touch on the map stops it where it is
+// After the descent, the map travels from its head down to the current stone,
+// a calm camera move; a touch on the map stops it where it is. A long way is a
+// swoop (Kellan, 2026-10-29: a glide over thousands of px stuttered - every
+// frame a fresh screen of stones to paint): it pulls away under a soft motion
+// blur, leaps the middle in one step while blurred, and eases in to the stone
+// as the blur clears - a few screens painted instead of the whole way.
 let stoneGlide = 0;
 function glideToStone() {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
-  if (!node || reduceMotion) { if (node) sheet.scrollTop = Math.max(0, node.getBoundingClientRect().top + sheet.scrollTop - sheet.clientHeight * 0.45); return; }
+  if (!node) return;
   const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
+  if (reduceMotion) { sheet.scrollTop = to; return; }
   if (to - from < 40) return;
-  const seconds = Math.min(1.6, 0.7 + (to - from) / 4000) / motionRate;
-  const stop = () => { cancelAnimationFrame(stoneGlide); sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true); };
+  const H = sheet.clientHeight, far = to - from > 2.4 * H, lead = 0.8 * H;
+  const seconds = (far ? 1.15 : Math.min(1.1, 0.6 + (to - from) / 3000)) / motionRate;
+  const BLUR = 7;   // px at the swoop's fastest
+  const stop = () => {
+    cancelAnimationFrame(stoneGlide); sheet.style.filter = sheet.style.willChange = '';
+    sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
+  };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
+  if (far) sheet.style.willChange = 'filter';
   let t0 = null;
   const step = (now_) => {
     t0 ??= now_;
-    const k = Math.min(1, (now_ - t0) / 1000 / seconds), e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
-    sheet.scrollTop = from + (to - from) * e;
+    const k = Math.min(1, (now_ - t0) / 1000 / seconds);
+    if (!far) sheet.scrollTop = from + (to - from) * (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+    else if (k < 0.4) {            // pulling away, gathering speed and blur
+      const a = k / 0.4;
+      sheet.scrollTop = from + lead * a * a;
+      sheet.style.filter = `blur(${(BLUR * a * a).toFixed(2)}px)`;
+    } else {                        // the middle leapt; easing in to the stone, the blur clearing
+      const a = (k - 0.4) / 0.6, e = 1 - (1 - a) ** 3;
+      sheet.scrollTop = to - lead * (1 - e);
+      sheet.style.filter = a < 1 ? `blur(${(BLUR * (1 - a) ** 2).toFixed(2)}px)` : '';
+    }
     if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
   };
   stoneGlide = requestAnimationFrame(step);
-  mark('map: glide to the current stone');
+  mark(`map: ${far ? 'swoop' : 'glide'} to the current stone`);
 }
 function cancelPull(seconds = 0.35) {
   pull.live = false;
