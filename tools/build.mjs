@@ -21,17 +21,21 @@ for (const f of ['build/three.module.min.js', 'build/three.core.min.js', 'exampl
   cpSync(join(three, f), out);
 }
 
-// stamp the version into How to play: package version and the commit it was built from
-const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+// stamp the version into Settings' foot, from store/release.json (the version the store has):
+// the app shows it as the store does, "1.0 (2)"; the web adds the commit it was built from
+const release = JSON.parse(readFileSync(join(root, 'store/release.json'), 'utf8'));
 let sha = (process.env.GITHUB_SHA || '').slice(0, 7);
 if (!sha) { try { sha = execSync('git rev-parse --short HEAD', { cwd: root }).toString().trim(); } catch { sha = ''; } }
 // the patch number counts commits, so every deploy shows a new version
 let count = '';
 try { count = execSync('git rev-list --count HEAD', { cwd: root }).toString().trim(); } catch { count = ''; }
-const [major, minor] = pkg.version.split('.');
-const stamp = `v${major}.${minor}.${count || '0'}${sha ? ' · ' + sha : ''}`;
+const stamp = process.argv.includes('--app') ? `${release.version} (${release.build})`
+  : `v${release.version}.${count || '0'}${sha ? ' · ' + sha : ''}`;
 const htmlPath = join(dist, 'index.html');
-writeFileSync(htmlPath, readFileSync(htmlPath, 'utf8').replace('<p id="version" class="version">dev</p>', `<p id="version" class="version">${stamp}</p>`));
+// (by its id, whatever the element; and loudly if it's gone, not shipping "dev" again)
+const html = readFileSync(htmlPath, 'utf8'), stamped = html.replace(/(id="version"[^>]*>)dev(<)/, `$1${stamp}$2`);
+if (stamped === html) throw new Error('build: no id="version" holding "dev" in index.html to stamp');
+writeFileSync(htmlPath, stamped);
 console.log(`stamped ${stamp}`);
 
 // a profiling build only (docs/profiling.md): the benchmark runs itself n times after launch.
