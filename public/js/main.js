@@ -2301,8 +2301,8 @@ const buildMap = () => {
 // phone the drawn logo holds a little longer, rather than the screen going
 // black. (Fading the title's canvas itself instead cost a frame of a third of a
 // second as it was first shown.) A quick relaunch, or a tap, skips the erase.
-const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - drawn by 0.7 s (index.html @keyframes chalk-draw), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
-const SPLASH_ERASE = 0.4;  // s: index.html @keyframes chalk-wipe, quicker than the drawing (at 0.3 s it read on a phone as the logo vanishing)
+const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - slapped on by about 0.7 s (index.html @keyframes chalk-slap), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
+const SPLASH_ERASE = 0.5;  // s: the splotches lifting off in turn (index.html @keyframes chalk-unslap: their delays at 0.7 of the slaps', each 0.15 s)
 const SPLASH_BREATH = 0.12;   // s: black, between the erase and the card's fade (Kellan: "it feels like taking a breath")
 const splash = $('#splash');
 if (splash) {

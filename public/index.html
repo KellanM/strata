@@ -38,26 +38,21 @@
     /* the mark small in the frame, and centred by what is drawn - the sticker (about 288 to 484) - not by its frame */
     #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
     /* put down in splotches of chalk slapped on one after another, rolling from where the rock is
-       looking (Kellan, 2026-10-29), held, then wiped off by a rough chalk edge sweeping the same
-       way - all moved by transform and opacity only, so it keeps moving while the game loads */
+       looking - up and a little right (its pupils, its 5-degree lean) - down and back across it;
+       held; then lifted off the same way, each slap played backwards (Kellan, 2026-10-29). All
+       transform and opacity, so it keeps moving while the game loads */
     #splash .chalk { position: absolute; left: 78px; top: 296px; width: 240px; height: 206px; overflow: hidden; }
     /* the splotches: each shows its patch of a picture of the logo (splash-logo.png) through a
        chalk-dab shape (tools/chalk-splotch.py), over black that hides the logo till it's slapped on;
-       made, placed and timed by the script after the card */
+       made, placed and timed (--d) by the script after the card */
     #splash .chalk .slaps { position: absolute; inset: 0; background: #000; }
     #splash .chalk .slaps i { position: absolute; width: 84px; height: 84px; background: url(splash-logo.png) 0 0 / 240px 206px no-repeat;
       -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
       animation: chalk-slap .17s cubic-bezier(.2, 1.4, .4, 1) var(--d) both; }
     @keyframes chalk-slap { from { opacity: 0; transform: scale(.72); } 45% { opacity: 1; } to { opacity: 1; transform: none; } }
-    /* the strokes come from where the rock is looking - up and a little right (its pupils, its
-       5-degree lean) - and sweep down and back across it, put on and wiped off alike (Kellan,
-       2026-10-29: tried both ways, this one). A square wide enough to cover the logo at any
-       angle, turned about its centre */
-    #splash .chalk .sweep { position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; margin: -170px 0 0 -170px; transform: rotate(115deg); }
-    #splash .chalk .sweep i { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background: 0 0 / 100% 100% no-repeat; will-change: transform; }
-    #splash .chalk .wipe { background-image: url(chalk-draw.png); transform: translateX(-90%) scaleX(-1); }   /* waiting with its rough edge just off the rock (further in, it had nibbled it) */
-    #splash.erasing .chalk .wipe { animation: chalk-wipe .4s linear both; }   /* even: every frame of it erasing (eased, the rock went in three or four) */   /* when the game is ready (main.js SPLASH_ERASE) */
-    @keyframes chalk-wipe { from { transform: translateX(-90%) scaleX(-1); } to { transform: translateX(-25%) scaleX(-1); } }   /* from the edge touching the rock to the black over all of it */
+    /* when the game is ready (main.js SPLASH_ERASE): off again in the same order, a little quicker */
+    #splash.erasing .chalk .slaps i { animation: chalk-unslap .15s cubic-bezier(.6, 0, .8, .4) calc((var(--d) - .1s) * .7) both; }
+    @keyframes chalk-unslap { from { opacity: 1; transform: none; } 55% { opacity: 1; } to { opacity: 0; transform: scale(.72); } }
     /* a quick relaunch (an update's reload): just black, fading up into the game */
     #splash.quick > * { display: none; }
     /* Leaving the app, the screen goes black first: iOS shows its last snapshot
@@ -69,7 +64,6 @@
     @media (prefers-reduced-motion: reduce) { #splash .chalk { display: none; } }
   </style>
   <link rel="preload" href="splash-name.png" as="image">
-  <link rel="preload" href="chalk-draw.png" as="image">
   <link rel="preload" href="splash-logo.png" as="image">
   <link rel="preload" href="chalk-splotch-1.png" as="image">
   <link rel="preload" href="chalk-splotch-2.png" as="image">
@@ -132,7 +126,7 @@
         </g></g>
         </g>
       </svg>
-      <div class="chalk" aria-hidden="true"><div class="slaps"></div><div class="sweep"><i class="wipe"></i></div></div>
+      <div class="chalk" aria-hidden="true"><div class="slaps"></div></div>
     </div>
   </div>
   <script>
