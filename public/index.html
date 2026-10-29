@@ -34,10 +34,17 @@
     #splash .gone { display: none; }
     #splash.shards .gone { display: inline; }   /* the test: ?splash=shards, or the developer panel */
     #splash .art { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
-      transform: scale(calc(var(--fit, 1) * .64)) translateY(36px); opacity: 0; animation: card-in .7s ease .1s forwards; }
+      transform: scale(calc(var(--fit, 1) * .64)) translateY(36px);
+      /* drawn on in chalk, in quick strokes, held, then wiped off before the card lifts (tools/chalk-strip.py) */
+      -webkit-mask: url(chalk-strip.png) no-repeat 88% 0 / 500% 100%; mask: url(chalk-strip.png) no-repeat 88% 0 / 500% 100%;
+      animation: chalk 1.6s .1s both; }
     /* the mark small in the frame, and centred by what is drawn - the sticker (about 288 to 484) - not by its frame */
     #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-    @keyframes card-in { to { opacity: 1; } }
+    @keyframes chalk {
+      0% { -webkit-mask-position: 88% 0; mask-position: 88% 0; animation-timing-function: steps(7, end); }
+      38%, 72% { -webkit-mask-position: 50% 0; mask-position: 50% 0; }
+      72% { animation-timing-function: cubic-bezier(.5, 0, .8, .6); }
+      100% { -webkit-mask-position: 0% 0; mask-position: 0% 0; } }
     /* a quick relaunch (an update's reload): just black, fading up into the game */
     #splash.quick > * { display: none; }
     /* Leaving the app, the screen goes black first: iOS shows its last snapshot
@@ -46,9 +53,10 @@
        Coming back, the black lifts gently. */
     #shroud { position: fixed; inset: 0; z-index: 1001; background: #000; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
     #shroud.on { opacity: 1; transition: none; }
-    @media (prefers-reduced-motion: reduce) { #splash .art { animation-duration: .01s; animation-delay: 0s; } }
+    @media (prefers-reduced-motion: reduce) { #splash .art { animation: none; -webkit-mask: none; mask: none; } }
   </style>
   <link rel="preload" href="splash-name.png" as="image">
+  <link rel="preload" href="chalk-strip.png" as="image">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
     {
@@ -76,7 +84,11 @@
             <feComponentTransfer in="soft" result="edge"><feFuncA type="linear" slope="6" intercept="-2.2"/></feComponentTransfer>
             <feFlood flood-color="#fff"/>
             <feComposite operator="in" in2="edge" result="border"/>
-            <feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <feMerge result="sticker"><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <!-- chalk: the white grainy, as chalk on a blackboard (Kellan, 2026-10-29) -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="noise"/>
+            <feColorMatrix in="noise" type="matrix" values="0.7 0 0 0 0.5  0.7 0 0 0 0.5  0.7 0 0 0 0.5  0 0 0 0 1" result="grain"/>
+            <feComposite in="sticker" in2="grain" operator="arithmetic" k1="1" k2="0" k3="0" k4="0"/>
           </filter>
           <!-- the rock's underside cut flat, where it sits on the name -->
           <clipPath id="sr-ground"><rect width="390" height="395.3"/></clipPath>

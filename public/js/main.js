@@ -2245,7 +2245,7 @@ const buildMap = () => {
 // animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
 // the title begins under it, the logo carving as before. A tap lifts it as
 // soon as that work is done.
-const SPLASH_HOLD = 1.6;   // s: the card fades in (0.8 s) and holds; with its fade out, about 2 s, as the peers' cards (docs/flow-study.md F3)
+const SPLASH_HOLD = 1.75;   // s: the card is drawn on in chalk, held and wiped off again (index.html @keyframes chalk, 0.1 + 1.6 s); about 2 s, as the peers' cards (docs/flow-study.md F3)
 const splash = $('#splash');
 if (splash) {
   let lifted = false, ready = false;
