@@ -303,17 +303,16 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu.at-foot .map-scroll { background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, transparent 50%, var(--map-foot, transparent) 50%); }
 /* the map's world (mapworld.js) is its own fixed layers behind the canvas: no veil, no blur */
 .map-backdrop { position: fixed; inset: 0; background: none; pointer-events: none; }
-/* a stand-in of the map where you are - its sky's gradient across the screen and its trail -
-   seen only where a fling outruns the painting (Kellan, 2026-10-29: a flat colour flickering from
-   one to the next, and no trail) */
-.mb-sky, .mb-trail { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the map's sky where you are, its gradient across the screen - seen only where a fling outruns the
+   painting (Kellan, 2026-10-29: a flat colour had flickered from one to the next; a stand-in trail
+   drawn over it looked wrong) */
+.mb-sky { position: absolute; inset: 0; }
 /* flung fast, the map rushes past as the launch's swoop does: its colours smeared by the speed,
    streaks flying by - over the map, under its rings; gone as it slows (main.js mapRush) */
 .map-rush { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .28s ease-out; }
 .map-rush.live { transition-duration: .1s; }
 .rush-sky, .rush-streaks { position: absolute; inset: 0; }
 .rush-streaks { background-repeat: repeat-y; transform-origin: 50% 50%; }
-.mb-trail path { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-opacity: .45; }
 #menu.pulling .map-backdrop > * { display: none; }
 /* the map keeps its own ink: names sit on each chapter's cloud, not on the level's sky */
 #menu .map-scroll { --ink: #4a3d63; --ink-soft: rgba(74, 61, 99, .62); color: var(--ink); }

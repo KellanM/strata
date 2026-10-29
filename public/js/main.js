@@ -2372,18 +2372,13 @@ function ringInk() {
   };
   $('#menu').style.setProperty('--ink-head', ink(sc.scrollTop + 60));
   $('#menu').style.setProperty('--ink-foot', ink(sc.scrollTop + sc.clientHeight - 60));
-  // and what shows behind the content where it isn't painted yet: a stand-in of the map here, its
-  // sky's gradient down the screen and its trail (style.css .mb-sky, .mb-trail)
-  const m = mapWorld.model, top = sc.scrollTop, H = sc.clientHeight, W = sc.clientWidth;
-  const rgb = (y) => `rgb(${mapWorld.skyAt(y).map(Math.round).join(',')})`;
-  $('#menu .mb-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${rgb(top + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
-  if (m.trailX) {
-    const pts = [];
-    for (let y = top - 40; y <= top + H + 40; y += 24) pts.push(`${(W / 2 + m.trailX(y)).toFixed(1)},${(y - top).toFixed(1)}`);
-    const here = m.regions.find((r) => top + H / 2 >= r.top && top + H / 2 < r.bottom) ?? m.regions[m.regions.length - 1];
-    const path = $('#menu .mb-trail path');
-    path.setAttribute('d', `M${pts.join('L')}`);
-    path.setAttribute('stroke', `#${(here.base.under ?? 0x4a3d63).toString(16).padStart(6, '0')}`);
+  // and what shows behind the content where it isn't painted yet: the sky's gradient down the screen
+  // (style.css .mb-sky) - redrawn as the map moves on by a sixth of a screen, not every frame
+  const top = sc.scrollTop, H = sc.clientHeight;
+  if (Math.abs(top - (ringInk.skyAt ?? -1e9)) > H / 6) {
+    ringInk.skyAt = top;
+    const rgb = (y) => `rgb(${mapWorld.skyAt(y).map(Math.round).join(',')})`;
+    $('#menu .mb-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${rgb(top + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
   }
   $('#menu').classList.toggle('at-foot', top > sc.scrollHeight - 2 * H);
 }
@@ -2391,10 +2386,10 @@ function ringInk() {
 // colours smear by the speed and the swoop's streaks fly past, faster than the map; as it slows
 // the map comes clear (Kellan, 2026-10-29). Not for the swoop itself, the title's descent, or
 // reduced motion; a jump (the swoop's leap) is not a fling.
-const rush = { y: null, t: 0, v: 0, timer: 0 };
+const rush = { y: null, t: 0, v: 0, timer: 0, skyAt: null };
 function mapRush() {
   const sc = mapSheet(), el = $('#menu .map-rush'), now = performance.now(), y = sc.scrollTop, H = sc.clientHeight, W = sc.clientWidth;
-  const quiet = () => { rush.v = 0; el.classList.remove('live'); el.style.opacity = '0'; };
+  const quiet = () => { rush.v = 0; rush.skyAt = null; el.classList.remove('live'); el.style.opacity = '0'; };
   const last = rush.y, dt = Math.max(8, now - rush.t);
   rush.y = y; rush.t = now;
   if (last == null || reduceMotion || swooping || $('#menu').classList.contains('pulling') || !mapWorld.model?.regions) { quiet(); return; }
@@ -2412,11 +2407,15 @@ function mapRush() {
     for (let i = -2; i <= 2; i++) mapWorld.skyAt(z + (i * span) / 4).forEach((v, j) => (acc[j] += v / 5));
     return `rgb(${acc.map(Math.round).join(',')})`;
   };
-  $('#menu .rush-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${sky(y + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
+  // (its colours redrawn as the map moves on by a twelfth of a screen; the streaks a screen-sized
+  // layer, slid - not a tall one, nor rescaled each frame: flung hard, the page had crashed)
+  if (Math.abs(y - (rush.skyAt ?? -1e9)) > H / 12) {
+    rush.skyAt = y;
+    $('#menu .rush-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${sky(y + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
+  }
   const st = $('#menu .rush-streaks');
   if (!st.style.backgroundImage) { st.style.backgroundImage = `url(${streakTile(W, H)})`; st.style.backgroundSize = `${W}px ${2 * H}px`; }
   st.style.backgroundPosition = `0 ${(-(y * 1.5) % (2 * H)).toFixed(1)}px`;   // half as fast again as the map
-  st.style.transform = `scaleY(${(1 + 0.6 * t).toFixed(3)})`;
   st.style.opacity = t.toFixed(3);
   el.classList.add('live');
   el.style.opacity = (0.88 * t).toFixed(3);
@@ -2689,9 +2688,11 @@ function glideToStone(onLeap) {
   band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${H}px; transform-origin:0 0; will-change:transform; background: linear-gradient(180deg, ${grad.join(', ')})`;
   veil.appendChild(band);
   // and the stars streaking past over them (Kellan, 2026-10-29, "stars")
+  // (drawn at half size and enlarged - they are soft, nothing is lost - so the layer holds a
+  // quarter of the pixels: six screens tall at full size, it was some 70 MB on a phone)
   const streaks = document.createElement('div'), tile = streakTile(sheet.clientWidth, H);
-  streaks.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${6 * H}px; will-change:transform;
-    background: url(${tile}) 0 0 / ${sheet.clientWidth}px ${2 * H}px repeat-y`;
+  streaks.style.cssText = `position:absolute; left:0; top:0; width:50%; height:${3 * H}px; will-change:transform; transform-origin:0 0;
+    background: url(${tile}) 0 0 / ${sheet.clientWidth / 2}px ${H}px repeat-y`;
   veil.appendChild(streaks);
   if (fromTitle) {
     // from the title: over the whole screen, the title included, so the night dissolves into
@@ -2705,7 +2706,9 @@ function glideToStone(onLeap) {
   const sweep = band.animate([{ transform: `translateY(0) scaleY(${TRAVEL + 1})` }, { transform: `translateY(${-TRAVEL * H}px) scaleY(${TRAVEL + 1})` }], { duration: T, easing: `cubic-bezier(${EASE_SWOOP})`, fill: 'forwards' });
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
-  streaks.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.4 }, { transform: `translateY(${-3.6 * H}px) scaleY(.25)`, opacity: 0 }],
+  // (each as at full size: moved ty and stretched s about the full layer's middle, 3H down)
+  const streakAt = (ty, s) => `translateY(${(ty + 3 * H * (1 - s)).toFixed(1)}px) scale(2, ${(2 * s).toFixed(3)})`;
+  streaks.animate([{ transform: streakAt(0, 0.3), opacity: 0 }, { transform: streakAt(-2 * H, 1.4), opacity: 1, offset: 0.4 }, { transform: streakAt(-3.6 * H, 0.25), opacity: 0 }],
     { duration: T * 0.8, easing: 'cubic-bezier(.45, 0, .2, 1)', fill: 'forwards' });
   // (from the title it covers quickly, before the title's lower edge has risen into view)
   const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;

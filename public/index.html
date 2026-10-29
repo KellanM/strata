@@ -20,6 +20,10 @@
        colour, which on iPhone showed below the card (under the toolbar and the
        home indicator) */
     html:has(#splash:not(.out)) { background: #000 !important; }
+    /* and nothing of the sky behind it: the map's world (the title's sunrise) is there from the
+       first moments, and on an iPhone it peeked out at the foot while the card was black (Kellan,
+       2026-10-29: "the whole screen should be black") */
+    html:has(#splash:not(.out)) #map-world { visibility: hidden; }
     /* The studio's card (Kellan, 2026-10-25): one still picture, black and
        white, that fades in, holds, and fades out (main.js SPLASH_HOLD, .out).
        The pet rock in silhouette, leaning back a little, its googly eyes cut out
@@ -27,7 +31,7 @@
        together as a sticker, a white border round them (Kellan, 2026-10-28: the
        name was laid in the rock's long shadow on a lit floor, then the pair sat
        in a white circle; the name keeps its warp). */
-    #splash { position: fixed; inset: 0; min-height: 100lvh; z-index: 1000; background: #000; overflow: hidden;
+    #splash { position: fixed; inset: -60px 0; min-height: calc(100lvh + 120px); z-index: 1000; background: #000; overflow: hidden;   /* (past every edge a little: toolbars and the home indicator) */
       transition: opacity .9s cubic-bezier(.2, 0, .4, 1); -webkit-user-select: none; user-select: none; }
     #splash.out { opacity: 0; pointer-events: none; }
     #splash svg * { stroke: none !important; }   /* style.css strokes the HUD's icons */
@@ -235,8 +239,8 @@
   </section>
 
   <section id="menu" class="overlay" aria-label="Puzzles">
-    <!-- behind the map, where a fling outruns its painting: a stand-in of it (main.js ringInk) -->
-    <div class="map-backdrop" aria-hidden="true"><div class="mb-sky"></div><svg class="mb-trail"><path/></svg></div>
+    <!-- behind the map, where a fling outruns its painting: its sky (main.js ringInk) -->
+    <div class="map-backdrop" aria-hidden="true"><div class="mb-sky"></div></div>
     <div class="map-scroll">
       <header class="map-head">
         <h1 class="sr-only">Strata</h1>
