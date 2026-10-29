@@ -44,24 +44,31 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const P = PALETTES[0];
   const TOP = 1;   // the top row of stones
   const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
-  // The logo's stone (Kellan, 2026-10-28): a 3x3x3 block turned corner-on, as the app
-  // icon shows it - three faces meeting in the middle. The glowing cube is its front
-  // corner, (1, 1, 1), turned to face us; the touch opens it, and the other 26 are
-  // chiselled away round it as blocks are in a level (Kellan, 2026-10-28).
-  const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.atan(1 / Math.SQRT2))
-    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4));
+  // The logo's stone (Kellan, 2026-10-28): a 3x3x3 block. The glowing cube is its
+  // near top corner, (1, 1, 1); the touch opens it, and the other 26 are cleared
+  // round it as blocks are in a level. How it is turned (?rot= to try others):
+  // iso, corner-on as the app icon shows it; game, a level's own three-quarter view
+  // from above; soft, turned a little less and seen a little lower
+  const TURNS = { iso: [Math.atan(1 / Math.SQRT2), -Math.PI / 4], game: [0.5, -Math.PI / 4], soft: [0.36, -0.6], front: [0.3, -0.38] };
+  const [pitch, yaw] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.soft;   // soft (Kellan, 2026-10-28: corner-on looked strange)
+  const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch)
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
   const stoneCells = [];
   for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
     if (x === 1 && y === 1 && z === 1) continue;   // the glowing one
     stoneCells.push(new THREE.Vector3(x - 1, y - 1, z - 1).applyQuaternion(ISO));   // from the glowing cube
   }
   {
-    // rest the stone's lowest point on the wall's top
+    // the block's centre on the screen's centre line (corner-on, that is the glowing
+    // cube; turned otherwise, the cube sits up and to one side of it), its lowest
+    // point resting on the wall's top
+    const centre = new THREE.Vector3(1, 1, 1).applyQuaternion(ISO);   // the glowing cube from the block's centre
     let low = 0;
-    for (let x = -0.5; x <= 2.5; x += 3) for (let y = -0.5; y <= 2.5; y += 3) for (let z = -0.5; z <= 2.5; z += 3)
-      low = Math.min(low, new THREE.Vector3(x - 2, y - 2, z - 2).applyQuaternion(ISO).y);
-    CUBE_AT.y = Math.max(CUBE_AT.y, TOP + 0.5 - low);
-    CAM_FROM = CUBE_AT.y;
+    for (let x = -1.5; x <= 1.5; x += 3) for (let y = -1.5; y <= 1.5; y += 3) for (let z = -1.5; z <= 1.5; z += 3)
+      low = Math.min(low, new THREE.Vector3(x, y, z).applyQuaternion(ISO).y);
+    const mid = Math.max(TOP + 1 - centre.y, TOP + 0.5 - low);   // the block's centre height
+    CUBE_AT.set(centre.x, mid + centre.y, 0);   // the block behind it (its light and halo sit just in front)
+    CAM_FROM = mid;   // the camera opens level with the block's centre
   }
   const rand = rng(11);
   const cells = [];
@@ -121,24 +128,46 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   if (withWall) scene.add(core);
 
   // ---------------------------------------------------------------- the glowing cube
+  // A stone with something inside it (Kellan, 2026-10-28: less glare, a ball of
+  // light in the middle that becomes the stream into the sky): a shell of warm,
+  // thin stone the light shows through - most at the middle of each face, a
+  // little at the seams - and in it the ball of light (orb, below)
   const glowMat = new THREE.ShaderMaterial({
     uniforms: { uB: { value: 1 } },
+    transparent: true, depthWrite: false,
     vertexShader: 'varying vec2 vUv; varying vec3 vN; void main(){ vUv = uv; vN = normal; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: /* glsl */`
       uniform float uB; varying vec2 vUv; varying vec3 vN;
       void main() {
         vec2 e = min(vUv, 1.0 - vUv); float k = min(e.x, e.y);
-        // light from inside: hottest at the seams, a warm stone skin across each face
-        float seam = 1.0 - smoothstep(0.0, 0.12, k);
-        vec3 skin = vec3(0.86, 0.62, 0.38) * (0.55 + 0.45 * uB);
-        vec3 hot = vec3(1.0, 0.86, 0.6) * (0.9 + 0.8 * uB);
-        gl_FragColor = vec4(mix(skin, hot, seam), 1.0);
+        float seam = 1.0 - smoothstep(0.0, 0.07, k);
+        float mid = 1.0 - smoothstep(0.08, 0.5, length(vUv - 0.5));   // where the light inside shows through
+        vec3 skin = vec3(0.5, 0.36, 0.26) * (0.75 + 0.25 * uB);
+        vec3 hot = vec3(1.0, 0.8, 0.55) * (0.55 + 0.35 * uB);
+        vec3 col = mix(skin, hot, seam * 0.8);
+        gl_FragColor = vec4(col, mix(0.92, 0.42, mid) * (1.0 - 0.3 * seam));
       }`,
   });
   const glowCube = new THREE.Mesh(box, glowMat);
   glowCube.position.copy(CUBE_AT);
   glowCube.quaternion.copy(ISO);
+  glowCube.renderOrder = 2;
   scene.add(glowCube);
+  // the ball of light inside: a hot core in a soft warm glow, breathing; when the
+  // stone breaks it gives itself away as the swarm, shrinking as the stream leaves it
+  const orb = new THREE.Sprite(new THREE.SpriteMaterial({ map: (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d'), grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(255,250,235,1)'); grd.addColorStop(0.18, 'rgba(255,226,160,0.95)');
+    grd.addColorStop(0.45, 'rgba(255,170,90,0.35)'); grd.addColorStop(1, 'rgba(255,140,60,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })(), blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, transparent: true }));
+  orb.position.copy(CUBE_AT);
+  orb.scale.setScalar(1.1);
+  orb.renderOrder = 1;
+  scene.add(orb);
+  let orbFrom = null;   // when the stone broke (real time): the ball streams away from then
   // the other 26 stones of the logo, lit by the glowing one as the wall is. The
   // touch clears all 27 as a row of zeros clears in a level (main.js clearRow,
   // Kellan 2026-10-28): the touched cube - the glowing one - breaks first, a
@@ -154,10 +183,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     order.forEach((f, j) => { f.at = delay; f.n = j + 1; gap = Math.max(0.045, gap * ROW_CLEAR_EASE); delay += gap; });
   }
   const sq = new THREE.Quaternion().copy(ISO), sp = new THREE.Vector3(), ss = new THREE.Vector3(), rd = new THREE.Vector3();
+  const rc = new THREE.Color(), RIPPLE_GLOW = new THREE.Color(1.25, 0.95, 0.7);
   function placeStones(k) {   // k: seconds since the touch (null: at rest)
     let any = false;
     stoneBreaks.forEach((f, i) => {
-      if (k === null) { f.done = false; stones.setColorAt(i, new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1)); }
+      if (k === null) { f.done = false; f.c = new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1); stones.setColorAt(i, f.c); }
       else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f.off, (f.n + 1) / (stoneCells.length + 1)); }
       sp.copy(CUBE_AT).add(f.off);
       let scale = f.done ? 0.0001 : 1;
@@ -166,6 +196,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         const dist = f.off.length(), front = dist - k / ROW_CLEAR_STEP, env = Math.exp(-front * front * 0.9) * Math.exp(-k * 1.7) * 1.3;
         sp.addScaledVector(rd.copy(f.off).normalize().multiplyScalar(0.6).add(new THREE.Vector3(0, 0.8, 0)), env * 0.16);
         scale *= 1 - 0.07 * env;
+        // and its light: a warm brightening that travels with the wave (cubes.js, ripple light)
+        stones.setColorAt(i, rc.copy(f.c).lerp(RIPPLE_GLOW, Math.min(1, env * 0.5)).multiplyScalar(1 + 0.9 * env));
       }
       ss.setScalar(scale);
       stones.setMatrixAt(i, m4.compose(sp, sq, ss));
@@ -416,7 +448,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
           vec2 q = (position.xy - uGlow.xy) / uGlow.zw; float c = uGlowK * exp(-dot(q,q) * 1.6);
           float wake = clamp((uTime - aOn) / 1.4, 0.0, 1.0); wake *= wake;
           float flash = 1.0 + 1.5 * wake * (1.0 - wake) * 4.0;               // a little glint as it wakes
-          vA = wake * flash * (0.45 + 0.7 * c + 0.4 * aSeed) * (0.8 + 0.2 * sin(uTime * (0.5 + aSeed) + aSeed * 50.0));
+          vA = wake * flash * (0.45 + 0.7 * c + 0.4 * aSeed) * (1.0 - 0.4 + 0.4 * sin(uTime * (0.9 + 1.6 * aSeed) + aSeed * 50.0) * sin(uTime * (0.37 + 0.5 * aSeed) + aSeed * 17.0) + 0.9 * pow(max(0.0, sin(uTime * (0.21 + 0.35 * aSeed) + aSeed * 91.0)), 40.0));
           gl_PointSize = (2.0 + 3.2 * aSeed * aSeed + 2.6 * c) * uPx * clamp(14.0 / -mv.z, 0.6, 1.2);
           gl_Position = projectionMatrix * mv; }`,
       fragmentShader: 'varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * 1.6); gl_FragColor = vec4(vec3(1.0, 0.95, 0.88) * a, a); }',
@@ -444,7 +476,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
     const m = new THREE.ShaderMaterial({
       uniforms: { uA: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: 'attribute float aSeed; uniform float uTime, uPx; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vA = (0.35 + 0.65 * aSeed) * (0.7 + 0.3 * sin(uTime * (0.4 + aSeed) + aSeed * 40.0)); gl_PointSize = (0.8 + 1.6 * aSeed * aSeed) * uPx; gl_Position = projectionMatrix * mv; }',
+      vertexShader: 'attribute float aSeed; uniform float uTime, uPx; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vA = (0.35 + 0.65 * aSeed) * (1.0 - 0.45 + 0.45 * sin(uTime * (0.9 + 1.6 * aSeed) + aSeed * 50.0) * sin(uTime * (0.37 + 0.5 * aSeed) + aSeed * 17.0) + 0.9 * pow(max(0.0, sin(uTime * (0.21 + 0.35 * aSeed) + aSeed * 91.0)), 40.0)); gl_PointSize = (0.8 + 1.6 * aSeed * aSeed) * uPx; gl_Position = projectionMatrix * mv; }',
       fragmentShader: 'uniform float uA; varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = exp(-dot(q,q) * 4.0) * vA * uA; gl_FragColor = vec4(vec3(0.85, 0.88, 1.0) * a, a); }',
     });
     const p = new THREE.Points(g, m); p.frustumCulled = false;
@@ -460,7 +492,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
     const m = new THREE.ShaderMaterial({
       uniforms: { uA: { value: 0 }, uTime: { value: 0 }, uPx: { value: DPR } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: 'attribute float aSeed; uniform float uTime, uPx; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vA = (0.3 + 0.7 * aSeed) * (0.75 + 0.25 * sin(uTime * (0.4 + aSeed) + aSeed * 40.0)); gl_PointSize = (1.3 + 2.6 * aSeed * aSeed) * uPx; gl_Position = projectionMatrix * mv; }',
+      vertexShader: 'attribute float aSeed; uniform float uTime, uPx; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vA = (0.3 + 0.7 * aSeed) * (1.0 - 0.45 + 0.45 * sin(uTime * (0.9 + 1.6 * aSeed) + aSeed * 50.0) * sin(uTime * (0.37 + 0.5 * aSeed) + aSeed * 17.0) + 0.9 * pow(max(0.0, sin(uTime * (0.21 + 0.35 * aSeed) + aSeed * 91.0)), 40.0)); gl_PointSize = (1.3 + 2.6 * aSeed * aSeed) * uPx; gl_Position = projectionMatrix * mv; }',
       fragmentShader: 'uniform float uA; varying float vA; void main(){ vec2 q = gl_PointCoord * 2.0 - 1.0; float a = min(1.0, exp(-dot(q,q) * 3.5) * vA * uA); gl_FragColor = vec4(vec3(0.95, 0.93, 1.0) * a, a); }',
     });
     const p = new THREE.Points(g, m); p.frustumCulled = false;
@@ -496,6 +528,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     // the break, as in a level: from the face toward the touch (the front)
     const t = realT, c = (h) => new THREE.Color(h);
     glowCube.visible = false;
+    orbFrom = realT;
     if (!quiet) onChisel?.(1 / 27);
     fragments.burst(CUBE_AT, CUBE_AT.clone().add(new THREE.Vector3(0, 0.15, 0.5)), t);
     shards.burst(CUBE_AT, t, [c(GLOW.top), c(GLOW.lit), c(GLOW.top)], 3, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
@@ -539,10 +572,12 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     const lit = smooth(0.4, 3.2, simT);   // the night comes up out of black
     if (tapAt === null) {
       glowMat.uniforms.uB.value = breath * lit;
-      halo.material.opacity = (0.45 + 0.4 * breath) * lit;
-      halo.scale.setScalar(4.2 + 1.2 * breath);
+      halo.material.opacity = (0.2 + 0.18 * breath) * lit;
+      halo.scale.setScalar(3.6 + 0.8 * breath);
+      orb.material.opacity = (0.75 + 0.25 * breath) * lit;
+      orb.scale.setScalar(1.0 + 0.2 * breath);
       wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(1.1);
-      wallMat.uniforms.uLi.value[0] = (1.4 + 0.9 * breath) * lit;
+      wallMat.uniforms.uLi.value[0] = (0.9 + 0.5 * breath) * lit;
       // the fingertip: once the night is up, if nothing has been touched (docs/flow-study.md F4)
       if (hint && simT - idleSince > 3.2) {
         v3.copy(CUBE_AT).project(camera);
@@ -556,10 +591,16 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
-      glowMat.uniforms.uB.value = 1 + 1.2 * flare;
-      halo.material.opacity = (0.85 + 0.6 * flare) * (1 - smooth(1.2, 3.5, s));
-      halo.scale.setScalar(5 + 3 * flare);
-      wallMat.uniforms.uLi.value[0] = (2.3 + 2.5 * flare) * (1 - smooth(1, 3.8, s));
+      glowMat.uniforms.uB.value = 1 + 0.6 * flare;
+      halo.material.opacity = (0.4 + 0.35 * flare) * (1 - smooth(1.2, 3.5, s));
+      halo.scale.setScalar(4 + 2 * flare);
+      wallMat.uniforms.uLi.value[0] = (1.4 + 1.4 * flare) * (1 - smooth(1, 3.8, s));
+      // the ball: a held breath as the stone opens, then it streams away as the swarm (release over 2.6 s), smaller and smaller
+      const gone = orbFrom === null ? 0 : smooth(0, 2.4, realT - orbFrom);
+      orb.material.opacity = (1 - gone) * (1 + 0.4 * flare);
+      orb.scale.setScalar((0.95 + 0.5 * flare) * (1 - 0.8 * gone));
+      orb.position.y = CUBE_AT.y + 0.35 * gone;
+      orb.visible = gone < 1;
       // the rising light lights the wall as it passes
       wallMat.uniforms.uL.value[1].copy(swarm.centre).setZ(swarm.centre.z + 1.5);
       wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);

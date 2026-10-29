@@ -57,7 +57,9 @@ const VERT = /* glsl */`
     // in flight: a quick shimmer with rare bright glints; settled: a slow star twinkle
     float shimmer = 0.62 + 0.38 * sin(uTime * mix(7.0, 13.0, aSeed.x) + ph);
     float glint = pow(max(0.0, sin(uTime * mix(1.1, 2.7, aSeed.x) + ph * 7.0)), 30.0) * 1.8;
-    float twinkle = (0.85 + 0.3 * sin(uTime * mix(0.5, 1.4, aSeed.x) + ph)) * 1.25;
+    // two slow waves beating against each other, and now and then a brief glint (Kellan, 2026-10-28: a bit more twinkle)
+    float twinkle = (0.78 + 0.34 * sin(uTime * mix(0.9, 2.2, aSeed.x) + ph) * sin(uTime * mix(0.3, 0.8, aSeed.x) + ph * 3.0)
+      + 0.8 * pow(max(0.0, sin(uTime * mix(0.2, 0.5, aSeed.x) + ph * 11.0)), 40.0)) * 1.25;
     // arriving: a soft glint as it lands in its place
     float land = 4.0 * aState.y * (1.0 - aState.y);
     float b = mix(shimmer + glint, twinkle, aState.y) + 1.6 * land * land;
