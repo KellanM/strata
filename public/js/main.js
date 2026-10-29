@@ -6,6 +6,7 @@ import { SHAPES, BONUS, CHAPTERS, TUTORIAL, TUTORIAL_V2, LESSON_EXTRAS, randomSh
 import { PALETTES, variant } from './palettes.js';
 import { scoreFor } from './score.js';
 import { sound } from './audio.js';
+import { renderThumb } from './thumbs.js';
 import { Finale } from './finale.js';
 import { Fragments } from './fragments.js';
 import { Cubes } from './cubes.js';
@@ -1426,10 +1427,57 @@ function goNext() {
   else if (idx >= 0) {
     const next = list[(idx + 1) % list.length];
     // the last stone of a chapter: the first time, go to the map to watch the next one's cloud part
-    if (next.shape.chapter !== game.shape.chapter && !unveiled(next.shape.chapter)) { $('#actions').classList.remove('show'); resultToMap(); }
+    if (next.shape.chapter !== game.shape.chapter && !unveiled(next.shape.chapter)) { $('#actions').classList.remove('show'); closeWorld(game, resultToMap); }
     else washInto(next.palette, () => startPuzzle(next));
   }
   else startRandom(game.shape.dims[0]);
+}
+
+// A world closes (Kellan, 2026-10-29; experience-study H4): the first time every stone of a world is
+// open and the next world's cloud is still to part, its finds gather in a ring round its name, on its
+// own sky, with its line - about 3 s, a tap to go on, the bed held low - and then the map, where the
+// next cloud parts. Once per world.
+let worldClosing = false;
+function closeWorld(g, then) {
+  const ch = !g.entry.lesson && !g.entry.bonus && CHAPTERS.find((c) => c.name === g.shape.chapter);
+  const list = puzzleList(), mine = ch ? list.filter((e) => e.shape.chapter === ch.name) : [];
+  const later = list.find((e, i) => i > list.findIndex((o) => o.shape.id === mine.at(-1)?.shape.id));
+  const closed = JSON.parse(localStorage.getItem('strata.worlds.closed') || '[]');
+  if (worldClosing || !ch || !mine.every((e) => solvedStore[e.shape.id]) || closed.includes(ch.name) || (later && unveiled(later.shape.chapter))) { then(); return; }
+  worldClosing = true;
+  localStorage.setItem('strata.worlds.closed', JSON.stringify([...closed, ch.name]));
+  const hexOf = (h) => '#' + new THREE.Color(h).getHexString();
+  const el = document.createElement('div');
+  el.id = 'world-close';
+  el.setAttribute('role', 'status');
+  el.style.background = `linear-gradient(180deg, ${hexOf(g.palette.skyTop)}, ${hexOf(g.palette.skyBottom)})`;
+  // the ring: wide enough to clear the name, a little taller than wide, from the top round
+  const W = innerWidth, n = mine.length, rx = Math.min(W / 2 - 36, 168), ry = Math.min(innerHeight * 0.3, 1.32 * rx);
+  el.innerHTML = '<div class="ring" aria-hidden="true">' + mine.map((e, k) => {
+    const a = -Math.PI / 2 + (2 * Math.PI * k) / n;
+    return `<img alt="" style="--x:${(Math.cos(a) * rx).toFixed(0)}px; --y:${(Math.sin(a) * ry).toFixed(0)}px; --k:${k}">`;
+  }).join('') + '</div><p class="numeral"></p><h2 class="cname"></h2><p class="cline"></p><p class="all">every stone opened</p>';
+  el.querySelector('.numeral').textContent = ch.numeral;
+  el.querySelector('.cname').textContent = ch.name;
+  el.querySelector('.cline').textContent = ch.line;
+  el.style.setProperty('--n', n);
+  const imgs = el.querySelectorAll('.ring img');
+  mine.forEach((e, k) => Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { imgs[k].src = url; }));
+  document.body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  sound.hush(true);
+  let done = false;
+  const go = () => {
+    if (done) return;
+    done = true; clearTimeout(timer); worldClosing = false;
+    sound.hush(false);
+    then();
+    el.classList.remove('in');
+    setTimeout(() => el.remove(), reduceMotion ? 0 : 700);
+  };
+  // (its finds take about 1.5 s to gather; then some 3 s to look)
+  const timer = setTimeout(go, (reduceMotion ? 3200 : 1500 + 3200) / motionRate);
+  el.addEventListener('click', go);
 }
 
 function unveiled(chapter) {
@@ -1457,7 +1505,7 @@ function washInto(palette, start) {
   });
 }
 $('#win-menu').addEventListener('click', () => { clearResult(); show('#win', false); resultToMap(); });
-$('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); resultToMap(); });
+$('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); closeWorld(game, resultToMap); });
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
 $('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });

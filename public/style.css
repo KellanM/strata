@@ -715,6 +715,31 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
   #chapter-card.show .numeral, #chapter-card.show .cname, #chapter-card.show .cline { animation: none; opacity: 1; }
 }
 
+/* ---------- a world closes: its finds ringed round its name (main.js closeWorld) ---------- */
+#world-close {
+  position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; color: var(--ink); opacity: 0; transition: opacity .7s ease; cursor: pointer;
+}
+#world-close.in { opacity: 1; }
+#world-close .ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+#world-close .ring img {
+  position: absolute; width: 52px; height: 52px; left: -26px; top: -26px; opacity: 0;
+  transform: translate(calc(var(--x) * .9), calc(var(--y) * .9)) scale(.8);
+  filter: drop-shadow(0 4px 8px rgba(30, 30, 50, .16));
+  transition: opacity .9s ease, transform 1.2s var(--ease-out); transition-delay: calc(.35s + var(--k) * 1.1s / var(--n));
+}
+#world-close.in .ring img { opacity: 1; transform: translate(var(--x), var(--y)); }
+#world-close p, #world-close h2 { position: relative; margin: 0; opacity: 0; transition: opacity 1s ease .2s; }
+#world-close.in p, #world-close.in h2 { opacity: 1; }
+#world-close .numeral { font-size: 13px; letter-spacing: .5em; padding-left: .5em; opacity: 0; }
+#world-close.in .numeral { opacity: .7; }
+#world-close .cname { margin: 8px 0 10px; font-size: clamp(20px, 6vw, 26px); font-weight: 500; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; white-space: nowrap; }
+#world-close .cline { font-size: 15px; max-width: min(250px, calc(100% - 140px)); line-height: 1.45; }
+#world-close.in .cline { opacity: .85; }
+#world-close .all { margin-top: 26px; font-size: 11px; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+#world-close.in .all { opacity: .62; transition-delay: 1.4s; }
+@media (prefers-reduced-motion: reduce) { #world-close, #world-close * { transition: none !important; } }
+
 /* longer names (Paper Lantern, Crescent Moon) step down so they stay on one line */
 #win-title .name.long { font-size: clamp(20px, 6vw, 34px); letter-spacing: .2em; padding-left: .2em; }
 

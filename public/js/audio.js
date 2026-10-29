@@ -169,6 +169,15 @@ class Sound {
     g.setTargetAtTime(1, t + 0.05, release / 3);
   }
 
+  // a world closing: the bed held low while its finds gather (on), then back slowly (off)
+  hush(on) {
+    if (!this.ctx) return;
+    const g = this.duckGain.gain, t = this.now;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.setTargetAtTime(on ? Math.pow(10, -14 / 20) : 1, t, on ? 0.25 : 0.6);
+  }
+
   // ------------------------------------------------------------ the bed
 
   startBed() {
