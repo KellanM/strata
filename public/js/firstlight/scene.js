@@ -44,31 +44,30 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const P = PALETTES[0];
   const TOP = 1;   // the top row of stones
   const CUBE_AT = new THREE.Vector3(0, TOP + 1, 0);
-  // The logo's stone (Kellan, 2026-10-28): a 3x3x3 block. The glowing cube is its
-  // near top corner, (1, 1, 1); the touch opens it, and the other 26 are cleared
-  // round it as blocks are in a level. How it is turned (?rot= to try others):
-  // iso, corner-on as the app icon shows it; game, a level's own three-quarter view
-  // from above; soft, turned a little less and seen a little lower
+  // The logo's stone (Kellan, 2026-10-28): a geode. A 3x3x3 block of stone with
+  // its middle cube missing and a light in the hollow, shining out through the
+  // cracks between the 26 stones. A touch on any of them releases the light - it
+  // becomes the swarm, the stars and the name - and clears the stones as a row of
+  // zeros clears in a level, from the touched one outward. How it is turned
+  // (?rot= to try others): iso, corner-on as the app icon shows it; game, a
+  // level's own three-quarter view from above; soft, turned a little less and
+  // seen a little lower; front, nearly face on
   const TURNS = { iso: [Math.atan(1 / Math.SQRT2), -Math.PI / 4], game: [0.5, -Math.PI / 4], soft: [0.36, -0.6], front: [0.3, -0.38] };
   const [pitch, yaw] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.soft;   // soft (Kellan, 2026-10-28: corner-on looked strange)
   const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch)
     .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
-  const stoneCells = [];
+  const stoneCells = [];   // each stone's place from the hollow (CUBE_AT), turned
   for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
-    if (x === 1 && y === 1 && z === 1) continue;   // the glowing one
-    stoneCells.push(new THREE.Vector3(x - 1, y - 1, z - 1).applyQuaternion(ISO));   // from the glowing cube
+    if (!x && !y && !z) continue;   // the hollow
+    stoneCells.push(new THREE.Vector3(x, y, z).applyQuaternion(ISO));
   }
   {
-    // the block's centre on the screen's centre line (corner-on, that is the glowing
-    // cube; turned otherwise, the cube sits up and to one side of it), its lowest
-    // point resting on the wall's top
-    const centre = new THREE.Vector3(1, 1, 1).applyQuaternion(ISO);   // the glowing cube from the block's centre
+    // the block on the screen's centre line, its lowest point resting on the wall's top
     let low = 0;
     for (let x = -1.5; x <= 1.5; x += 3) for (let y = -1.5; y <= 1.5; y += 3) for (let z = -1.5; z <= 1.5; z += 3)
       low = Math.min(low, new THREE.Vector3(x, y, z).applyQuaternion(ISO).y);
-    const mid = Math.max(TOP + 1 - centre.y, TOP + 0.5 - low);   // the block's centre height
-    CUBE_AT.set(centre.x, mid + centre.y, 0);   // the block behind it (its light and halo sit just in front)
-    CAM_FROM = mid;   // the camera opens level with the block's centre
+    CUBE_AT.set(0, Math.max(TOP + 1, TOP + 0.5 - low), 0);   // the hollow, where the light is
+    CAM_FROM = CUBE_AT.y;   // the camera opens level with it
   }
   const rand = rng(11);
   const cells = [];
@@ -127,34 +126,15 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   core.position.set(0, TOP - 11.5, -0.5);
   if (withWall) scene.add(core);
 
-  // ---------------------------------------------------------------- the glowing cube
-  // A stone with something inside it (Kellan, 2026-10-28: less glare, a ball of
-  // light in the middle that becomes the stream into the sky): a shell of warm,
-  // thin stone the light shows through - most at the middle of each face, a
-  // little at the seams - and in it the ball of light (orb, below)
-  const glowMat = new THREE.ShaderMaterial({
-    uniforms: { uB: { value: 1 } },
-    transparent: true, depthWrite: false,
-    vertexShader: 'varying vec2 vUv; varying vec3 vN; void main(){ vUv = uv; vN = normal; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: /* glsl */`
-      uniform float uB; varying vec2 vUv; varying vec3 vN;
-      void main() {
-        vec2 e = min(vUv, 1.0 - vUv); float k = min(e.x, e.y);
-        float seam = 1.0 - smoothstep(0.0, 0.07, k);
-        float mid = 1.0 - smoothstep(0.08, 0.5, length(vUv - 0.5));   // where the light inside shows through
-        vec3 skin = vec3(0.5, 0.36, 0.26) * (0.75 + 0.25 * uB);
-        vec3 hot = vec3(1.0, 0.8, 0.55) * (0.55 + 0.35 * uB);
-        vec3 col = mix(skin, hot, seam * 0.8);
-        gl_FragColor = vec4(col, mix(0.92, 0.42, mid) * (1.0 - 0.3 * seam));
-      }`,
-  });
-  const glowCube = new THREE.Mesh(box, glowMat);
-  glowCube.position.copy(CUBE_AT);
-  glowCube.quaternion.copy(ISO);
-  glowCube.renderOrder = 2;
-  scene.add(glowCube);
-  // the ball of light inside: a hot core in a soft warm glow, breathing; when the
-  // stone breaks it gives itself away as the swarm, shrinking as the stream leaves it
+  // ---------------------------------------------------------------- the geode
+  // The light in the hollow: a core of light filling the block's inside, seen only
+  // where the cracks between the stones let it out (the stones are set a little
+  // apart), and a ball of light at its heart that the touch releases
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xffc27a });
+  const hollow = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.8, 2.8), coreMat);
+  hollow.position.copy(CUBE_AT); hollow.quaternion.copy(ISO);
+  scene.add(hollow);
+  const CORE = new THREE.Color(0xffc27a), CORE_HOT = new THREE.Color(0xfff0d2);
   const orb = new THREE.Sprite(new THREE.SpriteMaterial({ map: (() => {
     const c = document.createElement('canvas'); c.width = c.height = 128;
     const g = c.getContext('2d'), grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
@@ -162,39 +142,42 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     grd.addColorStop(0.45, 'rgba(255,170,90,0.35)'); grd.addColorStop(1, 'rgba(255,140,60,0)');
     g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(c);
-  })(), blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, transparent: true }));
+  })(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
   orb.position.copy(CUBE_AT);
-  orb.scale.setScalar(1.1);
-  orb.renderOrder = 1;
-  scene.add(orb);
-  let orbFrom = null;   // when the stone broke (real time): the ball streams away from then
-  // the other 26 stones of the logo, lit by the glowing one as the wall is. The
-  // touch clears all 27 as a row of zeros clears in a level (main.js clearRow,
-  // Kellan 2026-10-28): the touched cube - the glowing one - breaks first, a
-  // ripple runs out through the block ahead of the cascade, and the rest break
-  // one after another, nearest first, the run gathering pace
+  orb.scale.setScalar(1.6);
+  scene.add(orb);   // hidden in the stone until the stones around it go
+  let orbFrom = null;   // when the light was released (real time): it streams away from then
+  // The 26 stones, lit as the wall is. The touch clears them as a row of zeros
+  // clears in a level (main.js clearRow): the touched stone first, a ripple
+  // running out through the block ahead of the cascade, the rest one after
+  // another, nearest the touch first, the run gathering pace
   const stoneRand = rng(23);
   const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
-  const ROW_CLEAR_STEP = 0.085, ROW_CLEAR_EASE = 0.93;   // as main.js: the first gap, and how each later one shortens
-  const stoneBreaks = stoneCells.map((off) => ({ off, done: false }));
-  {
-    const order = [...stoneBreaks].sort((a, b) => a.off.length() - b.off.length() || stoneRand() - 0.5);
-    let delay = ROW_CLEAR_STEP, gap = ROW_CLEAR_STEP;   // the glowing cube is the first, at the touch
-    order.forEach((f, j) => { f.at = delay; f.n = j + 1; gap = Math.max(0.045, gap * ROW_CLEAR_EASE); delay += gap; });
+  const GAP = 0.94;   // each stone's size: the cracks between them let the light out
+  const ROW_CLEAR_STEP = 0.05, ROW_CLEAR_EASE = 0.9;   // a quicker run than a level's (Kellan, 2026-10-28)
+  const stoneBreaks = stoneCells.map((off) => ({ off, done: false, at: 0, n: 0 }));
+  let touched = null;   // the stone the touch landed on
+  function schedule(first) {
+    touched = stoneBreaks[first];
+    const order = [...stoneBreaks].sort((a, b) => a.off.distanceTo(touched.off) - b.off.distanceTo(touched.off) || stoneRand() - 0.5);
+    let delay = 0, gap = ROW_CLEAR_STEP;
+    order.forEach((f, j) => { f.at = delay; f.n = j + 1; if (j > 0) gap = Math.max(0.028, gap * ROW_CLEAR_EASE); delay += gap; });
   }
   const sq = new THREE.Quaternion().copy(ISO), sp = new THREE.Vector3(), ss = new THREE.Vector3(), rd = new THREE.Vector3();
-  const rc = new THREE.Color(), RIPPLE_GLOW = new THREE.Color(1.25, 0.95, 0.7);
+  const rc = new THREE.Color(), RIPPLE_GLOW = new THREE.Color(1.25, 0.95, 0.7), UP = new THREE.Vector3(0, 0.8, 0);
   function placeStones(k) {   // k: seconds since the touch (null: at rest)
     let any = false;
     stoneBreaks.forEach((f, i) => {
       if (k === null) { f.done = false; f.c = new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1); stones.setColorAt(i, f.c); }
-      else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f.off, (f.n + 1) / (stoneCells.length + 1)); }
+      else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f, f.n / stoneCells.length); }
       sp.copy(CUBE_AT).add(f.off);
-      let scale = f.done ? 0.0001 : 1;
-      // the ripple running ahead of the cascade (cubes.js): out from the touched cube, and a little up
-      if (k !== null && !f.done) {
-        const dist = f.off.length(), front = dist - k / ROW_CLEAR_STEP, env = Math.exp(-front * front * 0.9) * Math.exp(-k * 1.7) * 1.3;
-        sp.addScaledVector(rd.copy(f.off).normalize().multiplyScalar(0.6).add(new THREE.Vector3(0, 0.8, 0)), env * 0.16);
+      let scale = f.done ? 0.0001 : GAP;
+      // the ripple running ahead of the cascade (cubes.js): out from the touched stone, and a little up
+      if (k !== null && !f.done && touched) {
+        const d = rd.copy(f.off).sub(touched.off), dist = d.length();
+        const front = dist - k / ROW_CLEAR_STEP, env = Math.exp(-front * front * 0.9) * Math.exp(-k * 1.7) * 1.3;
+        if (dist > 0.01) d.normalize();
+        sp.addScaledVector(d.multiplyScalar(0.6).add(UP), env * 0.16);
         scale *= 1 - 0.07 * env;
         // and its light: a warm brightening that travels with the wave (cubes.js, ripple light)
         stones.setColorAt(i, rc.copy(f.c).lerp(RIPPLE_GLOW, Math.min(1, env * 0.5)).multiplyScalar(1 + 0.9 * env));
@@ -209,7 +192,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   }
   placeStones(null);
   scene.add(stones);
-  // its halo
+  // a soft glow round the block, from the light behind its cracks
   const haloTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 128;
     const g = c.getContext('2d'), grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
@@ -218,30 +201,26 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     return new THREE.CanvasTexture(c);
   })();
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-  halo.position.copy(CUBE_AT).setZ(0.6);
-  halo.scale.setScalar(5);
+  halo.position.copy(CUBE_AT).setZ(CUBE_AT.z - 2.2);   // behind the block: it shows round its edges
+  halo.scale.setScalar(6);
   scene.add(halo);
-  // The stone breaks as a block does in a level (main.js act): it comes apart
-  // into eight pieces that shrink away from the touch, a few chips fly, and its
-  // sparks splash out and rise - the same systems, in the glowing stone's
-  // colours. Then its light leaves as the swarm.
+  // A stone breaks as a block does in a level (main.js act): it comes apart into
+  // eight pieces on the block's lattice that shrink away from the touched stone's
+  // side, a few chips fly, and its sparks splash out and rise
   const GLOW = { top: 0xfff2cc, lit: 0xffd590, shade: 0xe9a560, under: 0xb8743c };
-  const fragments = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() });
-  fragments.setPalette(GLOW);
   const shards = new Shards(), ash = new Ash();
   ash.setPalette({ skyTop: 0x121731, skyBottom: 0x2a2f5c, shade: GLOW.shade, motes: 0xfff1d6 });
-  // the 26 stones' pieces, in their own colours as the glowing stone lights them at night
-  const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() });
+  const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() }, 8 * 60, ISO);
   const warm = (h, k) => new THREE.Color(h).multiply(new THREE.Color(1, 0.78, 0.56)).multiplyScalar(k).getHex();
   const STONE = { top: warm(P.top, 0.62), lit: warm(P.lit, 0.55), shade: warm(P.shade, 0.4), under: warm(P.under, 0.3) };
   stoneFrags.setPalette(STONE);
-  scene.add(fragments.mesh, stoneFrags.mesh, shards.points, ash.points);
-  // a stone chiselled away, as main.js act does it: 8 pieces shrinking away from the
-  // touch's side, a few chips, and a small puff of sparks out of its open face
-  function breakStone(at, off, progress) {
-    const t = realT, c = (h) => new THREE.Color(h), out = off.clone().normalize();
+  scene.add(stoneFrags.mesh, shards.points, ash.points);
+  function breakStone(at, f, progress) {
+    const t = realT, c = (h) => new THREE.Color(h), out = f.off.clone().normalize();
     if (!quiet) onChisel?.(progress);
-    stoneFrags.burst(at, at.clone().addScaledVector(out, 0.5), t);
+    // the shrink spreads from the side toward the touched stone (the touched one: from its face toward us)
+    const toward = f === touched ? new THREE.Vector3(0, 0.2, 1) : touched.off.clone().sub(f.off);
+    stoneFrags.burst(at, at.clone().addScaledVector(toward.normalize(), 0.5), t);
     shards.burst(at, t, [c(STONE.top), c(STONE.lit), c(STONE.top)], 2, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
     if (!quiet) ash.burst(at, 9, out.add(new THREE.Vector3(0, 0.3, 0.6)).normalize(), c(GLOW.shade));
   }
@@ -516,24 +495,20 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   let quiet = false;   // finish() runs the clock forward in silence
   swarm.onSettle = () => { if (!quiet) sound.star(); };
 
-  function open() {
+  function open(first = nearestStone()) {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
-    breakAt = realT;   // the touched cube breaks first; the other 26 follow it (placeStones)
+    schedule(first);   // the touched stone breaks first, the rest follow it (placeStones)
+    breakAt = realT + 0.06;   // and the light in the hollow is released
     hint?.classList.remove('show');
     if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
   let breakAt = null;
   function breakGlow() {
-    // the break, as in a level: from the face toward the touch (the front)
-    const t = realT, c = (h) => new THREE.Color(h);
-    glowCube.visible = false;
+    // the light leaves the hollow as the swarm, a puff of its sparks with it
+    const c = (h) => new THREE.Color(h);
     orbFrom = realT;
-    if (!quiet) onChisel?.(1 / 27);
-    fragments.burst(CUBE_AT, CUBE_AT.clone().add(new THREE.Vector3(0, 0.15, 0.5)), t);
-    shards.burst(CUBE_AT, t, [c(GLOW.top), c(GLOW.lit), c(GLOW.top)], 3, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
-    if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.25, 1).normalize(), c(GLOW.lit));
-    // and the light it held leaves as the swarm
+    if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.6, 0.8).normalize(), c(GLOW.lit));
     swarm.release(simT + 0.12);
   }
 
@@ -571,13 +546,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     const breath = 0.5 - 0.5 * Math.cos(simT * Math.PI * 2 / 5.5);
     const lit = smooth(0.4, 3.2, simT);   // the night comes up out of black
     if (tapAt === null) {
-      glowMat.uniforms.uB.value = breath * lit;
-      halo.material.opacity = (0.2 + 0.18 * breath) * lit;
-      halo.scale.setScalar(3.6 + 0.8 * breath);
-      orb.material.opacity = (0.75 + 0.25 * breath) * lit;
-      orb.scale.setScalar(1.0 + 0.2 * breath);
-      wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(1.1);
-      wallMat.uniforms.uLi.value[0] = (0.9 + 0.5 * breath) * lit;
+      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.35 * breath).multiplyScalar(lit);
+      halo.material.opacity = (0.16 + 0.14 * breath) * lit;
+      halo.scale.setScalar(5.6 + 0.8 * breath);
+      wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(CUBE_AT.z + 1.8);   // the light out of the cracks, on the stones' faces
+      wallMat.uniforms.uLi.value[0] = (0.55 + 0.35 * breath) * lit;
       // the fingertip: once the night is up, if nothing has been touched (docs/flow-study.md F4)
       if (hint && simT - idleSince > 3.2) {
         v3.copy(CUBE_AT).project(camera);
@@ -591,14 +564,15 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
-      glowMat.uniforms.uB.value = 1 + 0.6 * flare;
-      halo.material.opacity = (0.4 + 0.35 * flare) * (1 - smooth(1.2, 3.5, s));
-      halo.scale.setScalar(4 + 2 * flare);
-      wallMat.uniforms.uLi.value[0] = (1.4 + 1.4 * flare) * (1 - smooth(1, 3.8, s));
+      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.6 + 0.4 * flare);
+      hollow.visible = orbFrom === null || realT - orbFrom < 0.25;   // the hollow's light has gone into the ball
+      halo.material.opacity = (0.3 + 0.35 * flare) * (1 - smooth(1.2, 3.5, s));
+      halo.scale.setScalar(5.6 + 2 * flare);
+      wallMat.uniforms.uLi.value[0] = (1 + 1.4 * flare) * (1 - smooth(1, 3.8, s));
       // the ball: a held breath as the stone opens, then it streams away as the swarm (release over 2.6 s), smaller and smaller
       const gone = orbFrom === null ? 0 : smooth(0, 2.4, realT - orbFrom);
       orb.material.opacity = (1 - gone) * (1 + 0.4 * flare);
-      orb.scale.setScalar((0.95 + 0.5 * flare) * (1 - 0.8 * gone));
+      orb.scale.setScalar((1.4 + 0.6 * flare) * (1 - 0.8 * gone));
       orb.position.y = CUBE_AT.y + 0.35 * gone;
       orb.visible = gone < 1;
       // the rising light lights the wall as it passes
@@ -606,11 +580,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       wallMat.uniforms.uLi.value[1] = 3.2 * swarm.flying * smooth(0.3, 1.2, s);
       swarm.step(simT, sdt);
       // the break's own pieces keep real time, as in a level
-      fragments.uniforms.uTime.value = stoneFrags.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
+      stoneFrags.uniforms.uTime.value = shards.uniforms.uTime.value = realT;
       shards.uniforms.uUnitPx.value = ash.uniforms.uUnitPx.value = unitPx;
       ash.step(dt, realT);
-      fragments.uniforms.uSparks.value = stoneFrags.uniforms.uSparks.value = ash.lights;   // the sparks light the pieces
-      fragments.uniforms.uSparkCol.value = stoneFrags.uniforms.uSparkCol.value = ash.lightColor;
+      stoneFrags.uniforms.uSparks.value = ash.lights;   // the sparks light the pieces
+      stoneFrags.uniforms.uSparkCol.value = ash.lightColor;
       swarm.material.uniforms.uTime.value = realT;
       far.material.uniforms.uA.value = smooth(9, 14, s);
       spray.material.uniforms.uA.value = 1.6 * smooth(5, 12, s);
@@ -663,13 +637,25 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     idleSince = simT;
     if (tapAt !== null) return false;
     sound.unlock();
-    // the cube is the thing to touch; a touch anywhere near it opens it
+    // the stone is the thing to touch; a touch on it, or near it, opens it from the stone under the finger
     v3.copy(CUBE_AT).project(camera);
     const sx = (v3.x * 0.5 + 0.5) * window.innerWidth, sy = (-v3.y * 0.5 + 0.5) * window.innerHeight;
-    if (Math.hypot(x - sx, y - sy) < Math.max(70, window.innerWidth * 0.16)) { open(); return true; }
+    if (Math.hypot(x - sx, y - sy) < Math.max(90, window.innerWidth * 0.22)) { open(stoneAt(x, y)); return true; }
     hint?.classList.add('show');   // a touch elsewhere: show where
     return false;
   }
+  // the stone under a point on the screen: the nearest to the camera of those the point is on
+  function stoneAt(x, y) {
+    let best = nearestStone(), score = Infinity;
+    const r = unitPx / DPR * 0.55;   // a stone's half-width on screen, in css px
+    stoneBreaks.forEach((f, i) => {
+      v3.copy(CUBE_AT).add(f.off).project(camera);
+      const d = Math.hypot((v3.x * 0.5 + 0.5) * window.innerWidth - x, (-v3.y * 0.5 + 0.5) * window.innerHeight - y);
+      if (d < r && v3.z < score) { score = v3.z; best = i; }
+    });
+    return best;
+  }
+  function nearestStone() { let best = 0; stoneBreaks.forEach((f, i) => { if (f.off.z > stoneBreaks[best].off.z) best = i; }); return best; }
   // the finished sky at once: the clock run forward (the sky is a function of time)
   function finish() {
     if (tapAt !== null && simT - tapAt > 15) return;

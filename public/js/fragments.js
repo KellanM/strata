@@ -19,6 +19,7 @@ const vertexShader = /* glsl */ `
   attribute float aEnd;       // when the whole break is over
 
   uniform float uTime;
+  uniform mat3 uRot;          // the block's turn (the title's turned stone; identity in a level)
   varying vec3 vN;
   varying vec3 vWP;
   varying float vHeight;
@@ -34,9 +35,9 @@ const vertexShader = /* glsl */ `
     float e = 1.0 - pow(1.0 - k, 3.0);              // ease out: shrinks fast, then gently vanishes
     float size = ${(PIECE * 0.82).toFixed(4)} * (1.0 - e);   // starts a little smaller: the split shows
     if (size <= 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
-    vN = normal;
+    vN = uRot * normal;
     vHeight = aOrigin.y;
-    vWP = aOrigin + position * size;
+    vWP = aOrigin + uRot * (position * size);
     gl_Position = projectionMatrix * viewMatrix * vec4(vWP, 1.0);
   }
 `;
@@ -68,8 +69,10 @@ const fragmentShader = /* glsl */ `
 `;
 
 export class Fragments {
-  constructor(lightUniform, capacity = 8 * 60) {
+  // rotation: a quaternion for a turned block - its pieces sit on its lattice (title)
+  constructor(lightUniform, capacity = 8 * 60, rotation = null) {
     this.capacity = capacity;
+    this.rotation = rotation;
     this.next = 0;
     const box = new THREE.BoxGeometry(1, 1, 1);
     const geo = new THREE.InstancedBufferGeometry();
@@ -90,6 +93,7 @@ export class Fragments {
     geo.instanceCount = capacity;
     this.uniforms = {
       uTime: { value: 0 }, uLight: lightUniform,
+      uRot: { value: new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(rotation ?? new THREE.Quaternion())) },
       cTop: { value: new THREE.Color() }, cLit: { value: new THREE.Color() },
       cShade: { value: new THREE.Color() }, cUnder: { value: new THREE.Color() },
       uSparks: { value: Array.from({ length: SPARKS }, () => new THREE.Vector4(0, 0, 0, 0)) },
@@ -111,19 +115,22 @@ export class Fragments {
   burst(center, from, time) {
     const piece = new THREE.Vector3(), dir = new THREE.Vector3(), axis = new THREE.Vector3();
     const near = [], spots = [];
+    const lat = new THREE.Vector3();
     for (const x of [-0.5, 0.5]) for (const y of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) {
-      piece.set(center.x + x * PIECE, center.y + y * PIECE, center.z + z * PIECE);
-      spots.push([x, y, z]);
+      lat.set(x * PIECE, y * PIECE, z * PIECE);
+      if (this.rotation) lat.applyQuaternion(this.rotation);
+      piece.copy(center).add(lat);
+      spots.push(lat.clone());
       near.push(piece.distanceTo(from));
     }
     const lo = Math.min(...near), hi = Math.max(...near);
-    spots.forEach(([x, y, z], n) => {
+    spots.forEach((lat, n) => {
       const i = this.next++ % this.capacity;
       // nearest the touch goes first, the far side last
       const delay = MAX_DELAY * (hi > lo ? (near[n] - lo) / (hi - lo) : 0);
       dir.set(0, 0, 0);
       axis.set(0, 1, 0);
-      this.aOrigin.setXYZ(i, center.x + x * PIECE, center.y + y * PIECE, center.z + z * PIECE);
+      this.aOrigin.setXYZ(i, center.x + lat.x, center.y + lat.y, center.z + lat.z);
       this.aDir.setXYZ(i, dir.x, dir.y, dir.z);
       this.aSpin.setXYZW(i, axis.x, axis.y, axis.z, (Math.random() * 1.2 + 0.4) * (Math.random() < 0.5 ? -1 : 1));
       this.aStart.setX(i, time + MAX_DELAY + delay - MAX_DELAY);
