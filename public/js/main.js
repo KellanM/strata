@@ -2133,7 +2133,7 @@ $('#dev-ads-reset').addEventListener('click', () => {
 });
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
 $('#dev-reset').addEventListener('click', () => {
-  if (!confirm('Reset all progress? Stars, scores and the journal will be cleared.')) return;
+  if (!confirm('Reset all progress? Stars, scores and the collection will be cleared.')) return;
   for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && k !== 'strata.sfx' && k !== 'strata.music' && k !== 'strata.haptics') localStorage.removeItem(k);
   location.reload();
 });
