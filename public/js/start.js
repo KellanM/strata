@@ -11,7 +11,7 @@ await restoreSaves();
 // (Not at all on a quick relaunch, whose card is plain black; and a hidden tab gets no frames.)
 const splash = document.getElementById('splash');
 if (splash && !splash.classList.contains('quick') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const draw = splash.querySelector('.chalk .draw');
+  const draw = splash.querySelector('.chalk .slaps [data-last]');   // the last splotch to land
   await Promise.race([new Promise((r) => draw?.addEventListener('animationend', r, { once: true })), new Promise((r) => setTimeout(r, 900))]);
 }
 await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 100))]);
