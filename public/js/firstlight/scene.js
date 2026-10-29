@@ -154,7 +154,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   // another, nearest the touch first, the run gathering pace
   const stoneRand = rng(23);
   const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
-  const GAP = 0.94;   // each stone's size: the cracks between them let the light out
+  const GAP = 0.93;   // each stone's size: the cracks between them let the light out
   const ROW_CLEAR_STEP = 0.05, ROW_CLEAR_EASE = 0.9;   // a quicker run than a level's (Kellan, 2026-10-28)
   // off: the stone's place from the hollow as the block is turned now
   const stoneBreaks = stoneCells.map((cell) => ({ cell, off: cell.clone().applyQuaternion(ISO), done: false, at: 0, n: 0,
@@ -653,12 +653,13 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         const keep = Math.pow(1 - 0.08, dt * 60); turn.vy *= keep; turn.vp *= keep;
         setTurn();
       }
-      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.35 * breath).multiplyScalar(lit);
-      rayK = (0.75 + 0.35 * breath) * lit;
-      halo.material.opacity = (0.16 + 0.14 * breath) * lit;
+      // more light from the hollow (Kellan, 2026-10-29): hotter through the cracks, stronger rays and glow - steady, breathing, never a flare
+      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.55 + 0.3 * breath).multiplyScalar(lit);
+      rayK = (1.0 + 0.3 * breath) * lit;
+      halo.material.opacity = (0.24 + 0.12 * breath) * lit;
       halo.scale.setScalar(5.6 + 0.8 * breath);
       wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(CUBE_AT.z + 1.8);   // the light out of the cracks, on the stones' faces
-      wallMat.uniforms.uLi.value[0] = (0.55 + 0.35 * breath) * lit;
+      wallMat.uniforms.uLi.value[0] = (0.75 + 0.3 * breath) * lit;
       // the fingertip: once the night is up, if nothing has been touched (docs/flow-study.md F4)
       if (hint && simT - idleSince > 3.2) {
         v3.copy(CUBE_AT).project(camera);
@@ -673,7 +674,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       // the stone opens and gives its light away - no burst of brightness first
       // (Kellan, 2026-10-28: the flash before the break was too much)
       coreMat.color.copy(CORE).lerp(CORE_HOT, 0.2);
-      rayK = 0.6 * (1 - smooth(0, 0.2, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
+      rayK = 0.9 * (1 - smooth(0, 0.2, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
       hollow.visible = false;   // the hollow's light has gone into the ball at the touch (lingering, its flat face showed through the first stone's gap)
       halo.material.opacity = 0.3 * (1 - smooth(0.2, 2.5, s));
       halo.scale.setScalar(5.6);
