@@ -12,8 +12,8 @@ const html = `<!doctype html><html><head><style>
   html, body { margin: 0; background: transparent; }
   .art { position: absolute; left: 0; top: 0; width: 390px; height: 844px; }
   .name span { display: block; }
-  .name .l1 { font-size: 38px; }
-  .name .l2 { font-size: 96px; line-height: .84; transform: scaleY(.62); transform-origin: 50% 0; margin-bottom: -.3em; }
+  .name .l1 { font-size: 38px; margin-bottom: 5px; }   /* a gap before ROCK: rounded, the two lines touched */
+  .name .l2 { font-size: 106px; line-height: .84; transform: scaleY(.62); transform-origin: 50% 0; margin-bottom: -.3em; }
   .floor { position: absolute; left: 0; top: 316px; width: 390px; height: 300px; perspective: 260px; perspective-origin: 195px -40px; }
   .name { position: absolute; left: 0; right: 0; top: 70px; margin: 0; text-align: center; color: #000; transform: rotateX(64deg); transform-origin: 50% 100%;
     font: 400 46px/.86 "Splash Anton", Impact, "Arial Narrow", sans-serif; letter-spacing: .01em; transform-style: preserve-3d; white-space: nowrap; }

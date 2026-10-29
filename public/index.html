@@ -79,7 +79,7 @@
             <feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <!-- the rock's underside cut flat, where it sits on the name -->
-          <clipPath id="sr-ground"><rect width="390" height="393.7"/></clipPath>
+          <clipPath id="sr-ground"><rect width="390" height="395.3"/></clipPath>
         </defs>
         <!-- (test) two shards gone from the disc where the radiation sign's upper
              blades would be; with the shadow below it reads as that sign -->
@@ -91,10 +91,10 @@
              its underside cut flat where it sits on the name -->
         <g filter="url(#sr-sticker)">
         <!-- the studio's name, laid flat in perspective (narrow away from us, wide
-             toward us) - drawn by tools/splash-name.mjs, as an image so the sticker's
+             toward us) - drawn by tools/splash-name.mjs and .py (letters rounded), as an image so the sticker's
              border takes it and the rock as one shape in every browser -->
-        <image href="splash-name.png" x="104" y="394.75" width="186" height="76.75"/>
-        <g clip-path="url(#sr-ground)"><g transform="translate(200 394) rotate(-5) scale(1.72) translate(-60 -94)">
+        <image href="splash-name.png" x="94" y="395" width="207" height="88"/>
+        <g clip-path="url(#sr-ground)"><g transform="translate(200 395.6) rotate(-5) scale(1.72) translate(-60 -94)">
           <path fill="#000" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
           <circle fill="#fff" cx="49" cy="66" r="10"/>
           <circle fill="#fff" cx="73" cy="64" r="8.5"/>
