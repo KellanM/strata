@@ -3,9 +3,9 @@
 # while the game loads behind the card - a mask, moved on the main thread, froze).
 #   public/chalk-draw.png  rough edge then black: slides off to the right, the
 #                          sticker appearing behind its edge as if drawn in chalk
-#   public/chalk-wipe.png  black then a soft smudged edge: slides in from the
-#                          left, wiping the sticker off again
-# Kellan, 2026-10-29: "chalk on a blackboard ... then it is quickly erased again".
+#   (the erase is the same cover, mirrored: index.html @keyframes chalk-wipe)
+# Kellan, 2026-10-29: "chalk on a blackboard ... then it is quickly erased again", the erase
+# symmetrical to the drawing.
 #   python tools/chalk-strip.py
 import random
 from PIL import Image, ImageFilter
@@ -28,12 +28,4 @@ def draw(x, y):
     p = min(1, max(0, 0.5 + d))                    # chance this grain is still covered
     return 255 if random.random() < p ** 1.4 else 0
 
-# the eraser's edge: wide and soft, swept in a few bands, leaving a smudge
-def wipe(x, y):
-    at = 1.6 * U + 6 * ((y // 4) % 3) + random.uniform(-2, 2)
-    d = (x - at) / (0.4 * U)
-    k = min(1, max(0, 0.5 - d))
-    return 255 if k >= 1 else 255 * k * (0.8 + 0.2 * random.random())   # solid behind the smudge: nothing left of the sticker
-
 cover('chalk-draw.png', draw)
-cover('chalk-wipe.png', wipe)

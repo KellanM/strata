@@ -2270,45 +2270,44 @@ const buildMap = () => {
   primeMap();
 };
 // The studio's card (index.html #splash) holds the screen while the heavy
-// work happens behind it: the first frames are drawn (every shader compiled)
-// and the whole map is built. Then it lifts - no sooner than its own little
-// animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
-// the title begins under it, the logo carving as before. A tap lifts it as
-// soon as that work is done.
-const SPLASH_HOLD = 1.6;   // s: the card is drawn on in chalk, held and wiped off again (index.html @keyframes chalk: wiped by 1.67 s, the card fading as the wipe ends); about 2 s, as the peers' cards (docs/flow-study.md F3)
+// work happens behind it: every program the title draws with is compiled
+// (fl.warm) and the whole map is built. Then, the chalk drawing done and held a
+// moment (SPLASH_HOLD), it is erased as it was drawn, and the card fades from
+// black into the stone - which began under it as the erase began, so it is
+// there to fade up out of the black, not popping in after a beat of black
+// (Kellan, 2026-10-29). The erase waits for the work, not the clock: on a slow
+// phone the drawn logo holds a little longer, rather than the screen going
+// black. (Fading the title's canvas itself instead cost a frame of a third of a
+// second as it was first shown.) A quick relaunch, or a tap, skips the erase.
+const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - drawn by 0.7 s (index.html @keyframes chalk-draw), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
+const SPLASH_ERASE = 0.6;  // s: index.html @keyframes chalk-wipe, the drawing's own pace
 const splash = $('#splash');
 if (splash) {
   let lifted = false, ready = false;
-  // the title begins under the card (half a second ahead, its programs compiled already: fl.warm),
-  // so the stone is there when the card fades, and the card's fade is the stone's, up out of the
-  // black - not a beat of black and the stone popping in whole (Kellan, 2026-10-29). (Fading the
-  // canvas itself instead cost a frame of a third of a second as it was first shown.)
-  const lift = () => {
+  const out = () => {
+    splash.classList.add('out');
+    document.querySelector('meta[name=theme-color]').content = themeColor;
+    mark('splash: lifted');
+    perf.boot('splash-lifted');
+    setTimeout(() => splash.remove(), 1100);
+  };
+  const lift = (erase) => {
     if (lifted || !ready) return;
     lifted = true;
-    const late = !titleBegun;
     beginTitle();
-    const go = (f) => (late ? requestAnimationFrame(() => requestAnimationFrame(f)) : f());
-    go(() => {
-      splash.classList.add('out');
-      document.querySelector('meta[name=theme-color]').content = themeColor;
-      mark('splash: lifted');
-      perf.boot('splash-lifted');
-      setTimeout(() => splash.remove(), 800);
-    });
+    if (erase) { splash.classList.add('erasing'); setTimeout(out, SPLASH_ERASE * 1000); }   // (erased, a breath of black - Kellan, 2026-10-29: "it feels like taking a breath" - then the stone)
+    else requestAnimationFrame(() => requestAnimationFrame(out));   // the stone's first frame drawn first
   };
   // a tap skips the rest of the card (index.html notes it, even one made before this ran)
-  window.onSplashTap = () => { mark('splash: tapped'); lift(); };
+  window.onSplashTap = () => { mark('splash: tapped'); lift(false); };
   requestAnimationFrame(() => requestAnimationFrame(() => {
     fl.warm();
     buildMap();
     ready = true;
-    if (window.splashTapped) { lift(); return; }
+    if (window.splashTapped) { lift(false); return; }
     const quick = splash.classList.contains('quick') || reduceMotion;
     const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
-    // (the title starts half a second ahead, as the chalk is wiped off)
-    if (left > 500) setTimeout(beginTitle, left - 500);
-    setTimeout(lift, left);
+    setTimeout(() => lift(!quick), left);
   }));
 } else {
   beginTitle();
