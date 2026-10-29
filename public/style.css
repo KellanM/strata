@@ -1093,3 +1093,4 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 
 /* the store app (js/native.js): no purchases in version 1, no web install prompt */
 .native-app #support, .native-app #install { display: none !important; }
+.no-ads #support { display: none !important; }   /* nothing to buy: native.js MONETIZED */

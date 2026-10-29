@@ -8,11 +8,15 @@
 //   localStorage comes up empty, it is filled back from there - before the
 //   game reads a single key (js/start.js).
 // - Haptics: the iPhone's own engine (Capacitor Haptics), not the web's.
-// - Version 1 ships with no ads and no purchases (ads.js reads noAdsBuild).
+// - Version 1 ships with no ads and no purchases, in the app and on the web
+//   (Kellan, 2026-10-28: free until the ad network is integrated). ads.js reads
+//   noAdsBuild: every gift is free, no ad shows, Remove Ads is hidden.
 
+// the one switch for ads and purchases: false until they are integrated for real
+export const MONETIZED = false;
 const cap = globalThis.Capacitor;
 export const nativeApp = !!cap?.isNativePlatform?.();
-export const noAdsBuild = nativeApp;
+export const noAdsBuild = nativeApp || !MONETIZED;
 const plugin = (name) => (nativeApp ? cap.registerPlugin?.(name) ?? cap.Plugins?.[name] : null);
 const Prefs = plugin('Preferences');
 const Haptics = plugin('Haptics');
@@ -71,3 +75,4 @@ export function haptic(pattern, kind) {
 }
 
 if (nativeApp) document.documentElement.classList.add('native-app');
+if (noAdsBuild) globalThis.document?.documentElement.classList.add('no-ads');
