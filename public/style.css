@@ -1102,7 +1102,7 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 .pause-resume { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
   border: 1.5px solid var(--ink); color: var(--ink); background: color-mix(in srgb, var(--sky, #f7dccb) 40%, transparent);
   transition: transform .25s cubic-bezier(.2,.9,.3,1.4), background .3s; }
-.pause-resume svg { width: 34px; height: 34px; margin-left: 4px; fill: currentColor; stroke-width: 1.2; }
+.pause-resume svg { width: 34px; height: 34px; fill: currentColor; stroke-width: 1.2; }
 .pause-row { display: flex; justify-content: center; gap: 14px; margin-top: 30px; }
 .pause-row button { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 92px; padding: 4px 0;
   color: var(--ink); }
