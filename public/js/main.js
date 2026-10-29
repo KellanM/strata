@@ -334,8 +334,11 @@ function applyPalette(p) {
   else document.documentElement.style.removeProperty('--ink');
   // the page behind the canvas wears the sky too, so no edge can ever show a seam
   document.documentElement.style.backgroundColor = '#' + new THREE.Color(p.skyBottom).getHexString();
-  document.querySelector('meta[name=theme-color]').content = '#' + new THREE.Color(p.skyTop).getHexString();
+  themeColor = '#' + new THREE.Color(p.skyTop).getHexString();
+  // the studio's card keeps the browser's bars black until it lifts (index.html)
+  if (!document.querySelector('#splash:not(.out)')) document.querySelector('meta[name=theme-color]').content = themeColor;
 }
+let themeColor = '#000000';
 
 // ---------------------------------------------------------------- camera
 
@@ -2247,15 +2250,18 @@ if (splash) {
     if (lifted || !ready) return;
     lifted = true;
     splash.classList.add('out');
+    document.querySelector('meta[name=theme-color]').content = themeColor;
     mark('splash: lifted');
     perf.boot('splash-lifted');
     setTimeout(() => splash.remove(), 800);
     beginTitle();
   };
-  splash.addEventListener('pointerdown', () => { mark('splash: tapped'); lift(); });
+  // a tap skips the rest of the card (index.html notes it, even one made before this ran)
+  window.onSplashTap = () => { mark('splash: tapped'); lift(); };
   requestAnimationFrame(() => requestAnimationFrame(() => {
     buildMap();
     ready = true;
+    if (window.splashTapped) { lift(); return; }
     const quick = splash.classList.contains('quick') || reduceMotion;
     const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
     setTimeout(lift, left);
