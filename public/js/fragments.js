@@ -23,6 +23,7 @@ const vertexShader = /* glsl */ `
   varying vec3 vN;
   varying vec3 vWP;
   varying float vHeight;
+  varying vec2 vUv;
 
   vec3 rot(vec3 v, vec3 axis, float a) {
     float c = cos(a), s = sin(a);
@@ -36,6 +37,7 @@ const vertexShader = /* glsl */ `
     float size = ${(PIECE * 0.82).toFixed(4)} * (1.0 - e);   // starts a little smaller: the split shows
     if (size <= 0.001) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
     vN = uRot * normal;
+    vUv = uv;
     vHeight = aOrigin.y;
     vWP = aOrigin + uRot * (position * size);
     gl_Position = projectionMatrix * viewMatrix * vec4(vWP, 1.0);
@@ -49,12 +51,28 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uSparkCol;
   varying vec3 vN;
   varying vec3 vWP;
+  varying vec2 vUv;
+#ifdef LIT
+  // lit as the stone it came from (the title: firstlight/scene.js wallMat), by the same lights
+  uniform vec3 uL[2]; uniform vec3 uLc[2]; uniform float uLi[2]; uniform float uMoon;
+#endif
   void main() {
     vec3 n = normalize(vN);
     vec3 c;
+#ifdef LIT
+    vec3 base = n.y > 0.5 ? cTop : n.y < -0.5 ? cUnder : abs(n.z) > 0.5 ? cLit : cShade;
+    c = base * vec3(0.13, 0.13, 0.24) * (0.8 + 0.5 * max(n.y, 0.0)) * uMoon;
+    for (int i = 0; i < 2; i++) {
+      vec3 d = uL[i] - vWP; float r = length(d);
+      float ndl = max(dot(n, d / r), 0.0) * 0.8 + 0.2;
+      c += base * uLc[i] * ndl * uLi[i] / (1.0 + 0.32 * r * r);
+    }
+    vec2 e = min(vUv, 1.0 - vUv); c *= 0.62 + 0.38 * smoothstep(0.0, 0.09, min(e.x, e.y));   // its carved edges
+#else
     if (n.y > 0.5) c = cTop;
     else if (n.y < -0.5) c = cUnder;
     else c = mix(cShade, cLit, smoothstep(0.1, 0.9, dot(normalize(n.xz + 1e-4), uLight) * 0.5 + 0.5));
+#endif
     // the sparks bursting out beside them light the pieces, as they light the stone (cubes.js)
     for (int i = 0; i < ${SPARKS}; i++) {
       vec4 s = uSparks[i];
@@ -69,8 +87,10 @@ const fragmentShader = /* glsl */ `
 `;
 
 export class Fragments {
-  // rotation: a quaternion for a turned block - its pieces sit on its lattice (title)
-  constructor(lightUniform, capacity = 8 * 60, rotation = null) {
+  // rotation: a quaternion for a turned block - its pieces sit on its lattice (title).
+  // lit: { uL, uLc, uLi, uMoon } - the stone's own light uniforms, shared, so the
+  // pieces are shaded as the stone they came from (title)
+  constructor(lightUniform, capacity = 8 * 60, rotation = null, lit = null) {
     this.capacity = capacity;
     this.rotation = rotation;
     this.next = 0;
@@ -79,6 +99,7 @@ export class Fragments {
     geo.index = box.index;
     geo.setAttribute('position', box.getAttribute('position'));
     geo.setAttribute('normal', box.getAttribute('normal'));
+    geo.setAttribute('uv', box.getAttribute('uv'));
     const attr = (name, size, fill = 0) => {
       const a = new THREE.InstancedBufferAttribute(new Float32Array(capacity * size).fill(fill), size);
       a.setUsage(THREE.DynamicDrawUsage);
@@ -99,7 +120,8 @@ export class Fragments {
       uSparks: { value: Array.from({ length: SPARKS }, () => new THREE.Vector4(0, 0, 0, 0)) },
       uSparkCol: { value: new THREE.Color(1, 1, 1) },
     };
-    this.mesh = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: this.uniforms }));
+    if (lit) Object.assign(this.uniforms, lit);
+    this.mesh = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: this.uniforms, defines: lit ? { LIT: '' } : {} }));
     this.mesh.frustumCulled = false;
   }
 

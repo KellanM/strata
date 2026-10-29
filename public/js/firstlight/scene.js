@@ -210,10 +210,14 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const GLOW = { top: 0xfff2cc, lit: 0xffd590, shade: 0xe9a560, under: 0xb8743c };
   const shards = new Shards(), ash = new Ash();
   ash.setPalette({ skyTop: 0x121731, skyBottom: 0x2a2f5c, shade: GLOW.shade, motes: 0xfff1d6 });
-  const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() }, 8 * 60, ISO);
-  const warm = (h, k) => new THREE.Color(h).multiply(new THREE.Color(1, 0.78, 0.56)).multiplyScalar(k).getHex();
-  const STONE = { top: warm(P.top, 0.62), lit: warm(P.lit, 0.55), shade: warm(P.shade, 0.4), under: warm(P.under, 0.3) };
+  // the pieces are shaded as their stones are: the same colours, the night, the light out of the cracks and the rising stream
+  const { uL, uLc, uLi, uMoon } = wallMat.uniforms;
+  const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() }, 8 * 60, ISO, { uL, uLc, uLi, uMoon });
+  const STONE = { top: P.top, lit: P.lit, shade: P.shade, under: P.under };
   stoneFrags.setPalette(STONE);
+  // the chips aren't lit (atmosphere.js Shards): their colours as the stone looks at night by its glow
+  const night = (h, k) => new THREE.Color(h).multiply(new THREE.Color(1, 0.78, 0.56)).multiplyScalar(k);
+  const CHIPS = [night(P.top, 0.62), night(P.lit, 0.55), night(P.top, 0.62)];
   scene.add(stoneFrags.mesh, shards.points, ash.points);
   function breakStone(at, f, progress) {
     const t = realT, c = (h) => new THREE.Color(h), out = f.off.clone().normalize();
@@ -221,7 +225,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     // the shrink spreads from the side toward the touched stone (the touched one: from its face toward us)
     const toward = f === touched ? new THREE.Vector3(0, 0.2, 1) : touched.off.clone().sub(f.off);
     stoneFrags.burst(at, at.clone().addScaledVector(toward.normalize(), 0.5), t);
-    shards.burst(at, t, [c(STONE.top), c(STONE.lit), c(STONE.top)], 2, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
+    shards.burst(at, t, CHIPS, 2, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
     if (!quiet) ash.burst(at, 9, out.add(new THREE.Vector3(0, 0.3, 0.6)).normalize(), c(GLOW.shade));
   }
   let unitPx = 30;   // device px per world unit at the stone's depth (the shards' and sparks' size)
