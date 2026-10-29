@@ -47,8 +47,11 @@
        made, placed and timed (--d) by the script after the card */
     #splash .chalk .slaps { position: absolute; inset: 0; background: #000; }
     #splash .chalk .slaps i { position: absolute; width: 84px; height: 84px; background: url(splash-logo.png) 0 0 / 240px 206px no-repeat;
-      -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
-      animation: chalk-slap .17s cubic-bezier(.2, 1.4, .4, 1) var(--d) both; }
+      -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; opacity: 0; }
+    /* only once the game has loaded and is ready (main.js adds .go): the card is plain black till
+       then, so nothing else is asked of the phone while the chalk goes on and comes off (Kellan,
+       2026-10-29: put on while the game loaded, it stuttered, and came off in a snap) */
+    #splash.go .chalk .slaps i { animation: chalk-slap .17s cubic-bezier(.2, 1.4, .4, 1) var(--d) both; }
     @keyframes chalk-slap { from { opacity: 0; transform: scale(.72); } 45% { opacity: 1; } to { opacity: 1; transform: none; } }
     /* when the game is ready (main.js SPLASH_ERASE): off again in the same order, a little quicker */
     #splash.erasing .chalk .slaps i { animation: chalk-unslap .15s cubic-bezier(.6, 0, .8, .4) calc((var(--d) - .1s) * .7) both; }

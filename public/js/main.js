@@ -2291,17 +2291,16 @@ const buildMap = () => {
   perf.boot('map-built');
   primeMap();
 };
-// The studio's card (index.html #splash) holds the screen while the heavy
-// work happens behind it: every program the title draws with is compiled
-// (fl.warm) and the whole map is built. Then, the chalk drawing done and held a
-// moment (SPLASH_HOLD), it is erased as it was drawn, and the card fades from
-// black into the stone - which began under it as the erase began, so it is
-// there to fade up out of the black, not popping in after a beat of black
-// (Kellan, 2026-10-29). The erase waits for the work, not the clock: on a slow
-// phone the drawn logo holds a little longer, rather than the screen going
-// black. (Fading the title's canvas itself instead cost a frame of a third of a
-// second as it was first shown.) A quick relaunch, or a tap, skips the erase.
-const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - slapped on by about 0.7 s (index.html @keyframes chalk-slap), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
+// The studio's card (index.html #splash) is plain black while the heavy work
+// happens behind it: every program the title draws with is compiled (fl.warm)
+// and the whole map is built and painted. Only then does its chalk play - slapped
+// on, held, lifted off - with nothing else asked of the phone, so it plays
+// smoothly (Kellan, 2026-10-29: played while the game loaded, it stuttered and
+// came off in a snap); then a breath of black, and the card fades into the stone,
+// which began under it in that breath. (Fading the title's canvas itself instead
+// cost a frame of a third of a second as it was first shown.) A quick relaunch,
+// or a tap, skips the chalk.
+const SPLASH_HOLD = 1.0;   // s: from the chalk's start to its lifting off - slapped on by about 0.7 s (index.html @keyframes chalk-slap), then held
 const SPLASH_ERASE = 0.5;  // s: the splotches lifting off in turn (index.html @keyframes chalk-unslap: their delays at 0.7 of the slaps', each 0.15 s)
 const SPLASH_BREATH = 0.12;   // s: black, between the erase and the card's fade (Kellan: "it feels like taking a breath")
 const splash = $('#splash');
@@ -2337,8 +2336,14 @@ if (splash) {
     ready = true;
     if (window.splashTapped) { lift(false); return; }
     const quick = splash.classList.contains('quick') || reduceMotion;
-    const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
-    setTimeout(() => lift(!quick), left);
+    if (quick) { lift(false); return; }
+    // all loaded: now the chalk, after a frame so its start isn't the frame the work ended on
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (lifted) return;
+      splash.classList.add('go');
+      mark('splash: chalk');
+      setTimeout(() => lift(true), SPLASH_HOLD * 1000);
+    }));
   }));
 } else {
   beginTitle();
