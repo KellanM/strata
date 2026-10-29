@@ -2372,6 +2372,9 @@ function ringInk() {
   };
   $('#menu').style.setProperty('--ink-head', ink(sc.scrollTop + 60));
   $('#menu').style.setProperty('--ink-foot', ink(sc.scrollTop + sc.clientHeight - 60));
+  // and what shows behind the content where it isn't painted yet (style.css .map-scroll): the sky here
+  $('#menu').style.setProperty('--map-here', `rgb(${mapWorld.skyAt(sc.scrollTop + sc.clientHeight / 2).map(Math.round).join(',')})`);
+  $('#menu').classList.toggle('at-foot', sc.scrollTop > sc.scrollHeight - 2 * sc.clientHeight);
 }
 let ringInkFrame = 0;
 mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); }); }, { passive: true });

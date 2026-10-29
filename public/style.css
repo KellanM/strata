@@ -294,11 +294,16 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu:not(.show) * { animation-play-state: paused; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
-  background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, transparent 50%, var(--map-foot, transparent) 50%);   /* seen only past the map's foot, its night and stars (mapworld.js layoutScene, layoutDusk) */
+  /* behind the map's content, seen only where it isn't painted: a fling faster than the phone can
+     paint, or the bounce past either end. The map's own sky where you are (main.js ringInk keeps
+     --map-here), and near the foot its night and stars (Kellan, 2026-10-29: a fast scroll had shown
+     a pink top over a starry bottom - this, fixed for the foot alone) */
+  background: var(--map-here, transparent);
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   scrollbar-width: none; touch-action: pan-y;
 }
 .map-scroll::-webkit-scrollbar { display: none; }
+#menu.at-foot .map-scroll { background: var(--map-foot-stars, none) 0 100% / 100% 50% no-repeat, linear-gradient(180deg, var(--map-here, transparent) 50%, var(--map-foot, transparent) 50%); }
 /* the map's world (mapworld.js) is its own fixed layers behind the canvas: no veil, no blur */
 .map-backdrop { position: fixed; inset: 0; background: none; pointer-events: none; }
 /* the map keeps its own ink: names sit on each chapter's cloud, not on the level's sky */
