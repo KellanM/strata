@@ -1,7 +1,7 @@
 // A sketch of the sound: silence until the first touch (browsers wait for
 // one anyway), then a soft knock, a warm swell as the light rises, and a
-// high, quiet bell for stars as they arrive - never more than a few a second,
-// on a pentatonic scale so any of them can sound together.
+// high, quiet bell for stars as they arrive - quick at first, thinning out as
+// they settle, on a pentatonic scale so any of them can sound together.
 const SCALE = [0, 2, 4, 7, 9];   // major pentatonic
 const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -93,14 +93,41 @@ export class Sound {
     g.gain.setValueAtTime(gain, at); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
     n.connect(f); f.connect(g); g.connect(dest); n.start(at); n.stop(at + dur + 0.02);
   }
+  // The stars coming in, as the name is written (Kellan, 2026-10-29: the vibe, but "too repetitive
+  // and drag on for too long"): quick and bright as the first rush in, thinning as fewer arrive -
+  // the gap between them growing from a tenth of a second to more than one - and quiet by about
+  // nine seconds. Not each a random note: a little melody wandering the pentatonic by a step or two,
+  // high at first and drifting down as the stars settle; softer and longer-ringing as it slows,
+  // spread a little left and right, and now and then, early, a twinkle - a quick neighbour note.
   star() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    if (t - this.last < 0.11) return;
+    this.t0 ??= t;
+    const age = t - this.t0;
+    if (age > 9) return;
+    const gap = 0.1 * Math.exp(age / 2.4);   // 0.1 s, 0.3 at 2.6 s, 1.2 at 6 s
+    if (t - this.last < gap * (0.75 + 0.5 * Math.random())) return;
     this.last = t;
     this.count++;
-    const m = 74 + SCALE[(Math.random() * 5) | 0] + 12 * (Math.random() < 0.35);
-    this.tone(midi(m), t, 1.8, 0.035, 'sine');
-    this.tone(midi(m) * 2.01, t, 0.6, 0.008, 'sine');
+    const step = [-2, -1, -1, 1, 1, 2][(Math.random() * 6) | 0] - (Math.random() < age / 10 ? 1 : 0);
+    this.deg = Math.max(0, Math.min(10, (this.deg ?? 8) + step));
+    const m = 74 + 12 * Math.floor(this.deg / 5) + SCALE[this.deg % 5];
+    const soft = 1 - 0.55 * Math.min(1, age / 9), ring = 1.6 + 0.3 * age, pan = Math.random() * 1.2 - 0.6;
+    this.bell(midi(m), t, ring, 0.035 * soft, pan);
+    if (age < 5 && Math.random() < 0.2) {   // a twinkle: the next note up, just after
+      const d = this.deg + 1, m2 = 74 + 12 * Math.floor(d / 5) + SCALE[d % 5];
+      this.bell(midi(m2), t + 0.08, ring * 0.6, 0.02 * soft, -pan);
+    }
+  }
+  bell(freq, at, dur, gain, pan) {
+    const c = this.ctx, o = c.createOscillator(), h = c.createOscillator(), g = c.createGain(), hg = c.createGain();
+    const p = c.createStereoPanner ? c.createStereoPanner() : null;
+    o.frequency.value = freq; h.frequency.value = freq * 2.01;   // the bell's ring and a faint overtone
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(gain, at + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    hg.gain.setValueAtTime(0, at); hg.gain.linearRampToValueAtTime(gain * 0.23, at + 0.01); hg.gain.exponentialRampToValueAtTime(0.0001, at + dur * 0.35);
+    o.connect(g); h.connect(hg); hg.connect(g);
+    const out = p ? (p.pan.value = pan, g.connect(p), p) : g;
+    out.connect(this.out); out.connect(this.wet);
+    o.start(at); h.start(at); o.stop(at + dur + 0.05); h.stop(at + dur + 0.05);
   }
 }
