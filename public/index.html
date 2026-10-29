@@ -80,6 +80,8 @@
         <defs>
           <clipPath id="sr-disc-clip"><circle cx="195" cy="300" r="132"/></clipPath>
           <clipPath id="sr-floor-clip"><path d="M5 384A190 150 0 0 0 385 384Z"/></clipPath>
+          <!-- the ground under the rock: it rests on the floor, its base flat on it -->
+          <clipPath id="sr-ground"><rect width="390" height="391.7"/></clipPath>
         </defs>
         <!-- the light behind: a great white disc (flat, two colours: a logo) -->
         <circle cx="195" cy="300" r="132" fill="#fff"/>
@@ -91,19 +93,22 @@
         </g>
         <!-- the floor it lights: a flat half-ellipse toward us from the horizon -->
         <path fill="#fff" d="M5 384A190 150 0 0 0 385 384Z"/>
-        <!-- the long shadow, flat and true to the light behind: it widens as it
-             comes toward us. The name lies in it (.name, below), cut out of it. -->
+        <!-- the long shadow, flat and true to the light behind: it begins at the
+             rock's footprint (as wide as its base, where it touches the floor) and
+             widens as it comes toward us. The name lies in it (.name, below), cut out of it. -->
         <g clip-path="url(#sr-floor-clip)">
-          <path fill="#000" d="M126 384 C150 379 240 378 264 384 L362 646 C300 664 90 664 28 646 Z"/>
+          <path fill="#000" d="M127.4 390.7H218.9L286.8 445L362 646C300 664 90 664 28 646L103.2 445Z"/>
         </g>
-        <!-- the rock: black, leaning back, its eyes cut out and turned up to the light -->
-        <g transform="translate(195 386) rotate(-11) scale(1.72) translate(-60 -94)">
+        <!-- the rock: black, leaning back a little, its eyes cut out and turned up to the light;
+             it sits on the floor just in front of the horizon, its underside cut flat
+             where it meets the ground (the light shows under its lip on either side) -->
+        <g clip-path="url(#sr-ground)"><g transform="translate(200 392) rotate(-5) scale(1.72) translate(-60 -94)">
           <path fill="#000" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
           <circle fill="#fff" cx="49" cy="66" r="10"/>
           <circle fill="#fff" cx="73" cy="64" r="8.5"/>
           <circle fill="#000" cx="52.6" cy="59.6" r="4.6"/>
           <circle fill="#000" cx="76.4" cy="58.4" r="4"/>
-        </g>
+        </g></g>
       </svg>
       <div class="floor"><p class="name"><span class="l1">UNSUPERVISED</span><span class="l2">ROCK</span></p></div>
     </div>
