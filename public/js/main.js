@@ -2531,6 +2531,7 @@ function warmStreaks() {
 const whenIdle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 300));
 // the title's night sky, top to bottom (sampled from the title screen, 390x844)
 const TITLE_NIGHT = ['#111630', '#181b3f', '#1d2555', '#31356b', '#5b568f'];
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 // the launch swoop's strip easing, and when (of its time) the stand-in begins to lift off the map
 const EASE_SWOOP = [0.55, 0, 0.15, 1], LIFT_SWOOP = 0.6;
 // CSS's cubic-bezier(x1, y1, x2, y2) as a function of time: the progress at k (0..1), so a
@@ -2601,9 +2602,12 @@ function glideToStone(onLeap) {
   // what shows as the map shows through and comes to rest - is the stone's own sky at true scale,
   // unsmeared, so the strip dissolves into the very colours beneath it (the swoop audit: it had
   // been a squeeze of thousands of px there, light dissolving into dark)
-  const eased = cubicBezier(...EASE_SWOOP), rest = Math.min(to - from, 3 * H);
-  const left = (k) => Math.min(rest, 3 * H * (1 - eased(k)));
-  const R = left(LIFT_SWOOP), SH = 4 * H, grad = [], span = to - from;
+  // (it travels TRAVEL screens - five: at three, once the title's screen and the landing's true
+  // scale had their room, the worlds between were squeezed into little more than one, and the way
+  // felt short: Kellan, 2026-10-29)
+  const TRAVEL = 5, eased = cubicBezier(...EASE_SWOOP), rest = Math.min(to - from, TRAVEL * H);
+  const left = (k) => Math.min(rest, TRAVEL * H * (1 - eased(k)));
+  const R = left(LIFT_SWOOP), SH = (TRAVEL + 1) * H, grad = [], span = to - from;
   const sky = (y) => mapWorld.skyAt(y).map(Math.round);
   const smeared = (y, win) => { const M = 24, acc = [0, 0, 0]; let C = 0;
     for (let m = 0; m < M; m++) { const l = oklab(sky(y + win * (m / (M - 1) - 0.5))); for (let i = 0; i < 3; i++) acc[i] += l[i] / M; C += Math.hypot(l[1], l[2]) / M; }
@@ -2612,10 +2616,10 @@ function glideToStone(onLeap) {
   const stopAt = (rgb, s) => grad.push(`rgb(${rgb.join(',')}) ${((s / SH) * 100).toFixed(2)}%`);
   // from the title, the strip's first screen is the title's own sky - its night, and at its foot the
   // dawn the tap has called up - so the stand-in covers it without a change of colour (Kellan, 2026-10-29)
-  const fromTitle = $('#menu').classList.contains('pulling'), s0 = fromTitle ? 0.37 * SH : 0, s1 = 3 * H - R;
+  const fromTitle = $('#menu').classList.contains('pulling'), s0 = fromTitle ? 1.48 * H : 0, s1 = TRAVEL * H - R;
   if (fromTitle) {
-    TITLE_NIGHT.slice(0, -1).forEach((c, i) => grad.push(`${c} ${((i / (TITLE_NIGHT.length - 1)) * 20).toFixed(2)}%`));
-    stopAt(sky(0), 0.25 * SH);
+    TITLE_NIGHT.slice(0, -1).forEach((c, i) => stopAt(hexRgb(c), (i / (TITLE_NIGHT.length - 1)) * 0.8 * H));
+    stopAt(sky(0), H);
   }
   for (let n = 0, N = 40; n <= N; n++) {
     const s = s0 + (s1 - s0) * n / N, y = from + (to - R - from) * n / N;
@@ -2626,7 +2630,8 @@ function glideToStone(onLeap) {
   veil = document.createElement('div');
   veil.style.cssText = `position:absolute; left:0; top:${sheet.offsetTop}px; width:100%; height:${H}px; overflow:hidden; pointer-events:none; z-index:${(parseInt(getComputedStyle(sheet).zIndex) || 0) + 1}; opacity:0`;
   const band = document.createElement('div');
-  band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${4 * H}px; will-change:transform; background: linear-gradient(180deg, ${grad.join(', ')})`;
+  // (drawn one screen tall and stretched: a smooth gradient loses nothing, and the layer is a sixth the size)
+  band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${H}px; transform-origin:0 0; will-change:transform; background: linear-gradient(180deg, ${grad.join(', ')})`;
   veil.appendChild(band);
   // and the stars streaking past over them (Kellan, 2026-10-29, "stars")
   const streaks = document.createElement('div'), tile = streakTile(sheet.clientWidth, H);
@@ -2642,7 +2647,7 @@ function glideToStone(onLeap) {
   const T = 1450 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again;
   // a long tail to its easing, so it is already slowing as the map shows through
-  const sweep = band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE_SWOOP})`, fill: 'forwards' });
+  const sweep = band.animate([{ transform: `translateY(0) scaleY(${TRAVEL + 1})` }, { transform: `translateY(${-TRAVEL * H}px) scaleY(${TRAVEL + 1})` }], { duration: T, easing: `cubic-bezier(${EASE_SWOOP})`, fill: 'forwards' });
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
   streaks.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.4 }, { transform: `translateY(${-3.6 * H}px) scaleY(.25)`, opacity: 0 }],
