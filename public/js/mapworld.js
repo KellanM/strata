@@ -196,7 +196,8 @@ export class MapWorld {
       // (the first begins at its plain sea colour: the dawn above sinks into that)
       stops.push(`${rgba(r.index === 0 ? this.firstSeaHex : a)} ${(r.top + 120).toFixed(0)}px`, `${rgba(b)} ${Math.max(r.top + 121, r.bottom - 120).toFixed(0)}px`);
     }
-    stops.push(`${rgba(seaEnds(regions[regions.length - 1].base)[1])} ${model.end}px`);
+    this.lastSea = rgba(seaEnds(regions[regions.length - 1].base)[1]);
+    stops.push(`${this.lastSea} ${model.end}px`);
     this.seaStrip.style.background = `linear-gradient(180deg, ${stops.join(', ')})`;
     for (const r of regions) this.buildChunk(r);
     this.layoutSky();
@@ -214,6 +215,11 @@ export class MapWorld {
     // its foot fades into the first chapter's gradient below (a hard line showed there once the chapters had gradients)
     this.dawn.style.webkitMaskImage = this.dawn.style.maskImage = 'linear-gradient(180deg, #000 45%, transparent)';
     this.layoutDusk();
+    // past the end - iOS's bounce at the foot of the scroll - the map's last colour goes on (the
+    // scroller's own background, under the half of the screen the bounce opens; the night of
+    // the Drift, or the last sea) rather than whatever lay behind (Kellan, 2026-10-29: a pink)
+    // (set on its parent, #menu: the descent clears the scroller's own inline style when it lands)
+    this.scroller.parentElement.style.setProperty('--map-foot', this.model.driftTop ? '#121731' : this.lastSea);
     // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
     const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
     this.layers.far.style.setProperty('--par', `${(range * (1 - FAR_RATE)).toFixed(1)}px`);

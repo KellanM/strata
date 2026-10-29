@@ -294,6 +294,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #menu:not(.show) * { animation-play-state: paused; }
 .map-scroll {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  background: linear-gradient(180deg, transparent 50%, var(--map-foot, transparent) 50%);   /* seen only past the map's foot (mapworld.js layoutScene) */
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   scrollbar-width: none; touch-action: pan-y;
 }
