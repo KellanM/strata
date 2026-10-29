@@ -434,7 +434,7 @@ export function renderMap(root, opts) {
     el.style.setProperty('--edge', `${x0 + 8}px`);
     // past the next chapter, the cloud keeps the name: only its numeral shows
     el.innerHTML = r.named
-      ? `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub">${r.stars} / ${r.items.length * 3} ★</span>`
+      ? `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub"><b class="gem-ic">◆</b> ${r.stars} / ${r.items.length * 3}</span>`
       : `<span class="r-num">${esc(r.numeral)}</span><span class="r-name" aria-hidden="true">?</span><span class="sr-only">Locked world</span>`;
     root.appendChild(el);
     r.el = el;
@@ -490,7 +490,7 @@ export function renderMap(root, opts) {
       num = isBonus ? '✦' : String(number).padStart(2, '0');
       if (isBonus) {
         name = s ? shape.name : 'Shrine';
-        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `${n.region.stars} / ${shrineStars(n.region)} ★` : 'open';
+        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `<b class="gem-ic">◆</b> ${n.region.stars} / ${shrineStars(n.region)}` : 'open';
         if (!s) art = shrine(n.region.base, n.state);
       } else {
         name = s ? shape.name : n.state === 'locked' ? '' : '???';
@@ -503,7 +503,7 @@ export function renderMap(root, opts) {
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
       b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +
-        (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} stars` : ', locked') : ''));
+        (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} gems` : ', locked') : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
         b.addEventListener('click', () => {
@@ -652,7 +652,9 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate, delay = 0.
   return dur / 1000;
 }
 
-const STAR = '<svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.8 6.3 20l1.4-6.3-4.8-4.3 6.4-.7z"/></svg>';
+// a stone's gems under its name: the same faceted diamond as the result's, Finds' and the Rules'
+// (it had been a star here alone; Kellan, 2026-10-29: one reward, one symbol)
+const STAR = '<svg viewBox="0 0 12 16" aria-hidden="true"><path class="l" d="M6 0 0 8l6 8z"/><path class="r" d="M6 0l6 8-6 8z"/><path class="o" d="M6 .7 .9 8 6 15.3 11.1 8z"/></svg>';
 function starRow(n) {
-  return `<span class="stars-mini" aria-label="${n} of 3 stars">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
+  return `<span class="stars-mini" aria-label="${n} of 3 gems">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
 }

@@ -33,7 +33,7 @@ export function renderJournal(root, { entries, solved }) {
   const total = entries.length;
   const found = entries.filter((e) => solved[e.shape.id]).length;
   const gemsWon = entries.reduce((n, e) => n + (solved[e.shape.id] ? recordStars(e.shape, solved[e.shape.id]) : 0), 0);
-  root.querySelector('#journal-count').innerHTML = `${found} of ${total} found <span class="jr-total">${GEM}${gemsWon} / ${total * 3}</span>`;
+  root.querySelector('#journal-count').innerHTML = `${found} of ${total} uncovered <span class="jr-total">${GEM}${gemsWon} / ${total * 3}</span>`;
   const grid = root.querySelector('#journal-grid');
   grid.innerHTML = '';
   // the worlds not reached yet - after the first with nothing found, the next to come - are

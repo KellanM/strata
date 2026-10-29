@@ -482,7 +482,14 @@ class Sound {
     this.progress = 1;
     this.nextChord(true);
     this.nudge(1600, 4);
-    this.duck(-6, 2.5);
+    // a hush for the reveal: the bed drops away at the last chisel, holds there while the object
+    // lands, then comes back slowly under the chord (Kellan, 2026-10-29: quieter before the reveal;
+    // a 6 dB dip had barely made room)
+    const dg = this.duckGain.gain, h = this.now;
+    dg.cancelScheduledValues(h); dg.setValueAtTime(dg.value, h);
+    dg.linearRampToValueAtTime(Math.pow(10, -18 / 20), h + 0.06);
+    dg.setValueAtTime(Math.pow(10, -18 / 20), h + 0.45);
+    dg.setTargetAtTime(1, h + 0.5, 0.7);
     const t0 = this.now + 0.34, base = this.key.root + 24;
     [0, 1, 2, 3, 4, 5].forEach((d, k) => this.fmBell(this.degree(d, base), { at: t0 + k * SIXTEENTH, gain: 0.09, decay: 1.4, index: 2.5 }));
     const chordAt = t0 + 6 * SIXTEENTH;

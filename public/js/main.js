@@ -684,7 +684,6 @@ function win() {
   rayBoost = 2.6;
   buzz([12, 50, 30, 908, 60], 'win');   // the last pulse is the landing, 1.0 s in
   sound.win();
-  $('#pz-name').textContent = g.shape.name;
 
   // confetti in the object's own colours, thrown from all over it
   const hues = [...new Set(cells.map((i) => g.puzzle.colors[i] || 0xffffff))].slice(0, 5).map((h) => new THREE.Color(h));
@@ -702,16 +701,20 @@ function win() {
   const flash = $('#flash');
   flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
 
-  // the payoff, lessons too: the object is named over it ("you uncovered ...")
+  // the payoff, lessons too: the object is named over it ("you uncovered ..."); a block from the
+  // drift is no object, and says only what it is (Kellan, 2026-10-29: honest words for the drift)
   const title = $('#win-title');
-  const letters = [...g.shape.name];
-  const story = !g.entry.lesson && g.shape.story;
-  title.innerHTML = '<span class="sub">you uncovered</span><span class="name' + (letters.length > 9 ? ' long' : '') + '">' +
+  const drift = g.shape.id.startsWith('random');
+  const letters = [...(drift ? `${d[0]}³` : g.shape.name)];
+  const story = !g.entry.lesson && !drift && g.shape.story;
+  title.innerHTML = `<span class="sub">${drift ? 'carved from the drift' : 'you uncovered'}</span><span class="name` + (letters.length > 9 ? ' long' : '') + '">' +
     letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
     (story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
   if (story) title.querySelector('.story').textContent = story;
   title.classList.remove('show'); void title.offsetWidth;
-  after(1.1, () => { if (game === g) title.classList.add('show'); });
+  // (the bar above says "No. 31" till now: the answer is the object's to give, not the type's first -
+  // it had changed to the name at the last chisel, over the still-white block)
+  after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = drift ? `${d[0]}³` : g.shape.name; } });
 
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
   // a run of flawless solves feeds the streak bonus
@@ -2051,7 +2054,7 @@ function offerShrine(s) {
   if (!ads.shrineAdEligible({ ...s, opened: ads.openedShrines().has(id) })) return false;
   const free = ads.adsRemoved() || !ads.enabled();
   openOffer({
-    text: `This shrine opens at ${s.need} stars.`,
+    text: `This shrine opens at ${s.need} gems.`,
     small: `${s.stars} gathered so far`,
     yes: free ? 'Open it' : 'Watch to open',
     onMap: true,

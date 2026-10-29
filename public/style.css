@@ -399,10 +399,15 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .map-node .nm { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; }
 .map-node.lbl-left .nm { margin-right: -.26em; }
 .map-node .mt { font-size: 9.5px; letter-spacing: .2em; opacity: .62; font-variant-numeric: tabular-nums; }
-.stars-mini { display: inline-flex; gap: 3px; margin-top: 3px; }
-.stars-mini i { display: block; width: 9px; height: 9px; }
-.stars-mini svg { width: 9px; height: 9px; display: block; fill: none; stroke: currentColor; stroke-width: 2; opacity: .55; }
-.stars-mini i.on svg { fill: currentColor; opacity: 1; }
+.stars-mini { display: inline-flex; gap: 4px; margin-top: 3px; }
+.stars-mini i { display: block; width: 7px; height: 10px; }
+.stars-mini svg { width: 7px; height: 10px; display: block; stroke: none; }
+.stars-mini .o { fill: none; stroke: currentColor; stroke-width: 1; opacity: .45; }
+.stars-mini i:not(.on) .l, .stars-mini i:not(.on) .r { display: none; }
+.stars-mini i.on .o { display: none; }
+.stars-mini i.on .l { fill: #fff2c2; }
+.stars-mini i.on .r { fill: #e9b949; }
+.gem-ic { font-weight: 400; color: #e9b949; font-size: .9em; }   /* the gem in a count: ◆ 40 / 48 */
 .map-node .nm:empty { display: none; }
 
 .map-node .ring {
@@ -952,7 +957,7 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .map-node.current .ring { border-color: #e9b949; }
 .map-node.current .halo { animation: none; opacity: .6; }
 .map-node.current .cube { animation: none; }
-.stars-mini i.on svg { fill: #e9b949; stroke: #e9b949; }
+
 /* a chapter whose cloud is parting: its stones appear as it clears */
 .map-node.veiled-in { opacity: 0; pointer-events: none; }
 
