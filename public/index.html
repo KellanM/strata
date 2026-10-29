@@ -43,10 +43,10 @@
        transform only, so they keep moving while the game loads behind the card
        (tools/chalk-strip.py) */
     #splash .chalk { position: absolute; left: 78px; top: 296px; width: 240px; height: 206px; overflow: hidden; }
-    /* the strokes run the way the rock is looking - up and a little right (its pupils, its 5-degree
-       lean): the covers' left-to-right turned to start there (Kellan, 2026-10-29). A square wide
-       enough to cover the logo at any angle, turned about its centre */
-    #splash .chalk .sweep { position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; margin: -170px 0 0 -170px; transform: rotate(115deg); }
+    /* the strokes run along the rock's gaze - up and a little right (its pupils, its 5-degree
+       lean) - starting from below and behind it and sweeping toward where it looks (Kellan,
+       2026-10-29). A square wide enough to cover the logo at any angle, turned about its centre */
+    #splash .chalk .sweep { position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; margin: -170px 0 0 -170px; transform: rotate(-65deg); }
     #splash .chalk i { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background: 0 0 / 100% 100% no-repeat; will-change: transform; }
     #splash .chalk .draw { background-image: url(chalk-draw.png); animation: chalk-draw .6s cubic-bezier(.3, 0, .7, 1) .1s both; }
     #splash .chalk .wipe { background-image: url(chalk-draw.png); transform: translateX(-90%) scaleX(-1); }   /* waiting with its rough edge just off the rock (further in, it had nibbled it) */
