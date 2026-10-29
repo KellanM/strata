@@ -2275,8 +2275,8 @@ function carveLogo() {
 const beginTitle = () => {
   if (titleBegun) return;
   titleBegun = true; perf.boot('title-interactive');
-  // the streaks of the launch's swoop and a fast fling down the map (mapRush): drawn while they look at the title
-  setTimeout(() => whenIdle(warmStreaks), 1200);
+  // a fast fling's streaks (rushStreaks) drawn while they look at the title, not on its first frame
+  setTimeout(() => whenIdle(() => { const sh = mapSheet(); if (sh?.clientHeight) rushStreaks(sh.clientWidth, sh.clientHeight); }), 1200);
   // and the map's mist made plain images, a few at a time in quiet moments (mapworld.js lighten)
   setTimeout(() => mapWorld.built?.then(() => mapWorld.lighten(whenIdle)), 2500);
 };   // First light starts (frame() resumes it)
@@ -2397,10 +2397,13 @@ function ringInk() {
 // and never under the map's own half-second fade (the fling audit). The first fast move shows every
 // stone still waiting to make its entrance at once, so the map is all there as it slows.
 const rush = { y: null, t: 0, v: 0, skyAt: null, shown: 0, target: 0, moved: 0, loop: 0, stretch: 0.6, phase: 0, canvas: null };
-function rushStreaks(W, H) {
-  if (rush.canvas?.dataset.key === `${W}x${H}`) return rush.canvas;
-  const cv = rush.canvas ?? document.createElement('canvas');
-  cv.className = 'rush-streaks'; cv.dataset.key = `${W}x${H}`;
+// The streaks of the swoop and of a fast fling, one pattern: a screen's worth of soft lines three
+// times over, drawn at half size on a canvas shown three screens tall; slid and stretched by the
+// compositor alone - longer the faster (speedStretch) - and the pattern travelling half as fast
+// again as the map (Kellan, 2026-10-29)
+const speedStretch = (screensPerSecond) => Math.min(3, Math.max(0.5, 0.12 * screensPerSecond + 0.1));   // about half at 4 screens a second, whole at 8, twice at 16
+function streakPattern(W, H, cv = document.createElement('canvas')) {
+  cv.dataset.key = `${W}x${H}`;
   cv.width = Math.round(W / 2); cv.height = Math.round(1.5 * H);   // half size: shown 3H tall
   cv.style.cssText = `position:absolute; left:0; top:0; width:${W}px; height:${3 * H}px; transform-origin:0 0; will-change:transform`;
   const g = cv.getContext('2d'); g.setTransform(0.5, 0, 0, 0.5, 0, 0);
@@ -2413,6 +2416,12 @@ function rushStreaks(W, H) {
       g.fillStyle = gr; g.fillRect(x - w / 2, y0, w, len);
     }
   }
+  return cv;
+}
+function rushStreaks(W, H) {
+  if (rush.canvas?.dataset.key === `${W}x${H}`) return rush.canvas;
+  const cv = streakPattern(W, H, rush.canvas ?? undefined);
+  cv.className = 'rush-streaks';
   if (!rush.canvas) { $('#menu .map-rush .rush-streaks')?.replaceWith(cv); rush.canvas = cv; }
   return cv;
 }
@@ -2445,7 +2454,10 @@ function mapRush() {
   rush.moved = now;
   const speed = (Math.abs(rush.v) * 1000) / H;   // screens a second
   if (speed > 2) showAllStones();
-  const k = Math.min(1, Math.max(0, (speed - 3) / 4)), t = k * k * (3 - 2 * k);
+  // (later in the fling's speeding up than it was - from 5 screens a second, whole by 10 - and the
+  // streaks later still, from 7: Kellan, 2026-10-29, "too early")
+  const k = Math.min(1, Math.max(0, (speed - 5) / 5)), t = k * k * (3 - 2 * k);
+  const ks = Math.min(1, Math.max(0, (speed - 7) / 5)), ts = ks * ks * (3 - 2 * ks);
   rush.target = 0.88 * t;
   if (!rush.loop && (rush.target > 0.002 || rush.shown > 0.002)) rush.loop = requestAnimationFrame(rushFrame);
   if (t < 0.01) return;
@@ -2465,10 +2477,10 @@ function mapRush() {
   // screens tall of a one-screen pattern, drawn once at half size, slid and stretched by the
   // compositor alone (transform: no paint); the pattern travels half as fast again as the map
   const st = rushStreaks(W, H);
-  rush.stretch = rush.stretch * 0.7 + Math.min(3, Math.max(0.5, 0.12 * speed + 0.1)) * 0.3;   // about half at 4 screens a second, whole at 8, twice at 16
+  rush.stretch = rush.stretch * 0.7 + speedStretch(speed) * 0.3;
   rush.phase = (((rush.phase + (1.5 * dy) / rush.stretch) % H) + H) % H;
   st.style.transform = `translateY(${(-rush.phase * rush.stretch).toFixed(1)}px) scaleY(${rush.stretch.toFixed(3)})`;
-  st.style.opacity = t.toFixed(3);
+  st.style.opacity = ts.toFixed(3);
 }
 let ringInkFrame = 0;
 mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
@@ -2597,40 +2609,6 @@ function finishPull() {
 // over it: the colours of every chapter on the way, a strip slid by the
 // compositor (smooth however busy the page is). Under it the map leaps to the
 // stone in one step; the stand-in fades off as the blur clears.
-// The swoop's streaks: soft white lines, a tile two screens tall that repeats. Drawn ahead, in
-// a quiet moment once the title is up, as a blob decoded before it is wanted - drawn on a timer,
-// it had landed on the splash's erase, and its first use decoded it on the tap's frame (the swoop
-// audit); drawn on the spot only if it is wanted before it is ready
-let streakCache = null;
-function streakCanvas(W, H) {
-  const dpr = 0.5, TH = 2 * H, cv = document.createElement('canvas');   // half the page's pixels: the streaks are soft, and it is shown enlarged (it had been 780 x 3376, 10.5 MB)
-  cv.width = W * dpr; cv.height = TH * dpr;
-  const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 140; i++) {
-    const x = rnd() * W, len = (0.15 + rnd() * 0.5) * H, y = rnd() * TH, a = 0.35 + rnd() * 0.5, w = 0.8 + rnd() * 1.4;
-    for (const off of [0, -TH, TH]) {   // across the tile's seam
-      const gr = g.createLinearGradient(0, y + off, 0, y + off + len);
-      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.7, `rgba(255,255,255,${a})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = gr; g.fillRect(x - w / 2, y + off, w, len);
-    }
-  }
-  return cv;
-}
-function streakTile(W, H) {
-  if (streakCache?.key !== `${W}x${H}`) streakCache = { key: `${W}x${H}`, url: streakCanvas(W, H).toDataURL() };
-  return streakCache.url;
-}
-function warmStreaks() {
-  const sh = mapSheet(), W = sh?.clientWidth, H = sh?.clientHeight, key = `${W}x${H}`;
-  if (!H || streakCache?.key === key) return;
-  streakCanvas(W, H).toBlob((blob) => {
-    if (!blob || streakCache?.key === key) return;
-    const url = URL.createObjectURL(blob), img = new Image();
-    img.src = url;
-    img.decode().catch(() => {}).then(() => { if (streakCache?.key !== key) streakCache = { key, url }; });
-  });
-}
 const whenIdle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 300));
 // the title's night sky, top to bottom (sampled from the title screen, 390x844)
 const TITLE_NIGHT = ['#111630', '#181b3f', '#1d2555', '#31356b', '#5b568f'];
@@ -2741,9 +2719,7 @@ function glideToStone(onLeap) {
   // and the stars streaking past over them (Kellan, 2026-10-29, "stars")
   // (drawn at half size and enlarged - they are soft, nothing is lost - so the layer holds a
   // quarter of the pixels: six screens tall at full size, it was some 70 MB on a phone)
-  const streaks = document.createElement('div'), tile = streakTile(sheet.clientWidth, H);
-  streaks.style.cssText = `position:absolute; left:0; top:0; width:50%; height:${3 * H}px; will-change:transform; transform-origin:0 0;
-    background: url(${tile}) 0 0 / ${sheet.clientWidth / 2}px ${H}px repeat-y`;
+  const streaks = streakPattern(sheet.clientWidth, H);
   veil.appendChild(streaks);
   if (fromTitle) {
     // from the title: over the whole screen, the title included, so the night dissolves into
@@ -2758,9 +2734,30 @@ function glideToStone(onLeap) {
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
   // (each as at full size: moved ty and stretched s about the full layer's middle, 3H down)
-  const streakAt = (ty, s) => `translateY(${(ty + 3 * H * (1 - s)).toFixed(1)}px) scale(2, ${(2 * s).toFixed(3)})`;
-  streaks.animate([{ transform: streakAt(0, 0.3), opacity: 0 }, { transform: streakAt(-2 * H, 1.4), opacity: 1, offset: 0.4 }, { transform: streakAt(-3.6 * H, 0.25), opacity: 0 }],
-    { duration: T * 0.8, easing: 'cubic-bezier(.45, 0, .2, 1)', fill: 'forwards' });
+  // the streaks as a fling's (rushStreaks): stretched by the strip's own speed at each moment - short
+  // as it sets off, longest at its fastest, short again as it slows to the stone (Kellan, 2026-10-29:
+  // the fling's stretch on the swoop) - the pattern travelling half as fast again as the strip, wrapping
+  // a screen at a time (the frames either side of a wrap the same picture)
+  {
+    // (the speed is the journey's - the real way across the map, (to - from), not the strip's five
+    // screens - as a fling's is; its streaks show by its own curve, from a quarter of its top speed)
+    const ease = cubicBezier(...EASE_SWOOP), N = 60, travel = TRAVEL * H, way = to - from, frames = [];
+    const speedAt = (k) => (way * (ease(Math.min(1, k + 0.01)) - ease(Math.max(0, k - 0.01))) / (((Math.min(1, k + 0.01) - Math.max(0, k - 0.01)) * T) / 1000)) / H;
+    let top = 0; for (let i = 0; i <= N; i++) top = Math.max(top, speedAt(i / N));
+    let phase = 0, was = 0;
+    for (let i = 0; i <= N; i++) {
+      const k = i / N, at = travel * ease(k), v = speedAt(k);   // screens a second
+      const sv = speedStretch(v), op = Math.min(1, Math.max(0, (v / top - 0.25) / 0.45)), o = op * op * (3 - 2 * op);
+      phase += (1.5 * (at - was)) / sv; was = at;
+      while (phase >= H) {   // wrap: the same picture at the seam, then on from the start of the pattern
+        frames.push({ offset: k, transform: `translateY(${(-H * sv).toFixed(1)}px) scaleY(${sv.toFixed(3)})`, opacity: o });
+        phase -= H;
+        frames.push({ offset: k, transform: `translateY(0px) scaleY(${sv.toFixed(3)})`, opacity: o });
+      }
+      frames.push({ offset: k, transform: `translateY(${(-phase * sv).toFixed(1)}px) scaleY(${sv.toFixed(3)})`, opacity: o });
+    }
+    streaks.animate(frames, { duration: T, easing: 'linear', fill: 'forwards' });
+  }
   // (from the title it covers quickly, before the title's lower edge has risen into view)
   const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;
   const LIFT = LIFT_SWOOP;
