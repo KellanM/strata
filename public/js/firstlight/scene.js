@@ -234,16 +234,26 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const SAMPLES = 40;
     const mat = new THREE.ShaderMaterial({
-      uniforms: { uTex: { value: rt.texture }, uSun: { value: new THREE.Vector2() }, uK: { value: 0 } },
+      uniforms: { uTex: { value: rt.texture }, uSun: { value: new THREE.Vector2() }, uK: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 } },
       depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, premultipliedAlpha: true,   // added as light (ONE, ONE)
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
-      fragmentShader: `uniform sampler2D uTex; uniform vec2 uSun; uniform float uK; varying vec2 vUv;
+      fragmentShader: `uniform sampler2D uTex; uniform vec2 uSun; uniform float uK, uTime, uAspect; varying vec2 vUv;
         void main() {
           // walk back toward the light, gathering what shines through the cracks on the way, fainter with distance
           vec2 dv = (vUv - uSun) * (0.7 / ${SAMPLES}.0), p = vUv;
           vec3 c = vec3(0.0); float w = 1.0;
           for (int i = 0; i < ${SAMPLES}; i++) { p -= dv; c += texture2D(uTex, p).rgb * w; w *= 0.95; }
-          gl_FragColor = vec4(c * uK * (1.2 / ${SAMPLES}.0), 0.0);   // light only: the sky behind the canvas still shows
+          // and they move as an aurora does (Kellan, 2026-10-28): soft folds of light
+          // drifting slowly round, their edges warping as curtains sway, a slow
+          // ripple running out along them, the far ends turning a little cooler
+          vec2 q = (vUv - uSun) * vec2(uAspect, 1.0); float a = atan(q.y, q.x), r = length(q);
+          float t = uTime;
+          float fold = sin(a * 4.0 + 1.1 * sin(a * 2.0 + t * 0.21) + t * 0.13);
+          float fold2 = sin(a * 9.0 - 0.8 * sin(a * 3.0 - t * 0.17 + r * 4.0) - t * 0.09);
+          float sway = sin(r * 9.0 - t * 0.55 + a * 2.0);
+          float stir = 0.45 + 0.4 * (0.5 + 0.5 * fold) * (0.7 + 0.3 * fold2) + 0.12 * sway;
+          vec3 tint = mix(vec3(1.0), vec3(0.78, 0.92, 1.05) + 0.12 * vec3(sin(t * 0.11 + a), 0.0, sin(t * 0.07 - a)), smoothstep(0.05, 0.35, r));
+          gl_FragColor = vec4(c * tint * uK * stir * (0.85 / ${SAMPLES}.0), 0.0);   // light only: the sky behind the canvas still shows
         }`,
     });
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
@@ -265,6 +275,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         sun.copy(CUBE_AT).project(camera);
         mat.uniforms.uSun.value.set(sun.x * 0.5 + 0.5, sun.y * 0.5 + 0.5);
         mat.uniforms.uK.value = k;
+        mat.uniforms.uTime.value = performance.now() / 1000;
+        mat.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
         const auto = renderer.autoClear; renderer.autoClear = false;
         renderer.render(quad, cam);
         renderer.autoClear = auto;
@@ -659,16 +671,17 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       if (breakAt !== null && realT >= breakAt) { breakAt = null; breakGlow(); }
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
-      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.6 + 0.4 * flare);
-      rayK = 1.1 + 0.8 * flare;
+      coreMat.color.copy(CORE).lerp(CORE_HOT, 0.4 + 0.2 * flare);
+      rayK = 0.8 * (1 - smooth(0, 0.3, realT - tapReal));   // the rays go as the stones open: once the light is out there is nothing to shine through
       hollow.visible = orbFrom === null || realT - orbFrom < 0.25;   // the hollow's light has gone into the ball
-      halo.material.opacity = (0.3 + 0.35 * flare) * (1 - smooth(1.2, 3.5, s));
-      halo.scale.setScalar(5.6 + 2 * flare);
-      wallMat.uniforms.uLi.value[0] = (1 + 1.4 * flare) * (1 - smooth(1, 3.8, s));
+      // a gentle swell as the light is released, not a flash (Kellan, 2026-10-28)
+      halo.material.opacity = (0.3 + 0.12 * flare) * (1 - smooth(1.2, 3.5, s));
+      halo.scale.setScalar(5.6 + 0.8 * flare);
+      wallMat.uniforms.uLi.value[0] = (0.7 + 0.3 * flare) * (1 - smooth(1, 3.8, s));
       // the ball: a held breath as the stone opens, then it streams away as the swarm (release over 2.6 s), smaller and smaller
       const gone = orbFrom === null ? 0 : smooth(0, 2.4, realT - orbFrom);
-      orb.material.opacity = (1 - gone) * (1 + 0.4 * flare);
-      orb.scale.setScalar((1.4 + 0.6 * flare) * (1 - 0.8 * gone));
+      orb.material.opacity = (1 - gone) * (0.75 + 0.15 * flare);
+      orb.scale.setScalar((1.2 + 0.25 * flare) * (1 - 0.8 * gone));
       orb.position.y = CUBE_AT.y + 0.35 * gone;
       orb.visible = gone < 1;
       // the rising light lights the wall as it passes
