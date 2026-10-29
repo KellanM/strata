@@ -104,3 +104,18 @@ test('shrine by ad: only when stars are the one thing missing, on a reached chap
   assert.equal(shrineAdEligible({ reached: true, stars: 3, need: 12, solved: true, opened: false }), false, 'solved');
   assert.equal(shrineAdEligible({ reached: true, stars: 3, need: 12, solved: false, opened: true }), false, 'opened by an ad before');
 });
+
+// What players get today (native.js MONETIZED off): no ad screen of any kind, no purchase.
+test('with monetization off, no ad or purchase ever reaches the provider', async () => {
+  const ads = await import('../public/js/ads.js');
+  const calls = [];
+  const spy = { name: 'spy', ready: () => true, interstitial: async (p) => { calls.push(p); }, rewarded: async (p) => { calls.push(p); return false; }, purchase: async () => { calls.push('buy'); return true; }, restore: async () => false };
+  ads.setProvider(spy);
+  ads.init();
+  for (const p of CONFIG.interstitial.placements) assert.equal(ads.canShow(p, { chapterIndex: 3, lesson: false, firstSession: false }), false);
+  assert.equal(await ads.showRewarded('rewind'), true);   // the gift, free
+  assert.equal(await ads.showRewarded('shrine'), true);
+  assert.equal(await ads.buyRemoveAds(), false);
+  assert.equal(ads.purchasable(), false);
+  assert.deepEqual(calls, []);
+});

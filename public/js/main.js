@@ -2020,7 +2020,10 @@ function offerShrine(s) {
 }
 
 // Remove Ads, in How to play under the sound toggles
-function renderSupport() { $('#support').classList.toggle('owned', ads.adsRemoved()); }
+function renderSupport() {
+  $('#support').hidden = !ads.purchasable() && !ads.enabled();   // nothing real to buy (the simulated purchase is the developer's)
+  $('#support').classList.toggle('owned', ads.adsRemoved());
+}
 $('#remove-ads').addEventListener('click', async () => {
   if (await ads.buyRemoveAds()) { renderSupport(); renderRewind(); }
 });

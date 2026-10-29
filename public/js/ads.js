@@ -165,7 +165,14 @@ const noneProvider = {
 let provider = webProvider;
 export function setProvider(p) { provider = p; }
 
-export const enabled = () => !noAdsBuild && store()?.getItem(KEY_OFF) !== '1';
+// The simulated provider (webProvider: a placeholder screen, a pretend purchase) is
+// for the developer panel only. Players never see it - not even once MONETIZED is
+// on - until a real network is set with setProvider (Kellan, 2026-10-28: we have
+// real players).
+const simulated = () => provider === webProvider;
+export const enabled = () => !noAdsBuild && (simulated() ? store()?.getItem(KEY_OFF) === '0' : store()?.getItem(KEY_OFF) !== '1');
+// Remove Ads can be bought: a store build with a real provider
+export const purchasable = () => !noAdsBuild && !simulated();
 export function setEnabled(on) { store()?.setItem(KEY_OFF, on ? '0' : '1'); }
 const active = () => (enabled() ? provider : noneProvider);
 
@@ -220,6 +227,7 @@ export async function showRewarded(placement) {
 }
 
 export async function buyRemoveAds() {
+  if (!purchasable() && !enabled()) return false;
   const ok = await provider.purchase(CONFIG.removeAds.sku, CONFIG.removeAds.price);
   if (ok) store()?.setItem(KEY_REMOVED, '1');
   log(ok ? 'purchase' : 'purchase_cancelled', 'remove_ads');
