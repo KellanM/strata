@@ -2269,7 +2269,12 @@ function carveLogo() {
   if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
-const beginTitle = () => { if (titleBegun) return; titleBegun = true; perf.boot('title-interactive'); };   // First light starts (frame() resumes it)
+const beginTitle = () => {
+  if (titleBegun) return;
+  titleBegun = true; perf.boot('title-interactive');
+  // a returning player's first descent swoops: its streaks drawn while they look at the title
+  if (returning) setTimeout(() => whenIdle(warmStreaks), 1200);
+};   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
@@ -2474,7 +2479,7 @@ function finishPull() {
   // only the launch's descent travels on to the current stone, and from the touch,
   // as one motion with the descent (Kellan, 2026-10-29); a player who has been up to
   // the title and comes back down lands at the map's head, where they left it
-  if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(); }
+  if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(() => { if (pull.gliding) { stopGlide(); setScroll(H); landed(); } }); }
   scrollTo(H, seconds, ease.descent, landed, () => {
     if (pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
     titleScreen.style.pointerEvents = 'none';
@@ -2489,11 +2494,12 @@ function finishPull() {
 // over it: the colours of every chapter on the way, a strip slid by the
 // compositor (smooth however busy the page is). Under it the map leaps to the
 // stone in one step; the stand-in fades off as the blur clears.
-// The swoop's streaks: soft white lines, a tile two screens tall that repeats, drawn
-// while the game is idle so the tap that starts the swoop doesn't wait for them
+// The swoop's streaks: soft white lines, a tile two screens tall that repeats. Drawn ahead, in
+// a quiet moment once the title is up, as a blob decoded before it is wanted - drawn on a timer,
+// it had landed on the splash's erase, and its first use decoded it on the tap's frame (the swoop
+// audit); drawn on the spot only if it is wanted before it is ready
 let streakCache = null;
-function streakTile(W, H) {
-  if (streakCache?.key === `${W}x${H}`) return streakCache.url;
+function streakCanvas(W, H) {
   const dpr = Math.min(2, devicePixelRatio || 1), TH = 2 * H, cv = document.createElement('canvas');
   cv.width = W * dpr; cv.height = TH * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr);
@@ -2506,13 +2512,27 @@ function streakTile(W, H) {
       g.fillStyle = gr; g.fillRect(x - w / 2, y + off, w, len);
     }
   }
-  streakCache = { key: `${W}x${H}`, url: cv.toDataURL() };
+  return cv;
+}
+function streakTile(W, H) {
+  if (streakCache?.key !== `${W}x${H}`) streakCache = { key: `${W}x${H}`, url: streakCanvas(W, H).toDataURL() };
   return streakCache.url;
 }
-// a returning player's first descent swoops: have the streaks ready while they look at the title
-if (returning) setTimeout(() => { const sh = mapSheet(); if (sh?.clientHeight) streakTile(sh.clientWidth, sh.clientHeight); }, 1500);
+function warmStreaks() {
+  const sh = mapSheet(), W = sh?.clientWidth, H = sh?.clientHeight, key = `${W}x${H}`;
+  if (!H || streakCache?.key === key) return;
+  streakCanvas(W, H).toBlob((blob) => {
+    if (!blob || streakCache?.key === key) return;
+    const url = URL.createObjectURL(blob), img = new Image();
+    img.src = url;
+    img.decode().catch(() => {}).then(() => { if (streakCache?.key !== key) streakCache = { key, url }; });
+  });
+}
+const whenIdle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 300));
 // the title's night sky, top to bottom (sampled from the title screen, 390x844)
 const TITLE_NIGHT = ['#111630', '#181b3f', '#1d2555', '#31356b', '#5b568f'];
+// the launch swoop's strip easing, and when (of its time) the stand-in begins to lift off the map
+const EASE_SWOOP = [0.55, 0, 0.15, 1], LIFT_SWOOP = 0.6;
 // CSS's cubic-bezier(x1, y1, x2, y2) as a function of time: the progress at k (0..1), so a
 // script can move in step with a compositor animation eased so
 function cubicBezier(x1, y1, x2, y2) {
@@ -2535,20 +2555,32 @@ function rgbOf([L, A, B]) {
     .map((v) => Math.round(255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055))));
 }
 let stoneGlide = 0;
-function glideToStone() {
+function glideToStone(onLeap) {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
   if (!node) return;
-  // (measured against the sheet: mid-descent it is still sliding up from below)
-  const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top - sheet.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
+  // the stone's place in the page, by its layout: not by where it shows - mid-descent the sheet is
+  // still sliding up from below, and the stone waits in its entrance pose, nudged down (.rv), which
+  // had landed it 20 px high
+  let y = 0, e = node;
+  for (; e && e !== sheet; e = e.offsetParent) y += e.offsetTop;
+  if (!e) y = node.getBoundingClientRect().top - sheet.getBoundingClientRect().top + sheet.scrollTop;
+  const from = sheet.scrollTop, to = Math.max(0, y - sheet.clientHeight * 0.45);
   if (reduceMotion) { sheet.scrollTop = to; return; }
   if (to - from < 40) return;
   const H = sheet.clientHeight, far = to - from > 2.4 * H;
-  let t0 = null, veil = null, settle = [], done = 0;
+  let t0 = null, veil = null, settle = [];
   const stop = () => {
-    cancelAnimationFrame(stoneGlide); clearTimeout(done); sheet.style.filter = '';
+    cancelAnimationFrame(stoneGlide); sheet.style.filter = '';
     if (far) sheet.scrollTop = to;
     settle.forEach((a) => a.cancel());
-    veil?.remove();
+    if (veil) {
+      // interrupted while it covers: it fades off quickly rather than cutting to the map in one frame
+      const v = veil, o = +getComputedStyle(v).opacity;
+      v.getAnimations({ subtree: true }).forEach((a) => a.pause());
+      if (o < 0.02) v.remove();
+      else v.animate([{ opacity: o }, { opacity: 0 }], { duration: 160, fill: 'forwards' }).finished.then(() => v.remove(), () => v.remove());
+      veil = null;
+    }
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
   };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
@@ -2563,29 +2595,34 @@ function glideToStone() {
     stoneGlide = requestAnimationFrame(step);
     return;
   }
-  // the stand-in: the sea's colours from here to the stone, squeezed into four screens
-  const strip = mapWorld.seaStrip, base = (strip?.offsetTop ?? 0) + (mapWorld.scene?.offsetTop ?? 0);
-  const stops = [...(strip?.style.background ?? '').matchAll(/rgba?\(([^)]+)\)\s+(-?[\d.]+)px/g)]
-    .map((m) => [parseFloat(m[2]) + base, m[1].split(',').map(Number)]);
-  const at = (y) => {
-    if (!stops.length) return [200, 190, 200];
-    let k = 0; while (k < stops.length - 1 && stops[k + 1][0] < y) k++;
-    const [y0, c0] = stops[k], [y1, c1] = stops[Math.min(k + 1, stops.length - 1)];
-    const f = y1 > y0 ? Math.min(1, Math.max(0, (y - y0) / (y1 - y0))) : 0;
-    return [0, 1, 2].map((i) => Math.round(c0[i] + (c1[i] - c0[i]) * f));
-  };
-  const span = to + H - from, N = 40, grad = [];
-  // the colours as a fast camera smears them (docs/swoop-study.md): each averaged over a ninth of
-  // the way in OKLab, its chroma put back so the worlds' complements don't meet in grey - no bands
-  const smeared = (y) => { const win = span / 9, M = 24, acc = [0, 0, 0]; let C = 0;
-    for (let m = 0; m < M; m++) { const l = oklab(at(y + win * (m / (M - 1) - 0.5))); for (let i = 0; i < 3; i++) acc[i] += l[i] / M; C += Math.hypot(l[1], l[2]) / M; }
+  // The stand-in: a strip four screens tall of the map's own sky (mapWorld.skyAt), slid up three.
+  // Its middle is the way from here to the stone squeezed, and smeared as a fast camera smears it
+  // (docs/swoop-study.md: averaged in OKLab, its chroma put back, so no bands); its last stretch -
+  // what shows as the map shows through and comes to rest - is the stone's own sky at true scale,
+  // unsmeared, so the strip dissolves into the very colours beneath it (the swoop audit: it had
+  // been a squeeze of thousands of px there, light dissolving into dark)
+  const eased = cubicBezier(...EASE_SWOOP), rest = Math.min(to - from, 3 * H);
+  const left = (k) => Math.min(rest, 3 * H * (1 - eased(k)));
+  const R = left(LIFT_SWOOP), SH = 4 * H, grad = [], span = to - from;
+  const sky = (y) => mapWorld.skyAt(y).map(Math.round);
+  const smeared = (y, win) => { const M = 24, acc = [0, 0, 0]; let C = 0;
+    for (let m = 0; m < M; m++) { const l = oklab(sky(y + win * (m / (M - 1) - 0.5))); for (let i = 0; i < 3; i++) acc[i] += l[i] / M; C += Math.hypot(l[1], l[2]) / M; }
     const k = Math.min(3, C / (Math.hypot(acc[1], acc[2]) || 1));
     return rgbOf([acc[0], acc[1] * k, acc[2] * k]); };
-  // from the title, the strip's first screen is the title's own night, so the stand-in covers it
-  // without a change of colour, and the night runs on into the dawn of the map (Kellan, 2026-10-29)
-  const fromTitle = $('#menu').classList.contains('pulling'), lead = fromTitle ? 0.37 : 0;
-  if (fromTitle) TITLE_NIGHT.forEach((c, i) => grad.push(`${c} ${((i / (TITLE_NIGHT.length - 1)) * 25).toFixed(2)}%`));
-  for (let n = 0; n <= N; n++) grad.push(`rgb(${smeared(from + (span * n) / N).join(',')}) ${((lead + (1 - lead) * n / N) * 100).toFixed(2)}%`);
+  const stopAt = (rgb, s) => grad.push(`rgb(${rgb.join(',')}) ${((s / SH) * 100).toFixed(2)}%`);
+  // from the title, the strip's first screen is the title's own sky - its night, and at its foot the
+  // dawn the tap has called up - so the stand-in covers it without a change of colour (Kellan, 2026-10-29)
+  const fromTitle = $('#menu').classList.contains('pulling'), s0 = fromTitle ? 0.37 * SH : 0, s1 = 3 * H - R;
+  if (fromTitle) {
+    TITLE_NIGHT.slice(0, -1).forEach((c, i) => grad.push(`${c} ${((i / (TITLE_NIGHT.length - 1)) * 20).toFixed(2)}%`));
+    stopAt(sky(0), 0.25 * SH);
+  }
+  for (let n = 0, N = 40; n <= N; n++) {
+    const s = s0 + (s1 - s0) * n / N, y = from + (to - R - from) * n / N;
+    const win = (span / 9) * Math.min(1, (s1 - s) / (0.8 * H));   // the smear easing off as the strip slows
+    stopAt(win > 4 ? smeared(y, win) : sky(y), s);
+  }
+  for (let n = 1, N = 10; n <= N; n++) { const s = s1 + (SH - s1) * n / N; stopAt(sky(to - R + (s - s1)), s); }
   veil = document.createElement('div');
   veil.style.cssText = `position:absolute; left:0; top:${sheet.offsetTop}px; width:100%; height:${H}px; overflow:hidden; pointer-events:none; z-index:${(parseInt(getComputedStyle(sheet).zIndex) || 0) + 1}; opacity:0`;
   const band = document.createElement('div');
@@ -2605,15 +2642,14 @@ function glideToStone() {
   const T = 1450 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again;
   // a long tail to its easing, so it is already slowing as the map shows through
-  const EASE = [0.55, 0, 0.15, 1];
-  const sweep = band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE})`, fill: 'forwards' });
+  const sweep = band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE_SWOOP})`, fill: 'forwards' });
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
   streaks.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.4 }, { transform: `translateY(${-3.6 * H}px) scaleY(.25)`, opacity: 0 }],
     { duration: T * 0.8, easing: 'cubic-bezier(.45, 0, .2, 1)', fill: 'forwards' });
   // (from the title it covers quickly, before the title's lower edge has risen into view)
   const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;
-  const LIFT = 0.6;   // of T: the stand-in begins to lift
+  const LIFT = LIFT_SWOOP;
   veil.animate([{ opacity: 0 }, { opacity: 1, offset: cover }, { opacity: 1, offset: LIFT }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
   // The map comes in short of the stone and, from the moment the stand-in begins to lift, moves
   // exactly as the strip does - the same distance left, the same easing - so the two cross-fade
@@ -2623,14 +2659,13 @@ function glideToStone() {
   // under the stand-in, its contents held back by what is left of the way and eased home along
   // the rest of the strip's own curve (sampled finely). Moved by scrollTop each frame, and
   // blurred afresh each frame, it had stuttered as it came to rest (Kellan, 2026-10-29).
-  const eased = cubicBezier(...EASE), rest = Math.min(to - from, 3 * H);
-  const left = (k) => Math.min(rest, 3 * H * (1 - eased(k)));
   const S = 24, frames = [];
   for (let i = 0; i <= S; i++) frames.push({ transform: `translateY(${left(LIFT + (1 - LIFT) * i / S).toFixed(1)}px)`, offset: i / S });
   const BLUR = 7;
-  const step = (now_) => {
-    t0 ??= now_;
-    const k = Math.min(1, (now_ - t0) / T);
+  // all on the strip's own clock, not the frames': its start resolves only once the tap's frame is
+  // drawn, and timed by the frames the leap and the end had come early (the swoop audit)
+  const step = () => {
+    const k = Math.min(1, (sweep.currentTime ?? 0) / T);
     if (k < 0.3) {                       // pulling away, the blur gathering, before the stand-in covers it
       const a = k / 0.3;
       sheet.scrollTop = from + 0.25 * H * a * a;
@@ -2641,6 +2676,7 @@ function glideToStone() {
     // under the stand-in: to the stone in one step, sharp, the paint hidden; the rest is the compositor's
     // (held back from now, timed on the strip's own clock, so the step never shows through the lift)
     sheet.scrollTop = to; sheet.style.filter = '';
+    onLeap?.();   // the descent from the title finished here too, unseen: else on a slow phone it rose on past the lift
     settle = [...sheet.children].map((c) => {
       const a = c.animate(frames, { duration: (1 - LIFT) * T, easing: 'linear', fill: 'both' });
       // pinned to the strip's timeline (made late, after the step's paint, it had begun late and hurried)
@@ -2648,7 +2684,7 @@ function glideToStone() {
       else a.effect.updateTiming({ delay: Math.max(0, LIFT * T - (sweep.currentTime ?? k * T)) });
       return a;
     });
-    done = setTimeout(stop, (1 - k) * T + 50);
+    Promise.all(settle.map((a) => a.finished)).then(stop, () => {});   // done when the compositor is
   };
   stoneGlide = requestAnimationFrame(step);
   mark('map: swoop to the current stone');

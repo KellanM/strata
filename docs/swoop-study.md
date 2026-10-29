@@ -68,3 +68,16 @@ These were behind `?swoop=`, recorded in the real game, frames in `swoop-frames/
 - All recordings are headless Chromium at 25 fps. Smoothness on an iPhone is untested; Kellan to check on device.
 - A fixed anchor (mechanism 5) isn't tried yet. Candidates: the title's stars stretching into the streaks, or the target stone held sharp while the world rushes past.
 - The Lagoon's dark teal still reads as a short band. That is true to the map, but it could be softened.
+
+## Audit and fixes (2026-10-29)
+
+A subagent audited the swoop against ten intended behaviours in Chromium and WebKit (probes in `%TEMP%\strata-swoop-audit`). Fixed from its findings, and re-measured with its tools:
+
+1. **The arrival's colours.** The strip's last stretch (what shows as the map comes through) is now the landing spot's own sky at true scale, read from `mapWorld.skyAt` (sea and dusk), with the smear easing off toward it. Before, it was a squeeze of ~7000 px of map. Strip end vs map at rest: rgb(155,126,115) vs (69,37,63) before; (60,30,58) vs (70,37,63) after, and (215,171,146) vs (214,172,148) at 60 stones.
+2. **One clock.** The leap and the end read the strip animation's own time, not the frames', and the swoop ends when its animations finish. Before, with the CPU throttled ×4, the settle was cut off at 383/580 ms; now all three finish at 580/580.
+3. **The descent finished at the leap** (under the opaque veil), as a touch would: the sheet's own translate is 0 through the lift in Chromium, throttled Chromium and WebKit.
+4. **The cover's first screen** ends at the map's dawn (`skyAt(0)`), the colour the tap is hurrying the title's foot to, not the night's violet.
+5. **The landing point** is measured by layout (offsetTop), not by the stone's entrance pose: it lands at 45%, 20 px lower than before.
+6. **The streak tile** is drawn once the title has begun, in an idle moment, as a pre-decoded blob, not on a 1.5 s timer that landed on the splash's erase.
+
+Also: a touch before the lift fades the veil off over 160 ms instead of cutting to the map in one frame. Not done: re-landing after a rotation mid-swoop (the app is portrait-locked).
