@@ -156,7 +156,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
    menu). No card: the sky's own wash over the blurred world, as the pause; the pages lie
    side by side and snap, natively scrolled; the titles above follow the swipe, the
    neighbours' peeking faint at the edges (main.js helpTab) */
-#help { display: block; padding: 0; background: color-mix(in srgb, var(--sky) 84%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#help { display: block; padding: 0; color: var(--ink); background: color-mix(in srgb, var(--sky) 84%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 #help .help-close { position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 2;
   background: none; box-shadow: none; border: 1px solid var(--line); color: var(--ink); }   /* a hairline ring, as the map's */
 .car-titles { position: absolute; left: 0; top: calc(78px + var(--safe-t)); display: flex; gap: 34px; white-space: nowrap; will-change: transform; }

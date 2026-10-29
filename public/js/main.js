@@ -1300,7 +1300,7 @@ function restartLevel() {
 pauseEl.addEventListener('click', (e) => {
   const what = e.target.closest('[data-pause]')?.dataset.pause;
   if (what === 'restart') restartLevel();
-  else if (what === 'rules') { helpFrom = 'pause'; show('#pause', false); renderSupport(); show('#help', true); helpTab('rules'); }   // the clock stays stopped
+  else if (what === 'rules') { helpFrom = 'pause'; show('#pause', false); renderSupport(); helpTint(false); show('#help', true); helpTab('rules'); }   // the clock stays stopped
   else if (what === 'map') { closePause(); saveProgress(); openMenu(); }
   else if (what === 'resume' || !e.target.closest('button')) closePause();   // or a tap anywhere else
 });
@@ -1310,7 +1310,24 @@ window.addEventListener('keydown', (e) => {
   closePause();
 }, true);
 let helpFrom = null;   // 'pause' while How to play was opened from the pause: closing it goes back there
-$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); helpFrom = null; show('#help', true); helpTab('more'); });
+$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); helpFrom = null; helpTint(true); show('#help', true); helpTab('more'); });
+// Over the map, the menu is washed in the map's own sky where you are, and inked for it - dark
+// on a light sky, light on a dark one, eased between as the rings are (ringInk) - rather than
+// the last level's colours over whatever lies beneath (Kellan, 2026-10-29: lost over the dark
+// worlds). From a level's pause it keeps the level's.
+function helpTint(onMap) {
+  const h = $('#help'), vars = ['--sky', '--ink', '--ink-soft', '--line', '--panel', '--panel-strong'];
+  if (!onMap || !mapWorld.model?.regions) { vars.forEach((v) => h.style.removeProperty(v)); return; }
+  const sc = mapSheet(), [r, g, b] = mapWorld.skyAt(sc.scrollTop + sc.clientHeight / 2).map(Math.round);
+  const L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255, k = Math.min(1, Math.max(0, (0.7 - L) / 0.34)), t = k * k * (3 - 2 * k);
+  const ink = [74, 61, 99].map((v, i) => Math.round(v + ([238, 240, 255][i] - v) * t)).join(',');
+  h.style.setProperty('--sky', `rgb(${r},${g},${b})`);
+  h.style.setProperty('--ink', `rgb(${ink})`);
+  h.style.setProperty('--ink-soft', `rgba(${ink},.62)`);
+  h.style.setProperty('--line', `rgba(${ink},.18)`);
+  h.style.setProperty('--panel', t > 0.5 ? 'rgba(22, 27, 54, 0.5)' : 'rgba(255, 249, 240, 0.62)');
+  h.style.setProperty('--panel-strong', t > 0.5 ? 'rgba(26, 31, 62, 0.86)' : 'rgba(255, 250, 243, 0.86)');
+}
 
 // The Learn stone's long press: the twelve lessons, to replay just one (docs/help-access-study.md)
 function openLessons(fromEl) {
