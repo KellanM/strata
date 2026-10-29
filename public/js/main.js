@@ -2450,13 +2450,49 @@ function glideToStone() {
     return [0, 1, 2].map((i) => Math.round(c0[i] + (c1[i] - c0[i]) * f));
   };
   const span = to + H - from, N = 40, grad = [];
-  for (let n = 0; n <= N; n++) grad.push(`rgb(${at(from + (span * n) / N).join(',')}) ${((n / N) * 100).toFixed(2)}%`);
+  // EXPERIMENT (swoop study): ?swoop=smear|lines|lines2|stars - the colours averaged as a fast camera
+  // would smear them, mixed in OKLab; then soft streaks over them
+  const SW = new URLSearchParams(location.search).get('swoop') || '';
+  const smear = SW !== '', toLab = (c) => { const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+    return [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b].map(Math.cbrt); };
+  const fromLab = (l) => { const [a, b, c] = l.map((v) => v ** 3);
+    return [4.0767416621 * a - 3.3077115913 * b + 0.2309699292 * c, -1.2684380046 * a + 2.6097574011 * b - 0.3413193965 * c, -0.0041960863 * a - 0.7034186147 * b + 1.7076147010 * c]
+      .map((v) => Math.round(255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)))); };
+  // (LMS-cube average -> OKLab; then the chroma put back to the mean chroma, so complements don't average to grey)
+  const lab = (c) => { const [l, m, q] = toLab(c); return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * q, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * q, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * q]; };
+  const unlab = ([L, A, B]) => fromLab([L + 0.3963377774 * A + 0.2158037573 * B, L - 0.1055613458 * A - 0.0638541728 * B, L - 0.0894841775 * A - 1.2914855480 * B]);
+  const smeared = (y) => { const win = span / 9, M = 24, acc = [0, 0, 0]; let C = 0;
+    for (let m = 0; m < M; m++) { const l = lab(at(y + win * (m / (M - 1) - 0.5))); for (let i = 0; i < 3; i++) acc[i] += l[i] / M; C += Math.hypot(l[1], l[2]) / M; }
+    const c = Math.hypot(acc[1], acc[2]) || 1, k = Math.min(3, C / c);
+    return unlab([acc[0], acc[1] * k, acc[2] * k]); };
+  for (let n = 0; n <= N; n++) grad.push(`rgb(${(smear ? smeared : at)(from + (span * n) / N).join(',')}) ${((n / N) * 100).toFixed(2)}%`);
   veil = document.createElement('div');
   veil.style.cssText = `position:absolute; left:0; top:${sheet.offsetTop}px; width:100%; height:${H}px; overflow:hidden; pointer-events:none; z-index:${(parseInt(getComputedStyle(sheet).zIndex) || 0) + 1}; opacity:0`;
   const band = document.createElement('div');
   band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${4 * H}px; will-change:transform;
     background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1.5px, transparent 1.5px 23px, rgba(255,255,255,.04) 23px 25px, transparent 25px 61px), linear-gradient(180deg, ${grad.join(', ')})`;
   veil.appendChild(band);
+  let streaks = null;
+  if (SW === 'lines' || SW === 'lines2' || SW === 'stars') {
+    const strong = SW !== 'lines', dpr = Math.min(2, devicePixelRatio || 1), W = sheet.clientWidth, TH = 2 * H;
+    const cv = document.createElement('canvas'); cv.width = W * dpr; cv.height = TH * dpr;
+    const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const count = SW === 'stars' ? 140 : strong ? 70 : 45;
+    for (let i = 0; i < count; i++) {
+      const x = rnd() * W, len = (SW === 'stars' ? 0.15 + rnd() * 0.5 : 0.25 + rnd() * 0.9) * H, y = rnd() * TH;
+      const a = SW === 'stars' ? 0.35 + rnd() * 0.5 : (strong ? 0.1 + rnd() * 0.22 : 0.05 + rnd() * 0.12), w = SW === 'stars' ? 0.8 + rnd() * 1.4 : 0.8 + rnd() * (strong ? 2.6 : 1.6);
+      for (const off of [0, -TH, TH]) {
+        const gr = g.createLinearGradient(0, y + off, 0, y + off + len);
+        gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.7, `rgba(255,255,255,${a})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.fillRect(x - w / 2, y + off, w, len);
+      }
+    }
+    streaks = document.createElement('div');
+    streaks.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${3 * TH}px; will-change:transform;
+      background: url(${cv.toDataURL()}) 0 0 / ${W}px ${TH}px repeat-y; mix-blend-mode: ${SW === 'stars' ? 'normal' : 'soft-light'}`;
+    veil.appendChild(streaks);
+  }
   if ($('#menu').classList.contains('pulling')) {
     // from the title: over the whole screen, the title included, so the night dissolves into
     // the sweep instead of its edge sliding up over it (Kellan, 2026-10-29)
@@ -2466,6 +2502,10 @@ function glideToStone() {
   const T = 1250 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again
   band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: 'cubic-bezier(.55, 0, .25, 1)', fill: 'forwards' });
+  // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
+  // with the speed, gone again on arrival
+  streaks?.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.45 }, { transform: `translateY(${-4 * H}px) scaleY(.5)`, opacity: 0 }],
+    { duration: T * 0.85, easing: 'cubic-bezier(.45, 0, .3, 1)', fill: 'forwards' });
   // (from the title it covers quickly, before the title's lower edge has risen into view)
   const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;
   veil.animate([{ opacity: 0 }, { opacity: 1, offset: cover }, { opacity: 1, offset: 0.66 }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
