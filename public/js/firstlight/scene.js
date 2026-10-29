@@ -216,6 +216,62 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     turn.yaw += a; turn.pitch += b;
     setTurn();
   }
+  // God rays (Kellan, 2026-10-28): the light streaming out of the cracks. The
+  // light seen through them is drawn alone - the stones in black, the hollow's
+  // light bright - at half the screen's size, and smeared outward from the
+  // hollow's centre on screen (light scattering in the air); that is laid over
+  // the scene as light only. It follows the stone however it is turned, and goes
+  // with the hollow's light when that is released.
+  const rays = (() => {
+    const rt = new THREE.WebGLRenderTarget(1, 1);
+    const occ = new THREE.Scene();
+    // the stones a little smaller here than drawn: at this size the cracks would be under a pixel
+    const shut = new THREE.InstancedMesh(box, new THREE.MeshBasicMaterial({ color: 0x000000 }), stoneCells.length);
+    shut.frustumCulled = false;
+    const m = new THREE.Matrix4(), smaller = new THREE.Matrix4().makeScale(0.9, 0.9, 0.9);
+    const glow = new THREE.Mesh(hollow.geometry, new THREE.MeshBasicMaterial({ color: 0xffd39a }));
+    occ.add(shut, glow);
+    const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const SAMPLES = 40;
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTex: { value: rt.texture }, uSun: { value: new THREE.Vector2() }, uK: { value: 0 } },
+      depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, premultipliedAlpha: true,   // added as light (ONE, ONE)
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: `uniform sampler2D uTex; uniform vec2 uSun; uniform float uK; varying vec2 vUv;
+        void main() {
+          // walk back toward the light, gathering what shines through the cracks on the way, fainter with distance
+          vec2 dv = (vUv - uSun) * (0.7 / ${SAMPLES}.0), p = vUv;
+          vec3 c = vec3(0.0); float w = 1.0;
+          for (int i = 0; i < ${SAMPLES}; i++) { p -= dv; c += texture2D(uTex, p).rgb * w; w *= 0.95; }
+          gl_FragColor = vec4(c * uK * (1.2 / ${SAMPLES}.0), 0.0);   // light only: the sky behind the canvas still shows
+        }`,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+    quad.frustumCulled = false;
+    const was = new THREE.Color(), sun = new THREE.Vector3();
+    return {
+      setSize(w, h) { rt.setSize(Math.max(1, Math.round(w / 2)), Math.max(1, Math.round(h / 2))); },
+      render(k) {
+        if (k <= 0.001 || !hollow.visible) return;
+        shut.visible = stones.visible;
+        for (let i = 0; i < stones.count; i++) { stones.getMatrixAt(i, m); shut.setMatrixAt(i, m.multiply(smaller)); }
+        shut.instanceMatrix.needsUpdate = true;
+        glow.position.copy(hollow.position); glow.quaternion.copy(hollow.quaternion);
+        glow.material.color.copy(coreMat.color);
+        const alpha = renderer.getClearAlpha(); renderer.getClearColor(was);
+        renderer.setClearColor(0x000000, 1);
+        renderer.setRenderTarget(rt); renderer.clear(); renderer.render(occ, camera);
+        renderer.setRenderTarget(null); renderer.setClearColor(was, alpha);
+        sun.copy(CUBE_AT).project(camera);
+        mat.uniforms.uSun.value.set(sun.x * 0.5 + 0.5, sun.y * 0.5 + 0.5);
+        mat.uniforms.uK.value = k;
+        const auto = renderer.autoClear; renderer.autoClear = false;
+        renderer.render(quad, cam);
+        renderer.autoClear = auto;
+      },
+    };
+  })();
+  let rayK = 0;   // how strongly the rays show (step)
   // a soft glow round the block, from the light behind its cracks
   const haloTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -552,6 +608,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     camera.fov = w / h < 0.75 ? 45 : 38;
     camera.updateProjectionMatrix();
     trails.setSize(w * DPR, h * DPR);
+    rays.setSize(w * DPR, h * DPR);
     unitPx = (h * DPR) / (2 * Math.tan(camera.fov * Math.PI / 360) * CAM_Z);
   }
   window.addEventListener('resize', layout);
@@ -584,6 +641,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
         setTurn();
       }
       coreMat.color.copy(CORE).lerp(CORE_HOT, 0.35 * breath).multiplyScalar(lit);
+      rayK = (0.75 + 0.35 * breath) * lit;
       halo.material.opacity = (0.16 + 0.14 * breath) * lit;
       halo.scale.setScalar(5.6 + 0.8 * breath);
       wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(CUBE_AT.z + 1.8);   // the light out of the cracks, on the stones' faces
@@ -602,6 +660,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       // the stone opens: a held breath of brightness, then it gives its light away
       const flare = smooth(0, 0.3, s) * (1 - smooth(0.3, 2.4, s));
       coreMat.color.copy(CORE).lerp(CORE_HOT, 0.6 + 0.4 * flare);
+      rayK = 1.1 + 0.8 * flare;
       hollow.visible = orbFrom === null || realT - orbFrom < 0.25;   // the hollow's light has gone into the ball
       halo.material.opacity = (0.3 + 0.35 * flare) * (1 - smooth(1.2, 3.5, s));
       halo.scale.setScalar(5.6 + 2 * flare);
@@ -660,6 +719,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     renderer.setRenderTarget(null);
     renderer.clear();
     renderer.render(scene, camera);
+    rays.render(rayK);
     if (tapAt !== null) {
       trails.render(swarmScene, camera, swarm, dt * pace(simT - tapAt), 0.95);
       trails.composite(1.6);
