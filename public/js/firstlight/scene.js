@@ -781,8 +781,22 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     if (veil) veil.style.opacity = '0';
     lastReal = null;
   }
+  // every program the title draws with, each used once now - under the studio's card, the
+  // canvas not yet shown (main.js) - so none is compiled at the title's first frame, or at the
+  // tap, where each was a visible hitch on a phone
+  function warm() {
+    render(0);
+    rays.render(1);
+    trails.render(swarmScene, camera, swarm, 1 / 60, 0);
+    trails.composite(1);
+    const was = renderer.autoClear; renderer.autoClear = false;
+    renderer.render(swarmScene, camera);
+    renderer.autoClear = was;
+    for (const t of [trails.a, trails.b]) { renderer.setRenderTarget(t); renderer.clear(); }
+    renderer.setRenderTarget(null); renderer.clear();
+  }
   return {
-    tap, finish,
+    tap, finish, warm,
     // a finger turns the stone until it is opened (main.js routes every drag here till then)
     turnBy(dx, dy) { if (tapAt === null) { idleSince = simT; hint?.classList.remove('show'); turnBy(dx, dy); } },
     grab() { turn.vy = turn.vp = 0; turn.held = true; turn.at = performance.now(); },

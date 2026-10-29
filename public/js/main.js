@@ -2252,7 +2252,7 @@ function carveLogo() {
   if (soundLive()) { sound.chisel(1); welcomed = true; }   // heard wherever the sound is already allowed
   mark('title: logo carved');
 }
-const beginTitle = () => { titleBegun = true; perf.boot('title-interactive'); };   // First light starts (frame() resumes it)
+const beginTitle = () => { if (titleBegun) return; titleBegun = true; perf.boot('title-interactive'); };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
@@ -2275,28 +2275,39 @@ const buildMap = () => {
 // animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
 // the title begins under it, the logo carving as before. A tap lifts it as
 // soon as that work is done.
-const SPLASH_HOLD = 1.75;   // s: the card is drawn on in chalk, held and wiped off again (index.html @keyframes chalk, 0.1 + 1.6 s); about 2 s, as the peers' cards (docs/flow-study.md F3)
+const SPLASH_HOLD = 1.6;   // s: the card is drawn on in chalk, held and wiped off again (index.html @keyframes chalk: wiped by 1.67 s, the card fading as the wipe ends); about 2 s, as the peers' cards (docs/flow-study.md F3)
 const splash = $('#splash');
 if (splash) {
   let lifted = false, ready = false;
+  // the title begins under the card (half a second ahead, its programs compiled already: fl.warm),
+  // so the stone is there when the card fades, and the card's fade is the stone's, up out of the
+  // black - not a beat of black and the stone popping in whole (Kellan, 2026-10-29). (Fading the
+  // canvas itself instead cost a frame of a third of a second as it was first shown.)
   const lift = () => {
     if (lifted || !ready) return;
     lifted = true;
-    splash.classList.add('out');
-    document.querySelector('meta[name=theme-color]').content = themeColor;
-    mark('splash: lifted');
-    perf.boot('splash-lifted');
-    setTimeout(() => splash.remove(), 800);
+    const late = !titleBegun;
     beginTitle();
+    const go = (f) => (late ? requestAnimationFrame(() => requestAnimationFrame(f)) : f());
+    go(() => {
+      splash.classList.add('out');
+      document.querySelector('meta[name=theme-color]').content = themeColor;
+      mark('splash: lifted');
+      perf.boot('splash-lifted');
+      setTimeout(() => splash.remove(), 800);
+    });
   };
   // a tap skips the rest of the card (index.html notes it, even one made before this ran)
   window.onSplashTap = () => { mark('splash: tapped'); lift(); };
   requestAnimationFrame(() => requestAnimationFrame(() => {
+    fl.warm();
     buildMap();
     ready = true;
     if (window.splashTapped) { lift(); return; }
     const quick = splash.classList.contains('quick') || reduceMotion;
     const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
+    // (the title starts half a second ahead, as the chalk is wiped off)
+    if (left > 500) setTimeout(beginTitle, left - 500);
     setTimeout(lift, left);
   }));
 } else {

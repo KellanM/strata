@@ -28,7 +28,7 @@
        name was laid in the rock's long shadow on a lit floor, then the pair sat
        in a white circle; the name keeps its warp). */
     #splash { position: fixed; inset: 0; min-height: 100lvh; z-index: 1000; background: #000; overflow: hidden;
-      transition: opacity .7s ease; -webkit-user-select: none; user-select: none; }
+      transition: opacity 1s cubic-bezier(.3, 0, .3, 1); -webkit-user-select: none; user-select: none; }
     #splash.out { opacity: 0; pointer-events: none; }
     #splash svg * { stroke: none !important; }   /* style.css strokes the HUD's icons */
     #splash .gone { display: none; }
@@ -42,7 +42,7 @@
        moving while the game loads behind the card (tools/chalk-strip.py) */
     #splash .chalk { position: absolute; left: 78px; top: 296px; width: 240px; height: 206px; overflow: hidden; }
     #splash .chalk i { position: absolute; top: 0; left: 0; width: 200%; height: 100%; background: 0 0 / 100% 100% no-repeat; will-change: transform; }
-    #splash .chalk .draw { background-image: url(chalk-draw.png); animation: chalk-draw .6s steps(7, end) .1s both; }
+    #splash .chalk .draw { background-image: url(chalk-draw.png); animation: chalk-draw .6s cubic-bezier(.3, 0, .7, 1) .1s both; }
     #splash .chalk .wipe { background-image: url(chalk-wipe.png); animation: chalk-wipe .42s cubic-bezier(.5, 0, .8, .6) 1.25s both; }
     @keyframes chalk-draw { from { transform: translateX(-25%); } to { transform: translateX(50%); } }
     @keyframes chalk-wipe { from { transform: translateX(-100%); } to { transform: translateX(0); } }
