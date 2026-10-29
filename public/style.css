@@ -672,7 +672,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .toggle.on { opacity: 1; }
 .toggle.on::before { background: currentColor; }
 
-/* after a solve: three rings in the pause's voice - Map, Next (the larger, filled a little), Again -
+/* after a solve: three rings in the pause's voice - Map, Next (the larger, filled a little), Replay -
    each named under it; no panel, the result lives in the scene (Kellan, 2026-10-29; experience-study
    H2, mockup M1) */
 #actions {
