@@ -51,7 +51,8 @@
        made, placed and timed (--d) by the script after the card */
     #splash .chalk .slaps { position: absolute; inset: 0; background: #000; }
     #splash .chalk .slaps i { position: absolute; width: 84px; height: 84px; background: url(splash-logo.png) 0 0 / 240px 206px no-repeat;
-      -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; opacity: 0; }
+      -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; opacity: 0;
+      will-change: transform, opacity; }   /* each its layer, masked and painted, before the chalk begins - made as each slap began, mid-way, they had cost frames (Kellan, 2026-10-29: "it hangs at certain points") */
     /* only once the game has loaded and is ready (main.js adds .go): the card is plain black till
        then, so nothing else is asked of the phone while the chalk goes on and comes off (Kellan,
        2026-10-29: put on while the game loaded, it stuttered, and came off in a snap) */
@@ -153,12 +154,14 @@
       const lay = (keep) => {
         const set = dabs.filter(keep).sort((p, q) => along(q) - along(p)), n = set.length;
         box.innerHTML = set.map((d, i) => {
-          const t = (i / Math.max(1, n - 1)) * 0.5 + d[3] * 0.03;   // an even beat, a touch uneven as slaps are
+          const t = 0.05 + (i / Math.max(1, n - 1)) * 0.6 + d[3] * 0.03;   // an even beat over 0.6 s (the pace Kellan liked), a touch uneven as slaps are
           const l = d[0] - 42, top = d[1] - 42;
           return `<i style="left:${l.toFixed(1)}px;top:${top.toFixed(1)}px;background-position:${(-l).toFixed(1)}px ${(-top).toFixed(1)}px;--m:url(chalk-splotch-${d[2]}.png);--d:${t.toFixed(3)}s"${i === n - 1 ? ' data-last' : ''}></i>`;
         }).join('');
       };
       lay(() => true);   // at once, all of them (if the picture can't be read, as before)
+      // the dabs' shapes decoded now, in the black, not on their first slap
+      [1, 2, 3].forEach((k) => { const m = new Image(); m.src = `chalk-splotch-${k}.png`; m.decode().catch(() => {}); });
       const img = new Image();
       img.src = 'splash-logo.png';
       img.decode().then(() => {
