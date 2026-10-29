@@ -331,11 +331,18 @@ export class MapWorld {
   // once the title is up (main.js): a canvas is a layer of its own, and everything drawn over one
   // became one too - some 230 layers on the map, the fling audit found, multiplying the memory a
   // fast scroll takes. The same pixels, so nothing shows the change.
-  lighten(idle = (f) => setTimeout(f, 50)) {
+  // canSwap(canvas): whether it may be swapped now - never one near the screen while the map is
+  // up and moving (Kellan, 2026-10-29: a quick tap had the swaps running for some 10 s after the
+  // landing, and a phone showed a swapped piece unpainted for a moment - seams between the worlds)
+  lighten(idle = (f) => setTimeout(f, 50), canSwap = () => true) {
     const todo = [...this.scene.querySelectorAll('canvas:not(.mw-strip):not(.mw-dusk-stars)')];   // (the dusk's stars are redrawn on a resize)
     const next = () => {
-      const batch = todo.splice(0, 4);
-      if (!batch.length) return;
+      if (!todo.length) return;
+      const batch = [];
+      for (let i = 0; i < todo.length && batch.length < 4; ) {
+        if (!todo[i].isConnected || canSwap(todo[i])) batch.push(...todo.splice(i, 1)); else i++;
+      }
+      if (!batch.length) { setTimeout(() => idle(next), 500); return; }   // none may go yet: look again in a while
       let left = batch.length;
       const done = () => { if (--left === 0) idle(next); };
       for (const c of batch) {
@@ -345,7 +352,8 @@ export class MapWorld {
           const img = new Image();
           img.src = URL.createObjectURL(blob);
           img.decode().then(() => {
-            if (c.isConnected) {
+            if (c.isConnected && !canSwap(c)) { URL.revokeObjectURL(img.src); todo.push(c); }   // (the map has moved on since: later)
+            else if (c.isConnected) {
               img.className = c.className; img.style.cssText = c.style.cssText; img.setAttribute('aria-hidden', 'true');
               img.width = c.width; img.height = c.height; img.draggable = false;
               c.replaceWith(img);

@@ -2328,7 +2328,16 @@ const beginTitle = () => {
   // a fast fling's streaks (rushStreaks) drawn while they look at the title, not on its first frame
   setTimeout(() => whenIdle(() => { const sh = mapSheet(); if (sh?.clientHeight) rushStreaks(sh.clientWidth, sh.clientHeight); }), 1200);
   // and the map's mist made plain images, a few at a time in quiet moments (mapworld.js lighten)
-  setTimeout(() => mapWorld.built?.then(() => mapWorld.lighten(whenIdle)), 2500);
+  // (any piece while the title covers the map; once the map is up, only pieces well off the screen,
+  // and only when it has been still a moment)
+  const mistSwap = (c) => {
+    if (swooping || pull.live || pull.gliding) return false;
+    if (titleUp) return true;
+    if (performance.now() - mapScrolledAt < 1200) return false;
+    const r = c.getBoundingClientRect(), H = innerHeight;
+    return r.bottom < -1.5 * H || r.top > 2.5 * H;
+  };
+  setTimeout(() => mapWorld.built?.then(() => mapWorld.lighten(whenIdle, mistSwap)), 2500);
 };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
@@ -2533,7 +2542,8 @@ function mapRush() {
   st.style.opacity = ts.toFixed(3);
 }
 let ringInkFrame = 0;
-mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
+let mapScrolledAt = 0;
+mapSheet().addEventListener('scroll', () => { mapScrolledAt = performance.now(); if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {
