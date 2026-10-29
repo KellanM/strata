@@ -69,6 +69,11 @@ function cube(top, left, right, size = 44) {
   </svg>`;
 }
 
+// Learn, once its lessons are done: the stone they were learned on, carved as
+// the app icon is (a 3x3x3 block, its near top corner chiselled away). It takes
+// the place of the plain stone, as a solved stone becomes its object.
+const LEARNED = { id: 'learned', dims: [3, 3, 3], cell: (x, y, z) => (x === 2 && y === 2 && z === 2 ? 0 : 0xf3e7d3) };
+
 // A chapter shrine: a faceted gem over a slim spire; gold once its stars open it.
 const GOLD = { top: 0xfff2c2, lit: 0xf3c95a, shade: 0xc98d2e, under: 0x8a5a1c };
 function shrine(p, state, size = 56) {
@@ -453,8 +458,14 @@ export function renderMap(root, opts) {
     b.style.setProperty('--glow', hex(p.glow));
     let num = '', name = '', meta = '', art = cube(hex(p.top), hex(p.lit), hex(p.shade), n.kind === 'drift' ? 38 : 46);
     if (n.kind === 'learn') {
-      num = '00'; name = 'Learn'; meta = `${lessons} lessons`;
+      num = '00'; name = 'Learn'; meta = learned ? 'completed' : `${lessons} lessons`;
       b.setAttribute('aria-label', `Learn: ${lessons} short lessons${learned ? ', completed' : ''}`);
+      if (learned) {
+        // done: the plain stone gives way to the carved one, the first time with the solved stones' rise
+        const fresh = celebrate && !seenObjects.has(LEARNED.id);
+        art = `${fresh ? art : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(LEARNED, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(LEARNED, p, { size: 120 })}"></span>`;
+        if (fresh) { b.classList.add('fresh'); newlySeen.push(LEARNED.id); }
+      }
       // a tap begins the lessons; a long press lists them, to replay just one
       let held = false, timer = 0;
       b.addEventListener('pointerdown', () => { held = false; clearTimeout(timer); timer = setTimeout(() => { held = true; opts.onLearnList?.(b); }, 520); });
@@ -498,7 +509,6 @@ export function renderMap(root, opts) {
       }
     }
     b.innerHTML = `<span class="halo"></span><span class="ring"></span>${art}
-      ${n.state === 'solved' && n.kind === 'learn' ? '<span class="mark" aria-hidden="true"></span>' : ''}
       <span class="label">${num ? `<span class="n">${num}</span>` : ''}<span class="nm">${esc(name)}</span><span class="mt">${meta}</span></span>`;
     band.el.appendChild(b);
     n.el = b;

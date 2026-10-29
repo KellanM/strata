@@ -397,11 +397,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 @keyframes breathe { 0%, 100% { transform: scale(.82); opacity: .55; } 50% { transform: scale(1.08); opacity: 1; } }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* solved: the uncovered colour, and a small diamond mark */
-.map-node .mark {
-  position: absolute; top: 12px; right: 12px; width: 9px; height: 9px; transform: rotate(45deg);
-  background: currentColor; opacity: .7; box-shadow: 0 0 0 2px color-mix(in srgb, var(--glow) 70%, transparent);
-}
+/* solved: the uncovered colour (Learn and the stones show what they became) */
 .map-node.solved .halo { opacity: .35; }
 
 /* locked: a faint outline of stone, still on the trail */
