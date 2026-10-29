@@ -2506,10 +2506,11 @@ function glideToStone() {
   if (reduceMotion) { sheet.scrollTop = to; return; }
   if (to - from < 40) return;
   const H = sheet.clientHeight, far = to - from > 2.4 * H;
-  let t0 = null, veil = null, leapt = false;
+  let t0 = null, veil = null, settle = [], done = 0;
   const stop = () => {
-    cancelAnimationFrame(stoneGlide); sheet.style.filter = '';
+    cancelAnimationFrame(stoneGlide); clearTimeout(done); sheet.style.filter = '';
     if (far) sheet.scrollTop = to;
+    settle.forEach((a) => a.cancel());
     veil?.remove();
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
   };
@@ -2568,7 +2569,7 @@ function glideToStone() {
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again;
   // a long tail to its easing, so it is already slowing as the map shows through
   const EASE = [0.55, 0, 0.15, 1];
-  band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE})`, fill: 'forwards' });
+  const sweep = band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE})`, fill: 'forwards' });
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
   streaks.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.4 }, { transform: `translateY(${-3.6 * H}px) scaleY(.25)`, opacity: 0 }],
@@ -2581,8 +2582,15 @@ function glideToStone() {
   // exactly as the strip does - the same distance left, the same easing - so the two cross-fade
   // as one surface slowing into place, coming to rest together (Kellan, 2026-10-29: it had glided
   // mostly unseen, and showed through slower than the strip above it: a snap, then a catching up)
-  const eased = cubicBezier(...EASE), left = (k) => 3 * H * (1 - eased(k));
-  const BLUR = 7, land = Math.max(from, to - left(LIFT));
+  // And all of it on the compositor, as the strip is: the map is put at the stone in one step
+  // under the stand-in, its contents held back by what is left of the way and eased home along
+  // the rest of the strip's own curve (sampled finely). Moved by scrollTop each frame, and
+  // blurred afresh each frame, it had stuttered as it came to rest (Kellan, 2026-10-29).
+  const eased = cubicBezier(...EASE), rest = Math.min(to - from, 3 * H);
+  const left = (k) => Math.min(rest, 3 * H * (1 - eased(k)));
+  const S = 24, frames = [];
+  for (let i = 0; i <= S; i++) frames.push({ transform: `translateY(${left(LIFT + (1 - LIFT) * i / S).toFixed(1)}px)`, offset: i / S });
+  const BLUR = 7;
   const step = (now_) => {
     t0 ??= now_;
     const k = Math.min(1, (now_ - t0) / T);
@@ -2590,13 +2598,20 @@ function glideToStone() {
       const a = k / 0.3;
       sheet.scrollTop = from + 0.25 * H * a * a;
       sheet.style.filter = `blur(${(BLUR * a).toFixed(2)}px)`;
-    } else {
-      if (!leapt) { leapt = true; sheet.scrollTop = land; }   // under the stand-in: one step, the paint hidden
-      if (k >= LIFT) sheet.scrollTop = Math.max(land, to - left(k));
-      const a = Math.max(0, (k - LIFT) / (1 - LIFT));
-      sheet.style.filter = a < 1 ? `blur(${(BLUR * (1 - a) ** 2).toFixed(2)}px)` : '';
+      stoneGlide = requestAnimationFrame(step);
+      return;
     }
-    if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
+    // under the stand-in: to the stone in one step, sharp, the paint hidden; the rest is the compositor's
+    // (held back from now, timed on the strip's own clock, so the step never shows through the lift)
+    sheet.scrollTop = to; sheet.style.filter = '';
+    settle = [...sheet.children].map((c) => {
+      const a = c.animate(frames, { duration: (1 - LIFT) * T, easing: 'linear', fill: 'both' });
+      // pinned to the strip's timeline (made late, after the step's paint, it had begun late and hurried)
+      if (sweep.startTime != null) a.startTime = sweep.startTime + LIFT * T;
+      else a.effect.updateTiming({ delay: Math.max(0, LIFT * T - (sweep.currentTime ?? k * T)) });
+      return a;
+    });
+    done = setTimeout(stop, (1 - k) * T + 50);
   };
   stoneGlide = requestAnimationFrame(step);
   mark('map: swoop to the current stone');
