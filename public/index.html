@@ -138,23 +138,42 @@
   </div>
   <script>
     // the chalk's splotches: a grid of dabs a little jittered over the logo's box, each slapped on
-    // in turn from where the rock is looking (up and right) down and back across it, over about
-    // half a second (start.js waits for the last before the game's code loads)
+    // in turn from where the rock is looking (up and right) down and back across it. Only those
+    // that land on the logo, and at an even beat by their order - laid over the whole box, the
+    // first had landed on empty black and the last trickled in, and it seemed to hang before it
+    // ended (Kellan, 2026-10-29). Which hold any of the logo is read from its picture while the
+    // card is still black (main.js plays the chalk once the game has loaded).
     (() => {
       const box = document.querySelector('#splash .chalk .slaps');
       if (!box) return;
       let seed = 5; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       const dabs = [];
       for (let y = 0; y <= 206; y += 34) for (let x = 0; x <= 240; x += 34) dabs.push([x + (rnd() - 0.5) * 12, y + (rnd() - 0.5) * 12, 1 + Math.floor(rnd() * 3), rnd()]);
-      const along = ([x, y]) => 0.42 * x - 0.91 * y, hi = Math.max(...dabs.map(along)), lo = Math.min(...dabs.map(along));
-      let last = null, latest = -1;
-      box.innerHTML = dabs.map((d) => {
-        const t = 0.1 + ((hi - along(d)) / (hi - lo)) * 0.5 + d[3] * 0.05;   // rolling, a little uneven, as slaps are
-        const l = d[0] - 42, top = d[1] - 42;
-        if (t > latest) { latest = t; last = d; }
-        return `<i style="left:${l.toFixed(1)}px;top:${top.toFixed(1)}px;background-position:${(-l).toFixed(1)}px ${(-top).toFixed(1)}px;--m:url(chalk-splotch-${d[2]}.png);--d:${t.toFixed(3)}s"${d === last ? ' data-last' : ''}></i>`;
-      }).join('');
-      box.querySelectorAll('[data-last]').forEach((e, i, all) => { if (i < all.length - 1) e.removeAttribute('data-last'); });
+      const along = ([x, y]) => 0.42 * x - 0.91 * y;
+      const lay = (keep) => {
+        const set = dabs.filter(keep).sort((p, q) => along(q) - along(p)), n = set.length;
+        box.innerHTML = set.map((d, i) => {
+          const t = (i / Math.max(1, n - 1)) * 0.5 + d[3] * 0.03;   // an even beat, a touch uneven as slaps are
+          const l = d[0] - 42, top = d[1] - 42;
+          return `<i style="left:${l.toFixed(1)}px;top:${top.toFixed(1)}px;background-position:${(-l).toFixed(1)}px ${(-top).toFixed(1)}px;--m:url(chalk-splotch-${d[2]}.png);--d:${t.toFixed(3)}s"${i === n - 1 ? ' data-last' : ''}></i>`;
+        }).join('');
+      };
+      lay(() => true);   // at once, all of them (if the picture can't be read, as before)
+      const img = new Image();
+      img.src = 'splash-logo.png';
+      img.decode().then(() => {
+        if (document.querySelector('#splash.go')) return;   // too late: it has begun
+        const c = document.createElement('canvas'); c.width = 240; c.height = 206;
+        const g = c.getContext('2d'); g.drawImage(img, 0, 0, 240, 206);
+        const px = g.getImageData(0, 0, 240, 206).data;
+        // a dab holds the logo if any of its middle (about its solid part) is lit
+        lay(([x, y]) => {
+          for (let j = Math.max(0, Math.round(y - 26)); j < Math.min(206, y + 26); j += 3)
+            for (let i = Math.max(0, Math.round(x - 26)); i < Math.min(240, x + 26); i += 3)
+              if ((i - x) ** 2 + (j - y) ** 2 < 26 * 26 && px[(j * 240 + i) * 4] > 60) return true;
+          return false;
+        });
+      }).catch(() => {});
     })();
     // when the card began (main.js holds it at least its length); a second
     // launch in the same session (an update's reload) skips the animation
