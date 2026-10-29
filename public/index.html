@@ -71,8 +71,8 @@
           <!-- a sticker (Kellan, 2026-10-28): a white border round the rock and its
                name together, grown out from their outline and rounded off -->
           <filter id="sr-sticker" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="12" result="grow"/>
-            <feGaussianBlur in="grow" stdDeviation="5" result="soft"/>
+            <feMorphology in="SourceAlpha" operator="dilate" radius="8" result="grow"/>
+            <feGaussianBlur in="grow" stdDeviation="3.5" result="soft"/>
             <feComponentTransfer in="soft" result="edge"><feFuncA type="linear" slope="6" intercept="-2.2"/></feComponentTransfer>
             <feFlood flood-color="#fff"/>
             <feComposite operator="in" in2="edge" result="border"/>
