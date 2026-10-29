@@ -55,31 +55,21 @@ export class Sound {
       o.start(t + 0.2); o.stop(at(16) + 0.2);
     }
   }
-  // The stone breaking (Kellan, 2026-10-29: "incredibly satisfying"). At the touch:
-  // a deep soft thoom as it gives way, a glassy crack (a geode splitting: a few
-  // inharmonic partials over a bright snap), and an airy whoosh rising as the light
-  // leaves. Then each of the 26 stones a crisp woody tok, panned where it is,
-  // climbing a pentatonic run as they go (a marimba glissando), and as the last
-  // goes a soft chord, the light reaching the sky.
+  // The stone breaking (Kellan, 2026-10-29): just the impact, dry - no echo (the
+  // night's delay made each hit sound three times) and no notes. At the touch a
+  // deep soft thoom as it gives way and a sharp crack; then each of the 26 stones
+  // a short knock, panned where it is.
   release() {
     if (!this.ctx) return;
     const c = this.ctx, t = c.currentTime;
     // the thoom: a low sine falling in pitch, felt more than heard
     const o = c.createOscillator(), g = c.createGain();
     o.frequency.setValueAtTime(96, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.45);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.42, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-    o.connect(g); g.connect(this.out); o.start(t); o.stop(t + 0.75);
-    // the crack: a bright snap, and glassy partials ringing a moment
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.42, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    o.connect(g); g.connect(this.out); o.start(t); o.stop(t + 0.65);
+    // the crack: a bright snap over a gritty break
     this.burst(t, 0.035, 0.5, 5200, 0.9, 'highpass');
-    this.burst(t, 0.12, 0.22, 1800, 3);
-    for (const [f, gn, d] of [[1630, 0.05, 0.5], [2471, 0.035, 0.38], [3517, 0.025, 0.3], [4890, 0.015, 0.22]]) this.tone(f * (0.98 + 0.04 * Math.random()), t + 0.004, d, gn, 'sine');
-    // the whoosh: breath of air rising after the light
-    const n = this.noiseSrc(1.6), bp = c.createBiquadFilter(), ng = c.createGain();
-    bp.type = 'bandpass'; bp.Q.value = 1.2;
-    bp.frequency.setValueAtTime(400, t + 0.05); bp.frequency.exponentialRampToValueAtTime(5200, t + 1.5);
-    ng.gain.setValueAtTime(0, t + 0.05); ng.gain.linearRampToValueAtTime(0.09, t + 0.5); ng.gain.linearRampToValueAtTime(0, t + 1.6);
-    n.connect(bp); bp.connect(ng); ng.connect(this.out); ng.connect(this.wet); n.start(t + 0.05); n.stop(t + 1.7);
-    this.run = 0;
+    this.burst(t, 0.14, 0.26, 1500, 2.2);
   }
   // one stone of the 26 going: k its place in the run (0..1), pan -1..1
   stone(k, pan = 0) {
@@ -88,28 +78,12 @@ export class Sound {
     const p = c.createStereoPanner ? c.createStereoPanner() : null;
     if (p) { p.pan.value = Math.max(-0.8, Math.min(0.8, pan)); p.connect(this.out); }
     const dest = p ?? this.out;
-    // the tok: a tight knock of stone - a short resonant click and a falling low body
-    this.burst(t, 0.018, 0.16 * (1 - 0.3 * k), 1700 + 900 * Math.random(), 7, 'bandpass', dest);
+    // the knock: a tight resonant click and a falling low body
+    this.burst(t, 0.02, 0.18 * (1 - 0.3 * k), 1500 + 900 * Math.random(), 6, 'bandpass', dest);
     const o = c.createOscillator(), g = c.createGain();
-    o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.06);
-    g.gain.setValueAtTime(0.11, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-    o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
-    // its note, climbing the scale through the run: woody, a marimba bar (fundamental and its 4th partial)
-    const step = this.run++, m = 62 + SCALE[step % 5] + 12 * Math.floor(step / 5);
-    const f = midi(Math.min(m, 98));
-    this.bar(f, t, 0.075 * (1 - 0.25 * k), dest);
-    if (k >= 1) {   // the last: a soft chord as the light reaches the sky
-      for (const [mm, gn] of [[74, 0.05], [79, 0.04], [83, 0.035], [86, 0.03]]) this.tone(midi(mm), t + 0.12, 2.6, gn, 'sine');
-    }
-  }
-  bar(f, at, gain, dest = this.out) {
-    const c = this.ctx;
-    for (const [mul, gn, d] of [[1, gain, 0.42], [3.93, gain * 0.32, 0.12]]) {
-      const o = c.createOscillator(), g = c.createGain();
-      o.frequency.value = f * mul;
-      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(gn, at + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, at + d);
-      o.connect(g); g.connect(dest); g.connect(this.wet); o.start(at); o.stop(at + d + 0.05);
-    }
+    o.frequency.setValueAtTime(200 + 40 * Math.random(), t); o.frequency.exponentialRampToValueAtTime(100, t + 0.07);
+    g.gain.setValueAtTime(0.13 * (1 - 0.3 * k), t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.12);
   }
   noiseSrc(dur) {
     const c = this.ctx, buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate), ch = buf.getChannelData(0);
