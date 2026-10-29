@@ -2272,8 +2272,8 @@ function carveLogo() {
 const beginTitle = () => {
   if (titleBegun) return;
   titleBegun = true; perf.boot('title-interactive');
-  // a returning player's first descent swoops: its streaks drawn while they look at the title
-  if (returning) setTimeout(() => whenIdle(warmStreaks), 1200);
+  // the streaks of the launch's swoop and a fast fling down the map (mapRush): drawn while they look at the title
+  setTimeout(() => whenIdle(warmStreaks), 1200);
 };   // First light starts (frame() resumes it)
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
@@ -2387,8 +2387,42 @@ function ringInk() {
   }
   $('#menu').classList.toggle('at-foot', top > sc.scrollHeight - 2 * H);
 }
+// Flung fast, the map looks like the launch's swoop: above about three screens a second its
+// colours smear by the speed and the swoop's streaks fly past, faster than the map; as it slows
+// the map comes clear (Kellan, 2026-10-29). Not for the swoop itself, the title's descent, or
+// reduced motion; a jump (the swoop's leap) is not a fling.
+const rush = { y: null, t: 0, v: 0, timer: 0 };
+function mapRush() {
+  const sc = mapSheet(), el = $('#menu .map-rush'), now = performance.now(), y = sc.scrollTop, H = sc.clientHeight, W = sc.clientWidth;
+  const quiet = () => { rush.v = 0; el.classList.remove('live'); el.style.opacity = '0'; };
+  const last = rush.y, dt = Math.max(8, now - rush.t);
+  rush.y = y; rush.t = now;
+  if (last == null || reduceMotion || swooping || $('#menu').classList.contains('pulling') || !mapWorld.model?.regions) { quiet(); return; }
+  const dy = y - last;
+  if (Math.abs(dy) > 2.5 * H || dt > 200) { rush.v = 0; return; }
+  rush.v = rush.v * 0.55 + (dy / dt) * 0.45;
+  const speed = (Math.abs(rush.v) * 1000) / H;   // screens a second
+  const k = Math.min(1, Math.max(0, (speed - 3) / 4)), t = k * k * (3 - 2 * k);
+  clearTimeout(rush.timer);
+  rush.timer = setTimeout(quiet, 140);   // still: it clears
+  if (t < 0.01) { quiet(); return; }
+  // the sky here, each point smeared over a span that grows with the speed
+  const span = H * (0.4 + 0.15 * speed), sky = (z) => {
+    const acc = [0, 0, 0];
+    for (let i = -2; i <= 2; i++) mapWorld.skyAt(z + (i * span) / 4).forEach((v, j) => (acc[j] += v / 5));
+    return `rgb(${acc.map(Math.round).join(',')})`;
+  };
+  $('#menu .rush-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${sky(y + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
+  const st = $('#menu .rush-streaks');
+  if (!st.style.backgroundImage) { st.style.backgroundImage = `url(${streakTile(W, H)})`; st.style.backgroundSize = `${W}px ${2 * H}px`; }
+  st.style.backgroundPosition = `0 ${(-(y * 1.5) % (2 * H)).toFixed(1)}px`;   // half as fast again as the map
+  st.style.transform = `scaleY(${(1 + 0.6 * t).toFixed(3)})`;
+  st.style.opacity = t.toFixed(3);
+  el.classList.add('live');
+  el.style.opacity = (0.88 * t).toFixed(3);
+}
 let ringInkFrame = 0;
-mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); }); }, { passive: true });
+mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {
@@ -2574,7 +2608,7 @@ function rgbOf([L, A, B]) {
   return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * q]
     .map((v) => Math.round(255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055))));
 }
-let stoneGlide = 0;
+let stoneGlide = 0, swooping = false;   // (mapRush stands aside while the launch's swoop runs)
 function glideToStone(onLeap) {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
   if (!node) return;
@@ -2602,8 +2636,10 @@ function glideToStone(onLeap) {
       veil = null;
     }
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
+    swooping = false; rush.y = null;
   };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
+  swooping = true;
   if (!far) {
     const seconds = Math.min(1.1, 0.6 + (to - from) / 3000) / motionRate;
     const step = (now_) => {
