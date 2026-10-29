@@ -2382,7 +2382,9 @@ function finishPull() {
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
-    glideToStone();
+    // only the launch's descent travels on to the current stone: a player who has been
+    // up to the title and comes back down lands at the map's head, where they left it (Kellan, 2026-10-29)
+    if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(); }
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
@@ -2402,7 +2404,7 @@ function finishPull() {
 // over it: the colours of every chapter on the way, a strip slid by the
 // compositor (smooth however busy the page is). Under it the map leaps to the
 // stone in one step; the stand-in fades off as the blur clears.
-let stoneGlide = 0;
+let stoneGlide = 0, glidedThisLaunch = false;
 function glideToStone() {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
   if (!node) return;
