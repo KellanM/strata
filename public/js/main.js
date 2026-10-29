@@ -2279,6 +2279,7 @@ if (splash) {
 
 // the scroll: k px up. The title moves with it, the logo too (by shifting the
 // camera's view), and the map sheet follows from just below the screen.
+let glidedThisLaunch = false, swoopVeil = null;   // the launch's swoop to the current stone (glideToStone)
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
 const mapSheet = () => $('#menu .map-scroll');
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
@@ -2300,6 +2301,7 @@ function setScroll(k) {
   {
     const sheet = mapSheet();
     sheet.style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
+    if (swoopVeil) swoopVeil.style.transform = sheet.style.transform;
     // the soft top edge (style.css #menu.pulling) slides up out of the sheet as it arrives
     sheet.style.webkitMaskPosition = sheet.style.maskPosition = `0 ${(-0.5 * H * Math.min(1, k / H)).toFixed(1)}px`;
   }
@@ -2382,14 +2384,16 @@ function finishPull() {
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
-    // only the launch's descent travels on to the current stone: a player who has been
-    // up to the title and comes back down lands at the map's head, where they left it (Kellan, 2026-10-29)
-    if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(); }
+    if (swoopVeil) swoopVeil.style.transform = swoopVeil.style.webkitMaskImage = swoopVeil.style.maskImage = '';   // the stand-in keeps to the sheet, now at rest
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
   // scroll then meets a settled map)
   const handOff = () => { if (!pull.gliding) return; stopGlide(); setScroll(H); mark('title: landed by a touch'); landed(); };
+  // only the launch's descent travels on to the current stone, and from the touch,
+  // as one motion with the descent (Kellan, 2026-10-29); a player who has been up to
+  // the title and comes back down lands at the map's head, where they left it
+  if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(); }
   scrollTo(H, seconds, ease.descent, landed, () => {
     if (pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
     titleScreen.style.pointerEvents = 'none';
@@ -2404,11 +2408,12 @@ function finishPull() {
 // over it: the colours of every chapter on the way, a strip slid by the
 // compositor (smooth however busy the page is). Under it the map leaps to the
 // stone in one step; the stand-in fades off as the blur clears.
-let stoneGlide = 0, glidedThisLaunch = false;
+let stoneGlide = 0;
 function glideToStone() {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
   if (!node) return;
-  const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
+  // (measured against the sheet: mid-descent it is still sliding up from below)
+  const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top - sheet.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
   if (reduceMotion) { sheet.scrollTop = to; return; }
   if (to - from < 40) return;
   const H = sheet.clientHeight, far = to - from > 2.4 * H;
@@ -2416,7 +2421,7 @@ function glideToStone() {
   const stop = () => {
     cancelAnimationFrame(stoneGlide); sheet.style.filter = '';
     if (!leapt && far) sheet.scrollTop = to;
-    veil?.remove();
+    veil?.remove(); swoopVeil = null;
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
   };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
@@ -2451,6 +2456,9 @@ function glideToStone() {
     background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1.5px, transparent 1.5px 23px, rgba(255,255,255,.04) 23px 25px, transparent 25px 61px), linear-gradient(180deg, ${grad.join(', ')})`;
   veil.appendChild(band);
   sheet.parentNode.insertBefore(veil, sheet.nextSibling);
+  swoopVeil = veil; veil.style.transform = sheet.style.transform;   // setScroll moves it with the sheet while the descent runs
+  if ($('#menu').classList.contains('pulling'))   // coming up out of the night, its top edge soft as the sheet's (style.css #menu.pulling)
+    veil.style.webkitMaskImage = veil.style.maskImage = 'linear-gradient(180deg, transparent 0, rgba(0,0,0,.35) 15vh, #000 40vh)';
   const T = 1250 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again
   band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: 'cubic-bezier(.55, 0, .25, 1)', fill: 'forwards' });
