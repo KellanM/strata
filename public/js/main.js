@@ -2280,7 +2280,8 @@ const buildMap = () => {
 // black. (Fading the title's canvas itself instead cost a frame of a third of a
 // second as it was first shown.) A quick relaunch, or a tap, skips the erase.
 const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - drawn by 0.7 s (index.html @keyframes chalk-draw), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
-const SPLASH_ERASE = 0.6;  // s: index.html @keyframes chalk-wipe, the drawing's own pace
+const SPLASH_ERASE = 0.3;  // s: index.html @keyframes chalk-wipe, twice the drawing's pace (Kellan, 2026-10-29)
+const SPLASH_BREATH = 0.12;   // s: black, between the erase and the card's fade (Kellan: "it feels like taking a breath")
 const splash = $('#splash');
 if (splash) {
   let lifted = false, ready = false;
@@ -2297,7 +2298,7 @@ if (splash) {
     if (erase) splash.classList.add('erasing');
     // the erase's animation begun (two frames: then it is the compositor's) before the title's first frames
     requestAnimationFrame(() => requestAnimationFrame(beginTitle));
-    if (erase) { setTimeout(out, SPLASH_ERASE * 1000); }   // (erased, a breath of black - Kellan, 2026-10-29: "it feels like taking a breath" - then the stone)
+    if (erase) { setTimeout(out, (SPLASH_ERASE + SPLASH_BREATH) * 1000); }   // erased, a breath of black, then the stone
     else requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(out)));   // the stone's first frame drawn first
   };
   // a tap skips the rest of the card (index.html notes it, even one made before this ran)
@@ -2383,7 +2384,7 @@ function primeMap() {
 }
 function startPull() {
   titleScreen.classList.add('going');   // its prompt goes as the page moves, not up over the map (F6)
-  fl.dawn();   // leaving without opening the stone: the sky comes up quickly, not black
+  fl.dawn();   // leaving before the sky has come (the stone shut, or opened but its dawn still slow): it comes quickly, not black
   pull.live = true;
   stopGlide();
   mark('title: pull');

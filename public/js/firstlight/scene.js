@@ -593,6 +593,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const pace = (s) => 1 + (FAST - 1) * (1 - smooth(3, 11, s));
   let tapAt = null, simT = 0, realT = 0, lastReal = null, idleSince = 0;
   let camY = CAM_FROM, tapReal = 0, dawnSpan = 7.5;   // the sky comes slowly, over the whole rise
+  let hurry = null;   // leaving for the map before it has: the rest of it, quickly (dawn())
   const sound = new Sound();
   let quiet = false;   // finish() runs the clock forward in silence
   swarm.onSettle = () => { if (!quiet) sound.star(); };
@@ -640,7 +641,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     step(dt);
     render(dt);
     // the sky: black behind the glowing stone until it opens, then it fades in as the light rises
-    if (veil) veil.style.opacity = dawnAt === null ? '1' : (1 - smooth(0, dawnSpan, realT - dawnAt)).toFixed(3);
+    if (veil) veil.style.opacity = hurry ? (hurry.from * (1 - Math.min(1, (realT - hurry.at) / hurry.span)) ** 2).toFixed(3)   // (most of it at once: the title's foot is in view as soon as it moves)
+      : dawnAt === null ? '1' : (1 - smooth(0, dawnSpan, realT - dawnAt)).toFixed(3);
     raf = requestAnimationFrame(frame);
   }
   function step(dt) {
@@ -801,8 +803,13 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     turnBy(dx, dy) { if (tapAt === null) { idleSince = simT; hint?.classList.remove('show'); turnBy(dx, dy); } },
     grab() { turn.vy = turn.vp = 0; turn.held = true; turn.at = performance.now(); },
     letGo() { turn.held = false; if (performance.now() - turn.at > 80) turn.vy = turn.vp = 0; },
-    // the sky comes now, quickly (a swipe on to the map without opening the stone)
-    dawn() { if (dawnAt === null) { dawnAt = realT; dawnSpan = 0.6; } },
+    // the sky comes now, quickly - from black, or from however far its slow coming has got: the
+    // title's foot must be dawn as it rises off the screen, or the night meets the map's sunrise
+    // in a hard line (Kellan, 2026-10-29: a tap before the rise had finished)
+    dawn() {
+      const left = dawnAt === null ? 1 : 1 - smooth(0, dawnSpan, realT - dawnAt);
+      if (left > 0.002 && !hurry) { hurry = { at: realT, from: left, span: 0.22 }; if (dawnAt === null) dawnAt = realT; }
+    },
     get opened() { return tapAt !== null; },
     get named() { return nameAt !== null; },
     pause() { running = false; cancelAnimationFrame(raf); },
