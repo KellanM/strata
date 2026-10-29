@@ -2476,6 +2476,16 @@ function streakTile(W, H) {
 if (returning) setTimeout(() => { const sh = mapSheet(); if (sh?.clientHeight) streakTile(sh.clientWidth, sh.clientHeight); }, 1500);
 // the title's night sky, top to bottom (sampled from the title screen, 390x844)
 const TITLE_NIGHT = ['#111630', '#181b3f', '#1d2555', '#31356b', '#5b568f'];
+// CSS's cubic-bezier(x1, y1, x2, y2) as a function of time: the progress at k (0..1), so a
+// script can move in step with a compositor animation eased so
+function cubicBezier(x1, y1, x2, y2) {
+  const at = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  return (k) => {
+    let lo = 0, hi = 1, t = k;
+    for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (at(x1, x2, t) < k) lo = t; else hi = t; }
+    return at(y1, y2, t);
+  };
+}
 // sRGB <-> OKLab (Björn Ottosson's matrices)
 function oklab(c) {
   const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
@@ -2557,17 +2567,22 @@ function glideToStone() {
   const T = 1450 / motionRate;
   // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again;
   // a long tail to its easing, so it is already slowing as the map shows through
-  band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: 'cubic-bezier(.55, 0, .15, 1)', fill: 'forwards' });
+  const EASE = [0.55, 0, 0.15, 1];
+  band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: `cubic-bezier(${EASE})`, fill: 'forwards' });
   // the streaks fly past faster than the colours drift (parallax: near detail, far sky), and stretch
   // with the speed, gone again on arrival
   streaks.animate([{ transform: 'translateY(0) scaleY(.3)', opacity: 0 }, { transform: `translateY(${-2 * H}px) scaleY(1.4)`, opacity: 1, offset: 0.4 }, { transform: `translateY(${-3.6 * H}px) scaleY(.25)`, opacity: 0 }],
     { duration: T * 0.8, easing: 'cubic-bezier(.45, 0, .2, 1)', fill: 'forwards' });
   // (from the title it covers quickly, before the title's lower edge has risen into view)
   const cover = veil.style.position === 'fixed' ? 0.13 : 0.28;
-  veil.animate([{ opacity: 0 }, { opacity: 1, offset: cover }, { opacity: 1, offset: 0.66 }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
-  // the map comes in short of the stone and glides the last half screen onto it, slowing,
-  // as the stand-in lifts: the arrival is seen to settle, not to stop
-  const BLUR = 7, land = Math.max(from, to - 0.5 * H);
+  const LIFT = 0.6;   // of T: the stand-in begins to lift
+  veil.animate([{ opacity: 0 }, { opacity: 1, offset: cover }, { opacity: 1, offset: LIFT }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
+  // The map comes in short of the stone and, from the moment the stand-in begins to lift, moves
+  // exactly as the strip does - the same distance left, the same easing - so the two cross-fade
+  // as one surface slowing into place, coming to rest together (Kellan, 2026-10-29: it had glided
+  // mostly unseen, and showed through slower than the strip above it: a snap, then a catching up)
+  const eased = cubicBezier(...EASE), left = (k) => 3 * H * (1 - eased(k));
+  const BLUR = 7, land = Math.max(from, to - left(LIFT));
   const step = (now_) => {
     t0 ??= now_;
     const k = Math.min(1, (now_ - t0) / T);
@@ -2577,9 +2592,8 @@ function glideToStone() {
       sheet.style.filter = `blur(${(BLUR * a).toFixed(2)}px)`;
     } else {
       if (!leapt) { leapt = true; sheet.scrollTop = land; }   // under the stand-in: one step, the paint hidden
-      const g = Math.max(0, (k - 0.55) / 0.45);
-      sheet.scrollTop = land + (to - land) * (1 - (1 - g) ** 3);
-      const a = Math.max(0, (k - 0.62) / 0.38);
+      if (k >= LIFT) sheet.scrollTop = Math.max(land, to - left(k));
+      const a = Math.max(0, (k - LIFT) / (1 - LIFT));
       sheet.style.filter = a < 1 ? `blur(${(BLUR * (1 - a) ** 2).toFixed(2)}px)` : '';
     }
     if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
