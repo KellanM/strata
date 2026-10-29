@@ -76,6 +76,13 @@ export function seaColour(p) {
   const sea = mix(p.skyTop, p.skyBottom, dark ? 0.55 : 0.35);
   return dark ? sea : mix(sea, 0xffffff, 0.18);
 }
+// A chapter's sea as a gradient down its length (Kellan, 2026-10-28: each world
+// with its own, as First Light has under the dawn): its sky's top colour over its
+// bottom one, as a level's sky runs, softened toward its sea colour
+export function seaEnds(p) {
+  const s = seaColour(p), lift = (c) => (lum(p.skyTop) < 0.35 ? c : mix(c, 0xffffff, 0.18));
+  return [mix(s, lift(p.skyTop), 0.8), mix(s, lift(p.skyBottom), 0.8)];
+}
 // mist lit by its own sky: warm cream in warm chapters, cool only at night
 export function mistColour(p) {
   if (p.name === 'Night') return mix(seaColour(p), 0xdfe6ff, 0.62);
@@ -182,10 +189,11 @@ export class MapWorld {
     this.firstSea = rgba(this.firstSeaHex);
     const stops = [`${this.firstSea} 0px`];
     for (const r of regions) {
-      const c = rgba(seaColour(r.base));
-      stops.push(`${c} ${(r.top + 120).toFixed(0)}px`, `${c} ${Math.max(r.top + 121, r.bottom - 120).toFixed(0)}px`);
+      const [a, b] = seaEnds(r.base);
+      // (the first begins at its plain sea colour: the dawn above sinks into that)
+      stops.push(`${rgba(r.index === 0 ? this.firstSeaHex : a)} ${(r.top + 120).toFixed(0)}px`, `${rgba(b)} ${Math.max(r.top + 121, r.bottom - 120).toFixed(0)}px`);
     }
-    stops.push(`${rgba(seaColour(regions[regions.length - 1].base))} ${model.end}px`);
+    stops.push(`${rgba(seaEnds(regions[regions.length - 1].base)[1])} ${model.end}px`);
     this.seaStrip.style.background = `linear-gradient(180deg, ${stops.join(', ')})`;
     for (const r of regions) this.buildChunk(r);
     this.layoutSky();
