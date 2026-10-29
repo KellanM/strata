@@ -2397,9 +2397,11 @@ function finishPull() {
 // After the descent, the map travels from its head down to the current stone,
 // a calm camera move; a touch on the map stops it where it is. A long way is a
 // swoop (Kellan, 2026-10-29: a glide over thousands of px stuttered - every
-// frame a fresh screen of stones to paint): it pulls away under a soft motion
-// blur, leaps the middle in one step while blurred, and eases in to the stone
-// as the blur clears - a few screens painted instead of the whole way.
+// frame a fresh screen of stones to paint - and blurred, the world behind still
+// moved like a slideshow). The map blurs as it pulls away, and a stand-in fades
+// over it: the colours of every chapter on the way, a strip slid by the
+// compositor (smooth however busy the page is). Under it the map leaps to the
+// stone in one step; the stand-in fades off as the blur clears.
 let stoneGlide = 0;
 function glideToStone() {
   const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
@@ -2407,33 +2409,67 @@ function glideToStone() {
   const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
   if (reduceMotion) { sheet.scrollTop = to; return; }
   if (to - from < 40) return;
-  const H = sheet.clientHeight, far = to - from > 2.4 * H, lead = 0.8 * H;
-  const seconds = (far ? 1.15 : Math.min(1.1, 0.6 + (to - from) / 3000)) / motionRate;
-  const BLUR = 7;   // px at the swoop's fastest
+  const H = sheet.clientHeight, far = to - from > 2.4 * H;
+  let t0 = null, veil = null, leapt = false;
   const stop = () => {
-    cancelAnimationFrame(stoneGlide); sheet.style.filter = sheet.style.willChange = '';
+    cancelAnimationFrame(stoneGlide); sheet.style.filter = '';
+    if (!leapt && far) sheet.scrollTop = to;
+    veil?.remove();
     sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true);
   };
   sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
-  if (far) sheet.style.willChange = 'filter';
-  let t0 = null;
+  if (!far) {
+    const seconds = Math.min(1.1, 0.6 + (to - from) / 3000) / motionRate;
+    const step = (now_) => {
+      t0 ??= now_;
+      const k = Math.min(1, (now_ - t0) / 1000 / seconds);
+      sheet.scrollTop = from + (to - from) * (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+      if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
+    };
+    stoneGlide = requestAnimationFrame(step);
+    return;
+  }
+  // the stand-in: the sea's colours from here to the stone, squeezed into four screens
+  const strip = mapWorld.seaStrip, base = (strip?.offsetTop ?? 0) + (mapWorld.scene?.offsetTop ?? 0);
+  const stops = [...(strip?.style.background ?? '').matchAll(/rgba?\(([^)]+)\)\s+(-?[\d.]+)px/g)]
+    .map((m) => [parseFloat(m[2]) + base, m[1].split(',').map(Number)]);
+  const at = (y) => {
+    if (!stops.length) return [200, 190, 200];
+    let k = 0; while (k < stops.length - 1 && stops[k + 1][0] < y) k++;
+    const [y0, c0] = stops[k], [y1, c1] = stops[Math.min(k + 1, stops.length - 1)];
+    const f = y1 > y0 ? Math.min(1, Math.max(0, (y - y0) / (y1 - y0))) : 0;
+    return [0, 1, 2].map((i) => Math.round(c0[i] + (c1[i] - c0[i]) * f));
+  };
+  const span = to + H - from, N = 40, grad = [];
+  for (let n = 0; n <= N; n++) grad.push(`rgb(${at(from + (span * n) / N).join(',')}) ${((n / N) * 100).toFixed(2)}%`);
+  veil = document.createElement('div');
+  veil.style.cssText = `position:absolute; left:0; top:${sheet.offsetTop}px; width:100%; height:${H}px; overflow:hidden; pointer-events:none; z-index:${(parseInt(getComputedStyle(sheet).zIndex) || 0) + 1}; opacity:0`;
+  const band = document.createElement('div');
+  band.style.cssText = `position:absolute; left:0; top:0; width:100%; height:${4 * H}px; will-change:transform;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1.5px, transparent 1.5px 23px, rgba(255,255,255,.04) 23px 25px, transparent 25px 61px), linear-gradient(180deg, ${grad.join(', ')})`;
+  veil.appendChild(band);
+  sheet.parentNode.insertBefore(veil, sheet.nextSibling);
+  const T = 1250 / motionRate;
+  // compositor-driven: the strip slides the whole way, the stand-in fades over the map and off again
+  band.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-3 * H}px)` }], { duration: T, easing: 'cubic-bezier(.55, 0, .25, 1)', fill: 'forwards' });
+  veil.animate([{ opacity: 0 }, { opacity: 1, offset: 0.28 }, { opacity: 1, offset: 0.66 }, { opacity: 0 }], { duration: T, easing: 'linear', fill: 'forwards' });
+  const BLUR = 7;
   const step = (now_) => {
     t0 ??= now_;
-    const k = Math.min(1, (now_ - t0) / 1000 / seconds);
-    if (!far) sheet.scrollTop = from + (to - from) * (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
-    else if (k < 0.4) {            // pulling away, gathering speed and blur
-      const a = k / 0.4;
-      sheet.scrollTop = from + lead * a * a;
-      sheet.style.filter = `blur(${(BLUR * a * a).toFixed(2)}px)`;
-    } else {                        // the middle leapt; easing in to the stone, the blur clearing
-      const a = (k - 0.4) / 0.6, e = 1 - (1 - a) ** 3;
-      sheet.scrollTop = to - lead * (1 - e);
+    const k = Math.min(1, (now_ - t0) / T);
+    if (k < 0.3) {                       // pulling away, the blur gathering, before the stand-in covers it
+      const a = k / 0.3;
+      sheet.scrollTop = from + 0.25 * H * a * a;
+      sheet.style.filter = `blur(${(BLUR * a).toFixed(2)}px)`;
+    } else {
+      if (!leapt) { leapt = true; sheet.scrollTop = to; }   // under the stand-in: one step, the paint hidden
+      const a = Math.max(0, (k - 0.62) / 0.38);
       sheet.style.filter = a < 1 ? `blur(${(BLUR * (1 - a) ** 2).toFixed(2)}px)` : '';
     }
     if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
   };
   stoneGlide = requestAnimationFrame(step);
-  mark(`map: ${far ? 'swoop' : 'glide'} to the current stone`);
+  mark('map: swoop to the current stone');
 }
 function cancelPull(seconds = 0.35) {
   pull.live = false;
