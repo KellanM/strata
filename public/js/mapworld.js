@@ -208,6 +208,8 @@ export class MapWorld {
     const g = dawnGradient(Hs, h, this.firstSeaHex);
     this.dawn.style.height = `${(DAWN + BELOW_END * h).toFixed(1)}px`;
     this.dawn.style.background = `${g.css} 0 ${(DAWN - Hs).toFixed(1)}px / 100% ${g.height.toFixed(1)}px no-repeat`;
+    // its foot fades into the first chapter's gradient below (a hard line showed there once the chapters had gradients)
+    this.dawn.style.webkitMaskImage = this.dawn.style.maskImage = 'linear-gradient(180deg, #000 45%, transparent)';
     this.layoutDusk();
     // the far layer's parallax: by the end of the scroll it has fallen behind by (1 - rate) of it
     const range = Math.max(0, Math.max(this.model.end, this.scroller.scrollHeight) - this.scroller.clientHeight);
