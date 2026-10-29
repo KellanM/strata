@@ -215,16 +215,17 @@
       <div id="map" class="map"></div>
     </div>
     <!-- the map's controls, in the pause's voice (docs/pause-study.md): a thin
-         ring and a glyph; Settings and the Collection either side of the head, the
-         glyph alone (Kellan, 2026-10-29: their words had crowded the stones'
-         names scrolling under them), Resume (when a level waits) centred at
-         the foot with its word -->
-    <button id="map-help" class="ring-btn" aria-label="Settings">
+         ring, a glyph, one word - Menu and Finds either side of the head (the
+         finds' glyph is the game's own, so it is named: Kellan, 2026-10-29),
+         Resume (when a level waits) centred at the foot -->
+    <button id="map-help" class="ring-btn" aria-label="Menu">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M5 7.5h14M5 12h14M5 16.5h14"/></svg></span>
+      <span class="ring-label">Menu</span>
     </button>
-    <!-- the collection (the journal, in the code): a stone on a display slab (Kellan, 2026-10-29) -->
-    <button id="map-journal" class="ring-btn" aria-label="Collection">
+    <!-- the finds (the Collection; the journal, in the code): a stone on a display slab -->
+    <button id="map-journal" class="ring-btn" aria-label="Finds">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M12 3.6L16.85 6.4L16.85 12L12 14.8L7.15 12L7.15 6.4ZM7.15 6.4L12 9.2L16.85 6.4M12 9.2V14.8"/><path d="M3.8 17.3 12 22l8.2-4.7M3.8 17.3l3.4-2M20.2 17.3l-3.4-2"/></svg></span>
+      <span class="ring-label">Finds</span>
     </button>
     <button id="map-close" class="ring-btn resume" aria-label="Back to the puzzle">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M9 7v10l8-5z"/></svg></span>
