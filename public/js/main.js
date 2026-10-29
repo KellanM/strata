@@ -2401,13 +2401,15 @@ function cancelPull(seconds = 0.35) {
     }
   });
 }
-// A drag that starts on First light's stone turns it, as a level's block turns
-// (Kellan, 2026-10-28); one that starts anywhere else scrolls to the map.
+// Until First light's stone is opened, a drag anywhere turns it, as a drag
+// anywhere turns a level's block (Kellan, 2026-10-28: a drag beside it had begun
+// the scroll to the map, bringing the sky up round a stone still shut); once it
+// is open, a drag scrolls to the map.
 titleScreen.addEventListener('pointerdown', (e) => {
   if (!titleUp || pull.id !== null) return;
   pull.id = e.pointerId; pull.y0 = pull.lastY = e.clientY; pull.lastT = performance.now(); pull.dy = pull.v = 0;
   pull.y0 += pull.k;   // catch a scroll that is still springing back
-  pull.turning = !fl.named && fl.onStone(e.clientX, e.clientY);
+  pull.turning = !fl.opened;
   pull.x0 = pull.lastX = e.clientX; pull.moved = 0;
   if (pull.turning) fl.grab();
   titleScreen.setPointerCapture?.(e.pointerId);

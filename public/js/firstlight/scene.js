@@ -706,12 +706,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   }
   return {
     tap, finish,
-    // a finger on the stone turns it (main.js routes a drag that starts on it here)
-    onStone(x, y) {
-      if (tapAt !== null) return false;
-      v3.copy(CUBE_AT).project(camera);
-      return Math.hypot(x - (v3.x * 0.5 + 0.5) * window.innerWidth, y - (-v3.y * 0.5 + 0.5) * window.innerHeight) < Math.max(90, window.innerWidth * 0.22);
-    },
+    // a finger turns the stone until it is opened (main.js routes every drag here till then)
     turnBy(dx, dy) { if (tapAt === null) { idleSince = simT; hint?.classList.remove('show'); turnBy(dx, dy); } },
     grab() { turn.vy = turn.vp = 0; turn.held = true; turn.at = performance.now(); },
     letGo() { turn.held = false; if (performance.now() - turn.at > 80) turn.vy = turn.vp = 0; },
