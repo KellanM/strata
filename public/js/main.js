@@ -1270,7 +1270,11 @@ function openPause() {
   pauseEl.querySelector('.pause-chapter').textContent = $('#pz-meta').textContent;
   pauseEl.querySelector('.pause-name').textContent = $('#pz-name').textContent;
   // the map is shut until the lessons are done; a lesson's only way out is skip
-  pauseEl.querySelector('[data-pause="map"]').hidden = !!game.entry.lesson && !localStorage.getItem('strata.tutorial');
+  const inLesson = !!game.entry.lesson && !localStorage.getItem('strata.tutorial');
+  pauseEl.querySelector('[data-pause="map"]').hidden = inLesson;
+  // three buttons either way (Kellan, 2026-10-29): a level's pause needs no Rules (the map's ? has
+  // them); a lesson keeps them where the map would be, while the rules are still being learned
+  pauseEl.querySelector('[data-pause="rules"]').hidden = !inLesson;
   show('#pause', true);
   mark('pause: open');
 }
