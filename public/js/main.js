@@ -2229,12 +2229,15 @@ const beginTitle = () => { titleBegun = true; perf.boot('title-interactive'); };
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
-// it comes up already scrolled to the current stone: the descent lands where
-// the player left off, not at the map's head (F2)
+// It comes up at its head, where the title's sky sinks into the dawn, and once
+// it has landed glides down to the current stone (glideToStone): built already
+// scrolled there (F2), the night met that chapter's colour in a hard edge
+// (Kellan, 2026-10-29).
 const buildMap = () => {
   if (mapBuilt) return;
   mapBuilt = true;
-  renderMenu(true, false, false);
+  renderMenu(false, false, false);
+  mapSheet().scrollTop = 0;
   mark('title: map built');
   perf.boot('map-built');
   primeMap();
@@ -2370,12 +2373,16 @@ function finishPull() {
     // the logo has scrolled away: hide the canvas outright before its view offset
     // resets, or the logo pops back to the centre while the canvas fades out
     canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; });
+    // gone at once: reset to its place with its fade still running, it slid back over the map's top as a dark band (the hitch on landing)
+    titleScreen.style.cssText = 'transition: none';
     titleScreen.classList.remove('show');
+    void titleScreen.offsetWidth;
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
+    glideToStone();
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
@@ -2386,6 +2393,27 @@ function finishPull() {
     titleScreen.style.pointerEvents = 'none';
     menuEl.addEventListener('pointerdown', handOff, true);
   });
+}
+// After the descent, the map glides from its head down to the current stone, a
+// calm camera move; a touch on the map stops it where it is
+let stoneGlide = 0;
+function glideToStone() {
+  const sheet = mapSheet(), node = $('#map .map-node.current') ?? [...document.querySelectorAll('#map .map-node.solved')].pop();
+  if (!node || reduceMotion) { if (node) sheet.scrollTop = Math.max(0, node.getBoundingClientRect().top + sheet.scrollTop - sheet.clientHeight * 0.45); return; }
+  const from = sheet.scrollTop, to = Math.max(0, node.getBoundingClientRect().top + from - sheet.clientHeight * 0.45);
+  if (to - from < 40) return;
+  const seconds = Math.min(1.6, 0.7 + (to - from) / 4000) / motionRate;
+  const stop = () => { cancelAnimationFrame(stoneGlide); sheet.removeEventListener('pointerdown', stop, true); sheet.removeEventListener('wheel', stop, true); };
+  sheet.addEventListener('pointerdown', stop, true); sheet.addEventListener('wheel', stop, true);
+  let t0 = null;
+  const step = (now_) => {
+    t0 ??= now_;
+    const k = Math.min(1, (now_ - t0) / 1000 / seconds), e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
+    sheet.scrollTop = from + (to - from) * e;
+    if (k < 1) stoneGlide = requestAnimationFrame(step); else stop();
+  };
+  stoneGlide = requestAnimationFrame(step);
+  mark('map: glide to the current stone');
 }
 function cancelPull(seconds = 0.35) {
   pull.live = false;
