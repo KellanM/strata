@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="boot">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -20,6 +20,10 @@
        colour, which on iPhone showed below the card (under the toolbar and the
        home indicator) */
     html:has(#splash:not(.out)) { background: #000 !important; }
+    /* and from the very first paint, before the card exists for that to find: style.css (loaded
+       after this) paints the page lilac, and for a moment on an iPhone that showed - black, a white
+       flash, black (Kellan, 2026-10-29). Taken off as the card lifts (main.js) */
+    html.boot { background: #000 !important; }
     /* and nothing of the sky behind it: the map's world (the title's sunrise) is there from the
        first moments, and on an iPhone it peeked out at the foot while the card was black (Kellan,
        2026-10-29: "the whole screen should be black") */

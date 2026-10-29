@@ -2308,6 +2308,7 @@ if (splash) {
   let lifted = false, ready = false;
   const out = () => {
     splash.classList.add('out');
+    document.documentElement.classList.remove('boot');
     document.querySelector('meta[name=theme-color]').content = themeColor;
     mark('splash: lifted');
     perf.boot('splash-lifted');
@@ -2346,6 +2347,7 @@ if (splash) {
     }));
   }));
 } else {
+  document.documentElement.classList.remove('boot');
   beginTitle();
   after(reduceMotion ? 0 : CARVE_AT + 0.6, buildMap);
 }
