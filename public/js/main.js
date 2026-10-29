@@ -2295,11 +2295,16 @@ if (splash) {
   const lift = (erase) => {
     if (lifted || !ready) return;
     lifted = true;
-    if (erase) splash.classList.add('erasing');
-    // the erase's animation begun (two frames: then it is the compositor's) before the title's first frames
-    requestAnimationFrame(() => requestAnimationFrame(beginTitle));
-    if (erase) { setTimeout(out, (SPLASH_ERASE + SPLASH_BREATH) * 1000); }   // erased, a breath of black, then the stone
-    else requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(out)));   // the stone's first frame drawn first
+    if (erase) {
+      // the erase on its own (nothing else asked of the phone while it plays), then in the
+      // breath of black the title begins, so the stone is there when the card fades
+      splash.classList.add('erasing');
+      setTimeout(beginTitle, SPLASH_ERASE * 1000);
+      setTimeout(out, (SPLASH_ERASE + SPLASH_BREATH) * 1000);
+      return;
+    }
+    beginTitle();
+    requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(out)));   // the stone's first frame drawn first
   };
   // a tap skips the rest of the card (index.html notes it, even one made before this ran)
   window.onSplashTap = () => { mark('splash: tapped'); lift(false); };
