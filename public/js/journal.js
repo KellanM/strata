@@ -1,5 +1,6 @@
-// The journal: every object you've uncovered, gathered by chapter like the
-// map, each chapter on its own sky. Found objects sit in a little pool of
+// The journal (Finds, to the player): every object you've uncovered, gathered by
+// chapter like the map, each chapter on its own sky, each sky out of the one before;
+// the worlds not yet reached are only named, at the end. Found objects sit in a little pool of
 // light with their gems (the same gold diamonds as the win screen); the rest
 // are a soft dark blur, waiting. Each chapter shows how much of it has been
 // found, and glows when complete.
@@ -35,14 +36,24 @@ export function renderJournal(root, { entries, solved }) {
   root.querySelector('#journal-count').innerHTML = `${found} of ${total} found <span class="jr-total">${GEM}${gemsWon} / ${total * 3}</span>`;
   const grid = root.querySelector('#journal-grid');
   grid.innerHTML = '';
-  CHAPTERS.forEach((ch) => {
+  // the worlds not reached yet - after the first with nothing found, the next to come - are
+  // gathered at the end into one quiet section, their names only (docs/finds-study.md)
+  const chapters = CHAPTERS.map((ch) => {
     const items = entries.filter((e) => e.shape.chapter === ch.name);
-    if (!items.length) return;
+    return { ch, items, have: items.filter((e) => solved[e.shape.id]).length };
+  }).filter((c) => c.items.length);
+  const next = chapters.findIndex((c) => !c.have);
+  const ahead = next < 0 ? [] : chapters.slice(next + 1).filter((c) => !c.have);
+  let prev = '#f3d7d0';   // the head's foot: the first chapter's sky comes out of it
+  chapters.forEach(({ ch, items, have }) => {
+    if (ahead.some((c) => c.ch === ch)) return;
     const p = PALETTES.find((q) => q.name === ch.palette) ?? PALETTES[0];
-    const have = items.filter((e) => solved[e.shape.id]).length;
     const complete = have === items.length;
     const sec = document.createElement('section');
     sec.className = 'jr-chapter' + (complete ? ' complete' : '');
+    // each chapter's sky comes out of the one before, not against it in a hard line
+    sec.style.setProperty('--prev', prev);
+    prev = hex(p.skyBottom);
     sec.style.setProperty('--sky-top', hex(p.skyTop));
     sec.style.setProperty('--sky-bottom', hex(p.skyBottom));
     sec.style.setProperty('--glow', hex(p.glow));
@@ -76,6 +87,20 @@ export function renderJournal(root, { entries, solved }) {
     }
     grid.appendChild(sec);
   });
+  // still ahead: out of the last chapter shown, down into the night of the map's end
+  let foot = prev;
+  if (ahead.length) {
+    const later = document.createElement('section');
+    later.className = 'jr-later';
+    later.style.background = `linear-gradient(180deg, ${prev} 0, #4c5187 45%, #121731)`;
+    const stones = (c) => c.items.filter((e) => !e.shape.bonus).length;
+    later.innerHTML = `<h3>Still ahead</h3><p>${ahead.length} ${ahead.length === 1 ? 'world' : 'worlds'} · ${ahead.reduce((n, c) => n + stones(c), 0)} stones</p>
+      <ol>${ahead.map((c) => `<li>${esc(c.ch.name)}<span>${stones(c)} stones</span></li>`).join('')}</ol>`;
+    grid.appendChild(later);
+    foot = '#121731';
+  }
+  // and past the foot (a bounce at the bottom), the page's last colour goes on
+  root.querySelector('.jr-scroll').style.setProperty('--jr-foot', foot);
 }
 
 // ---- the turntable
