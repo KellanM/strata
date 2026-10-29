@@ -2178,7 +2178,8 @@ const titleName = new URLSearchParams(location.search).get('name') || localStora
 // the wall under the stone: off by default (Kellan, 2026-10-25); developer panel "Title wall", or ?wall=on
 const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'none') !== 'none';
 const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), veil: $('#fl-night'), nameStyle: titleName, withWall: titleWall,
-  onOpen: () => { sound.unlock(); sound.chisel(1); buzz(12); },   // the stone breaks as a block does
+  onOpen: () => sound.unlock(),
+  onChisel: (k) => { sound.chisel(k); buzz(12, 'tick'); },   // each of the 27 as a block breaks in a level, its note rising through the run
   onNamed: () => {
   titleScreen.classList.add('named');
   mark('title: the name is written');

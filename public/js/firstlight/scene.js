@@ -21,7 +21,8 @@ import { Shards, Ash } from '../atmosphere.js';
 // (a dense cluster of stars around the letters, which are left dark)
 // withWall: false leaves the glowing stone alone in the night, no wall under it
 // veil: an element over the sky behind the scene; black until the stone opens
-export function createFirstLight({ canvas, hint = null, veil = null, onNamed = null, onOpen = null, nameStyle = 'lines', withWall = true }) {
+// onChisel(progress): each of the 27 cubes as it breaks (0..1 through the cascade), for its sound
+export function createFirstLight({ canvas, hint = null, veil = null, onNamed = null, onOpen = null, onChisel = null, nameStyle = 'lines', withWall = true }) {
   const negative = nameStyle === 'negative';
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
@@ -139,21 +140,34 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   glowCube.quaternion.copy(ISO);
   scene.add(glowCube);
   // the other 26 stones of the logo, lit by the glowing one as the wall is. The
-  // touch chisels them away as a level's blocks go (breakStone, below): the
-  // outer ones first, closing in on the light, each one quickly after the last
+  // touch clears all 27 as a row of zeros clears in a level (main.js clearRow,
+  // Kellan 2026-10-28): the touched cube - the glowing one - breaks first, a
+  // ripple runs out through the block ahead of the cascade, and the rest break
+  // one after another, nearest first, the run gathering pace
   const stoneRand = rng(23);
   const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
-  const CHISEL_SPAN = 0.5;   // s from the first stone's break to the last
-  const outmost = Math.max(...stoneCells.map((o) => o.length())), inmost = Math.min(...stoneCells.map((o) => o.length()));
-  const stoneBreaks = stoneCells.map((off) => ({ off, at: CHISEL_SPAN * (1 - (off.length() - inmost) / (outmost - inmost)) * (0.8 + 0.2 * stoneRand()), done: false }));
-  const sq = new THREE.Quaternion().copy(ISO), sp = new THREE.Vector3(), ss = new THREE.Vector3();
+  const ROW_CLEAR_STEP = 0.085, ROW_CLEAR_EASE = 0.93;   // as main.js: the first gap, and how each later one shortens
+  const stoneBreaks = stoneCells.map((off) => ({ off, done: false }));
+  {
+    const order = [...stoneBreaks].sort((a, b) => a.off.length() - b.off.length() || stoneRand() - 0.5);
+    let delay = ROW_CLEAR_STEP, gap = ROW_CLEAR_STEP;   // the glowing cube is the first, at the touch
+    order.forEach((f, j) => { f.at = delay; f.n = j + 1; gap = Math.max(0.045, gap * ROW_CLEAR_EASE); delay += gap; });
+  }
+  const sq = new THREE.Quaternion().copy(ISO), sp = new THREE.Vector3(), ss = new THREE.Vector3(), rd = new THREE.Vector3();
   function placeStones(k) {   // k: seconds since the touch (null: at rest)
     let any = false;
     stoneBreaks.forEach((f, i) => {
       if (k === null) { f.done = false; stones.setColorAt(i, new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1)); }
-      else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f.off); }
+      else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f.off, (f.n + 1) / (stoneCells.length + 1)); }
       sp.copy(CUBE_AT).add(f.off);
-      ss.setScalar(f.done ? 0.0001 : 1);
+      let scale = f.done ? 0.0001 : 1;
+      // the ripple running ahead of the cascade (cubes.js): out from the touched cube, and a little up
+      if (k !== null && !f.done) {
+        const dist = f.off.length(), front = dist - k / ROW_CLEAR_STEP, env = Math.exp(-front * front * 0.9) * Math.exp(-k * 1.7) * 1.3;
+        sp.addScaledVector(rd.copy(f.off).normalize().multiplyScalar(0.6).add(new THREE.Vector3(0, 0.8, 0)), env * 0.16);
+        scale *= 1 - 0.07 * env;
+      }
+      ss.setScalar(scale);
       stones.setMatrixAt(i, m4.compose(sp, sq, ss));
       if (!f.done) any = true;
     });
@@ -192,8 +206,9 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   scene.add(fragments.mesh, stoneFrags.mesh, shards.points, ash.points);
   // a stone chiselled away, as main.js act does it: 8 pieces shrinking away from the
   // touch's side, a few chips, and a small puff of sparks out of its open face
-  function breakStone(at, off) {
+  function breakStone(at, off, progress) {
     const t = realT, c = (h) => new THREE.Color(h), out = off.clone().normalize();
+    if (!quiet) onChisel?.(progress);
     stoneFrags.burst(at, at.clone().addScaledVector(out, 0.5), t);
     shards.burst(at, t, [c(STONE.top), c(STONE.lit), c(STONE.top)], 2, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
     if (!quiet) ash.burst(at, 9, out.add(new THREE.Vector3(0, 0.3, 0.6)).normalize(), c(GLOW.shade));
@@ -205,7 +220,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   for (let i = 0; i < 1800; i++) {
     const z = -14 * starRand() ** 1.5;
     const spread = 1 + -z / CAM_Z;   // farther stars spread wider, to fill the same view
-    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 5 + 15 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
+    starPlaces.push((starRand() - 0.5) * 11 * spread * (window.innerWidth / window.innerHeight < 0.75 ? 1 : 2.2), 2.5 + 17.5 * starRand() ** 0.85 * (0.9 + 0.2 * spread), z);
   }
   // The name, written in stars: each letter a few strokes (in a 2 x 3 box),
   // stars along them a little apart, as a constellation is drawn. Placed where
@@ -222,6 +237,10 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   // 2026-10-28: it settled high, over a wide empty sky). ?namey= and ?spray= to try others
   const q = new URLSearchParams(globalThis.location?.search ?? '');
   const NAME_Y = +(q.get('namey') ?? 0.35), SPRAY = +(q.get('spray') ?? 3000);
+  // The horizon (Kellan, 2026-10-28: the sky ended in a straight line, a blanket
+  // laid down as the camera settled): low in the resting view the stars thin out
+  // into the glow, as real ones do, along an uneven line. keep(x, y, z, r): r in 0..1
+  let horizon = () => true;
   {
     const word = 'STRATA', GAP = 1.15, W = word.length * 2 + (word.length - 1) * GAP;
     // the camera's resting pose (as step() leaves it at the top)
@@ -230,6 +249,13 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     rest.fov = rest.aspect < 0.75 ? 45 : 38;
     rest.updateProjectionMatrix();
     rest.position.set(0, CAM_TO, CAM_Z); rest.lookAt(0, CAM_TO + 1.5, 0); rest.updateMatrixWorld();
+    const hv = new THREE.Vector3(), hr = rng(53);
+    horizon = (x, y, z) => {
+      hv.set(x, y, z).project(rest);
+      const e = hv.y + 0.16 * Math.sin(hv.x * 2.6 + 0.4) + 0.09 * Math.sin(hv.x * 6.3 + 2.1);   // the uneven line
+      const k = Math.min(1, Math.max(0, (e + 1.1) / 0.75));
+      return hr() < k * k * (3 - 2 * k);   // a few at the foot of the screen, all of them by a third of the way up
+    };
     const at = (nx, ny) => {   // screen (-1..1) to the sky plane z = -1
       const d = new THREE.Vector3(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
       return rest.position.clone().addScaledVector(d, (-1 - rest.position.z) / d.z);
@@ -318,6 +344,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       w.set(v.x, v.y, 0.5).unproject(rest).sub(rest.position).normalize();
       const d = (-1 - rest.position.z) / w.z;
       if (near(rest.position.x + w.x * d, rest.position.y + w.y * d, 0.5 * k)) continue;
+      if (!horizon(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2])) continue;
       clear.push(starPlaces[i], starPlaces[i + 1], starPlaces[i + 2]);
     }
     starPlaces.length = 0; starPlaces.push(...clear);
@@ -331,8 +358,9 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       const z = -2 - 12 * gr();
       on.set(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
       const x = rest.position.x + on.x * (z - rest.position.z) / on.z, y = rest.position.y + on.y * (z - rest.position.z) / on.z;
-      if (y < TOP + 1.2) continue;                                            // the wall, not the sky
+      if (withWall && y < TOP + 1.2) continue;                                // the wall, not the sky
       if (z > -4 && near(x, y, 0.5 * k)) continue;
+      if (!horizon(x, y, z)) continue;
       fieldStars.push(x, y, z);
     }
     for (let n = 0; n < (negative ? 60 : 150);) {
@@ -351,7 +379,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       const z = -3 - 10 * sp();
       on.set(nx, ny, 0.5).unproject(rest).sub(rest.position).normalize();
       const x = rest.position.x + on.x * (z - rest.position.z) / on.z, y = rest.position.y + on.y * (z - rest.position.z) / on.z;
-      if (y < TOP + 1.2 || near(x, y, 0.45 * k)) continue;
+      if ((withWall && y < TOP + 1.2) || near(x, y, 0.45 * k) || !horizon(x, y, z)) continue;
       sprayStars.push(x, y, z); n++;
     }
     for (const [x, y, z] of nameStars) starPlaces.push(x, y, z);
@@ -406,7 +434,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   // faint far stars that come out once the first ones are home (the sky remembering)
   const far = (() => {
     const n = 700, pos = new Float32Array(n * 3), seed = new Float32Array(n), r = rng(9);
-    for (let i = 0; i < n; i++) { pos.set([(r() - 0.5) * 60, 4 + 40 * r(), -30 - 10 * r()], i * 3); seed[i] = r(); }
+    for (let i = 0; i < n; i++) {
+      let x, y, z;
+      do { x = (r() - 0.5) * 60; y = 40 * r(); z = -30 - 10 * r(); } while (!horizon(x, y, z));   // they too fade low in the sky
+      pos.set([x, y, z], i * 3); seed[i] = r();
+    }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
@@ -455,16 +487,16 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   function open() {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
-    breakAt = realT + BREAK_AFTER;   // the 26 stones are chiselled first (step), then the glowing cube breaks
+    breakAt = realT;   // the touched cube breaks first; the other 26 follow it (placeStones)
     hint?.classList.remove('show');
     if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
-  const BREAK_AFTER = 0.62;   // s: the stones are all chiselled (CHISEL_SPAN) and their pieces mostly gone
   let breakAt = null;
   function breakGlow() {
     // the break, as in a level: from the face toward the touch (the front)
     const t = realT, c = (h) => new THREE.Color(h);
     glowCube.visible = false;
+    if (!quiet) onChisel?.(1 / 27);
     fragments.burst(CUBE_AT, CUBE_AT.clone().add(new THREE.Vector3(0, 0.15, 0.5)), t);
     shards.burst(CUBE_AT, t, [c(GLOW.top), c(GLOW.lit), c(GLOW.top)], 3, 0.3, { size: 0.4, life: 0.5, gravity: 1.2, spread: 0.85 });
     if (!quiet) ash.burst(CUBE_AT, 30, new THREE.Vector3(0, 0.25, 1).normalize(), c(GLOW.lit));
