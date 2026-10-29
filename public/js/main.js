@@ -1300,7 +1300,7 @@ function restartLevel() {
 pauseEl.addEventListener('click', (e) => {
   const what = e.target.closest('[data-pause]')?.dataset.pause;
   if (what === 'restart') restartLevel();
-  else if (what === 'rules') { helpFrom = 'pause'; show('#pause', false); renderSupport(); helpTab(0); show('#help', true); }   // the clock stays stopped
+  else if (what === 'rules') { helpFrom = 'pause'; show('#pause', false); renderSupport(); show('#help', true); helpTab('rules'); }   // the clock stays stopped
   else if (what === 'map') { closePause(); saveProgress(); openMenu(); }
   else if (what === 'resume' || !e.target.closest('button')) closePause();   // or a tap anywhere else
 });
@@ -1310,7 +1310,7 @@ window.addEventListener('keydown', (e) => {
   closePause();
 }, true);
 let helpFrom = null;   // 'pause' while How to play was opened from the pause: closing it goes back there
-$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); helpFrom = null; helpTab(2); show('#help', true); });
+$('#map-help').addEventListener('click', () => { closeOffer(); renderSupport(); helpFrom = null; show('#help', true); helpTab('more'); });
 
 // The Learn stone's long press: the twelve lessons, to replay just one (docs/help-access-study.md)
 function openLessons(fromEl) {
@@ -1359,19 +1359,42 @@ $('#help [data-close]').addEventListener('click', () => {
   if (helpFrom === 'pause' && game?.pausedAt != null) show('#pause', true);
   helpFrom = null;
 });
-// How to play's pages; a mouse reads "right-click" where a finger reads "hold"
+// Settings, Rules, Touch: a carousel (docs/settings-study.md). The pages scroll natively and
+// snap; the titles above follow the swipe, the current one centred and full, its neighbours
+// faint at the edges; a title tapped glides its page in
 const helpTabs = [...document.querySelectorAll('#help [role="tab"]')];
-function helpTab(k) {
-  $('#help .tabs').dataset.tab = k;
-  $('#help h2').textContent = k === 2 ? 'Settings' : 'How to play';
+const helpPager = $('#help .help-pages'), helpTitles = $('#help .car-titles'), helpDots = [...document.querySelectorAll('#help .car-dots i')];
+function helpFollow() {
+  const W = helpPager.clientWidth || 1, p = Math.min(helpTabs.length - 1, Math.max(0, helpPager.scrollLeft / W));
+  const i0 = Math.floor(p), f = p - i0, i1 = Math.min(i0 + 1, helpTabs.length - 1);
+  const mid = (t) => t.offsetLeft + t.offsetWidth / 2;
+  helpTitles.style.transform = `translateX(${(W / 2 - (mid(helpTabs[i0]) + (mid(helpTabs[i1]) - mid(helpTabs[i0])) * f)).toFixed(1)}px)`;
   helpTabs.forEach((t, i) => {
-    t.setAttribute('aria-selected', i === k);
-    const page = $('#' + t.getAttribute('aria-controls'));
-    if (i === k && page.hidden) { page.classList.remove('in'); void page.offsetWidth; page.classList.add('in'); }
-    page.hidden = i !== k;
+    const near = Math.max(0, 1 - Math.abs(i - p));
+    t.style.opacity = (0.3 + 0.7 * near).toFixed(3);
+    t.style.setProperty('--k', near.toFixed(3));
+    t.setAttribute('aria-selected', Math.round(p) === i);
   });
+  helpDots.forEach((d, i) => d.classList.toggle('on', Math.round(p) === i));
 }
-helpTabs.forEach((t, i) => t.addEventListener('click', () => helpTab(i)));
+function helpTab(id, smooth = false) {
+  const k = helpTabs.findIndex((t) => t.getAttribute('aria-controls') === 'help-' + id);
+  helpPager.scrollTo({ left: k * helpPager.clientWidth, behavior: smooth && !reduceMotion ? 'smooth' : 'instant' });
+  helpFollow();
+}
+helpPager.addEventListener('scroll', helpFollow, { passive: true });
+addEventListener('resize', () => { if ($('#help').classList.contains('show')) helpFollow(); });
+helpTabs.forEach((t) => t.addEventListener('click', () => helpTab(t.getAttribute('aria-controls').slice(5), true)));
+// with keys: the arrows page, Escape closes
+window.addEventListener('keydown', (e) => {
+  if (!$('#help').classList.contains('show')) return;
+  if (e.key === 'Escape') { e.stopImmediatePropagation(); $('#help [data-close]').click(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const k = Math.round(helpPager.scrollLeft / helpPager.clientWidth) + (e.key === 'ArrowRight' ? 1 : -1);
+    if (helpTabs[k]) helpTab(helpTabs[k].getAttribute('aria-controls').slice(5), true);
+  }
+}, true);
+// a mouse reads "right-click" where a finger reads "hold"
 if (finePointer) for (const dt of document.querySelectorAll('#help [data-mouse]')) dt.textContent = dt.dataset.mouse;
 $('#coach-skip').addEventListener('click', finishTutorial);
 function goNext() {

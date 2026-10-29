@@ -152,29 +152,48 @@ h2 { font-size: 22px; letter-spacing: .32em; margin-bottom: 14px; }
 }
 .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 button.primary { background: var(--ink); color: var(--sky); box-shadow: none; padding: 12px 24px; border-radius: 999px; letter-spacing: .24em; text-transform: uppercase; font-size: 13px; }
-#help .primary { display: block; margin: 20px auto 0; }
-#help .panel { padding-top: 30px; }
-#help h2 { text-align: center; padding-left: .32em; margin-bottom: 18px; }
-
-/* How to play's three pages: Rules, Touch, Settings. A pill like the tools,
-   its highlight sliding between them; the pages share one height so the panel
-   never jumps as you switch */
-.tabs { position: relative; display: flex; padding: 4px; border-radius: 999px; margin: 0 auto 20px; max-width: 320px;
-  background: color-mix(in srgb, var(--ink) 6%, transparent); }
-.tabs::before { content: ""; position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: calc(100% - 8px);
-  border-radius: 999px; background: var(--panel-strong); box-shadow: 0 2px 10px rgba(40, 20, 60, 0.1);
-  transition: transform .45s var(--ease-out); }
-.tabs[data-tab="1"]::before { transform: translateX(100%); }
-.tabs[data-tab="2"]::before { transform: translateX(200%); }
-.tabs button { flex: 1; position: relative; z-index: 1; padding: 10px 0; border-radius: 999px; background: none; box-shadow: none;
-  font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); transition: color .3s; }
-.tabs button[aria-selected="true"] { color: var(--ink); }
-.help-pages { display: grid; }
-.help-pages > .help-page { grid-area: 1 / 1; }
-.help-pages > .help-page[hidden] { display: block; visibility: hidden; }
-.help-page.in { animation: page-in .45s var(--ease-out) both; }
-@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
-@media (prefers-reduced-motion: reduce) { .help-page.in { animation: none; } .tabs::before { transition: none; } }
+/* Settings and how to play: one carousel (docs/settings-study.md, mockup C, after Alto's
+   menu). No card: the sky's own wash over the blurred world, as the pause; the pages lie
+   side by side and snap, natively scrolled; the titles above follow the swipe, the
+   neighbours' peeking faint at the edges (main.js helpTab) */
+#help { display: block; padding: 0; background: color-mix(in srgb, var(--sky) 84%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#help .help-close { position: absolute; top: calc(12px + var(--safe-t)); right: 14px; z-index: 2;
+  background: none; box-shadow: none; border: 1px solid var(--line); color: var(--ink); }   /* a hairline ring, as the map's */
+.car-titles { position: absolute; left: 0; top: calc(78px + var(--safe-t)); display: flex; gap: 34px; white-space: nowrap; will-change: transform; }
+.car-titles button { padding: 8px 0; background: none; box-shadow: none; border-radius: 0; color: var(--ink);
+  font-size: 12px; letter-spacing: .36em; text-transform: uppercase; opacity: .35; }
+.car-titles button::after { content: ""; display: block; width: 7px; height: 7px; margin: 12px auto 0; transform: rotate(45deg) scale(var(--k, 0));
+  border: 1px solid var(--ink-soft); }
+.help-pages { position: absolute; left: 0; right: 0; top: calc(140px + var(--safe-t)); bottom: calc(96px + var(--safe-b));
+  display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior: contain; scrollbar-width: none; }
+.help-pages::-webkit-scrollbar { display: none; }
+.help-page { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: none; }
+.help-page .pg { margin: auto; width: min(340px, 100% - 48px); padding: 8px 0 16px; }
+#help .pg { opacity: 0; transform: translateY(8px); transition: opacity .25s ease-in, transform .25s ease-in; }
+#help.show .pg { opacity: 1; transform: none; transition: opacity .7s ease .1s, transform .9s cubic-bezier(.2,.8,.2,1) .1s; }
+.car-dots { position: absolute; left: 0; right: 0; bottom: calc(62px + var(--safe-b)); display: flex; justify-content: center; gap: 9px; }
+.car-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink); opacity: .25; transition: opacity .3s; }
+.car-dots i.on { opacity: .9; }
+.car-foot { position: absolute; left: 0; right: 0; bottom: calc(24px + var(--safe-b)); margin: 0; text-align: center;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); }
+.car-foot .version { display: inline; margin: 0; font-size: inherit; letter-spacing: inherit; }
+.car-foot a { color: var(--ink-soft); text-decoration: none; }
+/* the toggles in the pause's voice: a ring, a glyph, its word, and whether it's on */
+#help-more .toggles { display: flex; justify-content: center; gap: 10px; margin: 0; }
+.ring-toggle { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 96px; padding: 4px 0; background: none; box-shadow: none; border-radius: 0; color: var(--ink); }
+.ring-toggle svg { width: 60px; height: 60px; padding: 17px; border-radius: 50%; border: 1px solid var(--line); fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  transition: background .3s, border-color .3s, opacity .3s, transform .25s cubic-bezier(.2,.9,.3,1.4); opacity: .45; }
+.ring-toggle.on svg { opacity: 1; border-color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.ring-toggle:active svg { transform: scale(.92); }
+.ring-toggle .l { font-size: 11px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); transition: color .3s; }
+.ring-toggle.on .l { color: var(--ink); }
+.ring-toggle .s { margin-top: -6px; font-size: 9px; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
+.ring-toggle .s::after { content: "off"; }
+.ring-toggle.on .s::after { content: "on"; }
+#help-more .support { margin-top: 34px; }
+#help-more .home-tip { margin-top: 30px; }
+#help-more .home-tip p { font-size: 13px; line-height: 1.55; }
+@media (prefers-reduced-motion: reduce) { #help .pg, #help.show .pg { transform: none; transition: opacity .2s; } }
 
 .help-page .lead { margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
 .help-page .aside { margin: 16px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
@@ -190,9 +209,6 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .gestures dt:first-of-type, .gestures dt:first-of-type + dd { border-top: 0; padding-top: 2px; }
 .gestures dt { font-weight: 700; font-size: 14px; padding-right: 12px; }
 .gestures dd { color: var(--ink-soft); }
-#help-more .toggles { margin-top: 4px; }
-#help-more .home-tip { margin-top: 18px; }
-#help-more .home-tip p { font-size: 13px; line-height: 1.55; }
 
 .glyph { display: inline-grid; place-items: center; width: 24px; height: 24px; font-size: 13px; border: 1.5px solid currentColor; margin: 0 2px; }
 .glyph.circle { border-radius: 50%; }
@@ -760,8 +776,6 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* the build stamps this; it tells which version a phone is running */
 .version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
-.legal { margin: 6px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: .7; }
-.legal a { color: var(--ink-soft); text-decoration: none; }
 
 /* ---------- add to home screen ---------- */
 #install {
