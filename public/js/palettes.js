@@ -4,7 +4,7 @@
 export const PALETTES = [
   {
     name: 'Dawn', rayGain: 0.8,
-    skyTop: 0xf7dccb, skyBottom: 0xc6a3c4, glow: 0xfff1df,
+    skyTop: 0xb48fb0, skyBottom: 0xf0b493, glow: 0xfff0dc,   // sunrise: a rose sky over an apricot horizon (Kellan, 2026-10-28; it was a bright cream)
     top: 0xfcf0de, lit: 0xf1c4a6, shade: 0xa98cb6, under: 0x6f5b8c,
     paintTop: 0x9fe1d4, paintLit: 0x5db6ae, paintShade: 0x3a7a8d,
     rays: 0xfff0d6, motes: 0xfff6e8,

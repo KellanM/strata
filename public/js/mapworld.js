@@ -29,10 +29,11 @@ const NIGHT = '#121731';
 // the sky, top to bottom over 1.4 screens, ending at the horizon
 // (the last stretch is long and the peak low, so the horizon is a glow, not a band)
 // (Kellan, 2026-10-25: longer, so night turns to dawn over more of the way down)
-const SKY_STOPS = [[0, '#121731'], [0.3, '#1c234d'], [0.5, '#2c3465'], [0.64, '#454a80'], [0.76, '#6f6599'], [0.86, '#a888b0'], [0.93, '#dbb2bd'], [1, '#fbe2d6']];
+// (Kellan, 2026-10-28: to a rose sunrise at the horizon, not a bright cream - the map came up like a flashbang)
+const SKY_STOPS = [[0, '#121731'], [0.3, '#1c234d'], [0.5, '#2c3465'], [0.64, '#454a80'], [0.76, '#6f6599'], [0.86, '#a888b0'], [0.93, '#dba7b0'], [1, '#f4c4a8']];
 // below the horizon the glow sinks slowly into the first chapter's sea, over
 // this many screens: the title's sky and the map are one curve, no edge
-const BELOW = [[0, 0xfbe2d6], [0.2, 0xfbe1d7], [0.75, 0xf8dcd4]];
+const BELOW = [[0, 0xf4c4a8], [0.2, 0xf0c0a8], [0.75, 0xdcb6bb]];
 const BELOW_END = 1.8;
 const DAWN = 60;   // the horizon sits this far below the top of the map's page
 
@@ -146,7 +147,7 @@ export class MapWorld {
   layoutSky() {
     const { w, h } = this, Hs = h * 1.4, d = Math.min(2, this.dpr);
     this.Hs = Hs;
-    const sea = this.firstSeaHex ?? 0xf3dcd4, g = dawnGradient(Hs, h, sea);
+    const sea = this.firstSeaHex ?? 0xd4b3bb, g = dawnGradient(Hs, h, sea);
     this.sky.style.height = `${Hs + h + DAWN}px`;
     this.sky.style.background = `${g.css} 0 0 / 100% ${g.height.toFixed(1)}px no-repeat, ${rgba(sea)}`;
     this.starWrap.style.height = `${Hs}px`;
