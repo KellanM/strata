@@ -2178,18 +2178,19 @@ const titleName = new URLSearchParams(location.search).get('name') || localStora
 // the wall under the stone: off by default (Kellan, 2026-10-25); developer panel "Title wall", or ?wall=on
 const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'none') !== 'none';
 const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), veil: $('#fl-night'), nameStyle: titleName, withWall: titleWall,
-  onOpen: () => sound.unlock(),
+  onOpen: () => { sound.unlock(); if (returning) setTimeout(() => titleScreen.classList.add('named'), 1200); },   // a returning player is shown the way on before the name is written
   onChisel: (k) => { sound.chisel(k); buzz(12, 'tick'); },   // each of the 27 as a block breaks in a level, its note rising through the run
   onNamed: () => {
   titleScreen.classList.add('named');
   mark('title: the name is written');
 } });
 let titleBegun = false;
-// a returning player (the lessons done) finds the title already written: the
-// stone's opening belongs to the first launch; later ones are a still breath,
-// one tap from the map (docs/flow-study.md F2). ?title=fresh plays the opening
-// anyway, to review it on a phone that has done the lessons.
-if (localStorage.getItem('strata.tutorial') && new URLSearchParams(location.search).get('title') !== 'fresh') fl.finish();
+// Every launch opens on the stone (Kellan, 2026-10-28: the geode for everyone,
+// not only the first launch; this replaced F2's already-written title). A
+// returning player (the lessons done) needn't wait for the name: once the stone
+// is open, a tap goes on to the map. ?title=written gives the old still title.
+const returning = !!localStorage.getItem('strata.tutorial');
+if (returning && new URLSearchParams(location.search).get('title') === 'written') fl.finish();
 canvas.style.opacity = '0';
 // Sound from the first moment it's allowed: phones only let a page make sound
 // after a touch (on iPhone, a finger lifting), except where autoplay is granted
@@ -2442,7 +2443,7 @@ const endPull = (e) => {
     if (e.type === 'pointercancel' || Math.abs(pull.dy) > 10 || pull.gliding) return;   // (a swipe down isn't a tap)
     // First light: a tap opens the stone; while its light rises a tap waits;
     // once the name is written, a tap goes on as before (a swipe always does)
-    if (!fl.named) { if (fl.tap(e.clientX, e.clientY)) sound.unlock(); return; }
+    if (!fl.named && !(returning && fl.opened)) { if (fl.tap(e.clientX, e.clientY)) sound.unlock(); return; }
     startPull();
     finishPull();
     return;

@@ -87,3 +87,5 @@ Measured with `shots/flow-after.mjs` (Chromium, 390×844, frames in `shots/flow-
 | First launch, launch → lesson 1 | card → tap stone → swipe → lesson | card → tap stone → tap → map → tap Learn (15 s with the full stone break) |
 
 Still open: skipping the lessons leaves the unfinished lesson behind the map's Resume button (also true before); phone timing unmeasured.
+
+**Revised 2026-10-28 (Kellan):** every launch opens on the geode, not only the first; F2's already-written title is gone (`?title=written` keeps it for comparison). A returning player needn't wait for the name: once the stone is open, "tap to begin" shows after ~1 s and a tap goes on to the map. Measured: launch → puzzle 7.0 s, 3 taps (stone, begin, stone on the map).
