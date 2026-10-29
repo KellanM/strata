@@ -2294,15 +2294,18 @@ if (splash) {
   const lift = (erase) => {
     if (lifted || !ready) return;
     lifted = true;
-    beginTitle();
-    if (erase) { splash.classList.add('erasing'); setTimeout(out, SPLASH_ERASE * 1000); }   // (erased, a breath of black - Kellan, 2026-10-29: "it feels like taking a breath" - then the stone)
-    else requestAnimationFrame(() => requestAnimationFrame(out));   // the stone's first frame drawn first
+    if (erase) splash.classList.add('erasing');
+    // the erase's animation begun (two frames: then it is the compositor's) before the title's first frames
+    requestAnimationFrame(() => requestAnimationFrame(beginTitle));
+    if (erase) { setTimeout(out, SPLASH_ERASE * 1000); }   // (erased, a breath of black - Kellan, 2026-10-29: "it feels like taking a breath" - then the stone)
+    else requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(out)));   // the stone's first frame drawn first
   };
   // a tap skips the rest of the card (index.html notes it, even one made before this ran)
   window.onSplashTap = () => { mark('splash: tapped'); lift(false); };
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  requestAnimationFrame(() => requestAnimationFrame(async () => {
     fl.warm();
     buildMap();
+    await mapWorld.built;   // its scenery paints once its atlas has come: wait, or that lands on the erase
     ready = true;
     if (window.splashTapped) { lift(false); return; }
     const quick = splash.classList.contains('quick') || reduceMotion;

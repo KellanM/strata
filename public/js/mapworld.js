@@ -178,7 +178,10 @@ export class MapWorld {
    * model: { regions: [{ index, name, base, top, bottom, labelZ, labelSide, bank, folded }],
    *          trailX(z) (from the page's centre), driftTop, end }; z in page px
    */
-  async build(model) {
+  // (this.built: the painting is done - main.js holds the studio's card for it, or its
+  // near-second of work lands on whatever is moving then)
+  build(model) { return (this.built = this.paint(model)); }
+  async paint(model) {
     await this.atlasReady;
     this.model = model;
     for (const k of Object.keys(this.layers)) this.layers[k].innerHTML = '';
