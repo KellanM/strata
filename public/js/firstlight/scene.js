@@ -468,8 +468,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
       halo.scale.setScalar(4.2 + 1.2 * breath);
       wallMat.uniforms.uL.value[0].copy(CUBE_AT).setZ(1.1);
       wallMat.uniforms.uLi.value[0] = (1.4 + 0.9 * breath) * lit;
-      // the fingertip: only if nothing has been touched for a while
-      if (hint && simT - idleSince > 6.5) {
+      // the fingertip: once the night is up, if nothing has been touched (docs/flow-study.md F4)
+      if (hint && simT - idleSince > 3.2) {
         v3.copy(CUBE_AT).project(camera);
         hint.style.left = `${(v3.x * 0.5 + 0.5) * window.innerWidth}px`;
         hint.style.top = `${(-v3.y * 0.5 + 0.5) * window.innerHeight}px`;

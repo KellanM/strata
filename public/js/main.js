@@ -2156,9 +2156,12 @@ resize();
 // The title: under the name, the logo makes itself - a whole 2x2x2 stone is
 // there from the start, then its near top corner is chiselled away, as on the
 // app icon.
-// The title and the map are one tall page: swipe up and the title and logo
-// scroll off the top while the map comes up from below (the touch also lets the
-// sound start). The very first time, the swipe begins the first lesson instead.
+// The title and the map are one tall page: swipe up (or tap, once the name is
+// written) and the title and logo scroll off the top while the map comes up from
+// below (the touch also lets the sound start). The very first time, the map is
+// under mist but for Learn, the glowing stone: the lessons begin from there, and
+// end back on the map (docs/flow-study.md F1). After that, a launch opens on the
+// title already written, and the map comes up at the current stone (F2).
 const titleScreen = $('#title');
 // The title is First light (js/firstlight/scene.js): it draws on its own
 // canvas inside the title, so it scrolls away with it; the game's canvas (the
@@ -2175,6 +2178,10 @@ const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), vei
   mark('title: the name is written');
 } });
 let titleBegun = false;
+// a returning player (the lessons done) finds the title already written: the
+// stone's opening belongs to the first launch; later ones are a still breath,
+// one tap from the map (docs/flow-study.md F2)
+if (localStorage.getItem('strata.tutorial')) fl.finish();
 canvas.style.opacity = '0';
 // Sound from the first moment it's allowed: phones only let a page make sound
 // after a touch (on iPhone, a finger lifting), except where autoplay is granted
@@ -2213,13 +2220,12 @@ const beginTitle = () => { titleBegun = true; perf.boot('title-interactive'); };
 // build the map only once the logo is done: building it (every stone's picture)
 // stalls the page, which froze the carve on phones
 let mapBuilt = false;
-// it starts at its top: the title and the map are one page, so the swipe carries
-// on into the map's head rather than jumping to the current stone
+// it comes up already scrolled to the current stone: the descent lands where
+// the player left off, not at the map's head (F2)
 const buildMap = () => {
   if (mapBuilt) return;
   mapBuilt = true;
-  renderMenu(false, false, false);
-  mapSheet().scrollTop = 0;
+  renderMenu(true, false, false);
   mark('title: map built');
   perf.boot('map-built');
   primeMap();
@@ -2228,21 +2234,28 @@ const buildMap = () => {
 // work happens behind it: the first frames are drawn (every shader compiled)
 // and the whole map is built. Then it lifts - no sooner than its own little
 // animation has played (SPLASH_HOLD), and on a quick relaunch at once - and
-// the title begins under it, the logo carving as before.
-const SPLASH_HOLD = 2.6;   // s: the card fades in (1.1 s) and holds
+// the title begins under it, the logo carving as before. A tap lifts it as
+// soon as that work is done.
+const SPLASH_HOLD = 1.6;   // s: the card fades in (0.8 s) and holds; with its fade out, about 2 s, as the peers' cards (docs/flow-study.md F3)
 const splash = $('#splash');
 if (splash) {
+  let lifted = false, ready = false;
+  const lift = () => {
+    if (lifted || !ready) return;
+    lifted = true;
+    splash.classList.add('out');
+    mark('splash: lifted');
+    perf.boot('splash-lifted');
+    setTimeout(() => splash.remove(), 800);
+    beginTitle();
+  };
+  splash.addEventListener('pointerdown', () => { mark('splash: tapped'); lift(); });
   requestAnimationFrame(() => requestAnimationFrame(() => {
     buildMap();
+    ready = true;
     const quick = splash.classList.contains('quick') || reduceMotion;
     const left = quick ? 0 : Math.max(0, SPLASH_HOLD * 1000 - (performance.now() - (window.splashT0 ?? 0)));
-    setTimeout(() => {
-      splash.classList.add('out');
-      mark('splash: lifted');
-      perf.boot('splash-lifted');
-      setTimeout(() => splash.remove(), 800);
-      beginTitle();
-    }, left);
+    setTimeout(lift, left);
   }));
 } else {
   beginTitle();
@@ -2252,7 +2265,6 @@ if (splash) {
 // the scroll: k px up. The title moves with it, the logo too (by shifting the
 // camera's view), and the map sheet follows from just below the screen.
 const pull = { id: null, y0: 0, dy: 0, v: 0, lastY: 0, lastT: 0, live: false, k: 0, anim: 0 };
-const toMap = () => !!localStorage.getItem('strata.tutorial');
 const mapSheet = () => $('#menu .map-scroll');
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
@@ -2270,7 +2282,7 @@ function setScroll(k) {
   canvas.style.opacity = '0';   // First light is the title: the game's canvas (the old logo) stays hidden all the way down (titleUp goes false as the descent starts)
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (k > 0.5) camera.setViewOffset(w, h, 0, k, w, h); else camera.clearViewOffset();
-  if (toMap()) {
+  {
     const sheet = mapSheet();
     sheet.style.transform = $('#menu .map-backdrop').style.transform = `translateY(${H - k}px)`;
     // the soft top edge (style.css #menu.pulling) slides up out of the sheet as it arrives
@@ -2300,7 +2312,7 @@ function stopGlide() { cancelAnimationFrame(pull.anim); pull.gliding = false; }
 // painted: done on the tap's first frame instead, it stalled the descent's start
 let mapPrimed = false;
 function primeMap() {
-  if (!toMap() || !titleUp || $('#menu').classList.contains('show')) return;
+  if (!titleUp || $('#menu').classList.contains('show')) return;
   buildMap();
   const menu = $('#menu');
   menu.style.transition = 'none';
@@ -2314,12 +2326,13 @@ function primeMap() {
   mark('title: map primed');
 }
 function startPull() {
+  titleScreen.classList.add('going');   // its prompt goes as the page moves, not up over the map (F6)
   fl.dawn();   // leaving without opening the stone: the sky comes up quickly, not black
   pull.live = true;
   stopGlide();
   mark('title: pull');
   titleScreen.style.transition = 'none';
-  if (!toMap() || ($('#menu').classList.contains('show') && !mapPrimed)) return;
+  if ($('#menu').classList.contains('show') && !mapPrimed) return;
   primeMap();
   if (!mapPrimed) return;
   mapPrimed = false;
@@ -2331,41 +2344,36 @@ function finishPull() {
   if (!titleUp) return;
   titleUp = false;
   pull.live = false;
-  mark('title: to ' + (toMap() ? 'map' : 'lesson'));
+  mark('title: to map');
   sound.peel();
   const H = window.innerHeight;
   // the descent: about 1 s, lingering at the horizon (world.js); quicker if
-  // this session has already seen it (an update reload). The lesson path keeps
-  // the short glide: it isn't going to the map.
+  // this session has already seen it (an update reload)
   const seen = sessionStorage.getItem('strata.descended') === '1';
   sessionStorage.setItem('strata.descended', '1');
   const left = 1 - pull.k / H;
-  const seconds = !toMap() ? 0.5 : reduceMotion ? 0.01 : (seen ? DESCENT.again : DESCENT.first) * (0.35 + 0.65 * left);
+  const seconds = reduceMotion ? 0.01 : (seen ? DESCENT.again : DESCENT.first) * (0.35 + 0.65 * left);
   const landed = () => {
     menuEl.removeEventListener('pointerdown', handOff, true);
     // the logo has scrolled away: hide the canvas outright before its view offset
     // resets, or the logo pops back to the centre while the canvas fades out
-    if (toMap()) { canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; }); }
-    // to the first lesson: the glide faded the canvas out with the logo (setScroll);
-    // hand it back to the stylesheet so it fades in on the lesson, or the lesson is played blind
-    else canvas.style.transition = canvas.style.opacity = '';
+    canvas.style.transition = 'none'; canvas.style.opacity = '0'; after(0.7, () => { canvas.style.transition = canvas.style.opacity = ''; });
     titleScreen.classList.remove('show');
     titleScreen.style.cssText = '';
     camera.clearViewOffset();
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
-    if (toMap()) { mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true); }
+    mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
   // scroll then meets a settled map)
   const handOff = () => { if (!pull.gliding) return; stopGlide(); setScroll(H); mark('title: landed by a touch'); landed(); };
-  scrollTo(H, seconds, toMap() ? ease.descent : ease.glide, landed, () => {
-    if (!toMap() || pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
+  scrollTo(H, seconds, ease.descent, landed, () => {
+    if (pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
     titleScreen.style.pointerEvents = 'none';
     menuEl.addEventListener('pointerdown', handOff, true);
   });
-  if (!toMap()) after(0.25, () => startTutorial(0));
 }
 function cancelPull(seconds = 0.35) {
   pull.live = false;
@@ -2373,8 +2381,9 @@ function cancelPull(seconds = 0.35) {
     if (pull.live || !titleUp) return;
     titleScreen.style.cssText = '';
     titleScreen.classList.add('show');
+    titleScreen.classList.remove('going');
     // the map waits just below the screen again, primed for the next descent
-    if (toMap() && $('#menu').classList.contains('show')) {
+    if ($('#menu').classList.contains('show')) {
       stopReveal();
       prepareReveal($('#map'), '.map-node, .map-region');
       mapPrimed = true;
@@ -2420,7 +2429,7 @@ titleScreen.addEventListener('pointercancel', endPull);
 // short of it, the map settles back. A level left open is saved first (its
 // progress resumes when it's next opened).
 const ascent = { id: null, y0: 0, lastY: 0, lastT: 0, v: 0, live: false };
-const atMapTop = () => !titleUp && !pull.gliding && toMap() && mapBuilt && !diving && $('#menu').classList.contains('show')
+const atMapTop = () => !titleUp && !pull.gliding && mapBuilt && !diving && $('#menu').classList.contains('show')
   && !$('#menu').classList.contains('arriving') && !$('#menu').classList.contains('settling') && mapSheet().scrollTop <= 0;
 function beginAscent() {
   ascent.live = true;

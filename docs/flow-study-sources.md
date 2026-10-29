@@ -1,0 +1,61 @@
+# Opening-flow study: sources and evidence
+
+Strata's flow: native launch screen, then a ~3.1 s studio card (pet-rock ident), then a title (tap a glowing stone, then swipe up), then the world map, then a level.
+
+**How the evidence was gathered (2026-10-28).** I sampled frames from YouTube recordings by seeking the `<video>` element and drawing contact sheets. I looked at those frames myself. Timestamps are **video time, not cold-launch time**. Uploaders often trim the start, and platform and version vary (for example, the Noodlecake logo appears only on Android). Treat durations as roughly ±1 s. Anything marked **[unverified]** comes from memory or an indirect source, not from frames I saw.
+
+## 1. Platform guidance
+
+**Apple HIG, "Launching"** (https://developer.apple.com/design/human-interface-guidelines/launching, text read through the HIG JSON endpoint):
+- "Launch instantly. People want to start interacting with your app or game right away, and sometimes they don't want to wait more than a couple of seconds."
+- "Downplay the launch experience. A launch screen isn't part of an onboarding experience or a splash screen, and it isn't an opportunity for artistic expression."
+- "Design a launch screen that's nearly identical to the first screen of your app or game… If your app or game displays a solid color before transitioning to the first screen, create a launch screen that displays only that solid color."
+- "Don't advertise. The launch screen isn't a branding opportunity… don't include logos or other branding elements unless they're a fixed part of your app's first screen."
+- "If you need a splash screen, consider displaying it at the beginning of your onboarding flow… If you don't provide an onboarding experience, you might display your splash screen as soon as launching completes." (This was added in June 2024. It accepts an in-app splash after launch, so Strata's ident is allowed.)
+- "Restore the previous state when your app restarts so people can continue where they left off. Avoid making people retrace steps to reach their previous location in your app or game."
+
+**Apple engineering.** WWDC19 session 423, "Optimizing App Launch", sets a target of the first frame within **400 ms** (https://developer.apple.com/videos/play/wwdc2019/423/). The "Reducing your app's launch time" article says: "on iOS, the watchdog will terminate it if it takes too long" (https://developer.apple.com/documentation/xcode/reducing-your-app-s-launch-time).
+
+**Android SplashScreen API** (https://developer.android.com/develop/ui/views/launch/splash-screen):
+- Animated icon: "we recommend not exceeding 1,000 ms on phones." The delayed start may be no longer than 166 ms.
+- "The splash screen is dismissed as soon as your app draws its first frame."
+- "The design guidelines recommend against using a branding image." Also: "make sure the motion can be comfortably skipped."
+
+**Engines.** In Unity Personal the splash screen can't be disabled. Each logo's Logo Duration is "a value between 2 and 10 seconds", and the total is all logos plus 0.5 s fade (https://docs.unity3d.com/2019.3/Documentation/Manual/class-PlayerSettingsSplashScreen.html). This is a likely origin of the industry habit of 2–3 s per logo.
+
+**Retention and drop-off data.** I found **no published study that isolates logo or splash duration as a cause of drop-off.** The nearest material:
+- GameAnalytics: "Users should do something fun as soon as they open your mobile game." It also recommends a funnel for every tutorial step (https://gameanalytics.com/blog/tips-for-a-great-first-time-user-experience-ftue-in-f2p-games).
+- A Medium FTUE analysis found the largest drop happened before an intro video finished. Its caveat is that longer steps collect more quitters simply because they last longer (https://medium.com/data-science/incremental-data-science-for-mobile-game-development-955bb059e8a6).
+- A playio.co blog claims that if the "aha" moment takes more than 90 s, a significant share of users never return. It cites no primary data **[unverified]** (https://blog.playio.co/mobile-game-onboarding-retention).
+
+## 2. Comparable games
+
+| Game | Logos and duration (observed) | Title contents | Title to first puzzle | Relaunch / continue | Source |
+|---|---|---|---|---|---|
+| **Monument Valley 2** (ustwo) | ustwo games wordmark on black, about 2 s (v0:02). Then a small emblem grows from dark to light (v0:05–0:10) and opens into the scene (v0:10–0:13). | No button menu. The opening scene is a lit, in-world structure; no UI chrome was visible in the frames. | The scene flows into Chapter 1 (cave scene by v0:38). Exact first input not determined from frames. | **[unverified]** In MV1, chapter select is a menu of floating buildings you tap. GIGAZINE: "When installing and starting, the first chapter of the tutorial stage starts." | https://www.youtube.com/watch?v=GTD6692IXwA&t=2 ; https://gigazine.net/gsc_news/en/20141230-monument-valley |
+| **Alto's Odyssey** (Snowman; Android build) | Noodlecake (publisher) about 1.5 s (v0:00–0:01), then Team Alto about 1.5 s (v0:02–0:03), then black (v0:04–0:07). | First launch: a sunrise and balloon cinematic (v0:08–0:30). Then "ALTO's ODYSSEY" fades in **over the live world** (v0:32), and "Tap to start" appears (v0:36). | One tap anywhere (about v0:40), then a tooltip ("Welcome to the endless desert… Tap to continue"), then riding by v0:46. The title is the gameplay scene. | After a run there is a score screen with Home and Play Again. The title returns over the world with "Tap to start", "Workshop" top-right and "Players" bottom-right (v2:55, v4:06). | https://www.youtube.com/watch?v=GkQRsN1aY1U&t=0 ; &t=175 |
+| **I Love Hue** (Zut!) | None visible; the recording may be trimmed. | "I ♥ HUE" wordmark over an animated colour-tile mosaic, with "START" bottom-right (v0:00–0:02). | Tap START, then a level carousel ("Beginner" pack, level numbers, PLAY/REPLAY, v0:06), then a puzzle (v0:13). **2 taps.** | **[unverified]** | https://www.youtube.com/watch?v=LytlpMB4b4I |
+| **Two Dots** (Playdots; older build) | "Dots" studio mark about 1–2 s (v0:04). | "TWODOTS" wordmark, one green "Play" pill, illustrated mountains and characters (v0:06–0:10). This matches the Pratt IxD review: "the only text is the name of the app and the word 'play'". | Play (about v0:11), then a loading line ("Tiptoeing around Fox…", v0:13–0:16), then the map (v0:20), then an interactive tutorial ("Welcome to TwoDots", v0:30), then level 1 (v1:00). | The map is the hub. Levels above the current one are greyed. **[unverified]** whether relaunch skips the title. | https://www.youtube.com/watch?v=Ga4QI5yjilo ; https://ixd.prattsi.org/2015/02/two-dots-iphone-app-good-design/ |
+| **Mini Metro** (Dinosaur Polo Club; Apple Arcade) | Dinosaur Polo Club on black, about 1.5 s (v0:00–0:01). | The "Mini Metro" wordmark animates in (v0:04), and a single "→" arrow appears (v0:06). Nothing else. | First launch: the arrow leads straight into an interactive tutorial on a near-empty map ("Drag from this station…", v0:20). The arrow is the only input. | **[unverified]** | https://www.youtube.com/watch?v=gQBL-6Mr938 |
+| **Florence** (Mountains / Annapurna) | Annapurna Interactive about 3 s (v0:06–0:08), then Mountains about 3–4 s (v0:10–0:14). **About 7 s of logos in total.** | No menu was seen. A "headphones recommended" card with an arrow (v0:16), then the "chapter 1. adult life" card with an arrow (v0:30). | First vignette interaction (alarm clock) at about v0:40. | **[unverified]** | https://www.youtube.com/watch?v=11kko7dXADs |
+| **Nonogram.com** (Easybrain) | Easybrain about 1.5 s (v0:00). | **No title screen.** It shows a consent dialog (v0:02) and the iOS tracking prompt (v0:04), then "Welcome to Nonogram.com! Let's learn some basic rules. Tap to Start" (v0:08). | The tutorial is itself a 5×5 puzzle (first input about v0:10). "Level Completed!" offers Next Level or Main (v1:00). | The home screen is the hub. **[unverified]** | https://www.youtube.com/watch?v=HpKaBDv1R8s |
+| **Royal Match** (Dream Games), for contrast | Not in the recording (trimmed). | The home screen *is* the hub: a castle scene with a big "Level N" button and "Tasks" (v0:00). | Level 1 tap, then a loading card with a tip (v0:04), then the board (v0:06). Afterwards it returns home with a "Level 2 / Play" popup (v0:50). | The continue action is the Level N button on the home screen, with no title screen. Persistent-hub behaviour is inferred from that layout **[partly unverified]**. | https://www.youtube.com/watch?v=FYU6x5lFmuI |
+| Picross S (Jupiter) | Not checked. It's on Switch, not mobile. | — | — | — | — |
+
+Not covered: Monument Valley 3, I Love Hue Too, Assemble with Care, Islanders, Prune, Old Man's Journey and Lumino City. Talks found but not watched: Ken Wong, "Designing Monument Valley: Less Game, More Experience" (https://www.gdcvault.com/play/1021380/Designing-Monument-Valley-Less) and Jamie Churchman, "Mini Metro: When Less Is More", GDC 2017 (https://www.gamedeveloper.com/design/attend-gdc-2017-and-learn-the-value-of-less-is-more-from-a-i-mini-metro-i-dev).
+
+## 3. What the evidence suggests (mechanisms)
+
+1. **One short ident is normal; a long one is not.** *Claim:* HIG says "don't advertise" on the launch screen, but it now allows an in-app splash after launch. Android recommends ≤1,000 ms for the icon animation. *Observed:* single-studio idents ran about 1.5–2 s (ustwo, Dinosaur Polo Club, Easybrain, Dots, Team Alto). The longest was Florence, where two logos took about 7 s, at about 3 s each. *Interpretation:* Strata's 3.1 s single card is at the slow end of the indie norm. 1.5–2 s, or a card skippable on tap, would match its peers.
+
+2. **The title is usually the world, with one affordance.** *Observed:* Alto puts the logo and "Tap to start" over the live, running scene. Mini Metro shows a wordmark and one arrow. Two Dots and I Love Hue show a wordmark and one Play/Start. MV2 uses an in-world scene with no button menu. *Interpretation:* calm premium games use **one input** to leave the title. Strata uses two gestures (tap the stone, then swipe up), which is unusual. That's fine if the swipe is itself part of the delight. It's a risk if players don't discover it, because no peer asks for a gesture whose direction must be learned.
+
+3. **First launch gets to an interactive puzzle fast, often skipping the title.** *Observed:* Nonogram.com goes straight into a tutorial puzzle (about 8 s after the logo). Mini Metro goes into a tutorial map. GIGAZINE says MV1's first launch "starts" in Chapter 1. Alto's long cinematic plays on first launch only **[the first-launch-only part is unverified]**. *Interpretation:* consider making first launch go ident, then (title as a brief beat), then level 1 directly, without the map.
+
+4. **On return, the hub is the continue button.** *Claim:* HIG says "Restore the previous state… Avoid making people retrace steps." *Observed:* Royal Match's home screen has "Level N" as its primary button. Two Dots puts the map on its main screen, with locked levels greyed. Alto returns to its title-over-world screen with one-tap Play. *Interpretation:* for Strata, a relaunch should land on the map centred on the next stone, or offer a one-tap continue. Replaying the full title gesture every session goes against the HIG.
+
+5. **Chrome is minimal and secondary actions are peripheral.** *Observed:* Alto keeps Workshop and Players in the corners. Nonogram.com's completion screen has "Next Level" as the big button and "Main" as small text. *Interpretation:* keep settings off the title's focal point.
+
+6. **The launch screen should match the first frame.** *Claim:* HIG says a solid-colour first screen should get a solid-colour launch screen, and warns of an "unpleasant flash". *Interpretation:* Strata's native launch screen should be the exact background colour of the first frame of the ident, with no logo on it.
+
+7. **Funnel-instrument it, because there is no external number to borrow.** *Claim:* GameAnalytics says to track every step and find the biggest drops. *Interpretation:* log timestamps for app start, ident end, title shown, stone tap, swipe, map shown and first cell filled. Compare drop-off between the tap and the swipe steps in TestFlight before deciding.
