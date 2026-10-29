@@ -2300,8 +2300,8 @@ const buildMap = () => {
 // which began under it in that breath. (Fading the title's canvas itself instead
 // cost a frame of a third of a second as it was first shown.) A quick relaunch,
 // or a tap, skips the chalk.
-const SPLASH_HOLD = 1.0;   // s: from the chalk's start to its lifting off - slapped on by about 0.7 s (index.html @keyframes chalk-slap), then held
-const SPLASH_ERASE = 0.75;  // s: the slapping on played backwards (index.html #splash.erasing: the slaps' spread, about 0.58 s, and one slap, 0.17)
+const SPLASH_HOLD = 2.0;   // s: from the chalk's start to its fading - slapped on by about 0.7 s (index.html @keyframes chalk-slap), then held a good while (Kellan, 2026-10-29: "another second")
+const SPLASH_ERASE = 0.7;  // s: the logo fading to black (index.html @keyframes splash-fade)
 const SPLASH_BREATH = 0.12;   // s: black, between the erase and the card's fade (Kellan: "it feels like taking a breath")
 const splash = $('#splash');
 if (splash) {
