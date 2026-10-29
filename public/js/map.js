@@ -18,7 +18,7 @@ import { after, mark, DUR, ease, rate as motionRate } from './motion.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const STEP = 116;          // vertical distance between stones
-const GAP = 190;           // a chapter boundary: room for the cloud's edge and the name
+const GAP = 190;           // before the Drift: room for its name
 const COL = 420;           // max width of the trail column
 const SHRINE_STARS = 12;   // stars in a chapter that open its shrine
 // Chapters past the next one still under cloud are folded into a short stretch
@@ -252,18 +252,23 @@ export function renderMap(root, opts) {
   }
 
   // ---- layout (y down the map, x across the page)
+  // One beat down the whole trail (Kellan, 2026-10-28: stretches with no stones
+  // broke its rhythm): every node on it is a STEP below the last, its x the next
+  // phase of one wave - Learn, a chapter's stones, its shrine, the next chapter's
+  // stones. A chapter's name sits beside the trail between its shrine and its
+  // first stone, where the cloud's edge also falls.
   const nodes = [];         // { kind, x, y, palette, entry?, n?, state, region? }
-  const trail = [];         // learn + the stones that are laid out, in order
+  const trail = [];         // learn + the stones and shrines that are laid out, in order
   let k = 0, y = 70;
   const place = () => x0 + colW * (0.5 + 0.28 * Math.sin(k * 0.92 + 0.5));
   const learnPal = regions[0]?.items[0].palette ?? driftPalette;
   // the first stone of all sits on the centre line; the trail swings out from it
   const learn = { kind: 'learn', x: x0 + colW * 0.5, y, palette: learnPal, sky: learnPal, state: learned ? 'solved' : 'current' };
   nodes.push(learn); trail.push(learn);
-  k++; y += STEP * 0.9;
+  k++; y += STEP;
 
   regions.forEach((r) => {
-    r.top = y;
+    r.top = y - STEP * 0.62;
     r.nodes = [];
     if (r.folded) {
       // a short stretch of cloud: the name and its peak
@@ -271,9 +276,7 @@ export function renderMap(root, opts) {
       k += r.items.length;
       y += FOLDED_H;
     } else {
-      y += GAP * 0.42;
-      r.labelY = y;
-      y += GAP * 0.58;
+      r.labelY = y - STEP * 0.5;
       for (const e of r.items) {
         const i = entries.indexOf(e);
         const state = solved[e.shape.id] ? 'solved' : !open[i] ? 'locked' : i === first && learned ? 'current' : 'open';
@@ -289,7 +292,7 @@ export function renderMap(root, opts) {
       const need = shrineStars(r);
       const leftSide = r.last ? r.last.x > x0 + colW / 2 : (k % 2 === 0);
       r.shrine = {
-        kind: 'bonus', x: x0 + colW * (leftSide ? 0.14 : 0.86), y: r.folded ? r.labelY + 120 : r.last.y + STEP * 0.62,
+        kind: 'bonus', x: r.folded ? x0 + colW * (leftSide ? 0.14 : 0.86) : place(), y: r.folded ? r.labelY + 120 : y,
         palette: entry.palette, sky: r.items[0].palette, entry, region: r, need,
         // stars open it, once the trail has reached the chapter (stars from
         // stones that moved here when the map grew don't open it from afar);
@@ -297,13 +300,14 @@ export function renderMap(root, opts) {
         state: solved[b.id] ? 'solved' : devUnlock() || (r.reached && (r.stars >= need || !!opts.openedShrines?.has(b.id))) ? 'open' : 'locked',
       };
       nodes.push(r.shrine);
-      if (!r.folded) y += STEP * 0.35;
+      // on the trail, a beat of its own: the way on to the next chapter passes it
+      if (!r.folded) { trail.push(r.shrine); k++; y += STEP; }
     }
-    r.bottom = y;
+    r.bottom = y - STEP * 0.62;
   });
 
-  const driftTop = y;
-  y += GAP * 0.42;
+  const driftTop = y - STEP * 0.62;
+  y += GAP * 0.42 - STEP * 0.62;
   const driftLabelY = y;
   y += GAP * 0.58;
   const allSolved = learned && first < 0;
@@ -357,6 +361,9 @@ export function renderMap(root, opts) {
   svg.style.width = `${fullW}px`;
   svg.style.height = `${height}px`;
   const pts = trail.map((n) => [n.x, n.y]);
+  // a shrine on the way is passed, kept or not: the way through it opens with the stone before it
+  const passable = (n) => n.kind === 'bonus' || n.state !== 'locked';
+  const passed = (j) => (trail[j].kind === 'bonus' ? trail[j - 1]?.state === 'solved' : trail[j].state === 'solved');
   const segD = (i, move = true) => segment(pts[i - 1] ?? pts[i], pts[i], pts[i + 1], pts[i + 2] ?? pts[i + 1], move);
   const draws = [];
   let markup = '';
@@ -371,7 +378,7 @@ export function renderMap(root, opts) {
     const hide = b.region?.parting ? ' in-parting' : '';   // including the stretch that leads into it
     // today's trail: dotted, solid where walked, in the colour of the stone it leads to;
     // a stretch walked for the first time draws itself on
-    const walked = b.state !== 'locked' && a.state === 'solved';
+    const walked = passable(b) && passed(i);
     const id = b.entry?.shape.id ?? b.kind;
     const fresh = walked && celebrate && lit && !lit.has(id);
     if (fresh) draws.push({ i, id });
@@ -379,9 +386,9 @@ export function renderMap(root, opts) {
     const [y0, y1] = extent(a.y, b.y, a.y + (b.y - p0[1]) / 6, b.y - (p3[1] - a.y) / 6);
     parts.push({ y0, y1, html: `<path d="${segD(i)}" data-seg="${a.entry?.shape.id ?? a.kind}>${id}" class="trail${walked ? ' walked' : ''}${fresh ? ' draw' : ''}${hide}" stroke="${hex(b.palette.under)}"/>` });
   }
-  // a faint spur from each chapter's last stone to its shrine
+  // a faint spur from each chapter's last stone to its shrine (a folded chapter's: the rest are on the trail)
   for (const r of regions) {
-    if (!r.shrine || !r.last || !r.reached) continue;
+    if (!r.shrine || !r.last || !r.reached || trail.includes(r.shrine)) continue;
     const a = r.last, s = r.shrine;
     // one path, dotted until the shrine is kept, then solid: same d either way
     parts.push({ y0: Math.min(a.y, s.y), y1: Math.max(a.y, s.y), html: `<path d="M${a.x},${a.y}Q${(a.x + s.x) / 2},${s.y} ${s.x},${s.y}" data-seg="${a.entry?.shape.id}>${s.entry.shape.id}" class="trail spur${s.state === 'solved' ? ' walked' : ''}${r.parting ? ' in-parting' : ''}" stroke="${hex(a.palette.under)}"/>` });
@@ -525,7 +532,7 @@ export function renderMap(root, opts) {
   const woke = regions.filter((r) => r.awaken);
   if (woke.length) { woke.forEach((r) => seenChapters.add(r.name)); saveSet('strata.map.chapters', seenChapters); }
   // the first run marks what is already there as seen; a passive render saves nothing
-  const goldIds = trail.filter((n, i) => i > 0 && n.state !== 'locked').map((n) => n.entry?.shape.id ?? n.kind);
+  const goldIds = trail.filter((n, i) => i > 0 && passable(n)).map((n) => n.entry?.shape.id ?? n.kind);
   if (!lit || celebrate) saveSet('strata.map.lit', new Set([...(lit ?? []), ...goldIds]));
   const reachedNames = regions.filter((r) => r.reached).map((r) => r.name);
   if (!parted || celebrate) saveSet('strata.map.parted', new Set([...(parted ?? []), ...reachedNames]));
