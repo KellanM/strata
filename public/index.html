@@ -22,9 +22,10 @@
     html:has(#splash:not(.out)) { background: #000 !important; }
     /* The studio's card (Kellan, 2026-10-25): one still picture, black and
        white, that fades in, holds, and fades out (main.js SPLASH_HOLD, .out).
-       The pet rock in silhouette against a great white backlight, leaning back
-       in a dramatic pose, its googly eyes cut out of it and looking up into the
-       light, its long shadow thrown down the lit floor toward us. */
+       The pet rock in silhouette, leaning back a little, its googly eyes cut out
+       of it and looking up, sitting on the studio's name; both in one white
+       circle (Kellan, 2026-10-28: the name was laid in the rock's long shadow on
+       a lit floor - the shadow and the floor are gone, the name keeps its warp). */
     #splash { position: fixed; inset: 0; min-height: 100lvh; z-index: 1000; background: #000; overflow: hidden;
       transition: opacity .7s ease; -webkit-user-select: none; user-select: none; }
     #splash.out { opacity: 0; pointer-events: none; }
@@ -34,19 +35,17 @@
     #splash .gone { display: none; }
     #splash.shards .gone { display: inline; }   /* the test: ?splash=shards, or the developer panel */
     #splash .art { position: absolute; left: 50%; top: 50%; width: 390px; height: 844px; margin: -422px 0 0 -195px;
-      transform: scale(calc(var(--fit, 1) * .56)) translateY(71px); opacity: 0; animation: card-in .7s ease .1s forwards; }
-    /* the mark small in the frame, and centred by what is drawn - the disc's top (168) to the floor's foot (534) - not by its frame */
+      transform: scale(calc(var(--fit, 1) * .64)) translateY(41px); opacity: 0; animation: card-in .7s ease .1s forwards; }
+    /* the mark small in the frame, and centred by what is drawn - the circle (231 to 531) - not by its frame */
     #splash .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-    /* the name lies on the floor inside the shadow, cut out of it: the light
-       shows through its letters. It is laid down in the shadow's own
-       perspective (narrow toward the horizon, wide toward us), so it reads as
-       part of the scene rather than a caption over it. */
+    /* the name lies flat in perspective (narrow away from us, wide toward us),
+       the rock sitting on its far edge, so it reads as the ground the rock is on */
     #splash .name span { display: block; }
-    #splash .name .l1 { font-size: 38px; }   /* inside the shadow's edges at its depth */
-    #splash .name .l2 { font-size: 96px; line-height: .84; transform: scaleY(.62); transform-origin: 50% 0; margin-bottom: -.3em; }   /* as wide as the shadow at its depth, squished */
-    #splash .floor { position: absolute; left: 0; top: 384px; width: 390px; height: 300px; perspective: 260px; perspective-origin: 195px -40px; }
+    #splash .name .l1 { font-size: 38px; }   /* about as wide as the rock at its depth */
+    #splash .name .l2 { font-size: 96px; line-height: .84; transform: scaleY(.62); transform-origin: 50% 0; margin-bottom: -.3em; }   /* wider toward us, squished */
+    #splash .floor { position: absolute; left: 0; top: 316px; width: 390px; height: 300px; perspective: 260px; perspective-origin: 195px -40px; }
     #splash .name { position: absolute; left: 0; right: 0; top: 70px; margin: 0; text-align: center;
-      color: #fff; transform: rotateX(64deg); transform-origin: 50% 100%;
+      color: #000; transform: rotateX(64deg); transform-origin: 50% 100%;
       font: 400 46px/.86 "Splash Anton", Impact, "Arial Narrow", sans-serif; letter-spacing: .01em; transform-style: preserve-3d; white-space: nowrap; }
     @keyframes card-in { to { opacity: 1; } }
     /* a quick relaunch (an update's reload): just black, fading up into the game */
@@ -79,30 +78,20 @@
       <svg viewBox="0 0 390 844">
         <defs>
           <clipPath id="sr-disc-clip"><circle cx="195" cy="300" r="132"/></clipPath>
-          <clipPath id="sr-floor-clip"><path d="M5 384A190 150 0 0 0 385 384Z"/></clipPath>
-          <!-- the ground under the rock: it rests on the floor, its base flat on it -->
-          <clipPath id="sr-ground"><rect width="390" height="391.7"/></clipPath>
+          <!-- the rock's underside cut flat, where it sits on the name -->
+          <clipPath id="sr-ground"><rect width="390" height="393.7"/></clipPath>
         </defs>
-        <!-- the light behind: a great white disc (flat, two colours: a logo) -->
-        <circle cx="195" cy="300" r="132" fill="#fff"/>
+        <!-- the white circle the rock and its name sit in (flat, two colours: a logo) -->
+        <circle cx="195" cy="381" r="150" fill="#fff"/>
         <!-- (test) two shards gone from the disc where the radiation sign's upper
              blades would be; with the shadow below it reads as that sign -->
         <g class="gone">
           <polygon fill="#000" points="58.0,284.9 83.4,282.3 103.2,288.8 106.5,289.1 133.1,282.0 129.1,268.7 134.0,257.9 149.0,255.9 147.0,236.3 141.1,226.8 129.6,212.9 109.1,193.1 75.8,209.0 56.1,243.4"/>
           <polygon fill="#000" points="278.1,193.4 263.2,212.4 249.5,227.9 240.0,240.2 244.3,252.8 256.8,257.3 263.7,267.4 262.8,280.3 269.0,290.9 286.0,286.1 305.8,289.8 331.4,288.5 333.4,242.3 313.5,208.0"/>
         </g>
-        <!-- the floor it lights: a flat half-ellipse toward us from the horizon -->
-        <path fill="#fff" d="M5 384A190 150 0 0 0 385 384Z"/>
-        <!-- the long shadow, flat and true to the light behind: it begins at the
-             rock's footprint (as wide as its base, where it touches the floor) and
-             widens as it comes toward us. The name lies in it (.name, below), cut out of it. -->
-        <g clip-path="url(#sr-floor-clip)">
-          <path fill="#000" d="M127.4 390.7H218.9L286.8 445L362 646C300 664 90 664 28 646L103.2 445Z"/>
-        </g>
-        <!-- the rock: black, leaning back a little, its eyes cut out and turned up to the light;
-             it sits on the floor just in front of the horizon, its underside cut flat
-             where it meets the ground (the light shows under its lip on either side) -->
-        <g clip-path="url(#sr-ground)"><g transform="translate(200 392) rotate(-5) scale(1.72) translate(-60 -94)">
+        <!-- the rock: black, leaning back a little, its eyes cut out and turned up;
+             its underside cut flat where it sits on the name -->
+        <g clip-path="url(#sr-ground)"><g transform="translate(200 394) rotate(-5) scale(1.72) translate(-60 -94)">
           <path fill="#000" d="M12 84C8 72 16 58 32 51c12-5 30-7 45-3 16 4 30 13 31 26 1 11-11 18-34 20-27 2-57 1-62-10z"/>
           <circle fill="#fff" cx="49" cy="66" r="10"/>
           <circle fill="#fff" cx="73" cy="64" r="8.5"/>
