@@ -53,7 +53,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   // level's own three-quarter view from above; soft, turned a little less and
   // seen a little lower; front, nearly face on
   const TURNS = { iso: [Math.atan(1 / Math.SQRT2), -Math.PI / 4], game: [0.5, -Math.PI / 4], soft: [0.36, -0.6], front: [0.3, -0.38] };
-  const [PITCH, YAW] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.soft;   // soft (Kellan, 2026-10-28: corner-on looked strange)
+  const [PITCH, YAW] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.iso;   // corner-on, a hexagon (Kellan, 2026-10-29: back to it for the geode; soft before)
   // its turn: the resting one, plus however a finger has turned it (turnBy)
   const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), PITCH)
     .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), YAW));
