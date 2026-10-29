@@ -645,7 +645,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     const s = tapAt === null ? -1 : simT - tapAt;
     // before the tap: the cube breathes, once every 5.5 s (about a slow breath)
     const breath = 0.5 - 0.5 * Math.cos(simT * Math.PI * 2 / 5.5);
-    const lit = smooth(0.4, 3.2, simT);   // the night comes up out of black
+    const lit = smooth(0.1, 0.8, simT);   // the light comes up out of black - quickly (Kellan, 2026-10-28: 4x; it took about 3 s)
     if (tapAt === null) {
       if (!turn.held && (Math.abs(turn.vy) > 0.01 || Math.abs(turn.vp) > 0.01)) {
         turn.yaw += turn.vy * dt; turn.pitch += turn.vp * dt;
