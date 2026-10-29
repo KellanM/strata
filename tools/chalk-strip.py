@@ -3,7 +3,7 @@
 # while the game loads behind the card - a mask, moved on the main thread, froze).
 #   public/chalk-draw.png  rough edge then black: slides off to the right, the
 #                          sticker appearing behind its edge as if drawn in chalk
-#   (the erase is in blocks now: tools/splash-blocks.mjs)
+#   (the erase is the same cover, mirrored: index.html @keyframes chalk-wipe)
 # Kellan, 2026-10-29: "chalk on a blackboard ... then it is quickly erased again", the erase
 # symmetrical to the drawing.
 #   python tools/chalk-strip.py

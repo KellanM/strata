@@ -2297,24 +2297,7 @@ const buildMap = () => {
 // black. (Fading the title's canvas itself instead cost a frame of a third of a
 // second as it was first shown.) A quick relaunch, or a tap, skips the erase.
 const SPLASH_HOLD = 1.0;   // s: the soonest the erase starts - drawn by 0.7 s (index.html @keyframes chalk-draw), then held; with the erase and the fade about 2 s, as the peers' cards (docs/flow-study.md F3)
-const SPLASH_ERASE = 0.56;  // s: the blocks' wave (0.3 s across) and each one's shrinking (index.html @keyframes block-out, 0.24 s)
-// The logo erased as the game's stones break: in small squares, each shrinking away, in a wave
-// from where the rock is looking (up and to the right) down and back across it - the squares a
-// picture of the logo laid exactly over it (index.html .chalk data-blocks; tools/splash-blocks.mjs)
-function eraseInBlocks(splash) {
-  const box = splash.querySelector('.chalk');
-  if (!box?.dataset.blocks) return;
-  const cells = box.dataset.blocks.split(' ').map((c) => c.split('.').map(Number));
-  const along = ([x, y]) => 0.42 * x - 0.91 * y;   // toward the gaze
-  const hi = Math.max(...cells.map(along)), lo = Math.min(...cells.map(along));
-  const wrap = document.createElement('div');
-  wrap.className = 'blocks';
-  wrap.innerHTML = cells.map(([x, y]) => {
-    const d = ((hi - along([x, y])) / (hi - lo)) * 0.3 + (((x * 7 + y * 13) % 5) / 5) * 0.04;   // (a touch uneven, as a break is)
-    return `<i style="left:${x * 12}px;top:${y * 12}px;background-position:${-x * 12}px ${-y * 12}px;--d:${d.toFixed(3)}s"></i>`;
-  }).join('');
-  box.appendChild(wrap);
-}
+const SPLASH_ERASE = 0.4;  // s: index.html @keyframes chalk-wipe, quicker than the drawing (at 0.3 s it read on a phone as the logo vanishing)
 const SPLASH_BREATH = 0.12;   // s: black, between the erase and the card's fade (Kellan: "it feels like taking a breath")
 const splash = $('#splash');
 if (splash) {
@@ -2332,7 +2315,6 @@ if (splash) {
     if (erase) {
       // the erase on its own (nothing else asked of the phone while it plays), then in the
       // breath of black the title begins, so the stone is there when the card fades
-      eraseInBlocks(splash);
       splash.classList.add('erasing');
       setTimeout(beginTitle, SPLASH_ERASE * 1000);
       setTimeout(out, (SPLASH_ERASE + SPLASH_BREATH) * 1000);
