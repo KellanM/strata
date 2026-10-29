@@ -316,7 +316,10 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   scene.add(stoneFrags.mesh, shards.points, ash.points);
   function breakStone(at, f, progress) {
     const t = realT, c = (h) => new THREE.Color(h), out = f.off.clone().normalize();
-    if (!quiet) onChisel?.(progress);
+    if (!quiet) {
+      onChisel?.(progress);
+      v3.copy(at).project(camera); sound.stone(progress, v3.x);   // heard where it is
+    }
     // the shrink spreads from the side toward the touched stone (the touched one: from its face toward us)
     const toward = f === touched ? new THREE.Vector3(0, 0.2, 1) : touched.off.clone().sub(f.off);
     stoneFrags.burst(at, at.clone().addScaledVector(toward.normalize(), 0.5), t);
@@ -602,7 +605,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     schedule(first);   // the touched stone breaks first, the rest follow it (placeStones)
     breakAt = realT + 0.06;   // and the light in the hollow is released
     hint?.classList.remove('show');
-    if (!quiet) { onOpen?.(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
+    if (!quiet) { onOpen?.(); sound.release(); sound.open(2.5, false); }   // the chisel's own sound (onOpen), then the swell
   }
   let breakAt = null;
   function breakGlow() {

@@ -2179,7 +2179,7 @@ const titleName = new URLSearchParams(location.search).get('name') || localStora
 const titleWall = (new URLSearchParams(location.search).get('wall') || localStorage.getItem('strata.titleWall') || 'none') !== 'none';
 const fl = createFirstLight({ canvas: $('#firstlight'), hint: $('#fl-hint'), veil: $('#fl-night'), nameStyle: titleName, withWall: titleWall,
   onOpen: () => { sound.unlock(); if (returning) setTimeout(() => titleScreen.classList.add('named'), 1200); },   // a returning player is shown the way on before the name is written
-  onChisel: (k) => { sound.chisel(k); buzz(12, 'tick'); },   // each of the 27 as a block breaks in a level, its note rising through the run
+  onChisel: () => buzz(10, 'tick'),   // each stone a tick in the hand; its sound is First light's own (firstlight/sound.js stone)
   onNamed: () => {
   titleScreen.classList.add('named');
   mark('title: the name is written');
