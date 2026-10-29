@@ -81,8 +81,9 @@ export function renderThumb(shape, palette, { size = 160, canvas: wantCanvas = f
 // outline over the faintest halo, and nothing inside it. Its own picture, laid
 // over the object with screen blending (style.css .obj-rim), so it only adds
 // light and the miniature's shadow never browns it.
-export function renderRim(shape, palette, { size = 160 } = {}) {
-  const key = `rim|${shape.id}|${palette.shade}|${size}`;
+// gold: a solved shrine's object, edged in its shrine's gold (Kellan, 2026-10-29)
+export function renderRim(shape, palette, { size = 160, gold = false } = {}) {
+  const key = `rim|${shape.id}|${palette.shade}|${size}|${gold}`;
   if (cache.has(key)) return cache.get(key);
   const src = renderThumb(shape, palette, { size, canvas: true });
   const n = src.width, u = n / size;   // canvas pixels per drawn pixel at full size
@@ -98,8 +99,8 @@ export function renderRim(shape, palette, { size = 160 } = {}) {
   const o = out.getContext('2d');
   // spread a silhouette r pixels out in every direction
   const grow = (s, r) => { for (let k = 0; k < 16; k++) o.drawImage(s, Math.cos(k * Math.PI / 8) * r, Math.sin(k * Math.PI / 8) * r); };
-  o.globalAlpha = 0.22; grow(sil('#fff1cf'), 4.2 * u);   // the halo
-  o.globalAlpha = 1;    grow(sil('#fff6e2'), 1.5 * u);   // the line
+  o.globalAlpha = gold ? 0.32 : 0.22; grow(sil(gold ? '#ffd77a' : '#fff1cf'), 4.2 * u);   // the halo
+  o.globalAlpha = 1;    grow(sil(gold ? '#e9b949' : '#fff6e2'), (gold ? 1.8 : 1.5) * u);   // the line
   o.globalCompositeOperation = 'destination-out';
   o.drawImage(src, 0, 0);
   const url = out.toDataURL('image/png');

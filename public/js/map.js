@@ -499,7 +499,7 @@ export function renderMap(root, opts) {
       if (s) {
         // the stone has become the thing it was hiding
         const fresh = celebrate && !seenObjects.has(shape.id);
-        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120 })}"></span>`;
+        art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120, gold: isBonus })}"></span>`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
       b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +

@@ -917,7 +917,7 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 
 /* shrines: a gem on a slim spire, with its own light. Open (its stars earned):
    a warm gold halo and a column of light, the only thing that breathes besides
-   the next stone. Locked: pale. Solved: calm and cool. */
+   the next stone. Locked: pale. Solved: gold and still. */
 .map-node.bonus { width: 84px; height: 84px; margin: -42px 0 0 -42px; }
 .map-node.bonus::before { display: none; }
 .map-node.bonus .halo { inset: -30px; opacity: 1;
@@ -926,8 +926,11 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
   background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 214, 120, .6), rgba(255, 214, 120, 0) 72%); }
 .map-node.bonus.locked .halo { background: radial-gradient(closest-side, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); animation: none; }
 .map-node.bonus.locked::after { height: 150px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 255, 255, .38), rgba(255, 255, 255, 0) 72%); }
-.map-node.bonus.solved .halo { background: radial-gradient(closest-side, rgba(205, 225, 255, .55), rgba(205, 225, 255, 0)); animation: none; }
-.map-node.bonus.solved::after { height: 120px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(215, 232, 255, .4), rgba(215, 232, 255, 0) 72%); }
+/* solved: gold too, but still - its halo and a shorter column, and the object edged in gold
+   (Kellan, 2026-10-29: a finished shrine should stand apart from the stones' silver) */
+.map-node.bonus.solved .halo { background: radial-gradient(closest-side, rgba(255, 222, 140, .62), rgba(255, 210, 110, .22) 50%, rgba(255, 210, 110, 0)); animation: none; }
+.map-node.bonus.solved::after { height: 150px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 210, 112, .5), rgba(255, 210, 112, 0) 72%); }
+.map-node.bonus.solved .obj-rim { mix-blend-mode: normal; }   /* screened, gold on a pale sky washed out */
 .map-node.bonus .n { color: #e9b949; opacity: 1; font-size: 12px; }
 .map-node.bonus.open .nm { font-weight: 600; letter-spacing: .3em; }
 .map-node.bonus.open .mt { color: #a8741a; opacity: 1; }
