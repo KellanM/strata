@@ -2372,37 +2372,65 @@ function ringInk() {
     const k = Math.min(1, Math.max(0, (0.7 - L) / 0.34)), t = k * k * (3 - 2 * k);   // light skies dark ink, dark skies light
     return [74, 61, 99].map((v, i) => Math.round(v + ([238, 240, 255][i] - v) * t)).join(',');
   };
-  $('#menu').style.setProperty('--ink-head', ink(sc.scrollTop + 60));
-  $('#menu').style.setProperty('--ink-foot', ink(sc.scrollTop + sc.clientHeight - 60));
+  const top = sc.scrollTop, H = sc.clientHeight, full = sc.scrollHeight;   // (read before any write: no forced layout)
+  // set on the rings themselves, and only when it changes: set on #menu, every frame, it restyled
+  // the whole map - some 3,700 elements - and cost most of a frame on a phone (the fling audit)
+  const head = ink(top + 60), foot = ink(top + H - 60);
+  if (head !== ringInk.head) { ringInk.head = head; $('#map-help').style.setProperty('--ink-head', head); $('#map-journal').style.setProperty('--ink-head', head); }
+  if (foot !== ringInk.foot) { ringInk.foot = foot; $('#map-close').style.setProperty('--ink-foot', foot); }
   // and what shows behind the content where it isn't painted yet: the sky's gradient down the screen
   // (style.css .mb-sky) - redrawn as the map moves on by a sixth of a screen, not every frame
-  const top = sc.scrollTop, H = sc.clientHeight;
   if (Math.abs(top - (ringInk.skyAt ?? -1e9)) > H / 6) {
     ringInk.skyAt = top;
     const rgb = (y) => `rgb(${mapWorld.skyAt(y).map(Math.round).join(',')})`;
     $('#menu .mb-sky').style.background = `linear-gradient(180deg, ${[0, 1, 2, 3, 4].map((i) => `${rgb(top + (H * i) / 4)} ${i * 25}%`).join(', ')})`;
   }
-  $('#menu').classList.toggle('at-foot', top > sc.scrollHeight - 2 * H);
+  const atFoot = top > full - 2 * H;
+  if (atFoot !== $('#menu').classList.contains('at-foot')) $('#menu').classList.toggle('at-foot', atFoot);
 }
 // Flung fast, the map looks like the launch's swoop: above about three screens a second its
 // colours smear by the speed and the swoop's streaks fly past, faster than the map; as it slows
 // the map comes clear (Kellan, 2026-10-29). Not for the swoop itself, the title's descent, or
 // reduced motion; a jump (the swoop's leap) is not a fling.
-const rush = { y: null, t: 0, v: 0, timer: 0, skyAt: null };
+// Its showing is its own: on within a frame or two of the speed (a slow frame mid-fling is speed,
+// not a jump - it had cut the cover exactly when the phone struggled), off over about 0.15 s once the
+// scrolling stops (a little loop of frames while it shows, not a timer that fired between slow frames),
+// and never under the map's own half-second fade (the fling audit). The first fast move shows every
+// stone still waiting to make its entrance at once, so the map is all there as it slows.
+const rush = { y: null, t: 0, v: 0, skyAt: null, shown: 0, target: 0, moved: 0, loop: 0 };
+function rushFrame(now) {
+  const el = $('#menu .map-rush');
+  if (now - rush.moved > 220) rush.target = 0;   // still
+  const dt = Math.min(64, now - (rushFrame.last ?? now)); rushFrame.last = now;
+  rush.shown = rush.target >= rush.shown ? rush.target : Math.max(rush.target, rush.shown - (dt / 150) * 0.88);
+  el.style.opacity = rush.shown.toFixed(3);
+  if (rush.shown > 0.002) rush.loop = requestAnimationFrame(rushFrame);
+  else { rush.loop = 0; rushFrame.last = null; rush.v = 0; rush.skyAt = null; el.style.opacity = '0'; }
+}
+function showAllStones() {
+  if (!$('#map .rv')) return;
+  stopReveal();
+  // (and their own fade off - #map.shown - till the entrance is set again: dropped for a frame only,
+  // the stones still off the screen, whose style isn't worked out till they come into view, faded in
+  // anyway as they arrived)
+  $('#map').classList.add('shown');
+  for (const n of document.querySelectorAll('#map .rv')) { n.style.transitionDelay = ''; n.classList.remove('rv', 'rv-in'); }
+}
 function mapRush() {
   const sc = mapSheet(), el = $('#menu .map-rush'), now = performance.now(), y = sc.scrollTop, H = sc.clientHeight, W = sc.clientWidth;
-  const quiet = () => { rush.v = 0; rush.skyAt = null; el.classList.remove('live'); el.style.opacity = '0'; };
   const last = rush.y, dt = Math.max(8, now - rush.t);
   rush.y = y; rush.t = now;
-  if (last == null || reduceMotion || swooping || $('#menu').classList.contains('pulling') || !mapWorld.model?.regions) { quiet(); return; }
+  if (last == null || reduceMotion || swooping || $('#menu').classList.contains('pulling') || !mapWorld.model?.regions) { rush.v = 0; rush.target = 0; return; }
   const dy = y - last;
-  if (Math.abs(dy) > 2.5 * H || dt > 200) { rush.v = 0; return; }
-  rush.v = rush.v * 0.55 + (dy / dt) * 0.45;
+  if (Math.abs(dy) > 8 * H || dt > 400) return;   // a jump, or the first move after a rest: no speed in it
+  rush.v = rush.v * 0.45 + (dy / dt) * 0.55;
+  rush.moved = now;
   const speed = (Math.abs(rush.v) * 1000) / H;   // screens a second
+  if (speed > 2) showAllStones();
   const k = Math.min(1, Math.max(0, (speed - 3) / 4)), t = k * k * (3 - 2 * k);
-  clearTimeout(rush.timer);
-  rush.timer = setTimeout(quiet, 140);   // still: it clears
-  if (t < 0.01) { quiet(); return; }
+  rush.target = 0.88 * t;
+  if (!rush.loop && (rush.target > 0.002 || rush.shown > 0.002)) rush.loop = requestAnimationFrame(rushFrame);
+  if (t < 0.01) return;
   // the sky here, each point smeared over a span that grows with the speed
   const span = H * (0.4 + 0.15 * speed), sky = (z) => {
     const acc = [0, 0, 0];
@@ -2419,8 +2447,6 @@ function mapRush() {
   if (!st.style.backgroundImage) { st.style.backgroundImage = `url(${streakTile(W, H)})`; st.style.backgroundSize = `${W}px ${2 * H}px`; }
   st.style.backgroundPosition = `0 ${(-(y * 1.5) % (2 * H)).toFixed(1)}px`;   // half as fast again as the map
   st.style.opacity = t.toFixed(3);
-  el.classList.add('live');
-  el.style.opacity = (0.88 * t).toFixed(3);
 }
 let ringInkFrame = 0;
 mapSheet().addEventListener('scroll', () => { if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
@@ -2479,6 +2505,7 @@ function primeMap() {
   show('#menu', true);
   setScroll(pull.k);
   stopReveal();
+  $('#map').classList.remove('shown');
   prepareReveal($('#map'), '.map-node, .map-region');
   mapPrimed = true;
   mark('title: map primed');
@@ -2764,6 +2791,7 @@ function cancelPull(seconds = 0.35) {
     // the map waits just below the screen again, primed for the next descent
     if ($('#menu').classList.contains('show')) {
       stopReveal();
+      $('#map').classList.remove('shown');
       prepareReveal($('#map'), '.map-node, .map-region');
       mapPrimed = true;
     }
