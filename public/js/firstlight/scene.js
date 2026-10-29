@@ -53,13 +53,14 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   // level's own three-quarter view from above; soft, turned a little less and
   // seen a little lower; front, nearly face on
   const TURNS = { iso: [Math.atan(1 / Math.SQRT2), -Math.PI / 4], game: [0.5, -Math.PI / 4], soft: [0.36, -0.6], front: [0.3, -0.38] };
-  const [pitch, yaw] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.soft;   // soft (Kellan, 2026-10-28: corner-on looked strange)
-  const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch)
-    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
-  const stoneCells = [];   // each stone's place from the hollow (CUBE_AT), turned
+  const [PITCH, YAW] = TURNS[new URLSearchParams(globalThis.location?.search ?? '').get('rot')] ?? TURNS.soft;   // soft (Kellan, 2026-10-28: corner-on looked strange)
+  // its turn: the resting one, plus however a finger has turned it (turnBy)
+  const ISO = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), PITCH)
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), YAW));
+  const stoneCells = [];   // each stone's cell on the lattice, from the hollow (CUBE_AT)
   for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
     if (!x && !y && !z) continue;   // the hollow
-    stoneCells.push(new THREE.Vector3(x, y, z).applyQuaternion(ISO));
+    stoneCells.push(new THREE.Vector3(x, y, z));
   }
   {
     // the block on the screen's centre line, its lowest point resting on the wall's top
@@ -155,7 +156,9 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const stones = new THREE.InstancedMesh(box, wallMat, stoneCells.length);
   const GAP = 0.94;   // each stone's size: the cracks between them let the light out
   const ROW_CLEAR_STEP = 0.05, ROW_CLEAR_EASE = 0.9;   // a quicker run than a level's (Kellan, 2026-10-28)
-  const stoneBreaks = stoneCells.map((off) => ({ off, done: false, at: 0, n: 0 }));
+  // off: the stone's place from the hollow as the block is turned now
+  const stoneBreaks = stoneCells.map((cell) => ({ cell, off: cell.clone().applyQuaternion(ISO), done: false, at: 0, n: 0,
+    c: new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1) }));
   let touched = null;   // the stone the touch landed on
   function schedule(first) {
     touched = stoneBreaks[first];
@@ -168,7 +171,7 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   function placeStones(k) {   // k: seconds since the touch (null: at rest)
     let any = false;
     stoneBreaks.forEach((f, i) => {
-      if (k === null) { f.done = false; f.c = new THREE.Color(1, 1, 1).multiplyScalar(0.93 + stoneRand() * 0.1); stones.setColorAt(i, f.c); }
+      if (k === null) { f.done = false; stones.setColorAt(i, f.c); }
       else if (!f.done && k >= f.at) { f.done = true; breakStone(CUBE_AT.clone().add(f.off), f, f.n / stoneCells.length); }
       sp.copy(CUBE_AT).add(f.off);
       let scale = f.done ? 0.0001 : GAP;
@@ -192,6 +195,27 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   }
   placeStones(null);
   scene.add(stones);
+  // Turned by a finger, as a level's block is (orbit.js: its speed, its limits,
+  // its easing out): around the vertical by a sideways drag, and tipped toward or
+  // away by an up-and-down one, from overhead to a little below
+  const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), qy = new THREE.Quaternion();
+  const turn = { yaw: 0, pitch: 0, vy: 0, vp: 0, held: false, at: 0 };
+  function setTurn() {
+    const p = Math.min(Math.PI / 2 - 0.26, Math.max(-(Math.PI / 2 - 0.5), PITCH + turn.pitch));
+    turn.pitch = p - PITCH;
+    ISO.setFromAxisAngle(X, p).multiply(qy.setFromAxisAngle(Y, YAW + turn.yaw));
+    for (const f of stoneBreaks) f.off.copy(f.cell).applyQuaternion(ISO);
+    sq.copy(ISO);
+    hollow.quaternion.copy(ISO);
+    placeStones(null);
+  }
+  function turnBy(dx, dy) {
+    const k = 2 * Math.PI / window.innerHeight * 0.75, t = performance.now();
+    const a = dx * k, b = dy * k, dt = Math.max(8, t - turn.at) / 1000;
+    turn.vy = a / dt; turn.vp = b / dt; turn.at = t; turn.held = true;
+    turn.yaw += a; turn.pitch += b;
+    setTurn();
+  }
   // a soft glow round the block, from the light behind its cracks
   const haloTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -215,6 +239,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   const stoneFrags = new Fragments({ value: new THREE.Vector2(-0.45, 0.9).normalize() }, 8 * 60, ISO, { uL, uLc, uLi, uMoon });
   const STONE = { top: P.top, lit: P.lit, shade: P.shade, under: P.under };
   stoneFrags.setPalette(STONE);
+  const m4r = new THREE.Matrix4();
+  const latticeToPieces = () => stoneFrags.uniforms.uRot.value.setFromMatrix4(m4r.makeRotationFromQuaternion(ISO));
   // the chips aren't lit (atmosphere.js Shards): their colours as the stone looks at night by its glow
   const night = (h, k) => new THREE.Color(h).multiply(new THREE.Color(1, 0.78, 0.56)).multiplyScalar(k);
   const CHIPS = [night(P.top, 0.62), night(P.lit, 0.55), night(P.top, 0.62)];
@@ -502,6 +528,8 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   function open(first = nearestStone()) {
     if (tapAt !== null) return;
     tapAt = simT; tapReal = realT; if (dawnAt === null) dawnAt = realT + 0.25;
+    turn.vy = turn.vp = 0; turn.held = false;   // it stops where the touch found it
+    latticeToPieces();
     schedule(first);   // the touched stone breaks first, the rest follow it (placeStones)
     breakAt = realT + 0.06;   // and the light in the hollow is released
     hint?.classList.remove('show');
@@ -550,6 +578,11 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
     const breath = 0.5 - 0.5 * Math.cos(simT * Math.PI * 2 / 5.5);
     const lit = smooth(0.4, 3.2, simT);   // the night comes up out of black
     if (tapAt === null) {
+      if (!turn.held && (Math.abs(turn.vy) > 0.01 || Math.abs(turn.vp) > 0.01)) {
+        turn.yaw += turn.vy * dt; turn.pitch += turn.vp * dt;
+        const keep = Math.pow(1 - 0.08, dt * 60); turn.vy *= keep; turn.vp *= keep;
+        setTurn();
+      }
       coreMat.color.copy(CORE).lerp(CORE_HOT, 0.35 * breath).multiplyScalar(lit);
       halo.material.opacity = (0.16 + 0.14 * breath) * lit;
       halo.scale.setScalar(5.6 + 0.8 * breath);
@@ -673,6 +706,15 @@ export function createFirstLight({ canvas, hint = null, veil = null, onNamed = n
   }
   return {
     tap, finish,
+    // a finger on the stone turns it (main.js routes a drag that starts on it here)
+    onStone(x, y) {
+      if (tapAt !== null) return false;
+      v3.copy(CUBE_AT).project(camera);
+      return Math.hypot(x - (v3.x * 0.5 + 0.5) * window.innerWidth, y - (-v3.y * 0.5 + 0.5) * window.innerHeight) < Math.max(90, window.innerWidth * 0.22);
+    },
+    turnBy(dx, dy) { if (tapAt === null) { idleSince = simT; hint?.classList.remove('show'); turnBy(dx, dy); } },
+    grab() { turn.vy = turn.vp = 0; turn.held = true; turn.at = performance.now(); },
+    letGo() { turn.held = false; if (performance.now() - turn.at > 80) turn.vy = turn.vp = 0; },
     // the sky comes now, quickly (a swipe on to the map without opening the stone)
     dawn() { if (dawnAt === null) { dawnAt = realT; dawnSpan = 0.6; } },
     get opened() { return tapAt !== null; },

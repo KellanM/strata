@@ -2401,14 +2401,25 @@ function cancelPull(seconds = 0.35) {
     }
   });
 }
+// A drag that starts on First light's stone turns it, as a level's block turns
+// (Kellan, 2026-10-28); one that starts anywhere else scrolls to the map.
 titleScreen.addEventListener('pointerdown', (e) => {
   if (!titleUp || pull.id !== null) return;
   pull.id = e.pointerId; pull.y0 = pull.lastY = e.clientY; pull.lastT = performance.now(); pull.dy = pull.v = 0;
   pull.y0 += pull.k;   // catch a scroll that is still springing back
+  pull.turning = !fl.named && fl.onStone(e.clientX, e.clientY);
+  pull.x0 = pull.lastX = e.clientX; pull.moved = 0;
+  if (pull.turning) fl.grab();
   titleScreen.setPointerCapture?.(e.pointerId);
 });
 titleScreen.addEventListener('pointermove', (e) => {
   if (e.pointerId !== pull.id) return;
+  if (pull.turning) {
+    pull.moved = Math.max(pull.moved, Math.hypot(e.clientX - pull.x0, e.clientY - (pull.y0 - pull.k)));
+    if (pull.moved > 8) fl.turnBy(e.clientX - pull.lastX, e.clientY - pull.lastY);
+    pull.lastX = e.clientX; pull.lastY = e.clientY;
+    return;
+  }
   const t = performance.now();
   pull.dy = pull.y0 - e.clientY;                                          // + is up
   pull.v = (pull.lastY - e.clientY) / Math.max(1, t - pull.lastT);         // px per ms, + is up
@@ -2419,6 +2430,12 @@ titleScreen.addEventListener('pointermove', (e) => {
 const endPull = (e) => {
   if (e.pointerId !== pull.id) return;
   pull.id = null;
+  if (pull.turning) {
+    pull.turning = false;
+    fl.letGo();
+    if (pull.moved > 8 || e.type === 'pointercancel') return;   // a turn, not a tap
+    pull.dy = 0;   // a tap on the stone: it opens, below
+  }
   if (!pull.live) {   // a tap: the whole descent, as a full swipe would
     if (e.type === 'pointercancel' || Math.abs(pull.dy) > 10 || pull.gliding) return;   // (a swipe down isn't a tap)
     // First light: a tap opens the stone; while its light rises a tap waits;
