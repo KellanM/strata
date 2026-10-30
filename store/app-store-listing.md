@@ -33,7 +33,7 @@ Every stone keeps something inside.
 
 Strata is a quiet puzzle about finding it. Each level is a block of stone with an object hidden within: a lantern, a fox curled asleep, a lighthouse, a dragon too young to breathe fire. Numbers on three faces of the stone tell you how many of the object's cubes lie in each row. Read them, chisel away every cube that doesn't belong, and the shape is slowly revealed.
 
-It is a nonogram (picross) in three dimensions. Turn the stone in your hands, peel back its layers to see inside, and work row by row until only the object remains.
+It is a nonogram in three dimensions. Turn the stone in your hands, peel back its layers to see inside, and work row by row until only the object remains.
 
 A JOURNEY ACROSS FIFTEEN LANDS
 182 stones across 15 chapters, from First Light and the Moss Garden to the Lantern Festival, the Deep and Starfall. Each chapter is a place with its own light and color, and each stone you uncover takes its place on the map as a small sculpture. A bonus stone waits in every chapter for those who earn their stars.
@@ -53,14 +53,14 @@ QUIET BY DESIGN
 
 Find a quiet minute, pick up a stone, and see what it has been keeping.
 ```
-(1,615)
+(1,604)
 
 ## Keywords (100)
 
 ```
-nonogram,picross,logic,voxel,griddlers,hanjie,cube,relaxing,zen,offline,numbers,brain,chisel,carve
+nonogram,logic,voxel,cube,relaxing,zen,offline,numbers,brain,chisel,carve
 ```
-(98; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
+(73; comma-separated with no spaces; omits "Strata", the name, and words in the subtitle, which Apple already indexes)
 
 ## Category
 
