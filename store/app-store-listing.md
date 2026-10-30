@@ -134,8 +134,41 @@ If a later version adds ads (AppLovin MAX), purchases or analytics, this label a
 
 ## App Review notes
 
+Draft for **1.0 (7)** (the web build v1.0.448, commit `adc6dfe`), checked against that build on 2026-10-29. For Kellan to review before it goes into App Store Connect (Notes, under App Review Information; the limit is 4,000 characters).
+
 ```
-Strata is a single-player puzzle game: a 3D nonogram (picross) where you chisel away cubes from a block of stone to uncover a hidden object. No login or account is needed, and there is nothing to configure. To play: on the title screen, tap the glowing stone in the center, then swipe up; the first time, twelve short interactive lessons teach the rules step by step, and afterwards the map leads from level to level. The full rules are always available under Settings on the map, or from the pause menu (≡) during a puzzle. The app works entirely offline. This version contains no in-app purchases, no advertising, no tracking and no third-party SDKs, and it collects no data.
+Strata 1.0 (7) - a guide for App Review
+
+Strata is a single-player 3D picture-logic puzzle (a 3D nonogram). Each block of stone hides an object: chisel away every cube that isn't part of it, using the number clues.
+
+Version 1.0 is free. It needs no login or account, works fully offline, and has no ads, no in-app purchases, no tracking and no third-party SDKs. It collects no data; progress is saved only on the device.
+
+STARTING AND COMPLETING THE FIRST PUZZLE
+1. Launch the app. After a short splash, the title reads "Tap to begin". Tap anywhere; the view sweeps down to the map.
+2. On first launch the map's first stone, Learn ("11 short lessons"), is lit. Tap it.
+3. Lesson 1 opens with one line of instruction: tap the white cubes to knock them away; the coloured part stays. Keep tapping white cubes. When only the object is left, the puzzle is solved and the object is named; tap to go on to the next lesson. Each lesson takes under a minute.
+4. After lesson 11 the first world (First Light) opens on the map. Tap the lit stone to play the first full puzzle. When it is solved, the object is revealed with 1 to 3 gems and three buttons: Map, Next (the large play button) and Replay.
+
+WHERE THINGS ARE
+- Map: appears after the title. From a puzzle, tap the menu button (top left), then Map; or tap Map on the result screen. Pulling down at the top of the map returns to the title.
+- Rules: on the map, tap Menu (top left), then Rules. During the lessons, Rules is also in the pause menu. The Learn stone replays the lessons; hold it to choose a single lesson.
+- Finds: on the map, tap Finds (top right). It shows every object uncovered so far; tap one to see it large.
+- Sound, music and vibration: on the map, Menu, then Settings.
+
+CONTROLS
+- Tap a cube: chisel it away. Hold a cube: mark it as part of the object, so it can't be chiselled by mistake. The switch at the bottom (Chisel / Mark) changes what a tap does.
+- Drag: turn the block. Pinch: zoom. Double-tap the sky: reset the view.
+- Double-tap a cube in a row whose clue is 0: clear the whole row.
+- Slide a diamond on the guide beside the block to peel layers away and see inside.
+- Clues: a number is how many of the object's cubes are in that row. A circled number means they are split into two groups; a squared number, three groups or more.
+
+THINGS THAT MAY NOT BE OBVIOUS
+- There is no way to fail and no time limit. Chiselling a cube that belongs is a "slip": it is marked with a red x and the cube is kept. Gems: 3 for no slips, 2 for a few, 1 for finishing.
+- After a slip, a take-back button appears top right; it undoes the last slip at once (free, up to 5 a day).
+- If you wait without a move, a row that has a move will glow.
+- Stones open one after another down the map, across 15 worlds. Finishing a world's last stone shows that world's finds, then the next world appears from behind its cloud.
+- Gold shrines are optional bonus stones. Each opens once its world has enough gems; tapping one that isn't open yet offers to open it for free.
+- The Drift, at the foot of the map, offers random blocks (6, 8 or 10 cubes a side) at any time.
 ```
 
 Contact for App Review: Kellan Mythen, [phone], support@mythen.io.
