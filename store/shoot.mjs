@@ -46,15 +46,28 @@ async function open(browser, size, { solved = solvedJSON, query = '?nosplash' } 
   await page.waitForFunction(() => window.strata?.game);
   // web-only furniture that the app does not have
   await page.addStyleTag({ content: '#install, .sim-ad { display: none !important; }' });
+  // NOACTIONS=1: a result without its Map · Next · Replay rings, the object alone
+  if (process.env.NOACTIONS) await page.addStyleTag({ content: '#actions { display: none !important; }' });
   return { ctx, page };
+}
+
+// from the title down to the map: a tap once the title is up (the opening is a tap now, not a swipe),
+// then the swoop to the current stone, and a moment to settle
+async function toMap(page) {
+  await page.waitForFunction(() => document.querySelector('#title')?.classList.contains('show'));
+  await page.waitForTimeout(2000);
+  const size = page.viewportSize();
+  for (let k = 0; k < 8 && await page.evaluate(() => document.querySelector('#title').classList.contains('show')); k++) {
+    await page.mouse.click(size.width / 2, size.height / 2);
+    await page.waitForTimeout(1200);
+  }
+  await page.waitForFunction(() => !document.querySelector('#title').classList.contains('show') && document.querySelector('#menu').classList.contains('show'));
+  await page.waitForTimeout(3000);
 }
 
 // down to the map, then tap the level's stone there (as a player would)
 async function startLevel(page, id) {
-  const size = page.viewportSize();
-  await page.waitForTimeout(1500);
-  await swipeUp(page, size);
-  await page.waitForTimeout(3000);
+  await toMap(page);
   const node = page.locator(`.map-node[data-id="${id}"]`);
   await node.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(1500);
@@ -123,9 +136,7 @@ const FRAMES = {
   // 4: the map, a few stones solved
   async 4(browser, size) {
     const { ctx, page } = await open(browser, size);
-    await page.waitForTimeout(3000);
-    await swipeUp(page, size);
-    await page.waitForTimeout(4000);
+    await toMap(page);
     return { ctx, page };
   },
   // 5: a striking object in a dark palette
@@ -195,9 +206,7 @@ const FRAMES = {
     const solved = JSON.stringify(Object.fromEntries(ids.map((id) => [id, { time: 60, mistakes: 0, stars: 3, score: 1500 }])));
     const { ctx, page } = await open(browser, size, { solved });
     await page.evaluate((ids) => localStorage.setItem('strata.seen.objects', JSON.stringify(ids)), ids);
-    await page.waitForTimeout(1500);
-    await swipeUp(page, size);
-    await page.waitForTimeout(3500);
+    await toMap(page);
     await page.click('#map-journal');
     await page.waitForTimeout(2000);
     if (process.env.JSCROLL) await page.evaluate((y) => { const el = [...document.querySelectorAll('#journal *')].find((e) => e.scrollHeight > e.clientHeight + 20) ?? document.querySelector('#journal'); el.scrollTop = y; }, Number(process.env.JSCROLL));
