@@ -1257,7 +1257,7 @@ document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', ()
 $('#menu-btn').addEventListener('click', () => (pausable() ? openPause() : openMenu()));
 
 // In a level the menu button stills the world: the stone rests, centred under a
-// veil of its own sky, with where you are, a ring to resume, and Restart and Map
+// veil of its own sky, with where you are, a ring to resume, and Map and Retry
 // beneath (docs/pause-study.md). The clock stops while it's up. A solved level,
 // the title's logo, go straight to the map.
 const pauseEl = $('#pause'), restartBtn = pauseEl.querySelector('[data-pause="restart"]');
@@ -1269,7 +1269,7 @@ function openPause() {
   game.pausedAt = now();
   saveProgress();
   restartBtn.classList.remove('confirm');
-  restartLabel.textContent = 'Restart';
+  restartLabel.textContent = 'Retry';
   // where you are, as the HUD says it, without the clock
   pauseEl.querySelector('.pause-chapter').textContent = $('#pz-meta').textContent;
   pauseEl.querySelector('.pause-name').textContent = $('#pz-name').textContent;
