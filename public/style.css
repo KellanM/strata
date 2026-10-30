@@ -756,7 +756,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* ---------- story line under the solved object's name ---------- */
 #win-title .story {
-  max-width: min(300px, calc(100% - 48px)); margin-top: 6px; font-size: 15px; line-height: 1.45; letter-spacing: .02em;
+  max-width: min(320px, calc(100% - 48px)); margin-top: 6px; font-size: 13px; line-height: 1.45; letter-spacing: .03em;
   opacity: 0; text-shadow: 0 0 18px rgba(255, 250, 235, 0.8);
 }
 #win-title.show .story { animation: win-story 1.2s ease both; animation-delay: var(--d, 1.2s); }
