@@ -134,30 +134,30 @@ If a later version adds ads (AppLovin MAX), purchases or analytics, this label a
 
 ## App Review notes
 
-Draft for **1.0 (7)** (the web build v1.0.448, commit `adc6dfe`), checked against that build on 2026-10-29. For Kellan to review before it goes into App Store Connect (Notes, under App Review Information; the limit is 4,000 characters).
+For **1.0 (7)**, archived from game v1.0.447, commit `3af64af67d854e14e8d54ac4eb5e9350af728ecb`. Navigation and controls checked against the archived build on 2026-10-30; airplane-mode testing remains unconfirmed. For Kellan to review before it goes into App Store Connect (Notes, under App Review Information; the limit is 4,000 characters).
 
 ```
 Strata 1.0 (7) - a guide for App Review
 
 Strata is a single-player 3D picture-logic puzzle (a 3D nonogram). Each block of stone hides an object: chisel away every cube that isn't part of it, using the number clues.
 
-Version 1.0 is free. It needs no login or account, works fully offline, and has no ads, no in-app purchases, no tracking and no third-party SDKs. It collects no data; progress is saved only on the device.
+Version 1.0 is free. It needs no login or account, is designed to play fully offline, and has no ads, no in-app purchases, no analytics and no tracking. It collects no data; progress is saved only on the device. Privacy and Support links open public web pages and require an internet connection.
 
 STARTING AND COMPLETING THE FIRST PUZZLE
-1. Launch the app. After a short splash, the title reads "Tap to begin". Tap anywhere; the view sweeps down to the map.
-2. On first launch the map's first stone, Learn ("11 short lessons"), is lit. Tap it.
-   To skip the lessons and go straight to the main game, tap "SKIP" under the lesson's instruction, near the top of the screen; the map opens with Puzzle 1 ready.
-3. Lesson 1 opens with one line of instruction: tap the white cubes to knock them away; the coloured part stays. Keep tapping white cubes. When only the object is left, the puzzle is solved and the object is named; tap to go on to the next lesson. Each lesson takes under a minute.
-4. After lesson 11 the first world (First Light) opens on the map. Tap the lit stone to play the first full puzzle. When it is solved, the object is revealed with 1 to 3 gems and three buttons: Map, Next (the large play button) and Replay.
+1. Launch the app. After the splash, tap the glowing stone. Let its light form the title, then tap to continue to the map.
+2. On first launch the map's first stone, Learn ("12 short lessons"), is lit. Tap it.
+   To skip the lessons and go straight to the main game, tap "SKIP" under the lesson's instruction, near the top of the screen; the map opens with the first puzzle available. Tap its lit stone to play.
+3. Lesson 1 (Pillar) asks you to chisel away the plain cubes around the hidden shape. Follow the instruction until only the shape remains. When only the object is left, the puzzle is solved and the object is named; the next lesson follows after the reveal, or tap to continue sooner.
+4. After lesson 12 the first world (First Light) opens on the map. Tap the lit stone to play the first full puzzle. When it is solved, the object is revealed with 1 to 3 gems and three buttons: Map, Next (the large play button) and Replay.
 
 WHERE THINGS ARE
 - Map: appears after the title. From a puzzle, tap the menu button (top left), then Map; or tap Map on the result screen. Pulling down at the top of the map returns to the title.
-- Rules: on the map, tap Menu (top left), then Rules. During the lessons, Rules is also in the pause menu. The Learn stone replays the lessons; hold it to choose a single lesson.
+- Rules: on the map, tap Menu (top left), then Rules. During the unfinished introductory tutorial, Rules is also in the pause menu. The Learn stone replays the lessons; hold it to choose a single lesson.
 - Finds: on the map, tap Finds (top right). It shows every object uncovered so far; tap one to see it large.
 - Sound, music and vibration: on the map, Menu, then Settings.
 
 CONTROLS
-- Tap a cube: chisel it away. Hold a cube: mark it as part of the object, so it can't be chiselled by mistake. The switch at the bottom (Chisel / Mark) changes what a tap does.
+- With Chisel selected, tap a cube to chisel it away; hold to mark it. The bottom Chisel / Mark switch changes the tap action. Holding uses the opposite tool.
 - Drag: turn the block. Pinch: zoom. Double-tap the sky: reset the view.
 - Double-tap a cube in a row whose clue is 0: clear the whole row.
 - Slide a diamond on the guide beside the block to peel layers away and see inside.
@@ -165,10 +165,10 @@ CONTROLS
 
 THINGS THAT MAY NOT BE OBVIOUS
 - There is no way to fail and no time limit. Chiselling a cube that belongs is a "slip": it is marked with a red x and the cube is kept. Gems: 3 for no slips, 2 for a few, 1 for finishing.
-- After a slip, a take-back button appears top right; it undoes the last slip at once (free, up to 5 a day).
+- After a slip in a full puzzle, a take-back button appears top right; it undoes the last slip at once (free, up to 5 a day).
 - If you wait without a move, a row that has a move will glow.
 - Stones open one after another down the map, across 15 worlds. Finishing a world's last stone shows that world's finds, then the next world appears from behind its cloud.
-- Gold shrines are optional bonus stones. Each opens once its world has enough gems; tapping one that isn't open yet offers to open it for free.
+- Gold shrines are optional bonus stones. Each opens once its world has enough gems; an eligible locked shrine in a reached world can also be opened for free by tapping it.
 - The Drift, at the foot of the map, offers random blocks (6, 8 or 10 cubes a side) at any time.
 ```
 
@@ -176,7 +176,7 @@ Contact for App Review: Kellan Mythen, 425-890-4302, support@mythen.io.
 
 The rest of App Review Information:
 - **Sign-in required:** unchecked (there is no account).
-- **Attachment:** a screen recording, about a minute, made on an iPhone with build 7: "Tap to begin", lesson 1, "skip", the first stone solved to its result screen.
+- **Attachment (planned, not yet verified):** Kellan may record about a minute on an iPhone with build 7: open the glowing title stone, enter Learn, demonstrate lesson 1 and Skip, then solve the first full puzzle. Do not claim an attachment exists until recorded and attached.
 
 ## Screenshots
 
