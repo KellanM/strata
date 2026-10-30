@@ -146,6 +146,7 @@ Version 1.0 is free. It needs no login or account, works fully offline, and has 
 STARTING AND COMPLETING THE FIRST PUZZLE
 1. Launch the app. After a short splash, the title reads "Tap to begin". Tap anywhere; the view sweeps down to the map.
 2. On first launch the map's first stone, Learn ("11 short lessons"), is lit. Tap it.
+   To skip the lessons and go straight to the main game, tap "SKIP" under the lesson's instruction, near the top of the screen; the map opens with Puzzle 1 ready.
 3. Lesson 1 opens with one line of instruction: tap the white cubes to knock them away; the coloured part stays. Keep tapping white cubes. When only the object is left, the puzzle is solved and the object is named; tap to go on to the next lesson. Each lesson takes under a minute.
 4. After lesson 11 the first world (First Light) opens on the map. Tap the lit stone to play the first full puzzle. When it is solved, the object is revealed with 1 to 3 gems and three buttons: Map, Next (the large play button) and Replay.
 
@@ -171,7 +172,11 @@ THINGS THAT MAY NOT BE OBVIOUS
 - The Drift, at the foot of the map, offers random blocks (6, 8 or 10 cubes a side) at any time.
 ```
 
-Contact for App Review: Kellan Mythen, [phone], support@mythen.io.
+Contact for App Review: Kellan Mythen, 425-890-4302, support@mythen.io.
+
+The rest of App Review Information:
+- **Sign-in required:** unchecked (there is no account).
+- **Attachment:** a screen recording, about a minute, made on an iPhone with build 7: "Tap to begin", lesson 1, "skip", the first stone solved to its result screen.
 
 ## Screenshots
 
