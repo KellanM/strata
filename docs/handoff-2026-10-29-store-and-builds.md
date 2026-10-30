@@ -72,7 +72,9 @@ Suggested TestFlight "What to Test":
    | 4 | Maple Bonsai mid-solve | Autumn Woods | **Changed:** now plum over amber, was cream over rust |
    | 5 | Coelacanth | The Deep | Sky unchanged |
 
-   Re-shoot #4 with `store/shoot.mjs` at both sizes (6.9" and 6.5"), and check #1 to #5 against the live app before the next submission. The block colours didn't change; only the skies did. Show Kellan before replacing anything on the store.
+   Re-shoot #4 with `store/shoot.mjs` at both sizes (6.9" and 6.5"), and check #1 to #5 against the live app before the next submission.
+
+   **Done, 2026-10-29:** all five reshot at both sizes with the current UI (thin-ring buttons, the outline tool pill with the chisel and chalk, the quieter score with Map · Next · Replay rings, single-gold gems) and the current skies, in `store/screenshots/` under the same names. Not yet uploaded to App Store Connect: that is Kellan's. The block colours didn't change; only the skies did. Show Kellan before replacing anything on the store.
 
 2. **App preview video.** Still not made. It would come from `tools/trailer/v5` (the `preview` cut), but those files are Kellan's uncommitted edits, so ask before touching them. Any existing trailer footage shows the **old** opening (the glowing cube and the old splash card).
 
