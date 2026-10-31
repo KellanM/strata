@@ -32,6 +32,20 @@ Read this before any growth work, and keep the status table current. The backgro
   - the order of release;
   - the native-speaker review of the translations.
 
-## Not picked for now (still options)
+## Every other strategy we raised (on the table, not started)
 
-The Smart App Banner, a cadence of content drops, reveal clips, Apple Arcade, and the country chart burst. Don't build these unless asked.
+Kellan (2026-10-31): keep all of these, not just the ones picked. Each is a test waiting for its turn. Move a row up into the table above when it starts.
+
+| Strategy | Hypothesis | Metric (where) | Notes and risks | Source |
+|---|---|---|---|---|
+| iPad, universal (v1.3) | The 3D puzzle is at its best on a big screen; iPad players are the calm-game core | iPad share of installs and sessions; iPad featuring | One-way decision. Needs landscape layout, interface scale, pointer, keyboard and Pencil. A peel handle goes missing on iPad sizes today | ipad-duo-plan.md M2 |
+| #2 Smart App Banner on the web | Web players on iPhone move to the app | Installs from the web's Custom Product Page link | One meta tag, once the App Store page is live | this list |
+| #5 Content drops, nominated for featuring | Each update is a new featuring chance (BADLAND) | Featuring per update; reactivated players (App Analytics) | Gallery picks are the supply; add an in-app event to each drop; nominate 3 weeks ahead, 8 for a story | gtm-talks-study.md |
+| #9 Reveal clips, and a search-result video | "What's inside?" clips travel at no cost; a video beats screenshots in search | Views to installs from the link in the bio's Custom Product Page | The trailer pipeline exists; check that the WWDC26 search-result video is live in App Store Connect | gtm-study.md M3, gtm-talks-study.md |
+| #10 Apple Arcade pitch | Strata fits Arcade (no ads, no purchases, crafted); Arcade pays and features steadily | Accepted or not | A strategic fork: exclusivity may clash with the free web version and with ads later (strata-monetization-off) | this list |
+| #11 Country chart burst (New Zealand, Ireland) | A short Search Ads burst charts Strata in small Puzzle charts | Top Puzzle rank in New Zealand and Ireland; installs during the burst and the week after | Charts are per country, so it doesn't carry over. About $300–600. Time it with an update and a nomination. Real users only | charts-country-study.md |
+| Hopkins listing copy | Specific claims ("one answer per stone, no guessing") convert better than moods | Conversion rate (App Analytics) | Promo text first (#4); the subtitle and captions are Kellan's call | store/listing-copy-hopkins.md |
+| Copy study rewrites (C1–C8) | One name per thing makes the lessons clearer | Lesson completion (counted on the device); D1 | The rewrites are ready; "chisel" against "tap away" needs a playtest | copy-study.md |
+| Pre-orders and the featuring forms | A launch is one big event, booked months ahead | Featuring; day-one installs | For future major updates | gtm-study.md |
+
+**Avoid:** paid "boosting" services, bots and rewarded installs (guideline 5.6; Apple ended 193k developer accounts in 2025); paid ads at scale while v1 earns nothing; A/B tests too small to resolve at Strata's traffic.
