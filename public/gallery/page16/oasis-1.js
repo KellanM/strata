@@ -36,17 +36,17 @@ export default [
   // a hippo up to its middle in the pool, mid-yawn: the jaws open wide, a
   // pink mouth, two little tusks, eyes and ears on top of its head
   (() => {
-    const g = grid(9, 8, 9);
-    g.cylinder('y', [4, 4], 4.4, [0, 0], pool);                                         // the pool
-    g.ellipsoid([4, 1.6, 2.6], [3.7, 2.4, 2.7], hippo);                                 // the back, half under
-    g.box([1, 7], [3, 5], [2, 4], hippo).clear(1, 5, 2).clear(7, 5, 2);                 // the head
-    g.box([2, 6], [1, 1], [5, 8], hippo);                                               // the lower jaw, dropped
-    g.box([3, 5], [1, 1], [5, 7], mouth).box([3, 5], [2, 4], [4, 4], mouth);            // tongue and throat
-    g.box([2, 6], [5, 5], [5, 5], hippo).box([2, 6], [6, 6], [5, 7], hippo)             // the upper jaw, thrown up
-      .box([2, 6], [7, 7], [6, 8], hippo).clear(2, 7, 8).clear(6, 7, 8);
-    g.box([3, 5], [6, 6], [6, 7], mouth);                                               // its pink underside
-    pair(g, 2, 2, 8, tusk); pair(g, 2, 3, 8, tusk);                                     // tusks
-    for (const x of [1, 7]) g.set(x, 6, 3, hippo).set(x, 6, 4, INK).set(x, 7, 3, hippo);   // eye bumps and ears
+    const g = grid(9, 7, 8);
+    g.ellipsoid([4, 0, 3.5], [4.6, 0.5, 4.2], pool);                                    // the pool
+    g.ellipsoid([4, 1.4, 2.3], [3.7, 2.3, 2.6], hippo);                                 // the back, half under
+    g.box([1, 7], [2, 4], [2, 4], hippo).clear(1, 4, 2).clear(7, 4, 2);                 // the head
+    g.box([2, 6], [1, 1], [5, 7], hippo);                                               // the lower jaw, dropped
+    g.box([3, 5], [1, 1], [5, 6], mouth).box([3, 5], [2, 3], [4, 4], mouth);            // tongue and throat
+    g.box([2, 6], [4, 4], [5, 5], hippo).box([2, 6], [5, 5], [5, 7], hippo)             // the upper jaw, thrown up
+      .box([2, 6], [6, 6], [6, 7], hippo).clear(2, 6, 7).clear(6, 6, 7);
+    g.box([3, 5], [4, 4], [5, 5], mouth).box([3, 5], [5, 5], [6, 7], mouth);            // its pink underside
+    pair(g, 2, 2, 7, tusk); pair(g, 2, 3, 7, tusk);                                     // tusks
+    for (const x of [1, 7]) g.set(x, 5, 3, hippo).set(x, 5, 4, INK).set(x, 6, 3, hippo);   // eye bumps and ears
     tint(g, (x, y) => y === 0, pool);                                                   // the waterline
     return g.entry({ id: 'cand-p16-yawning-hippo', name: 'Yawning Hippo', fraction: 0.6, story: 'It has been waiting by the water since before the water.' });
   })(),
@@ -54,17 +54,17 @@ export default [
   // a little scorpion on guard: claws up and open, tail arched high over its
   // back with the sting held forward over its head, big eyes on the front
   (() => {
-    const g = grid(8, 7, 8);
-    g.box([2, 5], [0, 1], [1, 3], rust).clear(2, 1, 1).clear(5, 1, 1);                  // the body
-    g.box([2, 5], [0, 2], [4, 6], rust).clear(2, 2, 4).clear(5, 2, 4);                  // the head, big
-    pair(g, 2, 2, 6, INK);                                                              // eyes
-    g.box([0, 1], [0, 2], [5, 6], claw).box([6, 7], [0, 2], [5, 6], claw);              // the claws
-    for (const y of [0, 2]) { pair(g, 0, y, 7, claw); pair(g, 1, y, 7, claw); }         // pincers, open
+    const g = grid(8, 7, 7);
+    g.box([2, 5], [0, 1], [1, 2], rust).clear(2, 1, 1).clear(5, 1, 1);                  // the body
+    g.box([2, 5], [0, 2], [3, 5], rust).clear(2, 2, 3).clear(5, 2, 3);                  // the head, big
+    pair(g, 2, 2, 5, INK);                                                              // eyes
+    g.box([0, 1], [0, 2], [4, 5], claw).box([6, 7], [0, 2], [4, 5], claw);              // the claws
+    for (const y of [0, 2]) { pair(g, 0, y, 6, claw); pair(g, 1, y, 6, claw); }         // pincers, open
     for (const z of [1, 3]) pair(g, 1, 0, z, rust);                                     // legs
     for (const [y, z] of [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [5, 1], [6, 1], [6, 2], [6, 3], [5, 3]])
       g.box([3, 4], [y, y], [z, z], rust);                                              // the tail, arched
     g.box([3, 4], [4, 4], [3, 4], sting);                                               // the sting
-    return g.entry({ id: 'cand-p16-scorpion', name: 'Scorpion', story: 'It is the size of a thumb and has decided to be the size of a door.' });
+    return g.entry({ id: 'cand-p16-scorpion', name: 'Scorpion', story: 'Thumb-sized, and it has decided to be the size of a door.' });
   })(),
 
   // a cobra rising out of the charmer's basket, hood spread wider than the

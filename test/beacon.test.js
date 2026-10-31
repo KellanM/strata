@@ -21,16 +21,21 @@ const { progress, bonusFor } = await import('../public/js/map.js');
 const { recordStars } = await import('../public/js/score.js');
 
 const BEACON = ['thistle', 'beacon', 'pocket-compass', 'hill-ram', 'torch-fox', 'heron', 'watchtower', 'pack-donkey'];
-// stones that joined Beacon Hills after it replaced Teatime (gallery page 13 picks)
-const BEACON_LATER = ['travelling-lute', 'yurt'];
+// stones that joined Beacon Hills after it replaced Teatime (gallery page 13 picks, then 15)
+const BEACON_LATER = ['travelling-lute', 'yurt', 'highland-cow', 'red-grouse', 'sheepfold'];
+// Kellan's picks from gallery pages 15 and 16 (2026-10-31): no old save has seen them
+const PICKS = ['broody-hen', 'highland-cow', 'red-grouse', 'sheepfold', 'grapes', 'ice-lolly', 'sunfish', 'yawning-hippo',
+  'scorpion', 'monk', 'akabeko', 'goldfish-lantern', 'basket-dog'];
+const picked = new Set(PICKS);
 const TEATIME = ['teabag-pal', 'toaster', 'cake-stand', 'mug', 'stand-mixer', 'fried-egg', 'bunny-teacup', 'teapot'];
-const MOVED = { 'teabag-pal': 'First Light', toaster: 'First Light', 'fried-egg': 'First Light', teapot: 'First Light',
+// (Fried Egg moved to First Light too, then retired for the Broody Hen, 2026-10-31)
+const MOVED = { 'teabag-pal': 'First Light', toaster: 'First Light', teapot: 'First Light',
   'bunny-teacup': 'Moss Garden', mug: 'The Lagoon', 'stand-mixer': 'Clockwork Workshop' };
 
 // the trail as it was with Teatime as chapter II
 const moved = new Set(TEATIME);
-const firstLight = SHAPES.filter((s) => s.chapter === 'First Light' && !moved.has(s.id)).map((s) => s.id);
-const rest = SHAPES.filter((s) => s.chapter !== 'First Light' && s.chapter !== 'Beacon Hills' && !moved.has(s.id)).map((s) => s.id);
+const firstLight = SHAPES.filter((s) => s.chapter === 'First Light' && !moved.has(s.id) && !picked.has(s.id)).map((s) => s.id);
+const rest = SHAPES.filter((s) => s.chapter !== 'First Light' && s.chapter !== 'Beacon Hills' && !moved.has(s.id) && !picked.has(s.id)).map((s) => s.id);
 const oldTrail = [...firstLight, ...TEATIME, ...rest];
 const oldShrines = [...BONUS.map((b) => b.id).filter((id) => id !== 'bonus-beacon-hills'), 'bonus-teatime'];
 
@@ -77,6 +82,8 @@ test('chapter II is Beacon Hills; Teatime stones moved with their ids, retired i
   for (const [id, ch] of Object.entries(MOVED)) assert.equal(SHAPES.find((s) => s.id === id)?.chapter, ch, `${id} in ${ch}`);
   assert.equal(SHAPES.filter((s) => s.chapter === 'First Light').at(-1).id, 'teapot', 'the Teapot is First Light\'s finale');
   for (const id of [...BEACON, ...Object.keys(MOVED)]) assert.ok(ADDED_LATER.has(id), `${id} in ADDED_LATER`);
+  for (const id of PICKS) assert.ok(ADDED_LATER.has(id), `${id} in ADDED_LATER`);
+  assert.ok(RETIRED.has('fried-egg') && !SHAPES.some((s) => s.id === 'fried-egg'), 'Fried Egg retired for the Broody Hen');
   for (const id of RETIRED) assert.ok(![...SHAPES, ...BONUS].some((s) => s.id === id), `retired ${id} reused`);
   assert.ok(RETIRED.has('cake-stand') && RETIRED.has('bonus-teatime'));
   assert.ok(!CHAPTERS.some((c) => c.name === 'Teatime'));
@@ -90,7 +97,7 @@ test('an old save that solved Teatime and the Layer Cake keeps its moved solves 
   for (const id of Object.keys(MOVED)) assert.deepEqual(solved[id], rec(3), `${id} still solved`);
   const { furthest, first, open } = sane(solved);
   assert.equal(SHAPES[furthest].id, 'snail-cottage', 'the trail still reaches into Moss Garden');
-  assert.equal(SHAPES[first].id, BEACON[0], 'the new chapter waits behind it');
+  assert.equal(SHAPES[first].id, 'broody-hen', 'the stone added since opens first; the new chapter waits behind it');
   for (const id of BEACON) assert.ok(open[at(id)], `${id} open`);
   assert.ok(open[at('hatching-chick')] && open[at('moth')]);
   assert.ok(!open[at('cat')], 'nothing further on opened');
@@ -111,9 +118,9 @@ test('a mid-progress save keeps every solved stone; moved stones fill in behind 
   // all of the old First Light and the first four Teatime stones (Mug included)
   const solved = run(solvedThrough('mug'));
   const { furthest, first, open } = sane(solved);
-  assert.equal(SHAPES[first].id, 'fried-egg', 'the unsolved moved stones in First Light open first');
+  assert.equal(SHAPES[first].id, 'broody-hen', 'the new and unsolved stones in First Light open first');
   assert.equal(SHAPES[furthest].id, 'kitten-box', 'the trail is not cut back');
-  assert.ok(open[at('fried-egg')] && open[at('teapot')] && open[at(BEACON[0])]);
+  assert.ok(open[at('broody-hen')] && open[at('teapot')] && open[at(BEACON[0])]);
   assert.ok(!open[at(BEACON[1])], 'Beacon Hills opens one stone at a time');
   assert.ok(open[at('mug')] && !open[at('flip-flops')] && !open[at('axolotl')], 'a solved Mug does not open The Lagoon');
   assert.ok(!open[at('snail')] && !open[at('bunny-teacup')], 'Moss Garden still locked');
@@ -124,7 +131,7 @@ test('a mid-progress save keeps every solved stone; moved stones fill in behind 
   delete later['stand-mixer']; delete later['fried-egg'];
   const p = sane(run(later));
   assert.equal(SHAPES[p.furthest].id, 'teapot');
-  assert.equal(SHAPES[p.first].id, 'fried-egg');
+  assert.equal(SHAPES[p.first].id, 'broody-hen');
   assert.ok(p.open[at(BEACON[0])] && p.open[at(BEACON[1])] && !p.open[at(BEACON[2])]);
   assert.ok(!p.open[at('snail')] && p.open[at('bunny-teacup')] && !p.open[at('cat')], 'a solved Bunny opens nothing round it');
 });
@@ -134,11 +141,11 @@ test('a finished save keeps the whole map open, with the new chapter to play', (
   const solved = run(all);
   const { first, open } = sane(solved);
   assert.ok(open.every(Boolean), 'the whole map stays open');
-  assert.equal(SHAPES[first].id, BEACON[0]);
+  assert.equal(SHAPES[first].id, 'broody-hen', 'the stones added since are there to play, from the first');
   assert.ok(!solved['bonus-beacon-hills'], 'the Great Beacon is new and unsolved');
   for (const b of BONUS) if (b.chapter !== 'Beacon Hills') assert.ok(shrineOpen(b.chapter, solved, open) || solved[b.id], `${b.chapter} shrine`);
   const t = totals(solved);
-  assert.equal(t.found, SHAPES.length + BONUS.length - BEACON.length - BEACON_LATER.length - 1);
+  assert.equal(t.found, SHAPES.length + BONUS.length - BEACON.length - BEACON_LATER.length - 1 - PICKS.filter((id) => !BEACON_LATER.includes(id)).length);
   assert.equal(t.gems, t.found * 3);
 });
 

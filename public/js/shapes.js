@@ -311,6 +311,19 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 15: Broody Hen; Kellan's pick, 2026-10-31)
+      id: 'broody-hen', name: 'Broody Hen', from: 'cand-p15-broody-hen', fraction: 0.5, seed: 2,
+      story: 'She has been asked to move. She has declined.',
+      ...voxels({ a: 0xe2bf62, b: 0xfbf8f2, c: 0xb87a4e, d: 0xe0434b, e: 0x3a3442, f: 0xf2b33d }, [
+        '...aa... ..aaaa.. .aaaaaa. .aaaaaa. .aaaaaa. ..aaaa.. ...aa...',
+        '...aa... ..a..a.. .a.b..a. .abbb.a. .a.b..a. ..a..a.. ..cac...',
+        '........ ........ .bbbbb.. .bbbbb.. .bbbbb.. ........ ........',
+        '........ ........ b.bbbbb. bbbbbbbd b.bbbbb. ........ ........',
+        '........ ........ b....be. b....bbf b....be. ........ ........',
+        '........ ........ ........ b....dd. ........ ........ ........',
+      ]),
+    },
+    {
       // from the object gallery (bookshelf)
       id: 'bookshelf', from: 'cand-bookshelf', name: 'Bookshelf', fraction: 0.3, seed: 1,
       // hints curated for the solve path, not hidden at random (docs/aha-study.md)
@@ -325,19 +338,6 @@ export const SHAPES = [
         'a.....a agh.ija agh.ija',
         'a.....a ag..ija ag..ija',
         'aaaaaaa aaaaaaa aaaaaaa',
-      ]),
-    },
-    {
-      // from the object gallery (page 4: Fried Egg)
-      id: 'fried-egg', name: 'Fried Egg', from: 'cand-p4-fried-egg', fraction: 0.65, seed: 1,
-      // hints curated for the solve path, not hidden at random (docs/aha-study.md)
-      clues: '#...#.#.#.#.#.#.#.#.#...#.#.|..###..######.#####################.#####.#.####....#...#..#.#.|#....##..##...#####.####.#.##.#.####',
-      story: 'Sunny side up, and the morning has barely begun.',
-      ...voxels({ a: 0x5d6670, b: 0xfbf8f2, c: 0x9a6a45, d: 0xf59bb2, e: 0xf6b93b, f: 0x3a3442 }, [
-        '..aaa.... .aaaaa... aaaaaaa.. aaaaaaa.. aaaaaaa.. .aaaaa... ..aaa....',
-        '..aaa.... .abbba... abbbbba.. abbbbbacc abbbbba.. .adbda... ..aaa....',
-        '......... ......... ..eee.... ..eee.... ..fef.... ......... .........',
-        '......... ......... ......... ...e..... ......... ......... .........',
       ]),
     },
     {
@@ -527,6 +527,46 @@ export const SHAPES = [
         '......... ...ff..gb ...ff.abb ...ff..gb .........',
         '......... .......b. ......... .......b. .........',
         '......... .......a. ......... .......a. .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 15: Highland Cow; Kellan's pick, 2026-10-31; a body length shorter, for the phone's tap budget)
+      id: 'highland-cow', name: 'Highland Cow', from: 'cand-p15-highland-cow', fraction: 0.65, seed: 1,
+      story: "It can't see a thing through that fringe, and it doesn't seem to mind.",
+      ...voxels({ a: 0x8e4a28, b: 0xd0783e, c: 0x3a3442, d: 0xf0b8a8, e: 0xf3ead8, f: 0xeaa064, g: 0xb09670 }, [
+        '..a...a.. ......... ......... ..a...a.. ......... .........',
+        '..ab.ba.. ..b...b.. ......... ..ab.ba.. ......... .........',
+        '..bbbbb.. ..bbbbb.. ..bbbbb.. ..bbbbb.. ...bbb... ...cdc...',
+        '..bbbbb.. ..bbbbb.. ..bbbbb.. ..bbbbb.. ...bbb... ...ddd...',
+        '..bbbbb.. ..bbbbb.. ..bbbbb.. ..bbbbb.. ...bbb... ...cbc...',
+        '..bbbbb.. ..bbbbb.. ..bbbbb.. ..bbbbb.. eeebbbeee ..fffff..',
+        '......... ......... ......... ......... g..fff..g ..fffff..',
+        '......... ......... ......... ......... ....f.... ....f....',
+      ]),
+    },
+    {
+      // from the object gallery (page 15: Red Grouse; Kellan's pick, 2026-10-31)
+      id: 'red-grouse', name: 'Red Grouse', from: 'cand-p15-grouse', fraction: 0.65, seed: 1,
+      story: 'It tells everyone on the moor to go back, go back. Nobody does.',
+      ...voxels({ a: 0xb070b8, b: 0xa04c32, c: 0xfbf8f2, d: 0x5e2c22, e: 0x3a3442, f: 0xf2c04a, g: 0xe8403a }, [
+        '..aaa.. .aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa. ..aaa..',
+        '....... ....... ..aaa.. a.aba.a ..aaa.. .ac.ca. .......',
+        '....... ...b... ..bbb.. .bbbbb. ..bbb.. ...b... .......',
+        '..ddd.. ..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb.. .......',
+        '..ddd.. ....... ..bbb.. ..bbb.. ..bbb.. ..ebe.. ...f...',
+        '....... ....... ....... ..bbb.. ..gbg.. ..gbg.. .......',
+        '....... ....... ....... ..bbb.. ..bbb.. ..bbb.. .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 15: Drystone Sheepfold; Kellan's pick, 2026-10-31)
+      id: 'sheepfold', name: 'Drystone Sheepfold', from: 'cand-p15-sheepfold', fraction: 0.65, seed: 2,   // (eased to 10.9, under the Great Beacon)
+      story: 'No mortar. Every stone was chosen to sit on the one below.',
+      ...voxels({ a: 0x86b862, b: 0x77716c, c: 0xb0aaa2, d: 0xf6f1e6, e: 0xb07a3a, f: 0x4a4250, g: 0xf6efe4 }, [
+        '...aaa... .aaaaaaa. .aaaaaaa. aaaaaaaaa aaaaaaaaa aaaaaaaaa .aaaaaaa. .aaaaaaa. ...aaa...',
+        '...bbb... .cc...cc. .cdddd.c. b.dddd..b b.dddd..b b.......b .c.....c. .cc...cc. ...e.e...',
+        '...cbb... .cc...bc. .bdddd.c. b.dddd..c b.dddd..b c..ff...b .c.....b. .cb...cc. ...eee...',
+        '......... ......... ......... ......... ......... ..fggf... ......... ......... .........',
       ]),
     },
   ]),
@@ -753,6 +793,23 @@ export const SHAPES = [
         '.aaaaa. .abbba. .......',
         '.aaaaa. .abbba. .......',
         '..aaa.. ..aaa.. .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Grapes; Kellan's pick, 2026-10-31)
+      id: 'grapes', name: 'Grapes', from: 'cand-p16-grapes', fraction: 0.35, seed: 4,   // (eased to 9.5: The Orchard stays easier than Autumn Woods)
+      story: 'Picked in the morning, before the wasps were up.',
+      ...voxels({ a: 0x7b4f9e, b: 0x6aa84f, c: 0x8a5a3c }, [
+        '....... ....... ...a... ....... .......',
+        '....... ...a... ..aaa.. ...a... .......',
+        '....... ....... ..aaa.. ...a... .......',
+        '....... ..aaa.. .aaaaa. ..aaa.. ...a...',
+        '...a... ..aaa.. ..aaa.. ...a... .......',
+        '....... .aaaaa. .aaaaa. ..aaa.. ...a...',
+        '.a...a. aaa.aaa .aaaaa. ..aaa.. .......',
+        '....... .a.a.a. aaaaaaa .aaaaa. ..a.a..',
+        '....... .....b. .a.c.ab ..a.a.. .......',
+        '....... ....bbb ...cbbb ....bbb .......',
       ]),
     },
     {
@@ -1091,6 +1148,21 @@ export const SHAPES = [
   // The sea and the shore: wide shapes, hidden insides.
   ...chapter(5, [
     {
+      // from the object gallery (page 1: Ice Lolly; Kellan's pick, 2026-10-31)
+      id: 'ice-lolly', name: 'Ice Lolly', from: 'cand-ice-lolly', fraction: 0.65, seed: 1,
+      story: 'Bought at the kiosk at noon, and already losing a race with the sun.',
+      ...voxels({ a: 0xd9b48f, b: 0x86c77f, c: 0xfbf8f2, d: 0xf4a3b5 }, [
+        '.... .aa. ....',
+        '.... .aa. ....',
+        'bbbb bbbb bbbb',
+        'bbbb bbbb bbbb',
+        'cccc cccc cccc',
+        'cccc cccc cccc',
+        'dddd dddd ddd.',
+        '.dd. ddd. ddd.',
+      ]),
+    },
+    {
       // from the object gallery (flip-flops)
       id: 'flip-flops', from: 'cand-flip-flops', name: 'Flip-Flops', fraction: 0.65, seed: 1,
       story: 'Kicked off at the water\'s edge, one a little ahead of the other.',
@@ -1312,6 +1384,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 15: Ocean Sunfish; Kellan's pick, 2026-10-31)
+      id: 'sunfish', name: 'Ocean Sunfish', from: 'cand-p15-sunfish', fraction: 0.65, seed: 1,
+      story: 'The size of a small boat, and never once in a hurry.',
+      ...voxels({ a: 0x6f8496, b: 0xdfe8ee, c: 0x9fb4c4, d: 0xf59bb2, e: 0x3a3442 }, [
+        '........ .aa..... ........',
+        '........ ..aa.... ........',
+        '........ ...bbbb. ........',
+        '...bbb.. aabbbbbb ...bbb..',
+        '...cccd. aaccccca ...cccd.',
+        '...ccce. aacccccc ...ccce.',
+        '...ccc.. aacccccc ...ccc..',
+        '........ ...cccc. ........',
+        '........ ..aa.... ........',
+        '........ .aa..... ........',
+      ]),
+    },
+    {
       // from the object gallery (page 4: Seahorse)
       id: 'seahorse', name: 'Seahorse', from: 'cand-p4-seahorse', fraction: 0.6, seed: 18,
       story: 'It holds the seagrass with its tail and watches the tide go by.',
@@ -1495,6 +1584,20 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 16: Yawning Hippo; Kellan's pick, 2026-10-31; a layer lower and shallower, for the phone's tap budget)
+      id: 'yawning-hippo', name: 'Yawning Hippo', from: 'cand-p16-yawning-hippo', fraction: 0.6, seed: 1,
+      story: 'It has been waiting by the water since before the water.',
+      ...voxels({ a: 0x4fa8cf, b: 0x9d8fb4, c: 0xf08aa2, d: 0xfbf8f2, e: 0x3a3442 }, [
+        '..aaaaa.. .aaaaaaa. aaaaaaaaa aaaaaaaaa aaaaaaaaa aaaaaaaaa .aaaaaaa. ..aaaaa..',
+        '...bbb... .bbbbbbb. .bbbbbbb. .bbbbbbb. ..bbbbb.. ..bcccb.. ..bcccb.. ..bbbbb..',
+        '...bbb... .bbbbbbb. .bbbbbbb. .bbbbbbb. .bbcccbb. ......... ......... ..d...d..',
+        '......... ...bbb... .bbbbbbb. .bbbbbbb. .bbcccbb. ......... ......... ..d...d..',
+        '......... ......... ..bbbbb.. .bbbbbbb. .bbbbbbb. ..bcccb.. ......... .........',
+        '......... ......... ......... .b.....b. .e.....e. ..bbbbb.. ..bcccb.. ..bcccb..',
+        '......... ......... ......... .b.....b. ......... ......... ..bbbbb.. ...bbb...',
+      ]),
+    },
+    {
       // from the object gallery (page 9: Hooded Falcon)
       id: 'hooded-falcon', name: 'Hooded Falcon', from: 'cand-p9-falcon', fraction: 0.75, seed: 4,
       story: 'The hood keeps it calm. It is dreaming about the sky.',
@@ -1509,6 +1612,20 @@ export const SHAPES = [
         '..... ..g.. .ggg. ..c.. .....',
         '..... .iii. .iii. .iii. ..h..',
         '..... .iii. .iei. .iii. .....',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Scorpion; Kellan's pick, 2026-10-31; a layer shorter, for the phone's tap budget)
+      id: 'scorpion', name: 'Scorpion', from: 'cand-p16-scorpion', fraction: 0.65, seed: 1,
+      story: 'Thumb-sized, and it has decided to be the size of a door.',
+      ...voxels({ a: 0xc8673a, b: 0x6e3a2c, c: 0x3a3442, d: 0x2f2a36 }, [
+        '........ .aaaaaa. ..aaaa.. .aaaaaa. bbaaaabb bbaaaabb bb....bb',
+        '...aa... ...aa... ..aaaa.. ..aaaa.. bbaaaabb bbaaaabb ........',
+        '...aa... ........ ........ ...aa... bbaaaabb bbcaacbb bb....bb',
+        '...aa... ........ ........ ........ ........ ........ ........',
+        '...aa... ........ ........ ...dd... ...dd... ........ ........',
+        '...aa... ...aa... ........ ...aa... ........ ........ ........',
+        '........ ...aa... ...aa... ...aa... ........ ........ ........',
       ]),
     },
     {
@@ -1665,6 +1782,22 @@ export const SHAPES = [
         '....... ...d... a.ddd.a ...d... .......',
         '....... ....... a..e..a ....... .......',
         '....... ....... bbbbbbb ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Monk; Kellan's pick, 2026-10-31)
+      id: 'monk', name: 'Monk', from: 'cand-p16-monk', fraction: 0.65, seed: 1,
+      story: 'He sweeps the same hundred steps each morning. The leaves are in no hurry.',
+      ...voxels({ a: 0x8f877c, b: 0xf08a2a, c: 0xe6c45a, d: 0x8a5a3c, e: 0xf6d2b0, f: 0x3a3442 }, [
+        'aaaaaaaaa aaaaaaaaa aaaaaaaaa aaaaaaaaa aaaaaaaaa',
+        '...b..... ..bbb.... .bbbbb.cc ..bbb..cc ...b...cc',
+        '...b..... ..bbb.... .bbbbb... ..bbb..c. ...b.....',
+        '......... ..bbb.... ..bbb.... ..bbb..d. .........',
+        '......... ..bbb.... ..bbbbb.. ..bbb.ed. .........',
+        '......... ..eee.... ..eee.... ..eee..d. .........',
+        '......... ..eee.... .eeeee... ..fef..d. .........',
+        '......... ..eee.... .eeeee... ..eee..d. .........',
+        '......... ...e..... ..eee.... ...e..... .........',
       ]),
     },
     {
@@ -2261,6 +2394,49 @@ export const SHAPES = [
         '....... ....... ..aaa.. .gaaag. ..aaa.. ....... .......',
         '....... ....... ..hhh.. ..hih.. ..hhh.. ....... .......',
         '....... ....... ....... ....... ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Akabeko; Kellan's pick, 2026-10-31)
+      id: 'akabeko', name: 'Akabeko', from: 'cand-p16-akabeko', fraction: 0.75, seed: 2,   // (harder clues: Lantern Festival stays harder than Clockwork)
+      story: 'Tap its head and it agrees with you. It agrees with everyone.',
+      ...voxels({ a: 0x3a3442, b: 0xe0433f, c: 0xfbf8f2, d: 0xf6efe4, e: 0xf6d365 }, [
+        '......... .a...a... ......... .a...a... .........',
+        '......... .a...abbc ......bbc .a...abbc .........',
+        '......... .bbbbbbba abbbbbbbb .bbbbbbba .........',
+        '.......d. .bebebbbb abbbbbbbb .bebebbbb .......d.',
+        '.......d. ..bbbb... .bbbbb... ..bbbb... .......d.',
+        '......... ......... ......... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Goldfish Lantern; Kellan's pick, 2026-10-31)
+      id: 'goldfish-lantern', name: 'Goldfish Lantern', from: 'cand-p16-goldfish-lantern', fraction: 0.7, seed: 3,
+      story: 'It swims the length of the street and back. Nobody remembers lighting it.',
+      ...voxels({ a: 0xf59a62, b: 0xfbf3e6, c: 0xe8483c, d: 0xffd77a, e: 0xf07a8a, f: 0x3a3442 }, [
+        '......... ......... a........ ......... .........',
+        '......... ......... aa...bb.. ......... .........',
+        '......... ....bbbb. aaa.bbbb. ....bbbb. .........',
+        '......... ....cccc. .aaccdcce ....cccc. .........',
+        '......... ....ccccf .aaccdccc ....ccccf .........',
+        '......... ....cccc. aaa.cccc. ....cccc. .........',
+        '......... ......... aa...cc.. ......... .........',
+        '......... ......... a...aa... ......... .........',
+      ]),
+    },
+    {
+      // from the object gallery (page 16: Basket Dog; Kellan's pick, 2026-10-31)
+      id: 'basket-dog', name: 'Basket Dog', from: 'cand-p16-basket-dog', fraction: 0.65, seed: 8,
+      story: 'The basket keeps colds from getting in. It has never had one.',
+      ...voxels({ a: 0xf8f4ec, b: 0xe0434b, c: 0x4a3a4a, d: 0x3a3442, e: 0xc8924a }, [
+        '......... ......... ...a.a... ......... ...a.a... ......... ......... .........',
+        '......... ...aaa... ...aaa... ...aaa... ...aaa... ......... ......... .........',
+        '....a.... ...aaa... ...bbb... ...bbb... ...bbb... ......... ......... .........',
+        '....a.... ......... ..aaaaa.. .caaaaac. ..aaaaa.. ..aaaaa.. ...aaa... ....d....',
+        '......... ......... ..aaaaa.. .caaaaac. .caaaaac. ..adada.. ......... .........',
+        '......... ......... ..aaaaa.. ..aaaaa.. ..aaaaa.. ..aaaaa.. ......... .........',
+        '....e.... ..eeeee.. ..eeeee.. .eeeeeee. ..eeeee.. ..eeeee.. ....e.... .........',
+        '......... ......... ...eee... ...eee... ...eee... ......... ......... .........',
       ]),
     },
     {
@@ -3134,13 +3310,17 @@ export const ADDED_LATER = new Set([
   // Garden, The Lagoon and Clockwork Workshop (ids kept, so solves carry over)
   'thistle', 'pocket-compass', 'beacon', 'hill-ram', 'torch-fox', 'heron', 'pack-donkey', 'watchtower',
   'teabag-pal', 'toaster', 'fried-egg', 'teapot', 'bunny-teacup', 'mug',
+  // Kellan's picks from gallery pages 15 and 16 (2026-10-31)
+  'broody-hen', 'highland-cow', 'red-grouse', 'sheepfold', 'grapes', 'ice-lolly', 'sunfish', 'yawning-hippo', 'scorpion', 'monk', 'akabeko', 'goldfish-lantern', 'basket-dog',
 ]);
 
 // Retired ids: their solves stay in old saves (nothing reads them now), so they
 // must never be reused for a different object or a stale save would mark the
 // new one solved. Cake Stand and the Layer Cake shrine left with Teatime and
 // live on in gallery page 6.
-export const RETIRED = new Set(['cake-stand', 'bonus-teatime']);
+// Fried Egg left First Light for the Broody Hen (Kellan, 2026-10-31); it lives on in
+// gallery page 4.
+export const RETIRED = new Set(['cake-stand', 'bonus-teatime', 'fried-egg']);
 
 // Every stone and every shrine is lit by lit() (above). First Light took it
 // first (Kellan, 2026-10-23), with the recolouring listed for it here; the
@@ -3162,13 +3342,15 @@ const LIT = {
   // cloth-bound spines in old dyes, not a sweet shop
   bookshelf: { swap: { 0xe0565b: 0xb34a3f, 0x5b8fd6: 0x4d6d9a, 0x5fae6e: 0x5f8a4e, 0xf4a3b5: 0xd99a8c, 0xe9b949: 0xcf9f45,
     0x4fb3a9: 0x3f8a80, 0xf08a6c: 0xcf7650, 0x9b7fd1: 0x77669e, 0xf6d365: 0xe0c27a } },
-  'fried-egg': {}, 'kitten-box': {},
+  'kitten-box': {},
   teapot: { swap: { 0x5b8fd6: 0x3e66a3, 0xf6efe4: 0xf4ecdc } },              // cobalt on porcelain
   // Beyond First Light, a softer light (two tones, not three) where the
   // object's own pattern already does the work: segments, scales, mottled
   // snow and stone, an icon. The full ramp crossing them reads as speckle.
   'giant-isopod': { span: 2 }, 'dragon-head': { span: 2 }, invader: { span: 2 },
   'mountain-goat': { span: 2 }, 'calendar-stone': { span: 2 }, 'stand-mixer': { span: 2 },
+  // Kellan's picks (2026-10-31), lit as they were in the gallery
+  sheepfold: { span: 2 }, grapes: { span: 2 }, 'goldfish-lantern': { keep: [0xffd77a] },
 };
 // These carry hand-made dithered ramps of their own: the Heart, and the page
 // 14 pieces built with its kit (the amber, the orrery's sun, the astrolabe's

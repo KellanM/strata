@@ -100,7 +100,7 @@ export default [
     g.box([0, 1], [3, 6], [1, 1], molaDk);                                               // the frill of a tail
     flank(g, 6, 5, INK); flank(g, 6, 4, BLUSH);
     g.set(7, 4, 1, molaDk);
-    return g.entry({ id: 'cand-p15-sunfish', name: 'Ocean Sunfish', story: 'It is the size of a small boat and has never once been in a hurry.' });
+    return g.entry({ id: 'cand-p15-sunfish', name: 'Ocean Sunfish', story: 'The size of a small boat, and never once in a hurry.' });
   })(),
 
   // a knight's great helm sunk in the sand: a flat-topped steel bucket with

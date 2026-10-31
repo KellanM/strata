@@ -52,17 +52,19 @@ export default [
   // below the belly, a paler fringe over the eyes, a pink muzzle, and wide
   // cream horns turning up at the tips
   (() => {
-    const g = grid(9, 8, 8);
-    g.box([2, 6], [2, 5], [1, 5], ginger);                                                // the shaggy body
-    for (const [x, z] of [[3, 1], [5, 1], [3, 5], [5, 5], [2, 3], [6, 3]]) g.set(x, 1, z, ginger);   // the coat hanging in tufts
-    for (const [x, z] of [[2, 1], [6, 1], [2, 5], [6, 5]]) g.box([x, x], [0, 1], [z, z], gingerDk);   // legs
-    g.box([4, 4], [2, 4], [0, 0], gingerDk);                                              // the tail
-    g.box([3, 5], [2, 5], [6, 7], ginger);                                                // the head
-    g.box([3, 5], [2, 3], [7, 7], muzzle).set(3, 2, 7, INK).set(5, 2, 7, INK);            // the muzzle, nostrils
-    g.box([2, 6], [5, 6], [7, 7], gingerLt);                                              // the fringe
-    g.box([3, 5], [6, 6], [6, 6], gingerLt).set(4, 7, 7, gingerLt).set(4, 7, 6, gingerLt);   // and its top-knot
+    // 9x8x6: the body is a cube shorter than the first cut and the tail is
+    // gone, so a phone's chisels stay under 300; the face, fringe and horn
+    // span are unchanged
+    const g = grid(9, 8, 6);
+    g.box([2, 6], [2, 5], [0, 3], ginger);                                                // the shaggy body
+    for (const [x, z] of [[3, 0], [5, 0], [3, 3], [5, 3], [2, 1], [6, 1]]) g.set(x, 1, z, ginger);   // the coat hanging in tufts
+    for (const [x, z] of [[2, 0], [6, 0], [2, 3], [6, 3]]) g.box([x, x], [0, 1], [z, z], gingerDk);   // legs
+    g.box([3, 5], [2, 5], [4, 5], ginger);                                                // the head
+    g.box([3, 5], [2, 3], [5, 5], muzzle).set(3, 2, 5, INK).set(5, 2, 5, INK);            // the muzzle, nostrils
+    g.box([2, 6], [5, 6], [5, 5], gingerLt);                                              // the fringe
+    g.box([3, 5], [6, 6], [4, 4], gingerLt).set(4, 7, 5, gingerLt).set(4, 7, 4, gingerLt);   // and its top-knot
     pairFront(g, 3, 4, INK);                                                              // eyes, just showing
-    for (const [x, y] of [[2, 5], [1, 5], [0, 5], [0, 6]]) pair(g, x, y, 6, x === 0 && y === 6 ? hornTip : horn);   // the horns
+    for (const [x, y] of [[2, 5], [1, 5], [0, 5], [0, 6]]) pair(g, x, y, 4, x === 0 && y === 6 ? hornTip : horn);   // the horns
     return g.entry({ id: 'cand-p15-highland-cow', name: 'Highland Cow', story: "It can't see a thing through that fringe, and it doesn't seem to mind." });
   })(),
 

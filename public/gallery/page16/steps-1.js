@@ -81,7 +81,7 @@ export default [
     g.box([5, 6], [4, 4], [2, 2], robe).set(6, 4, 3, skin);                       // the sleeve, the hand
     g.box([7, 7], [3, 7], [3, 3], handle);                                        // the broom handle, out at his side
     g.box([7, 8], [1, 1], [2, 4], straw).set(7, 2, 3, straw);                     // the bristles
-    return g.entry({ id: 'cand-p16-monk', name: 'Monk', story: 'He sweeps the same hundred steps every morning. The leaves are in no hurry either.' });
+    return g.entry({ id: 'cand-p16-monk', name: 'Monk', story: 'He sweeps the same hundred steps each morning. The leaves are in no hurry.' });
   })(),
 
   // SHRINE MAIDEN (miko)
