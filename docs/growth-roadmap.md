@@ -49,3 +49,23 @@ Kellan (2026-10-31): keep all of these, not just the ones picked. Each is a test
 | Pre-orders and the featuring forms | A launch is one big event, booked months ahead | Featuring; day-one installs | For future major updates | gtm-study.md |
 
 **Avoid:** paid "boosting" services, bots and rewarded installs (guideline 5.6; Apple ended 193k developer accounts in 2025); paid ads at scale while v1 earns nothing; A/B tests too small to resolve at Strata's traffic.
+
+## Kellan's App Store Connect checklist (tests 3 and 4)
+
+None of this needs code. It's set up in App Store Connect once the app is live. The App ID appears under App Information once the record exists.
+
+**Test 3: one link per channel, no tracking SDK.**
+1. **Create Custom Product Pages** (App Store Connect › your app › Custom Product Pages):
+   - **web:** for links from kellanm.github.io/strata;
+   - **daily:** for the Daily Stone's share links;
+   - **social:** for clips and posts;
+   - **press:** for articles and newsletters.
+
+   Each can use its own screenshots and promotional text. Start with the default ones, so a difference in results comes from the audience, not the page.
+2. **Use each page's link everywhere that channel points.** The link is the app's App Store URL with `?ppid=<page id>`. Add campaign tokens (`ct=<campaign>` and your provider token `pt=<token>`, shown under App Analytics › Campaigns › Generate a Campaign Link), so App Analytics separates the campaigns too.
+3. **Read the results** in App Analytics: Metrics, filtered by Custom Product Page or Campaign. Look at Impressions → Product Page Views → Installs, and Retention D1/D7. Only players who agree to share with developers are counted, so treat the figures as a sample.
+
+**Test 4: promotional text.** It changes at any time without a new build.
+1. **Weeks 1–2:** the Hopkins line from store/listing-copy-hopkins.md: "Read the numbers, chisel the stone, and a fox or a baby dragon is left standing. One answer per stone, no guessing. No ads, no timers."
+2. **Weeks 3–4:** the current mood line from store/app-store-listing.md.
+3. **Compare** the conversion rate (Product Page Views → Installs) for the two windows in App Analytics. Keep the higher one only if it's at least about 20% better; smaller gaps are noise at Strata's traffic. Don't change anything else on the page during the test.
