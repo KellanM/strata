@@ -1,4 +1,4 @@
-import { haptic, nativeApp as inStoreApp } from './native.js';
+import { haptic, askForReview, nativeApp as inStoreApp } from './native.js';
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
 import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
@@ -1472,6 +1472,7 @@ function closeWorld(g, then) {
     done = true; clearTimeout(timer); worldClosing = false;
     sound.hush(false);
     then();
+    setTimeout(() => askForReview(closed.length + 1), 1600);   // once back on the map, if ever
     el.classList.remove('in');
     setTimeout(() => el.remove(), reduceMotion ? 0 : 700);
   };

@@ -20,6 +20,7 @@ export const noAdsBuild = nativeApp || !MONETIZED;
 const plugin = (name) => (nativeApp ? cap.registerPlugin?.(name) ?? cap.Plugins?.[name] : null);
 const Prefs = plugin('Preferences');
 const Haptics = plugin('Haptics');
+const Review = plugin('InAppReview');
 const PREFIX = 'strata.';
 
 const ours = () => Object.keys(localStorage).filter((k) => k.startsWith(PREFIX));
@@ -72,6 +73,22 @@ export function haptic(pattern, kind) {
     else Haptics.impact({ style: pattern >= 14 ? 'MEDIUM' : 'LIGHT' });
   } catch { /* */ }
   return true;
+}
+
+// The App Store's own rating sheet (@capacitor-community/in-app-review), asked
+// for at one good moment: back on the map after closing a world, from the
+// second world on, and not again for 120 days (Apple shows it at most three
+// times a year anyway, and may show it less). Never after a slip-filled
+// moment, never mid-level. docs/growth-roadmap.md, test 1.
+const ASKED = 'strata.review.asked';
+export function askForReview(worldsClosed) {
+  if (!Review || worldsClosed < 2) return;
+  try {
+    const last = Number(localStorage.getItem(ASKED) || 0);
+    if (Date.now() - last < 120 * 864e5) return;
+    localStorage.setItem(ASKED, String(Date.now()));
+    Review.requestReview();
+  } catch { /* */ }
 }
 
 if (nativeApp) document.documentElement.classList.add('native-app');
