@@ -465,7 +465,7 @@ export function renderMap(root, opts) {
     b.style.setProperty('--glow', hex(p.glow));
     let num = '', name = '', meta = '', art = cube(hex(p.top), hex(p.lit), hex(p.shade), n.kind === 'drift' ? 38 : 46);
     if (n.kind === 'learn') {
-      num = '00'; name = 'Learn'; meta = learned ? 'completed' : `${lessons} lessons`;
+      num = '00'; name = 'Learn'; meta = learned ? 'completed' : `${lessons} lessons${opts.lessonsFirst ? ' first' : ''}`;
       b.setAttribute('aria-label', `Learn: ${lessons} short lessons${learned ? ', completed' : ''}`);
       if (learned) {
         // done: the plain stone gives way to the carved one, the first time with the solved stones' rise

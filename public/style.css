@@ -466,6 +466,16 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #map-close .ring svg { width: 30px; height: 30px; fill: currentColor; stroke-width: 1.2; }   /* the play triangle (M9.5 7.2v9.6l7.5-4.8z, as the pause's) is drawn with its centroid on the ring's centre */
 #menu.has-game #map-close { opacity: 1; pointer-events: auto; }
 #map-help { position: absolute; top: calc(18px + var(--safe-t)); left: 26px; z-index: 1; }   /* in from the corners (Kellan, 2026-10-29) */
+/* the Daily Stone: Today, between Menu and Finds (once the lessons are done); the
+   head's words step down to clear it. Solved, its sun has risen: filled, in a
+   warm hairline, until the next day */
+#map-today { position: absolute; top: calc(18px + var(--safe-t)); left: 50%; translate: -50% 0; z-index: 1; }
+#map-today[hidden] { display: none; }
+#map-today svg { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+#map-today .sun { fill: none; transition: fill .4s; }
+#map-today.done .sun { fill: currentColor; }
+#map-today.done .ring { border-color: rgba(214, 160, 70, .62); box-shadow: 0 0 14px rgba(255, 214, 140, .28); }
+#menu.daily-on .map-head { padding-top: calc(104px + var(--safe-t)); }
 #menu:not(.show) #map-close { pointer-events: none; }
 /* (#menu.show > * would otherwise show it: it's only there with a level to go back to) */
 #menu:not(.has-game) #map-close { opacity: 0; pointer-events: none; }
@@ -564,7 +574,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 /* the tapped stone answers at once */
 .map-node.tapped .cube, .map-node.tapped .obj { animation: tap-pop .32s var(--ease-pop) both; }
 @keyframes tap-pop { 0% { scale: .9; } 55% { scale: 1.16; } 100% { scale: 1.1; } }
-#menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal { opacity: 0; transition: opacity .2s; }
+#menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal, #menu.diving #map-today { opacity: 0; transition: opacity .2s; }
 /* the level's sky opens out of the tapped stone as nested diamonds (a cube's top face):
    the glow leads, the sky follows; then it fades as the block assembles */
 #veil, #veil-glow { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
@@ -579,8 +589,8 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #menu.arriving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.35); opacity: 0; transition: none; }
 #menu.settling .map-scroll { transform-origin: var(--dive-x) var(--dive-y);
   transition: transform var(--dur-scene) var(--ease-glide), opacity .28s ease-out; }
-#menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal { opacity: 0; transition: none; }
-#menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal { transition: opacity .4s ease-out .2s; }
+#menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal, #menu.arriving #map-today { opacity: 0; transition: none; }
+#menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal, #menu.settling #map-today { transition: opacity .4s ease-out .2s; }
 /* map -> back to the level: a slight swell as it dissolves */
 #menu.leaving .map-scroll { transform: scale(1.08); opacity: 0; transition: transform .4s cubic-bezier(.4,0,.6,1), opacity .3s ease-in; }
 
@@ -703,6 +713,8 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #actions button.primary .ring { width: 72px; height: 72px; border-color: color-mix(in srgb, var(--ink) 55%, transparent); background: color-mix(in srgb, var(--ink) 7%, transparent); }
 #actions button.primary .ring svg { width: 30px; height: 30px; }
 #actions button.primary .lb { opacity: 1; }
+/* the Daily Stone's result: Map, Share, and Challenge in the app with Game Center */
+#actions:not(.daily) :is(#act-share, #act-challenge), #actions.daily :is(#act-next, #act-replay), #actions:not(.gc) #act-challenge { display: none; }
 
 /* ---------- chapter title card ---------- */
 #chapter-card {
@@ -934,7 +946,7 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 @keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
 @keyframes title-fade { from { opacity: 0; } }
 @keyframes title-breathe { 50% { opacity: .45; } }
-#menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close { opacity: 0; transition: none; }
+#menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close, #menu.pulling #map-today { opacity: 0; transition: none; }
 /* while the map comes up from the title, its sky has no edge: the backdrop reaches
    well above the sheet and fades in over that reach, so the title's sky melts into it */
 /* the sheet's own top edge fades too; main.js slides the fade off the top as the map arrives */
