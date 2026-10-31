@@ -2,8 +2,11 @@
 // iso corners plus front, side and top) and screenshots it in chunks of rows.
 //   node tools/qa-sheet.mjs <port> <file>[,<file>...] [only=1,4,9] [palette=Mint]
 // Output: shots/qa/<file>-<n>.png
-import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+// playwright isn't a repo dependency: use a local install if there is one, else the global one
+const { chromium } = await import('playwright').catch(() =>
+  import(pathToFileURL(`${process.env.APPDATA}/npm/node_modules/playwright/index.mjs`).href));
 
 const [port = '5194', files = 'themes/home', ...rest] = process.argv.slice(2);
 const opts = Object.fromEntries(rest.map((a) => a.split('=')));
