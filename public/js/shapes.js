@@ -52,7 +52,7 @@ function tone(hex, step) {
   return fromOklab([L + step * room, A * keepC + (up ? 0.003 : 0.009) * n, B * keepC + (up ? 0.016 : -0.02) * n * (C > 0.02 ? 1 : 0.6)]);
 }
 const BAYER2 = [[0, 2], [3, 1]];
-function lit(shape, { swap = {}, span = 3, keep = [], accent = 5 } = {}) {
+export function lit(shape, { swap = {}, span = 3, keep = [], accent = 5 } = {}) {
   const [X, Y, Z] = shape.dims, base = shape.cell;
   const paint = (x, y, z) => { const c = base(x, y, z); return c && (swap[c] ?? c); };
   const count = new Map(), lo = [X, Y, Z], hi = [0, 0, 0];

@@ -5,6 +5,7 @@
 import { PALETTES } from '../js/palettes.js';
 import { renderThumb } from '../js/thumbs.js';
 import { buildCells } from '../js/shapes.js';
+import { asInGame } from './light.js';
 
 const params = new URLSearchParams(location.search);
 const files = (params.get('files') || 'themes/home').split(',');
@@ -46,7 +47,7 @@ function ortho(s, view) {
 
 const rows = document.querySelector('#rows');
 for (const f of files) {
-  const list = (await import(`./${f}.js`)).default;
+  const list = (await import(`./${f}.js`)).default.map(asInGame);
   list.forEach((s, k) => {
     if (only && !only.has(k + 1)) return;
     const row = document.createElement('div');

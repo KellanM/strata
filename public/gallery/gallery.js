@@ -17,6 +17,7 @@ import { objectMesh, isoCamera } from '../js/objectmesh.js';
 import { makeOrbit, SHOW_SPIN } from '../js/orbit.js';
 import { stats } from './stats.js';
 import { SHAPES, CHAPTERS, BONUS } from '../js/shapes.js';
+import { asInGame } from './light.js';
 // gallery objects that are levels in the game now (levels made from them carry `from`)
 const IN_GAME = new Set([...SHAPES, ...BONUS].map((s) => s.from).filter(Boolean));
 
@@ -120,6 +121,7 @@ function renderPicks() {
 }
 
 const lists = await load();
+if (!LIVE) for (const k in lists) lists[k] = lists[k].map(asInGame);   // (Live's objects are lit already)
 const root = $('#themes');
 for (const t of SECTIONS) {
   if (!lists[t.key].length) continue;              // later pages show only themes with new ideas
