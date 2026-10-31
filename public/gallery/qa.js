@@ -59,6 +59,23 @@ for (const f of files) {
       img.src = renderThumb(turn(s, t), palette, { size: 104 });
       add(img, label);
     });
+    // the silhouette test: the game view filled solid, and the game view at
+    // thumbnail size - the object must be nameable from either alone
+    const solid = document.createElement('canvas'), small = new Image();
+    const src = new Image();
+    src.onload = () => {
+      solid.width = src.width; solid.height = src.height;
+      const g = solid.getContext('2d');
+      g.drawImage(src, 0, 0);
+      g.globalCompositeOperation = 'source-in';
+      g.fillStyle = '#2b2533'; g.fillRect(0, 0, solid.width, solid.height);
+    };
+    src.src = renderThumb(s, palette, { size: 104 });
+    solid.style.width = solid.style.height = '104px';
+    add(solid, 'silhouette');
+    small.src = renderThumb(s, palette, { size: 40 });
+    small.style.width = small.style.height = '40px';
+    add(small, '40 px');
     add(ortho(s, 'front'), 'front (+z)');
     add(ortho(s, 'side'), 'side (+x)');
     add(ortho(s, 'top'), 'top');

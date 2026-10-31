@@ -24,6 +24,25 @@ The game lights every level itself when it loads (`lit()` in `public/js/shapes.j
 - **Hand-made ramps are the exception.** A hand ramp (page 14's kit `ramp()`) is only for metal or glow that must read brighter than the light alone gives: the Heart's gold, the amber, the orrery's sun. Mark the entry `lit: false` and say why in its comment; the level goes in `LIT_SKIP`. Everything else is authored flat.
 - **Changing an existing level's light:** `swap` recolours first (e.g. cobalt on porcelain for the Teapot), and `keep` lists colours to leave flat.
 
+### Silhouette and character (2026-10-31, docs/silhouette-study-sources.md)
+
+The QA sheet now shows each object's game view filled solid ("silhouette") and at 40 px. These rules, ranked, come before the form-and-colour list below and win where they disagree:
+
+1. **Name it at 40 px** in the game view, with one noun, within 2 seconds. This is the test the rest serves.
+2. **The identity feature sets the outline.** In the silhouette panel, hiding it should shrink the top or the width: the fox's ear prongs and raised tail, the pegasus's wings at full width. Exception: things whose known outline is already compact (pumpkin, kokeshi, daruma, tortoise). Match the thing's well-known outline; don't add protrusions for their own sake. Outline complexity does not separate Kellan's favourites from the rest.
+3. **Colour blocks are parts.** 2–3 big flat colours, one per part, plus accents under 5 cubes. At this size colour names more than outline does.
+4. **Creatures face the camera:** both eyes visible from the game view, the snout toward +z or +x.
+5. **The pose is the subject's signature behaviour** (the meerkat stands sentinel, the cat beckons). The action limb sits on the outline, never in front of the body in the same colour ("A hand in front of a chest would simply disappear", Lasseter).
+6. **Negative space as notches, not holes.** The iso view's depth fills holes in, and only 1% of 638 gallery objects show an enclosed hole. Use V notches between ears, gaps between legs and steps in the outline.
+7. **No tangents.** Where two parts meet, there is a step of at least 1 cube or a change in lightness, so they don't merge.
+8. **Big, medium, small** by cube count: about half or more, 25–40%, under 10%.
+9. **Baby schema for cute creatures:** head volume at least ⅔ of the body's, eyes in the lower half of the head, no mouth, stub legs. Waived when the identity is a body proportion (the meerkat's height). A baby keeps its key part full size and shrinks the rest (Luxo Jr.).
+10. **Shape family matches temperament:** ellipsoids for soft, boxes for steady, single-cube points for sly or alert.
+11. **Mirror the features, free the pose.** Fully symmetric front-on icons are fine: the Pegasus and the Kokeshi are.
+12. **A context base** (cloud, mound, nest, step) holds at most about ⅓ of the cubes and differs in lightness from the figure.
+13. **Darkest low, strongest contrast at the identity** (Valve's TF2: dark feet to light chest).
+14. **Reject on sight:** stray single cubes, a same-colour part in front of the body, look-alike colours, detail hidden from the game view, and motifs that need a caption to read.
+
 ### Form and colour
 
 - **Review from every side before calling it done**: all four iso corners, a
@@ -31,23 +50,24 @@ The game lights every level itself when it loads (`lit()` in `public/js/shapes.j
   hides mistakes.
 - **Paired features match**: eyes, ears, horns, wings, arms/legs, claws, fins,
   whiskers, cheeks, paired handles/straps — same colour, same size, mirrored.
-  "Deliberate asymmetry" means a readable character choice (a tilted hat, one
-  raised paw), never a one-sided eye, horn or wing. The user has flagged this
+  Asymmetry is optional (rule 11 above): when used it is a readable
+  character choice (a tilted hat, one raised paw), never a one-sided eye, horn or wing. The user has flagged this
   repeatedly (gnome, snail, pelican, dragon).
 
-- Design the silhouette in the iso view first; the identifying feature must
-  read at 1 voxel and from at least 3 of the 4 spin angles.
+- Design the silhouette in the game view first. Opposite corners show the same
+  outline mirrored, so check the outline at two corners; colours and face still
+  need all four.
 - Sizes: small things 5–6³; props/creatures 7³; tall 5×9×5–6×10×6; wide
   9×5×5. Prefer a clear long axis to a perfect cube.
-- Main mass + 1–3 protrusions that break the outline (handle, ears, tail,
-  spout, flag). No symmetric blobs.
-- At least one deliberate asymmetry (turned head, bent stem, one-sided handle).
+- Main mass plus the protrusions the thing is known by (handle, ears, tail,
+  spout, flag); a compact outline is fine when that is the thing's outline
+  (rule 2 above).
 - 2–4 colours with jobs: body, identity feature, accent, single dark voxel
   for eyes. Non-body colours ≤ ~25% of voxels.
 - Each colour forms one or two connected regions; no scattered single voxels
   except eyes.
-- Cute: head ≈ 50–60% of a creature's height, stubby/implied limbs, eyes =
-  two single dark voxels set wide and low, no mouth or one voxel.
+- Cute: see the baby schema (rule 9 above); eyes are two single dark voxels
+  set wide and low, with no mouth or a one-voxel one.
 - Identity colour is the most saturated; the body is a pastel that separates
   from the chapter background.
 - Hollow where it means something (lantern, house, shell, teapot, birdhouse):
@@ -57,9 +77,9 @@ The game lights every level itself when it loads (`lit()` in `public/js/shapes.j
   than 3, no edge- or corner-only connections.
 - Nonogram: varied row counts, some rows split into 2+ groups, ~25–55% fill,
   no solid rectangles, no floating voxels.
-- Negative space is a feature (gap under a table, donut hole, handle loop).
-- Squint test: a 64 px thumbnail should be nameable in 2 seconds; if not,
-  enlarge the identifying feature.
+- Negative space is a feature, as notches the game view can show (gap under a
+  table, between legs, a handle loop seen side on); enclosed holes mostly fill in.
+- Squint test: see rule 1 above (40 px, the QA sheet's panel).
 
 ## Mechanisms
 
@@ -68,7 +88,7 @@ The game lights every level itself when it loads (`lit()` in `public/js/shapes.j
    an angle"): check from the win-screen iso view and its 90° turns.
 3. Predictable big shapes, varied small ones (Stålberg): clean primitive mass,
    character in 1–3 small parts.
-4. Exaggerate the identifying feature (~20–30% of the width at 7³).
+4. Exaggerate the identifying feature; the favourites go well past 30% of the width (the pegasus's wings are the full 9).
 5. The surprise is the reward: the reveal colours show what the grey block
    hid (e.g. a hollow lantern's glowing core found by peeling).
 6. Flat, deliberate colour beats noise; let the light shade. Since 2026-10-23 the light is the game's dithered ramp (see Dithered light above), so the material colours are authored flat and the ramp turns them.
