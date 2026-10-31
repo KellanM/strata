@@ -1,4 +1,4 @@
-import { haptic, nativeApp as inStoreApp } from './native.js';
+import { haptic, nativeApp as inStoreApp, shareOut, gameCenter, signInGameCenter, submitDaily, challengeFriends, onDailyActivity } from './native.js';
 import * as THREE from 'three';
 import { makeOrbit } from './orbit.js';
 import { Puzzle, setClues, lineFits, STYLE_CIRCLE, STYLE_SQUARE } from './puzzle.js';
@@ -19,6 +19,7 @@ import { renderJournal, closeView, viewOpen } from './journal.js';
 import { rate as motionRate, after, mark, reveal, prepareReveal, devFlags, ease, DUR, BEAT } from './motion.js';
 import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
+import * as daily from './daily.js';   // the Daily Stone (docs/daily-stone.md)
 import * as perf from './perf.js';   // frame timing and strata.bench() for profiling (docs/profiling.md)
 perf.boot('js');   // cold-start milestones for the CLI (issue #7): js, first-frame, map-built, splash-lifted, title-interactive
 
@@ -82,6 +83,27 @@ const lessonsV2 = (() => {
 if (lessonsV2) document.documentElement.classList.add('lessons-v2');
 const LESSON_RUN = lessonsV2 ? TUTORIAL_V2 : TUTORIAL;                              // played in a row
 const LESSON_LIST = lessonsV2 ? [...TUTORIAL_V2, ...LESSON_EXTRAS] : TUTORIAL;       // Learn's long press
+// The Daily Stone (daily.js, docs/daily-stone.md). Today is the device's own
+// calendar date; on the web, ?today=YYYY-MM-DD (or strata.dev.today) moves the
+// clock for testing - never in the app.
+const devToday = !inStoreApp && (new URLSearchParams(location.search).get('today') || localStorage.getItem('strata.dev.today'));
+function todayN() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(devToday || localStorage.getItem('strata.dev.today') || '');
+  return daily.dayNumber(m && !inStoreApp ? new Date(+m[1], m[2] - 1, +m[3], 12) : new Date());
+}
+const dailyDate = (n) => new Date(`${daily.dateOf(n)}T12:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+// A shared link, ?d=N: that day's stone opens once the player is on the map
+// (a day ahead is allowed: the sender may be in a later time zone). A new
+// player first takes the short lessons below, then goes straight to it.
+let dailyLink = (() => {
+  const n = daily.linkedDay(location.search);
+  return n && n <= todayN() + 1 ? n : null;
+})();
+// the short run for a newcomer from a link: chiselling, a number, numbers on
+// top, the circle, the square, turning, peeling - seven of the twelve
+const SHORT_RUN = lessonsV2
+  ? TUTORIAL_V2.filter((l) => ['v2-heart', 'v2-chest', 'v2-candle', 'v2-cat', 'v2-crown', 'v2-throne', 'v2-geode'].includes(l.id))
+  : LESSON_RUN;
 let updateReady = false;      // a new version has taken over; reload at a calm moment
 let lastTouch = null;         // { i, point }: where the last pick met its cube
 let titleUp = true;           // the launch title is showing: the block is a backdrop, no HUD or handles
@@ -138,7 +160,7 @@ function saveProgress() {
   const all = readProgress();
   const on = (a) => a.reduce((o, v, i) => (v && o.push(i), o), []);
   all[g.shape.id] = { b: on(g.broken), p: on(g.painted), u: g.undo.map((u) => [u.kind === 'break' ? 1 : 0, u.i]),
-    m: g.mistakes, t: Math.round(((g.pausedAt ?? now()) - g.start) * 10) / 10, at: Date.now() };
+    m: g.mistakes, s: g.slips ?? [], t: Math.round(((g.pausedAt ?? now()) - g.start) * 10) / 10, at: Date.now() };
   const ids = Object.keys(all).sort((a, b) => all[b].at - all[a].at);
   for (const id of ids.slice(PROGRESS_KEEP)) delete all[id];
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(all)); } catch { /* storage full: the level just starts fresh */ }
@@ -160,6 +182,7 @@ function restoreProgress(g) {
   for (const i of saved.p) { g.painted[i] = 1; cubes.setState(i, 1, 0); }
   g.undo = (saved.u ?? []).filter(([, i]) => ok(i)).map(([k, i]) => ({ kind: k ? 'break' : 'paint', i }));
   g.mistakes = saved.m | 0;
+  g.slips = (saved.s ?? []).filter(ok);   // where the slips fell (the Daily Stone's share line)
   g.start = now() - (saved.t || 0);
   g.restored = true;
   mark(`level: ${g.shape.id} resumed (${saved.b.length} chiselled, ${saved.t}s)`);
@@ -224,9 +247,10 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   controls.update();
 
   // a lesson's object is a mystery until it's uncovered, as a level's is
-  $('#pz-name').textContent = entry.lesson ? '?' : solvedStore[shape.id] ? shape.name : entry.bonus ? '✦ Shrine' : `No. ${entry.number ?? '—'}`;
+  $('#pz-name').textContent = entry.lesson ? '?' : entry.daily ? `Daily #${entry.daily}` : solvedStore[shape.id] ? shape.name : entry.bonus ? '✦ Shrine' : `No. ${entry.number ?? '—'}`;
   $('#pz-meta').textContent = entry.lesson
     ? `lesson ${entry.lesson} of ${(tutorial?.list ?? LESSON_RUN).length}`
+    : entry.daily ? (entry.daily === todayN() ? 'today’s stone' : dailyDate(entry.daily))
     : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
   updateStrikes();
   show('#menu', false);
@@ -706,9 +730,11 @@ function win() {
   // drift is no object, and says only what it is (Kellan, 2026-10-29: honest words for the drift)
   const title = $('#win-title');
   const drift = g.shape.id.startsWith('random');
+  const dayStone = g.entry.daily;   // the Daily Stone: no object either, named by its day
   const letters = [...(drift ? `${d[0]}³` : g.shape.name)];
-  const story = !g.entry.lesson && !drift && g.shape.story;
-  title.innerHTML = `<span class="sub">${drift ? 'carved from the drift' : 'you uncovered'}</span><span class="name` + (letters.length > 9 ? ' long' : '') + '">' +
+  const story = !g.entry.lesson && !drift && !dayStone && g.shape.story;
+  const sub = drift ? 'carved from the drift' : dayStone ? (dayStone === todayN() ? 'today’s stone' : `the stone of ${dailyDate(dayStone)}`) : 'you uncovered';
+  title.innerHTML = `<span class="sub">${sub}</span><span class="name` + (letters.length > 9 ? ' long' : '') + '">' +
     letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
     (story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
   if (story) title.querySelector('.story').textContent = story;
@@ -718,6 +744,7 @@ function win() {
   after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = drift ? `${d[0]}³` : g.shape.name; } });
 
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
+  if (dayStone) { dailySolved(g); return; }
   // a run of flawless solves feeds the streak bonus
   const streak = g.mistakes === 0 ? (Number(localStorage.getItem('strata.streak')) || 0) + 1 : 0;
   localStorage.setItem('strata.streak', String(streak));
@@ -741,6 +768,95 @@ function win() {
   }, 1800);
 }
 
+// ---------------------------------------------------------------- the Daily Stone
+
+// docs/daily-stone.md. One stone a day from the drift's generator (daily.js),
+// entered by the map's Today ring once the lessons are done. Solved, its
+// result offers Share (a spoiler-free line) and, in the app with Game Center,
+// Challenge. The record and the days in a row stay on this device.
+function openDaily(n, el = null) {
+  const { shape } = daily.dailyStone(n);
+  const palette = daily.dailyPalette(n);
+  const start = () => { closeOffer(); startPuzzle({ shape, palette, number: null, daily: n }); };
+  mark(`daily: #${n}`);
+  if (el) diveInto(el, palette, start); else washInto(palette, start);
+}
+
+// a day counts if it's today, or yesterday's stone finished past midnight
+const countsToday = (n) => n === todayN() || n === todayN() - 1;
+
+function dailySolved(g) {
+  const n = g.entry.daily;
+  // the levels' run of flawless solves is theirs: the day's score is the same for everyone
+  const result = scoreFor(g.shape, { mistakes: g.mistakes, time: g.elapsed, streak: 0 });
+  const waves = daily.slipWaves(g.puzzle, g.slips);
+  if (countsToday(n)) {
+    const { first } = daily.recordDay(n, { seconds: g.elapsed, slips: g.mistakes, stars: result.stars, score: result.total, waves });
+    if (first && n === todayN()) submitDaily(result.total, n);   // Game Center, in the app (a no-op here otherwise)
+  }
+  // a second solve of the day shares the first: the day's result is the first one
+  g.share = dailyShare(n) ?? daily.shareText({ day: n, stars: result.stars, slips: g.mistakes, seconds: g.elapsed, waves });
+  ads.noteSolve();
+  setTimeout(() => { if (game === g) showResult(g, result, false); }, 1800);
+}
+
+// the share line of a day already solved here, or null
+function dailyShare(n) {
+  const days = daily.readDays(), rec = days[n];
+  if (!rec) return null;
+  return daily.shareText({ day: n, stars: rec.s, slips: rec.m, seconds: rec.t, waves: [...rec.w].map((c) => c === '1'), streak: daily.streakAt(days, n) });
+}
+
+async function shareDaily(text, labelEl = null) {
+  const how = await shareOut(text);
+  mark(`daily: share (${how})`);
+  if (how === 'shared' || how === 'copied') daily.noteShare();
+  if (how === 'failed') { openOffer({ text: 'Copy your line', small: text, onMap: $('#menu').classList.contains('show') }); return how; }
+  if (labelEl && how === 'copied') {
+    labelEl.textContent = 'Copied';
+    clearTimeout(shareDaily.timer);
+    shareDaily.timer = setTimeout(() => { labelEl.textContent = 'Share'; }, 2200);
+  }
+  return how;
+}
+
+// The map's Today ring (index.html #map-today): there once the lessons are
+// done; filled once today's stone is solved, until the next day
+function updateToday() {
+  const btn = $('#map-today');
+  const on = !!localStorage.getItem('strata.tutorial');
+  btn.hidden = !on;
+  menuEl.classList.toggle('daily-on', on);
+  if (!on) return;
+  const n = todayN(), done = !!daily.readDays()[n];
+  btn.classList.toggle('done', done);
+  btn.dataset.day = n;
+  btn.setAttribute('aria-label', done ? `Today’s stone, Daily ${n}: solved` : `Today’s stone, Daily ${n}`);
+}
+function tapToday(el) {
+  const n = todayN();
+  const days = daily.readDays(), rec = days[n];
+  if (!rec) { closeOffer(); openDaily(n, el); return; }
+  // done for today: its line, to share again, and the days in a row
+  const run = daily.streakAt(days, n);
+  const gems = '◆'.repeat(rec.s) + '◇'.repeat(3 - rec.s);
+  const slips = rec.m === 0 ? 'no slips' : rec.m === 1 ? '1 slip' : `${rec.m} slips`;
+  openOffer({
+    text: `Daily #${n} · done for today`,
+    small: `${gems} · ${slips} · ${fmt(rec.t)}${run >= 2 ? ` · ${run} days in a row` : ''}`,
+    yes: 'Share', onYes: () => shareDaily(dailyShare(n)), onMap: true,
+  });
+}
+// a link's day, once the player is on the map with the lessons done
+function openLinkedDaily() {
+  const n = dailyLink;
+  if (!n || !localStorage.getItem('strata.tutorial')) return false;
+  dailyLink = null;
+  if (n === todayN() && daily.readDays()[n]) { tapToday($('#map-today')); return true; }
+  openDaily(n, $('#map-today').hidden ? null : $('#map-today'));
+  return true;
+}
+
 // ---------------------------------------------------------------- tutorial
 
 // docs/tutorial-study.md. A lesson's hints come one at a time, each held until
@@ -760,13 +876,15 @@ const LESSON_PAYOFF = 3.6, LESSON_TAP_AFTER = 1.8;
 let lessonNext = null;    // while a solved lesson is on show: move on now (if it's been long enough)
 
 // single: one lesson replayed from the Learn stone's list; solved, it goes back to the map
-function startTutorial(step = 0, { single = false } = {}) {
-  const list = single ? LESSON_LIST : LESSON_RUN;
-  tutorial = { step, hint: 0, open: !list[step].hints[0]?.wait, single, list };
+// short: the shorter run, for a newcomer from a Daily Stone link (SHORT_RUN), which ends on that stone
+function startTutorial(step = 0, { single = false, short = false } = {}) {
+  const list = single ? LESSON_LIST : short ? SHORT_RUN : LESSON_RUN;
+  tutorial = { step, hint: 0, open: !list[step].hints[0]?.wait, single, short, list };
   const lesson = list[step];
   const base = PALETTES.find((p) => p.name === lesson.sky) ?? PALETTES[0];
   // the rebuilt run is one chapter's walk (Frost Peaks): its day moves on stone by stone, as a level's does
-  const palette = lessonsV2 && step < LESSON_RUN.length ? variant(base, step / (LESSON_RUN.length - 1), step + 1) : base;
+  const run = single ? LESSON_RUN : list;
+  const palette = lessonsV2 && step < run.length ? variant(base, step / (run.length - 1), step + 1) : base;
   startPuzzle({ shape: lesson, palette, number: null, lesson: step + 1 });
 }
 
@@ -832,12 +950,12 @@ function tutorialEvent(kind) {
     tutorial.hint = tutorial.list[tutorial.step].hints.length;   // past the last hint
     tutorial.open = true;
     renderCoach();
-    const g = game, step = tutorial.step, single = tutorial.single, list = tutorial.list, t0 = now();
+    const g = game, step = tutorial.step, single = tutorial.single, short = tutorial.short, list = tutorial.list, t0 = now();
     const go = () => {
       if (game !== g || lessonNext !== next) return;
       lessonNext = null;
       if (single) { tutorial = null; renderCoach(); openMenu(); }
-      else if (step + 1 < list.length) startTutorial(step + 1);
+      else if (step + 1 < list.length) startTutorial(step + 1, { short });
       else finishTutorial();
     };
     const next = () => { if (now() - t0 >= LESSON_TAP_AFTER) go(); };
@@ -865,6 +983,9 @@ function finishTutorial() {
   localStorage.setItem('strata.tutorial', '1');
   tutorial = null;
   renderCoach();
+  signInGameCenter();   // the app with Game Center: now, not over the lessons (a no-op otherwise)
+  // from a Daily Stone link: straight on to that day's stone
+  if (dailyLink) { const n = dailyLink; dailyLink = null; openDaily(n); return; }
   openMenu();
 }
 
@@ -1508,6 +1629,9 @@ $('#win-menu').addEventListener('click', () => { clearResult(); show('#win', fal
 $('#act-map').addEventListener('click', () => { clearResult(); $('#actions').classList.remove('show'); closeWorld(game, resultToMap); });
 $('#act-replay').addEventListener('click', () => { clearResult(); if (game) startPuzzle(game.entry); });
 $('#act-next').addEventListener('click', goNext);
+$('#act-share').addEventListener('click', () => { if (game?.share) shareDaily(game.share, $('#act-share .lb')); });
+$('#act-challenge').addEventListener('click', () => challengeFriends());
+$('#map-today').addEventListener('click', (e) => tapToday(e.currentTarget));
 $('#win-next').addEventListener('click', () => { show('#win', false); goNext(); });
 $('#map-close').addEventListener('click', () => { if (game && !game.solved) closeMenu(); });
 window.addEventListener('keydown', (e) => {
@@ -1560,6 +1684,10 @@ function showResult(g, result, isBest) {
   const at = (ms, fn) => resultTimers.push(setTimeout(() => { if (game === g) fn(); }, ms));
   const actions = $('#actions');
   actions.classList.remove('show');
+  // the Daily Stone's result: Map, Share and (in the app with Game Center) Challenge
+  actions.classList.toggle('daily', !!g.entry.daily);
+  actions.classList.toggle('gc', !!g.entry.daily && gameCenter && g.entry.daily === todayN());
+  $('#act-share .lb').textContent = 'Share';
 
   // the score carves itself into the plinth, climbing
   let anim = null, shown = 0;
@@ -1615,7 +1743,9 @@ let mapRevealed = false;      // the stones cascade in the first time the map is
 function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
-  $('#map-progress').textContent = done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
+  $('#map-progress').textContent = dailyLink && !localStorage.getItem('strata.tutorial') ? 'the day’s stone waits'
+    : done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
+  updateToday();
   // the corner ✕ goes back to a level left part-way; a solved one (or the title's logo) has nothing to go back to
   $('#menu').classList.toggle('has-game', !!game && game.shape.id !== 'logo' && !game.solved);
   stopReveal();
@@ -1623,13 +1753,14 @@ function renderMenu(scroll = true, celebrate = false, animate = scroll) {
     entries,
     solved: solvedStore,
     learned: !!localStorage.getItem('strata.tutorial'),
-    lessons: LESSON_RUN.length,
+    lessons: dailyLink ? SHORT_RUN.length : LESSON_RUN.length,
+    lessonsFirst: !!dailyLink,   // a Daily Stone link waits for them
     drift: DRIFT_SIZES,
     driftPalette: PALETTES.find((p) => p.name === 'Night') ?? PALETTES[PALETTES.length - 1],
     fmt,
     scroll,
     celebrate,
-    onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0)),
+    onLearn: (el) => diveInto(el, PALETTES[0], () => startTutorial(0, { short: !!dailyLink && !localStorage.getItem('strata.tutorial') })),
     onLearnList: (el) => openLessons(el),
     onDrift: (n, el) => diveInto(el, PALETTES.find((p) => p.name === 'Night') ?? PALETTES[0], () => startRandom(n)),
     onPlay: (entry, el) => { closeOffer(); diveInto(el, entry.palette, () => startPuzzle(entry)); },
@@ -2054,7 +2185,7 @@ offerEl.querySelector('[data-yes]').addEventListener('click', () => { const run 
 // an ad takes back the latest one, so a stone finished clean still earns all
 // three stars. The cube stays marked (it does belong); only the slip goes.
 // With Remove Ads it is taken back at once. A day's cap (ads.js CONFIG.rewind).
-const rewindShown = () => !!game && !game.entry.lesson && game.shape.id !== 'logo' && !titleUp && !game.solved && game.mistakes > 0;
+const rewindShown = () => !!game && !game.entry.lesson && !game.entry.daily && game.shape.id !== 'logo' && !titleUp && !game.solved && game.mistakes > 0;
 function renderRewind() {
   const on = rewindShown();
   if (on && rewindEl.hidden && !reduceMotion) { rewindEl.classList.remove('arrive'); void rewindEl.offsetWidth; rewindEl.classList.add('arrive'); }
@@ -2440,7 +2571,7 @@ function ringInk() {
   // set on the rings themselves, and only when it changes: set on #menu, every frame, it restyled
   // the whole map - some 3,700 elements - and cost most of a frame on a phone (the fling audit)
   const head = ink(top + 60), foot = ink(top + H - 60);
-  if (head !== ringInk.head) { ringInk.head = head; $('#map-help').style.setProperty('--ink-head', head); $('#map-journal').style.setProperty('--ink-head', head); }
+  if (head !== ringInk.head) { ringInk.head = head; $('#map-help').style.setProperty('--ink-head', head); $('#map-journal').style.setProperty('--ink-head', head); $('#map-today').style.setProperty('--ink-head', head); }
   if (foot !== ringInk.foot) { ringInk.foot = foot; $('#map-close').style.setProperty('--ink-foot', foot); }
   // (what shows where a fling outruns the painting is the sea's own canvas: mapworld.js seaStrip)
   const atFoot = top > full - 2 * H;
@@ -2646,6 +2777,8 @@ function finishPull() {
     titleUp = false;
     after(1.5, () => fl.finish());   // the sky finished while the map rests, so a pull back up finds it written (no stall on that touch)
     mapSheet().style.cssText = $('#menu .map-backdrop').style.cssText = ''; $('#menu').style.transition = ''; $('#menu').classList.remove('pulling'); show('#menu', true);
+    // a Daily Stone link: on into that day's stone, from the Today ring
+    if (dailyLink) after(0.35, openLinkedDaily);
   };
   // the last of the descent doesn't hold the player: the title lets touches
   // through to the map, and the first one lands it at once (a stone's tap or a
@@ -2654,6 +2787,7 @@ function finishPull() {
   // only the launch's descent travels on to the current stone, and from the touch,
   // as one motion with the descent (Kellan, 2026-10-29); a player who has been up to
   // the title and comes back down lands at the map's head, where they left it
+  if (dailyLink && localStorage.getItem('strata.tutorial')) glidedThisLaunch = true;   // no swoop: a link goes to its stone
   if (!glidedThisLaunch) { glidedThisLaunch = true; glideToStone(() => { if (pull.gliding) { stopGlide(); setScroll(H); landed(); } }); }
   scrollTo(H, seconds, ease.descent, landed, () => {
     if (pull.k < HAND_OFF * H || titleScreen.style.pointerEvents === 'none') return;
@@ -3067,7 +3201,20 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
 }
 
 // console hook for testing: strata.game, strata.act(i, 'break' | 'paint')
-window.strata = { ads, poke, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, openMenu, bench: (o) => perf.bench(window.strata, o) };
+// The Daily Stone turns over at midnight: back in the app (or the tab), the
+// Today ring is today's again
+document.addEventListener('visibilitychange', () => { if (!document.hidden && menuEl.classList.contains('show')) updateToday(); });
+// Game Center (app only): signed in once the lessons are done, after the
+// launch has settled; a Challenge that asks for today's stone opens it
+if (gameCenter && localStorage.getItem('strata.tutorial')) setTimeout(signInGameCenter, 4000);
+onDailyActivity(() => {
+  if (!localStorage.getItem('strata.tutorial')) return;
+  const n = todayN();
+  if (game?.entry.daily === n && !game.solved) return;
+  dailyLink = n;
+  if (!titleUp) openLinkedDaily();   // (on the title, it waits for the map: finishPull)
+});
+window.strata = { ads, poke, daily, todayN, openDaily, updateToday, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, openMenu, bench: (o) => perf.bench(window.strata, o) };
 if (new URLSearchParams(location.search).has('perf') || localStorage.getItem('strata.perf') === '1') perf.showHud();
 // A profiling build (STRATA_AUTOBENCH=n npm run build:app, docs/profiling.md): past the
 // title on its own, then the benchmark n times, each table logged as one line the Mac
