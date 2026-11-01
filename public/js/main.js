@@ -21,6 +21,7 @@ import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
 import * as daily from './daily.js';   // the Daily Stone (docs/daily-stone.md)
 import * as perf from './perf.js';   // frame timing and strata.bench() for profiling (docs/profiling.md)
+import { t as tr, objName, storyOf, chapterName, chapterLine, hintStr, locale, lang, LANGS, LANGS_LIVE } from './i18n.js';   // the words, in the player's language (English unless another is live)
 perf.boot('js');   // cold-start milestones for the CLI (issue #7): js, first-frame, map-built, splash-lifted, title-interactive
 
 // Palette hexes are display colours; pass them through untouched.
@@ -91,7 +92,7 @@ function todayN() {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(devToday || localStorage.getItem('strata.dev.today') || '');
   return daily.dayNumber(m && !inStoreApp ? new Date(+m[1], m[2] - 1, +m[3], 12) : new Date());
 }
-const dailyDate = (n) => new Date(`${daily.dateOf(n)}T12:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+const dailyDate = (n) => new Date(`${daily.dateOf(n)}T12:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 // A shared link, ?d=N: that day's stone opens once the player is on the map
 // (a day ahead is allowed: the sender may be in a later time zone). A new
 // player first takes the short lessons below, then goes straight to it.
@@ -247,11 +248,11 @@ function startPuzzle(entry, { quiet = false, assemble = false, introSpeed = 1 } 
   controls.update();
 
   // a lesson's object is a mystery until it's uncovered, as a level's is
-  $('#pz-name').textContent = entry.lesson ? '?' : entry.daily ? `Daily #${entry.daily}` : solvedStore[shape.id] ? shape.name : entry.bonus ? '✦ Shrine' : `No. ${entry.number ?? '—'}`;
+  $('#pz-name').textContent = entry.lesson ? '?' : entry.daily ? tr('hud.daily', { n: entry.daily }) : solvedStore[shape.id] ? objName(shape) : entry.bonus ? tr('hud.shrine') : tr('hud.number', { n: entry.number ?? '—' });
   $('#pz-meta').textContent = entry.lesson
-    ? `lesson ${entry.lesson} of ${(tutorial?.list ?? LESSON_RUN).length}`
-    : entry.daily ? (entry.daily === todayN() ? 'today’s stone' : dailyDate(entry.daily))
-    : shape.chapter ?? (shape.id.startsWith('random') ? 'Drift' : palette.name);
+    ? tr('hud.lesson', { n: entry.lesson, total: (tutorial?.list ?? LESSON_RUN).length })
+    : entry.daily ? (entry.daily === todayN() ? tr('hud.today') : dailyDate(entry.daily))
+    : chapterName(shape.chapter) ?? (shape.id.startsWith('random') ? tr('hud.drift') : palette.name);
   updateStrikes();
   show('#menu', false);
   show('#win', false);
@@ -307,8 +308,8 @@ function maybeChapterCard(entry, holdMs = 0) {
     localStorage.setItem('strata.chapters', JSON.stringify(seen));
     chapterCard.classList.remove('shrine');
     chapterCard.querySelector('.numeral').textContent = ch.numeral;
-    chapterCard.querySelector('.cname').textContent = ch.name;
-    chapterCard.querySelector('.cline').textContent = ch.line;
+    chapterCard.querySelector('.cname').textContent = chapterName(ch.name);
+    chapterCard.querySelector('.cline').textContent = chapterLine(ch);
     chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
     chapterCard.classList.add('show');
     clearTimeout(chapterCardTimer);
@@ -321,9 +322,9 @@ function shrineCard(entry, holdMs = 0) {
   setTimeout(() => {
     if (game?.entry !== entry || $('#menu').classList.contains('show')) return;
     chapterCard.classList.add('shrine');
-    chapterCard.querySelector('.numeral').textContent = '✦ The Shrine of ✦';
-    chapterCard.querySelector('.cname').textContent = ch?.name ?? entry.shape.chapter;
-    chapterCard.querySelector('.cline').textContent = 'Kept for those who earned its light.';
+    chapterCard.querySelector('.numeral').textContent = tr('shrine.numeral');
+    chapterCard.querySelector('.cname').textContent = chapterName(ch?.name ?? entry.shape.chapter);
+    chapterCard.querySelector('.cline').textContent = tr('shrine.line');
     chapterCard.classList.remove('show'); void chapterCard.offsetWidth;
     chapterCard.classList.add('show');
     mark('shrine: card');
@@ -731,9 +732,9 @@ function win() {
   const title = $('#win-title');
   const drift = g.shape.id.startsWith('random');
   const dayStone = g.entry.daily;   // the Daily Stone: no object either, named by its day
-  const letters = [...(drift ? `${d[0]}³` : g.shape.name)];
-  const story = !g.entry.lesson && !drift && !dayStone && g.shape.story;
-  const sub = drift ? 'carved from the drift' : dayStone ? (dayStone === todayN() ? 'today’s stone' : `the stone of ${dailyDate(dayStone)}`) : 'you uncovered';
+  const letters = [...(drift ? `${d[0]}³` : objName(g.shape))];
+  const story = !g.entry.lesson && !drift && !dayStone && storyOf(g.shape);
+  const sub = drift ? tr('win.drift') : dayStone ? (dayStone === todayN() ? tr('hud.today') : tr('win.dayOf', { date: dailyDate(dayStone) })) : tr('win.uncovered');
   title.innerHTML = `<span class="sub">${sub}</span><span class="name` + (letters.length > 9 ? ' long' : '') + '">' +
     letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
     (story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
@@ -741,7 +742,7 @@ function win() {
   title.classList.remove('show'); void title.offsetWidth;
   // (the bar above says "No. 31" till now: the answer is the object's to give, not the type's first -
   // it had changed to the name at the last chisel, over the still-white block)
-  after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = drift ? `${d[0]}³` : g.shape.name; } });
+  after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = drift ? `${d[0]}³` : objName(g.shape); } });
 
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
   if (dayStone) { dailySolved(g); return; }
@@ -811,11 +812,11 @@ async function shareDaily(text, labelEl = null) {
   const how = await shareOut(text);
   mark(`daily: share (${how})`);
   if (how === 'shared' || how === 'copied') daily.noteShare();
-  if (how === 'failed') { openOffer({ text: 'Copy your line', small: text, onMap: $('#menu').classList.contains('show') }); return how; }
+  if (how === 'failed') { openOffer({ text: tr('share.copy'), small: text, onMap: $('#menu').classList.contains('show') }); return how; }
   if (labelEl && how === 'copied') {
-    labelEl.textContent = 'Copied';
+    labelEl.textContent = tr('share.copied');
     clearTimeout(shareDaily.timer);
-    shareDaily.timer = setTimeout(() => { labelEl.textContent = 'Share'; }, 2200);
+    shareDaily.timer = setTimeout(() => { labelEl.textContent = tr('act.share'); }, 2200);
   }
   return how;
 }
@@ -831,7 +832,7 @@ function updateToday() {
   const n = todayN(), done = !!daily.readDays()[n];
   btn.classList.toggle('done', done);
   btn.dataset.day = n;
-  btn.setAttribute('aria-label', done ? `Today’s stone, Daily ${n}: solved` : `Today’s stone, Daily ${n}`);
+  btn.setAttribute('aria-label', tr(done ? 'today.ariaDone' : 'today.aria', { n }));
 }
 function tapToday(el) {
   const n = todayN();
@@ -840,11 +841,11 @@ function tapToday(el) {
   // done for today: its line, to share again, and the days in a row
   const run = daily.streakAt(days, n);
   const gems = '◆'.repeat(rec.s) + '◇'.repeat(3 - rec.s);
-  const slips = rec.m === 0 ? 'no slips' : rec.m === 1 ? '1 slip' : `${rec.m} slips`;
+  const slips = tr('slips', { n: rec.m });
   openOffer({
-    text: `Daily #${n} · done for today`,
-    small: `${gems} · ${slips} · ${fmt(rec.t)}${run >= 2 ? ` · ${run} days in a row` : ''}`,
-    yes: 'Share', onYes: () => shareDaily(dailyShare(n)), onMap: true,
+    text: tr('today.done', { n }),
+    small: `${gems} · ${slips} · ${fmt(rec.t)}${run >= 2 ? ` · ${tr('days.run', { n: run })}` : ''}`,
+    yes: tr('act.share'), onYes: () => shareDaily(dailyShare(n)), onMap: true,
   });
 }
 // a link's day, once the player is on the map with the lessons done
@@ -895,7 +896,7 @@ function resetCoaching(entry, quiet) {
   coachCard = null;
   // the first real stone: the rule newcomers most often misread, gone at the first chisel
   if (!quiet && !entry.lesson && entry.number === 1 && !solvedStore[entry.shape.id]) {
-    coachCard = { text: 'Numbers now sit on three faces. Each counts the object’s cubes in its row: across, down or back.', until: 'break' };
+    coachCard = { text: tr('coach.first'), until: 'break' };
   }
   // else, once ever, a word the first time a mark the lessons taught turns up
   // in a level (docs/help-access-study.md): the notation needs a legend where
@@ -912,23 +913,23 @@ function resetCoaching(entry, quiet) {
 }
 const REMINDERS = [
   { key: 'circle', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_CIRCLE),
-    text: lessonsV2 ? 'A circled number: two pieces with a gap between, like the cat’s two ears.' : 'A circled number: that row’s cubes are in two groups, with a gap between.' },
+    text: tr(lessonsV2 ? 'remind.circle' : 'remind.circle.old') },
   { key: 'square', test: (p) => p.lines.some((l) => !l.hidden && l.style === STYLE_SQUARE),
-    text: lessonsV2 ? 'A squared number: three pieces or more, like the points of the crown.' : 'A square: that row’s cubes are in three groups or more.' },
+    text: tr(lessonsV2 ? 'remind.square' : 'remind.square.old') },
   { key: 'blank', test: (p) => [0, 1, 2].some((ax) => { const ls = p.lines.filter((l) => l.axis === ax); return ls.length && ls.every((l) => l.hidden); }),
-    text: 'One face shows no numbers at all. The other two are enough.' },
+    text: tr('remind.blank') },
   // the rebuilt run leaves these to the levels: said once, where first they help
   ...(lessonsV2 ? [
     { key: 'peel', test: (p) => p.dims.every((d) => d >= 3),
-      text: 'Some cubes are inside. Slide a diamond along its line to lift layers off and see in.' },
+      text: tr('remind.peel') },
     { key: 'mark', test: (p) => p.lines.some((l) => !l.hidden && l.count >= 3 && l.count === l.cells.length),
-      text: 'Sure a cube stays? Hold it to mark it, and it can’t be chiselled by mistake.' },
+      text: tr('remind.mark') },
   ] : []),
 ];
 
 // a mouse has no hold: its other tool is a right-click, so a hint may say so
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
-const hintText = (h) => (finePointer && h?.mouse) || h?.text;
+const hintText = (h) => (finePointer && hintStr(h, 'mouse')) || hintStr(h, 'text');
 
 function currentHint() {
   return tutorial && game?.entry.lesson ? tutorial.list[tutorial.step].hints[tutorial.hint] : null;
@@ -965,7 +966,7 @@ function tutorialEvent(kind) {
   }
   // a slip is the moment a held-back hint is worth reading; a hint may answer it
   // kindly, saying why that cube stays, until the next chisel lands
-  if (kind === 'mistake' && h.mistake) { tutorial.open = true; tutorial.reply = h.mistake; renderCoach(); }
+  if (kind === 'mistake' && h.mistake) { tutorial.open = true; tutorial.reply = hintStr(h, 'mistake'); renderCoach(); }
   else if (kind === 'mistake' && !tutorial.open && h.until !== 'mistake') { tutorial.open = true; renderCoach(); }
   if (kind === 'break' && tutorial.reply) { tutorial.reply = null; renderCoach(); }
   if (h.until !== kind) return;
@@ -1421,7 +1422,7 @@ function openPause() {
   game.pausedAt = now();
   saveProgress();
   restartBtn.classList.remove('confirm');
-  restartLabel.textContent = 'Retry';
+  restartLabel.textContent = tr('pause.retry');
   // where you are, as the HUD says it, without the clock
   pauseEl.querySelector('.pause-chapter').textContent = $('#pz-meta').textContent;
   pauseEl.querySelector('.pause-name').textContent = $('#pz-name').textContent;
@@ -1444,7 +1445,7 @@ function restartLevel() {
   // a level with chisels in it asks once more: "Start over?"
   if (begun(g) && !restartBtn.classList.contains('confirm')) {
     restartBtn.classList.add('confirm');
-    restartLabel.textContent = 'Start over?';
+    restartLabel.textContent = tr('pause.startOver');
     return;
   }
   closePause();
@@ -1490,7 +1491,7 @@ function openLessons(fromEl) {
   let el = $('#lessons');
   if (!el) {
     el = document.createElement('section');
-    el.id = 'lessons'; el.className = 'overlay'; el.setAttribute('aria-label', 'Lessons');
+    el.id = 'lessons'; el.className = 'overlay'; el.setAttribute('aria-label', tr('lessons.title'));
     document.body.appendChild(el);
     el.addEventListener('click', (e) => {
       const b = e.target.closest('[data-lesson]');
@@ -1498,9 +1499,9 @@ function openLessons(fromEl) {
       else if (e.target.closest('[data-close]') || e.target === el) show('#lessons', false);
     });
   }
-  el.innerHTML = `<div class="panel narrow lessons-panel"><h2>Lessons</h2><ol class="lesson-list">${LESSON_LIST.map((l, k) =>
-    `<li><button data-lesson="${k}"><span class="n">${String(k + 1).padStart(2, '0')}</span><span class="nm">${l.name}</span></button></li>`).join('')}</ol>
-    <button class="primary" data-close>Close</button></div>`;
+  el.innerHTML = `<div class="panel narrow lessons-panel"><h2>${tr('lessons.title')}</h2><ol class="lesson-list">${LESSON_LIST.map((l, k) =>
+    `<li><button data-lesson="${k}"><span class="n">${String(k + 1).padStart(2, '0')}</span><span class="nm">${objName(l)}</span></button></li>`).join('')}</ol>
+    <button class="primary" data-close>${tr('lessons.close')}</button></div>`;
   show('#lessons', true);
   buzz(12);
 }
@@ -1608,10 +1609,11 @@ function closeWorld(g, then) {
   el.innerHTML = '<div class="ring" aria-hidden="true">' + mine.map((e, k) => {
     const a = -Math.PI / 2 + (2 * Math.PI * k) / n;
     return `<img alt="" style="--x:${(Math.cos(a) * rx).toFixed(0)}px; --y:${(Math.sin(a) * ry).toFixed(0)}px; --k:${k}">`;
-  }).join('') + '</div><p class="numeral"></p><h2 class="cname"></h2><p class="cline"></p><p class="all">every stone opened</p>';
+  }).join('') + '</div><p class="numeral"></p><h2 class="cname"></h2><p class="cline"></p><p class="all"></p>';
   el.querySelector('.numeral').textContent = ch.numeral;
-  el.querySelector('.cname').textContent = ch.name;
-  el.querySelector('.cline').textContent = ch.line;
+  el.querySelector('.cname').textContent = chapterName(ch.name);
+  el.querySelector('.cline').textContent = chapterLine(ch);
+  el.querySelector('.all').textContent = tr('world.all');
   el.style.setProperty('--n', n);
   const imgs = el.querySelectorAll('.ring img');
   mine.forEach((e, k) => Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { imgs[k].src = url; }));
@@ -1692,7 +1694,7 @@ function startRandom(n) {
 
 function show(sel, on) { $(sel).classList.toggle('show', on); }
 
-function showWin(name, stats, nextLabel, sub = 'you uncovered') {
+function showWin(name, stats, nextLabel, sub = tr('win.uncovered')) {
   clearResult();
   $('#win').classList.remove('result-mode');
   $('#win .plain .sub').textContent = sub;
@@ -1719,7 +1721,7 @@ function showResult(g, result, isBest) {
   // the Daily Stone's result: Map, Share and (in the app with Game Center) Challenge
   actions.classList.toggle('daily', !!g.entry.daily);
   actions.classList.toggle('gc', !!g.entry.daily && gameCenter && g.entry.daily === todayN());
-  $('#act-share .lb').textContent = 'Share';
+  $('#act-share .lb').textContent = tr('act.share');
 
   // the score carves itself into the plinth, climbing
   let anim = null, shown = 0;
@@ -1775,8 +1777,8 @@ let mapRevealed = false;      // the stones cascade in the first time the map is
 function renderMenu(scroll = true, celebrate = false, animate = scroll) {
   const entries = puzzleList();
   const done = entries.filter((e) => solvedStore[e.shape.id]).length;
-  $('#map-progress').textContent = dailyLink && !localStorage.getItem('strata.tutorial') ? 'the day’s stone waits'
-    : done ? `${done} of ${entries.length} uncovered` : `${entries.length} stones to uncover`;
+  $('#map-progress').textContent = dailyLink && !localStorage.getItem('strata.tutorial') ? tr('map.waits')
+    : done ? tr('map.progress', { done, total: entries.length }) : tr('map.toUncover', { n: entries.length });
   updateToday();
   // the corner ✕ goes back to a level left part-way; a solved one (or the title's logo) has nothing to go back to
   $('#menu').classList.toggle('has-game', !!game && game.shape.id !== 'logo' && !game.solved);
@@ -1940,7 +1942,7 @@ window.addEventListener('resize', relayout);
 window.addEventListener('orientationchange', relayout);
 window.visualViewport?.addEventListener('resize', relayout);
 
-function loading(on) { $('#loading').textContent = on ? 'carving' : ''; }
+function loading(on) { $('#loading').textContent = on ? tr('loading') : ''; }
 
 // ---------------------------------------------------------------- render
 
@@ -2247,7 +2249,7 @@ function breath(palette) {
   el.id = 'breath';
   el.setAttribute('role', 'status');
   el.style.background = `linear-gradient(180deg, ${hexOf(palette.skyTop)}, ${hexOf(palette.skyBottom)})`;
-  el.innerHTML = '<p class="pause">a short ad,<br>then the map</p><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>';
+  el.innerHTML = `<p class="pause">${tr('ad.breath.html')}</p>` + '<div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>';
   document.body.appendChild(el);
   mark('ads: breath');
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
@@ -2283,7 +2285,7 @@ function renderRewind() {
   const on = rewindShown();
   if (on && rewindEl.hidden && !reduceMotion) { rewindEl.classList.remove('arrive'); void rewindEl.offsetWidth; rewindEl.classList.add('arrive'); }
   rewindEl.hidden = !on;
-  if (on) rewindEl.setAttribute('aria-label', `Take back your last slip (${game.mistakes} so far)`);
+  if (on) rewindEl.setAttribute('aria-label', tr('hud.rewindCount', { n: game.mistakes }));
 }
 function takeBackSlip(g) {
   if (game !== g || g.solved || g.mistakes <= 0) return;
@@ -2309,9 +2311,9 @@ rewindEl.addEventListener('click', () => {
   const g = game, can = ads.rewindOffer();
   if (can && ads.adsRemoved()) { ads.noteRewind(); takeBackSlip(g); return; }
   openOffer({
-    text: 'Take back your last slip?',
-    small: can ? 'a clean stone keeps all three ◆' : 'that’s all for today',
-    yes: can ? 'Watch an ad' : null,
+    text: tr('rewind.ask'),
+    small: tr(can ? 'rewind.clean' : 'rewind.cap'),
+    yes: can ? tr('rewind.watch') : null,
     onYes: async () => {
       const ok = await ads.showRewarded('rewind');
       if (!ok) return;
@@ -2328,9 +2330,9 @@ function offerShrine(s) {
   if (!ads.shrineAdEligible({ ...s, opened: ads.openedShrines().has(id) })) return false;
   const free = ads.adsRemoved() || !ads.enabled();
   openOffer({
-    text: `This shrine opens at ${s.need} gems.`,
-    small: `${s.stars} gathered so far`,
-    yes: free ? 'Open it' : 'Watch to open',
+    text: tr('shrine.opensAt', { n: s.need }),
+    small: tr('shrine.gathered', { n: s.stars }),
+    yes: tr(free ? 'shrine.openIt' : 'shrine.watch'),
     onMap: true,
     onYes: async () => {
       if (!(await ads.showRewarded('shrine'))) return;
@@ -2354,8 +2356,8 @@ $('#remove-ads').addEventListener('click', async () => {
 $('#restore-ads').addEventListener('click', async (e) => {
   const b = e.currentTarget;
   if (await ads.restorePurchases()) { renderSupport(); return; }
-  b.textContent = 'nothing to restore';
-  setTimeout(() => { b.textContent = 'restore purchase'; }, 1800);
+  b.textContent = tr('ads.nothing');
+  setTimeout(() => { b.textContent = tr('ads.restore'); }, 1800);
 });
 
 function renderDevAds() {
@@ -2407,6 +2409,15 @@ $('#dev-unlock').addEventListener('click', () => {
   if ($('#menu').classList.contains('show')) renderMenu(false);
 });
 $('#dev-ads').addEventListener('click', () => { ads.setEnabled(!ads.enabled()); renderDevAds(); });
+// the language: every table in turn, reviewed or not, then the player's own again (strata.dev.lang;
+// public/js/i18n.js). A table not yet live is marked so
+$('#dev-lang-state').textContent = lang + (LANGS_LIVE.includes(lang) ? '' : ' (not live)');
+$('#dev-lang').addEventListener('click', () => {
+  const order = [...LANGS, ''], cur = localStorage.getItem('strata.dev.lang') || '';
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  if (next) localStorage.setItem('strata.dev.lang', next); else localStorage.removeItem('strata.dev.lang');
+  location.href = location.pathname;   // (without a ?lang= that would choose again)
+});
 $('#dev-splashtest').addEventListener('click', () => {
   if (localStorage.getItem('strata.splashTest') === 'shards') localStorage.removeItem('strata.splashTest'); else localStorage.setItem('strata.splashTest', 'shards');
   renderDevAds();
@@ -2428,8 +2439,8 @@ $('#dev-ads-reset').addEventListener('click', () => {
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
 $('#dev-reset').addEventListener('click', () => {
   if (!confirm('Reset all progress? Stars, scores and your finds will be cleared.')) return;
-  // (the settings stay, and Larger text's count)
-  const keep = (k) => ['strata.sfx', 'strata.music', 'strata.haptics', 'strata.largeText'].includes(k) || k.startsWith('strata.a11y.');
+  // (the settings stay, and Larger text's count, and the language)
+  const keep = (k) => ['strata.sfx', 'strata.music', 'strata.haptics', 'strata.largeText', 'strata.lang', 'strata.dev.lang'].includes(k) || k.startsWith('strata.a11y.');
   for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && !keep(k)) localStorage.removeItem(k);
   location.reload();
 });
@@ -3267,7 +3278,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
     setInterval(check, 30 * 60 * 1000);
     $('#version').addEventListener('click', () => {
       if (devPress.opened) { devPress.opened = false; return; }   // that was a hold, not a tap
-      $('#version').textContent = 'checking…';
+      $('#version').textContent = tr('version.checking');
       updateReady = true;                       // the user asked: apply as soon as it lands
       reg.update().then(() => {
         if (!reg.installing && !reg.waiting) setTimeout(() => location.reload(), 300);
@@ -3277,7 +3288,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !nativeApp
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!hadController) return;                 // first install, nothing to refresh
     updateReady = true;
-    if ($('#version').textContent === 'checking…') location.reload(); else applyUpdate();
+    if ($('#version').textContent === tr('version.checking')) location.reload(); else applyUpdate();
   });
 }
 

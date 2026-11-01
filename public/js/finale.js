@@ -4,6 +4,7 @@
 // earned gem eases up, bounces softly at the top and settles, with its own
 // slow starburst of light behind it. Empty slots are just outlines.
 import * as THREE from 'three';
+import { t as tr, cjk } from './i18n.js';
 
 const vertexShader = /* glsl */ `
   varying vec3 vWorld;
@@ -193,7 +194,7 @@ export class Finale {
     const light = parseInt((this.ink ?? '#000000').slice(1, 3), 16) > 128;
     g.shadowColor = light ? 'rgba(20, 16, 40, 0.6)' : 'rgba(255, 252, 245, 0.6)';
     g.shadowBlur = 16;
-    const font = '"Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif';
+    const font = '"Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", ' + (cjk ? '"Hiragino Sans", "PingFang SC", "Noto Sans CJK JP", ' : '') + 'sans-serif';
     g.font = `400 64px ${font}`;
     g.letterSpacing = '18px';
     g.globalAlpha = 0.62;
@@ -202,8 +203,8 @@ export class Finale {
     if (this.text.best) {
       g.globalAlpha = 0.62;
       g.font = `500 30px ${font}`;
-      g.letterSpacing = '16px';
-      g.fillText('BEST', W / 2 + 8, H * 0.86);      // just under the number
+      g.letterSpacing = cjk ? '4px' : '16px';   // (no spaced capitals in Japanese or Chinese)
+      g.fillText(tr('result.best'), W / 2 + (cjk ? 2 : 8), H * 0.86);      // just under the number
       g.globalAlpha = 1;
     }
     g.letterSpacing = '0px';

@@ -17,6 +17,7 @@
 import { Puzzle, setClues, lineSolve, solveStats, difficulty, lineFits } from './puzzle.js';
 import { randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
+import { t as tr } from './i18n.js';
 
 // Daily #1. Fixed for good once the first share has gone out: moving it
 // renumbers (and so reseeds) every day after.
@@ -167,16 +168,16 @@ function clock(s) {
 // Plain text, built only from these numbers: the day, the gems, the slips, the
 // time, which waves had a slip, and the days in a row. No cell, row, clue or
 // colour ever goes in, so it can't carry the stone's shape (test/daily.test.js).
-export const INVITE = 'One 3D logic puzzle a day. One answer, no guessing.';
+export const INVITE = tr('share.invite');
 export function shareText({ day, stars, slips, seconds, waves, streak = 0 }) {
   const gems = GEM.repeat(stars) + GEM_EMPTY.repeat(3 - stars);
-  const slipWord = slips === 0 ? 'no slips' : slips === 1 ? '1 slip' : `${slips} slips`;
+  const slipWord = tr('slips', { n: slips });
   const lines = [
-    `Strata · Daily #${day}`,
+    `Strata · Daily #${day}`,   // (the same in every language: a line people know it by)
     `${gems} · ${slipWord} · ${clock(seconds)}`,
     waves.map((s) => (s ? WAVE_SLIP : WAVE_CLEAN)).join(''),
   ];
-  if (streak >= 2) lines.push(`${streak} days in a row`);
+  if (streak >= 2) lines.push(tr('days.run', { n: streak }));
   // for whoever receives it, the one line that says what this is (Hopkins,
   // docs/hopkins-study.md): name the reader's kind of puzzle, make the claim
   // only Strata can (every daily is checked to have one answer by logic
