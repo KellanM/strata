@@ -1,6 +1,6 @@
 // Strata in other languages (docs/growth-roadmap.md test 6). English is the source and the
 // fallback for any missing key (public/i18n/en.js); a language's table holds what it has
-// translated (public/i18n/ja.js, zh-Hans.js).
+// translated (public/i18n/ja.js, zh-Hans.js, ko.js).
 //
 // Which language: a saved choice (strata.lang), else the device's (navigator.languages, first
 // match wins), else English - but only from LANGS_LIVE. A table goes live once a native speaker
@@ -13,20 +13,24 @@
 import * as EN from '../i18n/en.js';
 import { TUTORIAL, TUTORIAL_V2 } from './shapes.js';
 
-// Japanese and Simplified Chinese live on Kellan's word (2026-10-31: "We don't need a human
-// reviewer"), without a native speaker's pass; docs/localisation.md keeps the open doubts
-export const LANGS_LIVE = ['en', 'ja', 'zh-Hans'];
-export const LANGS = ['en', 'ja', 'zh-Hans'];   // every table there is, reviewed or not
+// Live on Kellan's word (2026-10-31: "We don't need a human reviewer"; "Your translations are world
+// class"), without a native speaker's pass. Each language's open doubts are in docs/localisation.md
+// (Japanese, Simplified Chinese) and docs/l10n/<code>.md (the rest).
+export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'pt-BR', 'ru'];
+export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'pt-BR', 'ru'];   // every table there is, reviewed or not
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
-// simplified table for the mainland, Singapore and Malaysia; Traditional (Taiwan, Hong Kong,
-// Macau, -Hant) has no table yet, so it falls through to the next preference
+// traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the
+// rest (the mainland, Singapore, Malaysia). Portuguese is Brazil's for every Portuguese tag, and
+// Spanish one table for Spain and the Americas
 export function match(tag) {
   const t = String(tag ?? '').trim().toLowerCase().replace(/_/g, '-');
   if (!t) return null;
   if (t === 'en' || t.startsWith('en-')) return 'en';
   if (t === 'ja' || t.startsWith('ja-')) return 'ja';
-  if (t === 'zh' || t.startsWith('zh-')) return /hant|-tw|-hk|-mo/.test(t) ? null : 'zh-Hans';
+  if (t === 'zh' || t.startsWith('zh-')) return /hant|-tw|-hk|-mo/.test(t) ? 'zh-Hant' : 'zh-Hans';
+  for (const code of ['ko', 'de', 'fr', 'es', 'ru']) if (t === code || t.startsWith(code + '-')) return code;
+  if (t === 'pt' || t.startsWith('pt-')) return 'pt-BR';
   return null;
 }
 
@@ -57,14 +61,19 @@ export const lang = chooseLang({
 const table = lang === 'en' ? null : await import(`../i18n/${lang}.js`).then((m) => m.strings, () => null);
 // for dates and numbers: English keeps the device's own formats, as before
 export const locale = lang === 'en' ? undefined : lang;
-export const cjk = lang === 'ja' || lang === 'zh-Hans';
+export const cjk = ['ja', 'zh-Hans', 'zh-Hant', 'ko'].includes(lang);
 const plural = new Intl.PluralRules(lang === 'en' ? 'en' : lang);
 
+// a counted string's form for n: `zero` where the table has one ("no slips"), else the language's
+// own category from Intl.PluralRules, else `other`. English has one and other; Russian one (1, 21),
+// few (2-4, 22), many (0, 5-20, 11) and other (fractions); Japanese and Chinese only other. A
+// table may count a string English doesn't ("{n} days in a row": 1 день, 2 дня, 5 дней)
+export function pluralForm(forms, n, rules = plural) {
+  return (n === 0 && forms.zero != null ? forms.zero : forms[rules.select(n)]) ?? forms.other;
+}
+
 function fill(s, vars) {
-  if (s && typeof s === 'object') {
-    const n = Number(vars?.n ?? 0);
-    s = (n === 0 && s.zero != null ? s.zero : s[plural.select(n)]) ?? s.other;
-  }
+  if (s && typeof s === 'object') s = pluralForm(s, Number(vars?.n ?? 0));
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
 // the interface's words, by key

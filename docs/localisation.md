@@ -1,6 +1,6 @@
 # Localisation: the string system, the drafts, and how a language goes live (2026-10-31)
 
-Growth-roadmap test 6 (Japanese and Simplified Chinese first). **Live (Kellan, 2026-10-31):** Japanese and Simplified Chinese are on for players whose device or browser prefers them. Kellan decided against a native speaker's review ("We don't need a human reviewer"); the doubts below are what to fix first if players report them. The iOS app declares the languages in `CFBundleLocalizations` (`tools/ios-configure.mjs`).
+Growth-roadmap test 6 (Japanese and Simplified Chinese first). **Live (Kellan, 2026-10-31): ten languages.** English, Japanese, Simplified and Traditional Chinese, Korean, German, French, Spanish (one table for Spain and the Americas), Brazilian Portuguese (for every Portuguese tag) and Russian are on for players whose device or browser prefers them. Kellan decided against a native speaker's review ("We don't need a human reviewer"); the doubts below are what to fix first if players report them. The iOS app declares the languages in `CFBundleLocalizations` (`tools/ios-configure.mjs`).
 
 ## The system
 
@@ -39,7 +39,7 @@ Growth-roadmap test 6 (Japanese and Simplified Chinese first). **Live (Kellan, 2
 - No table has a key English doesn't.
 - Placeholders match English in every form. Plurals have `other`, and `zero` where English has one. `.html` keys keep their icons and close their tags.
 - English story lines keep to 14 words. Japanese story lines keep to 36 characters and Chinese to 30. That is two lines with Larger text in the 320 px box the line sits in: about 23 full-width characters a line at 13 px, about 19 at 1.22×. Chinese is set tighter because it runs about a sixth denser than Japanese for the same thought.
-- `chooseLang` never returns a language that isn't live, except through `?lang=` or `strata.dev.lang`. `LANGS_LIVE` is `['en', 'ja', 'zh-Hans']`.
+- `chooseLang` never returns a language that isn't live, except through `?lang=` or `strata.dev.lang`. `LANGS_LIVE` is all ten.
 - `index.html` says exactly what en.js says.
 
 ## Glossary (one term per thing; docs/copy-study.md C1)
@@ -85,3 +85,7 @@ Over-budget, on purpose: a few Touch-page gesture labels (ダブルタップ / �
 ## English unchanged, checked
 
 `tools/a11y-shots.mjs` was run on a copy of the build from before this work, and again after it. `--compare` checks every element with text (font size, letter-spacing, box and text) and every word and label on the page, shown or not, on every screen. The clock's digits are masked. `tools/pixel-diff.py` compares the pictures. The results are in the commit message that added this paragraph.
+
+## The other languages (2026-10-31)
+
+Each has its own notes, with its glossary, story-line budget, layout fixes and the doubts to fix first: `docs/l10n/zh-Hant.md`, `ko.md`, `de.md`, `fr.md`, `es.md`, `pt-BR.md` and `ru.md`. Their store pages are `store/listing-<code>.md`. Their layout rules are blocks at the end of `public/style.css`, each scoped to its `:lang()`, so English is never touched.

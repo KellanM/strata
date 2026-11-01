@@ -1278,7 +1278,7 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
   #journal-count { gap: 10px; letter-spacing: .2em; white-space: nowrap; }
 }
 
-/* ---------- another language (public/js/i18n.js; Japanese and Chinese, not live until reviewed) ----------
+/* ---------- another language (public/js/i18n.js): the CJK type rules (Japanese, Chinese, Korean) ----------
    English never gets a lang other than "en", so none of this touches it. The i18n module sets
    <html lang> and Settings' on and off; the faces below come after the Latin ones, so numbers and
    Latin words keep their look and the CJK characters come from the system's own faces (iOS has
@@ -1287,15 +1287,94 @@ html:not([lang="en"]) .ring-toggle .s::after { content: var(--t-off); }
 html:not([lang="en"]) .ring-toggle.on .s::after { content: var(--t-on); }
 html:lang(ja) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif; }
 html:lang(zh) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif; }
+html:lang(zh-Hant) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "PingFang TC", "PingFang HK", "Noto Sans CJK TC", "Noto Sans TC", "Microsoft JhengHei UI", "Microsoft JhengHei", system-ui, sans-serif; }
+html:lang(ko) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
 /* Spaced capitals are a Latin habit: CJK has no capitals, and characters tracked out a third of
    an em read as separate words. Every label closes up to a light tracking (the ✕s and gems keep
    theirs: they are marks, not words), and the lead-ins that balanced the tracking go too.
    Kanji and hanzi lose their strokes under about 11 px, so the small labels' floor rises to 11
    (13 with Larger text) */
-html:is(:lang(ja), :lang(zh)) { --tf: 11px; }
-html.large-text:is(:lang(ja), :lang(zh)) { --tf: 13px; }
-html:is(:lang(ja), :lang(zh)) body * { letter-spacing: .04em !important; }
-html:is(:lang(ja), :lang(zh)) :is(#strikes, .gems, .jr-total) { letter-spacing: .2em !important; }
-html:is(:lang(ja), :lang(zh)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
+html:is(:lang(ja), :lang(zh), :lang(ko)) { --tf: 11px; }
+html.large-text:is(:lang(ja), :lang(zh), :lang(ko)) { --tf: 13px; }
+html:is(:lang(ja), :lang(zh), :lang(ko)) body * { letter-spacing: .04em !important; }
+html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { letter-spacing: .2em !important; }
+html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---------- Russian (ru; docs/l10n/ru.md) ----------
+   Cyrillic capitals are wide, and Russian names run about a quarter longer than English, so the
+   letterspaced names that don't wrap in English get room to. The faces need nothing: Avenir Next
+   (iOS, macOS), Segoe UI and Century Gothic (Windows) and Roboto (Android, through system-ui) all
+   have Cyrillic.
+   - A map stone's name sits beside it on one line; a long one (ЧАЙНЫЙ ПАКЕТИК, with Larger text)
+     ran off the right edge, so it may take two lines.
+   - A Finds tile's name wraps instead of ending in "…", as it already does with Larger text.
+   - The chapter, shrine and world-closing cards set the world's name on one line in big tracked
+     capitals: ЧАСОВАЯ МАСТЕРСКАЯ, ПРАЗДНИК ФОНАРЕЙ and ОБЛАЧНЫЕ ОСТРОВА ran past a 375 px screen.
+     The tracking closes up a little and the name may take two lines.
+   - A find's own page sets its name at 26 px with Larger text's 1.22 on top: one-word names
+     (ПРОИГРЫВАТЕЛЬ, ОБСЕРВАТОРИЯ) were wider than the screen, so it steps down to 22 px. */
+html:lang(ru) .map-node .label { white-space: normal; }
+html:lang(ru) .map-node .nm { width: max-content; max-width: 10.5em; }
+html:lang(ru) .jr-tile .nm { white-space: normal; text-align: center; letter-spacing: .14em; }
+html:lang(ru) :is(#chapter-card .cname, #world-close .cname) { white-space: normal; letter-spacing: .2em; padding-left: .2em; line-height: 1.2; }
+html:lang(ru) #journal-view .jv-name { font-size: calc(22px * var(--ts)); letter-spacing: .2em; padding-left: .2em; }
+/* ---------- Spanish (es): longer words (docs/l10n/es.md) ----------
+   A world's name sits on one line on its card. Spanish names run a few letters longer than
+   English ("Escalones de brasa", "Noche de faroles"), so the card's tracking closes from .3em to
+   .2em, which keeps the longest inside 375 px. Finds' tile names wrap onto a second line, as
+   they do with Larger text, instead of being cut off: about twice as many Spanish names as
+   English ones run past a tile's width */
+html:lang(es) :is(#chapter-card .cname, #world-close .cname) { letter-spacing: .2em; padding-left: .2em; }
+html:lang(es) .jr-tile .nm { white-space: normal; text-align: center; }
+/* ---------- Korean (ko; public/i18n/ko.js, docs/l10n/ko.md) ----------
+   Hangul is set in words with spaces between, and a browser left to itself breaks a Korean line
+   between any two syllables, splitting words ("깎으 / 세요"). keep-all wraps at the spaces, as
+   Korean is printed; break-word still breaks a word too long for its box rather than let it spill */
+html:lang(ko) body { word-break: keep-all; overflow-wrap: break-word; }
+/* A story line, chapter line or coach card that wraps is balanced over its lines, so a short
+   last word ("문.") is never left alone on the last line (Safari 17.5 and Chrome 114 balance;
+   older browsers wrap as before) */
+html:lang(ko) :is(#win-title .story, #journal-view .jv-story, #chapter-card .cline, #coach-text) { text-wrap: balance; }
+/* ---------- German (de; docs/l10n/de.md) ----------
+   German runs about a third longer than English, and its names are often one long compound
+   (PFEILSCHWANZKREBS, SCHNECKENHÄUSCHEN) that has no space to wrap at. The words were cut first;
+   what is left: the Finds tiles track a little tighter, so more names fit before the ellipsis, and
+   where a name may wrap (the tiles with Larger text, the find's own page) a compound breaks with a
+   hyphen (hyphens: auto, German's dictionary on iOS and Android) rather than being clipped.
+   The find's own page sets its name at 26 px tracked .3em in a 320 px box: 18 letters (the longest
+   name, SCHLÜSSELLOCHBOGEN, as long as English's DRYSTONE SHEEPFOLD) need about 450. Tracked .12em
+   and kept under 5.8vw (about 22 px on a phone) every German name fits on one line; with Larger text
+   too, so there the name stays at that size and the story under it grows. */
+html:lang(de) .jr-tile .nm { letter-spacing: .12em; }
+html:lang(de) #journal-view .jv-name { font-size: min(calc(26px * var(--ts)), 5.8vw); letter-spacing: .12em; padding-left: .12em; }
+html.large-text:lang(de) .jr-tile .nm, html:lang(de) #journal-view .jv-name { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+/* ---------- French (fr) ----------
+   French runs about a fifth longer than English, and its spaced capitals collide first in rows of
+   ring labels with Larger text: the map's Menu · Aujourd'hui · Trouvailles, Settings' Musique ·
+   Vibrations, the pause's Carte · Réessayer. Those labels close up from .24em to .12em (their
+   lead-in padding with them), and the lessons list's names from .14em to .08em, so Couronne and
+   Coffre de marin stay inside their column. The chapter card's name never wraps and is sized by
+   the screen's width (6.4vw), so it holds about 16 French capitals at .3em: the longest names
+   ("Fête des lanternes", "Marches de braise", 17-18) close up to .24em and keep 30 px of margin
+   at 375 wide (the clockwork world is "L'horlogerie" for the same reason). English never has
+   lang="fr", so it is untouched. */
+html:lang(fr) :is(.ring-label, .ring-toggle .l, .pause-label) { letter-spacing: .12em; padding-left: .12em; }
+html:lang(fr) .lesson-list .nm { letter-spacing: .08em; }
+html:lang(fr) #chapter-card .cname { letter-spacing: .24em; padding-left: .24em; }
+/* ---- Brazilian Portuguese (pt-BR; docs/l10n/pt-BR.md). English is untouched.
+   Portuguese names are mostly "X de Y" (Saquinho de Chá, Carrinho de Castanhas), so a Finds tile
+   name takes two lines rather than losing its end, as it already does with Larger text, and
+   closes its tracking a little so most still fit on one */
+html:lang(pt-BR) .jr-tile .nm { white-space: normal; text-align: center; overflow-wrap: anywhere; }
+html:lang(pt-BR) .jr-tile.found .nm { letter-spacing: .14em; }
+/* A map name sits beside its stone on one line; a long Portuguese one ("Carrinho de Castanhas",
+   and "Saquinho de Chá" with Larger text) ran off the screen's edge. It wraps instead, within
+   the room beside the stone */
+html:lang(pt-BR) .map-node .label { white-space: normal; width: max-content; max-width: 40vw; }
+html:lang(pt-BR) .map-node .nm { letter-spacing: .2em; }
+html:lang(pt-BR) .map-node.lbl-left .nm { margin-right: -.2em; }
+/* A world's name on its card is one line in English. "Colinas das Fogueiras" and "Festa das
+   Lanternas" are wider than a 375 px screen in those capitals, so they may take two lines */
+html:lang(pt-BR) :is(#chapter-card, #world-close) .cname { white-space: normal; text-wrap: balance; max-width: 100%; }
