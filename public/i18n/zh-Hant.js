@@ -81,7 +81,7 @@ export const strings = {
   'touch.skyMouse': '按兩下天空',
   'touch.skyDo': '重設視角',
   'touch.menu': '選單 ≡',
-  'touch.menuDo': '繼續、回地圖或重來',
+  'touch.menuDo': '繼續、地圖或重來',
   'foot.privacy': '隱私權',
   'foot.support': '支援',
   'win.aria': '已解開',
