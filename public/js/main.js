@@ -1008,6 +1008,37 @@ function renderCoach(override) {
     coach.classList.add('show');
   }
   applyCues();
+  makeCoachRoom();
+  after(1, makeCoachRoom);   // and again once a new block has settled into view
+}
+
+// Larger text on a short screen (375x667): a card of three or four lines reached down over its
+// block, by up to 45px. With Larger text on, the view slides down until the block's top clears
+// the card, as each card's words arrive, and back up when it goes (without it the view is as
+// it always was)
+const coachRoom = { want: 0, now: 0 };
+function makeCoachRoom() {
+  const coach = $('#coach');
+  coachRoom.want = 0;
+  if (!document.documentElement.classList.contains('large-text') || !game || !coach.classList.contains('show') || coach.classList.contains('quiet')) return;
+  // the block's top on screen, as it would be with no slide: its box's corners, projected
+  const [X, Y, Z] = game.puzzle.dims.map((d) => d / 2);
+  let top = Infinity;
+  for (const x of [-X, X]) for (const y of [-Y, Y]) for (const z of [-Z, Z]) {
+    const v = new THREE.Vector3(x, y, z).project(camera);
+    top = Math.min(top, (1 - v.y) / 2 * canvas.clientHeight - coachRoom.now);
+  }
+  // (the card's height as it rests: it arrives from 8px above)
+  const bottom = coach.offsetTop + coach.offsetHeight;
+  coachRoom.want = Math.min(canvas.clientHeight * 0.12, Math.max(0, bottom + 10 - top));
+}
+function stepCoachRoom(dt) {
+  if (Math.abs(coachRoom.want - coachRoom.now) < 0.25) {
+    if (coachRoom.now === coachRoom.want) return;
+    coachRoom.now = coachRoom.want;
+  } else coachRoom.now += (coachRoom.want - coachRoom.now) * Math.min(1, (reduceMotion ? 1 : 5) * dt);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (coachRoom.now > 0.25) camera.setViewOffset(w, h, 0, -coachRoom.now, w, h); else camera.clearViewOffset();
 }
 
 // What the block and controls point at: the showing hint's cues, else a nudge.
@@ -1972,6 +2003,7 @@ function draw() {
   const dt = Math.min(0.05, t - last);
   last = t;
   stepViewAnim(t);
+  stepCoachRoom(dt);
   controls.update();
 
   if (game) {
@@ -2110,9 +2142,10 @@ document.addEventListener('click', (e) => {
   else if (e.target.closest('button')) sound.ui();
 }, { capture: true });
 function renderSoundToggles() {
-  $('#toggle-sfx').classList.toggle('on', sound.sfxOn);
-  $('#toggle-music').classList.toggle('on', sound.musicOn);
-  $('#toggle-haptics').classList.toggle('on', hapticsOn());
+  for (const [id, on] of [['#toggle-sfx', sound.sfxOn], ['#toggle-music', sound.musicOn], ['#toggle-haptics', hapticsOn()]]) {
+    $(id).classList.toggle('on', on);
+    $(id).setAttribute('aria-pressed', on);   // VoiceOver says on or off, as the ring's word does
+  }
 }
 $('#toggle-sfx').addEventListener('click', () => { sound.setSfx(!sound.sfxOn); renderSoundToggles(); });
 $('#toggle-music').addEventListener('click', () => { sound.setMusic(!sound.musicOn); renderSoundToggles(); });
@@ -2122,6 +2155,54 @@ $('#toggle-haptics').addEventListener('click', () => {
   buzz(12, 'tick');   // switched on: one tick, so you feel what it is
 });
 renderSoundToggles();
+
+// Larger text (docs/copy-study.md C7; docs/growth-roadmap.md test 7): the interface's type about a
+// fifth larger, no label under 12px (style.css --ts, --tf), and the clue numbers bolder (cubes.js).
+// strata.largeText is the player's own choice, '1' or '0'; until they make one it follows the
+// phone's text size: iOS gives a web view's -apple-system-body the size of its body text, 17px at
+// the default, so anything larger there turns this on. strata.a11y.largeText counts it on this
+// phone only (never sent), for a count to show later: how often it was switched on and off, and
+// whether the phone's size turned it on.
+function systemLargeText() {
+  const probe = document.createElement('span');
+  probe.style.font = '-apple-system-body';
+  if (!probe.style.font) return false;   // not WebKit on an Apple system: no such font
+  document.body.append(probe);
+  const px = parseFloat(getComputedStyle(probe).fontSize);
+  probe.remove();
+  return px > 17.5;
+}
+const largeTextChosen = () => localStorage.getItem('strata.largeText');
+const largeTextOn = () => (largeTextChosen() ?? (systemLargeText() ? '1' : '0')) === '1';
+function countLargeText(change) {
+  try {
+    const c = JSON.parse(localStorage.getItem('strata.a11y.largeText') || '{}');
+    c[change] = (c[change] || 0) + 1;
+    if (change !== 'off' && !c.first) c.first = new Date().toISOString().slice(0, 10);
+    localStorage.setItem('strata.a11y.largeText', JSON.stringify(c));
+  } catch { /* storage full: uncounted */ }
+}
+function applyLargeText() {
+  const on = largeTextOn();
+  // the phone's size turned it on, once: counted as that, not as the player's
+  if (on && !largeTextChosen() && !JSON.parse(localStorage.getItem('strata.a11y.largeText') || '{}').system) countLargeText('system');
+  document.documentElement.classList.toggle('large-text', on);
+  cubes.setLargeText(on);
+  makeCoachRoom();
+  const b = $('#toggle-text');
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on);
+}
+$('#toggle-text').addEventListener('click', () => {
+  const on = !largeTextOn();
+  localStorage.setItem('strata.largeText', on ? '1' : '0');
+  countLargeText(on ? 'on' : 'off');
+  applyLargeText();
+  if ($('#help').classList.contains('show')) helpFollow();   // the carousel's titles, a size up or down
+});
+applyLargeText();
+// the phone's text size changed in its Settings while the game was away
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !largeTextChosen()) applyLargeText(); });
 
 // ---------------------------------------------------------------- ads, a slip taken back, Remove Ads
 
@@ -2347,7 +2428,9 @@ $('#dev-ads-reset').addEventListener('click', () => {
 $('#dev-tutorial').addEventListener('click', () => { show('#dev', false); show('#menu', false); startTutorial(0); });
 $('#dev-reset').addEventListener('click', () => {
   if (!confirm('Reset all progress? Stars, scores and your finds will be cleared.')) return;
-  for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && k !== 'strata.sfx' && k !== 'strata.music' && k !== 'strata.haptics') localStorage.removeItem(k);
+  // (the settings stay, and Larger text's count)
+  const keep = (k) => ['strata.sfx', 'strata.music', 'strata.haptics', 'strata.largeText'].includes(k) || k.startsWith('strata.a11y.');
+  for (const k of Object.keys(localStorage)) if (k.startsWith('strata.') && !keep(k)) localStorage.removeItem(k);
   location.reload();
 });
 
