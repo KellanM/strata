@@ -19,14 +19,17 @@ export const LANGS_LIVE = ['en', 'ja', 'zh-Hans'];
 export const LANGS = ['en', 'ja', 'zh-Hans'];   // every table there is, reviewed or not
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
-// simplified table for the mainland, Singapore and Malaysia; Traditional (Taiwan, Hong Kong,
-// Macau, -Hant) has no table yet, so it falls through to the next preference
+// traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the
+// rest (the mainland, Singapore, Malaysia). Portuguese is Brazil's for every Portuguese tag, and
+// Spanish one table for Spain and the Americas
 export function match(tag) {
   const t = String(tag ?? '').trim().toLowerCase().replace(/_/g, '-');
   if (!t) return null;
   if (t === 'en' || t.startsWith('en-')) return 'en';
   if (t === 'ja' || t.startsWith('ja-')) return 'ja';
-  if (t === 'zh' || t.startsWith('zh-')) return /hant|-tw|-hk|-mo/.test(t) ? null : 'zh-Hans';
+  if (t === 'zh' || t.startsWith('zh-')) return /hant|-tw|-hk|-mo/.test(t) ? 'zh-Hant' : 'zh-Hans';
+  for (const code of ['ko', 'de', 'fr', 'es', 'ru']) if (t === code || t.startsWith(code + '-')) return code;
+  if (t === 'pt' || t.startsWith('pt-')) return 'pt-BR';
   return null;
 }
 
@@ -57,7 +60,7 @@ export const lang = chooseLang({
 const table = lang === 'en' ? null : await import(`../i18n/${lang}.js`).then((m) => m.strings, () => null);
 // for dates and numbers: English keeps the device's own formats, as before
 export const locale = lang === 'en' ? undefined : lang;
-export const cjk = lang === 'ja' || lang === 'zh-Hans';
+export const cjk = ['ja', 'zh-Hans', 'zh-Hant', 'ko'].includes(lang);
 const plural = new Intl.PluralRules(lang === 'en' ? 'en' : lang);
 
 function fill(s, vars) {
