@@ -67,8 +67,8 @@ export const strings = {
   'touch.zero': '0을 두 번 탭',
   'touch.zeroMouse': '0을 더블클릭',
   'touch.zeroDo': '그 줄을 한 번에 깎기',
-  'touch.full': '다 남는 줄을 두 번 탭',
-  'touch.fullMouse': '다 남는 줄을 더블클릭',
+  'touch.full': '다 남는 줄 두 번 탭',
+  'touch.fullMouse': '다 남는 줄 더블클릭',
   'touch.fullDo': '표시 도구일 때, 줄 전체를 표시',
   'touch.drag': '드래그',
   'touch.dragDo': '돌 회전',
@@ -195,7 +195,7 @@ export const strings = {
 
   // ---- objects: levels (name ≤ 8 syllables, story ≤ 36 characters with spaces)
   'name.steps': '계단',
-  'story.steps': '네 계단 아래, 아직 아무도 열지 않은 문.',
+  'story.steps': '네 계단 아래, 아무도 열지 않은 문.',
   'name.heart': '하트',
   'story.heart': '참을성 있는 누군가가 깎았다. 찾아낼 누군가를 위해.',
   'name.teabag-pal': '티백 친구',

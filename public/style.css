@@ -1307,3 +1307,7 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .
    between any two syllables, splitting words ("깎으 / 세요"). keep-all wraps at the spaces, as
    Korean is printed; break-word still breaks a word too long for its box rather than let it spill */
 html:lang(ko) body { word-break: keep-all; overflow-wrap: break-word; }
+/* A story line, chapter line or coach card that wraps is balanced over its lines, so a short
+   last word ("문.") is never left alone on the last line (Safari 17.5 and Chrome 114 balance;
+   older browsers wrap as before) */
+html:lang(ko) :is(#win-title .story, #journal-view .jv-story, #chapter-card .cline, #coach-text) { text-wrap: balance; }
