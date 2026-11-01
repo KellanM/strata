@@ -54,8 +54,16 @@ test('ko: no particle straight after a {placeholder} or an icon', () => {
 // a syllable's width, so 36 characters with the usual seven or eight spaces is about 30 syllables
 // wide. Wrapping only at spaces (word-break: keep-all) can leave up to one word, four or five
 // syllables, unused at the end of the first line, which still fits two lines of 19 at Larger text.
+// German is counted in characters too, and also in words, as English is. Its letters are Latin,
+// in the same 13 px box: at about 6.6 px a letter (Avenir Next, mixed case, with the spaces),
+// 320 px holds about 48 letters a line, or about 39 with Larger text. 80 is two lines without
+// Larger text and three with it, as the longest English lines (75) take. German runs about 30%
+// longer than English, so a budget near the English maximum makes the drafter cut, not wrap.
+// And the 14 words English keeps to: German compounds make that easy, the characters are the
+// real limit.
 const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90, ko: 36 };
 const PLURAL_FORMS = { ru: ['one', 'few', 'many', 'other'] };
+const LATIN_STORY_BUDGET = { de: { chars: 80, words: 14 } };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -96,7 +104,7 @@ for (const [code, T] of Object.entries(TABLES)) {
     }
   });
 
-  test(`${code}: story lines within ${STORY_BUDGET[code]} characters`, () => {
+  if (STORY_BUDGET[code]) test(`${code}: story lines within ${STORY_BUDGET[code]} characters`, () => {
     const long = Object.entries(T.strings).filter(([k, v]) => k.startsWith('story.') && chars(v) > STORY_BUDGET[code]);
     assert.deepEqual(long.map(([k, v]) => `${k} (${chars(v)}): ${v}`), []);
   });
@@ -111,6 +119,15 @@ for (const [code, T] of Object.entries(TABLES)) {
       assert.ok(/\{n\}/.test(v.one), `${code} ${k}: "one" must use {n}`);
     }
   });
+
+  const latin = LATIN_STORY_BUDGET[code];
+  if (latin) test(`${code}: story lines within ${latin.chars} characters and ${latin.words} words`, () => {
+    const long = Object.entries(T.strings).filter(([k, v]) => k.startsWith('story.')
+      && (chars(v) > latin.chars || v.split(/\s+/).length > latin.words));
+    assert.deepEqual(long.map(([k, v]) => `${k} (${chars(v)}, ${v.split(/\s+/).length} words): ${v}`), []);
+  });
+
+  test(`${code}: has a story-line budget`, () => assert.ok(STORY_BUDGET[code] || LATIN_STORY_BUDGET[code]));
 
   test(`${code}: marked as not reviewed until it is live`, () => {
     assert.equal(typeof T.reviewed, 'boolean');
@@ -164,7 +181,12 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   assert.equal(I18N.chooseLang({ prefs: ['ko-KR'], live: ['en'] }), 'en');
   assert.equal(I18N.chooseLang({ dev: 'ko', live: ['en'] }), 'ko');
   // live today: English, Japanese, Simplified Chinese and Korean (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'es', 'ru']);
+  // German: every de tag (Germany, Austria, Switzerland), once live
+  assert.equal(I18N.chooseLang({ prefs: ['de-AT'], live: ['en', 'de'] }), 'de');
+  assert.equal(I18N.chooseLang({ prefs: ['de-CH', 'en-GB'], live: ['en'] }), 'en');
+  assert.equal(I18N.chooseLang({ dev: 'de', live: ['en'] }), 'de');
+  // live today: English, Japanese, Simplified Chinese (Kellan, 2026-10-31) and German
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
