@@ -54,7 +54,8 @@ const walk = (dir) => {
     const p = join(dir, name);
     // the gallery and study prototypes (proto/) are deployed but never cached offline
     if (statSync(p).isDirectory()) { if (!['gallery', 'proto'].includes(relative(dist, p))) walk(p); }
-    else if (name !== 'sw.js' && name !== 'icon.svg') files.push(relative(dist, p).split(sep).join('/'));
+    // (og.jpg is the link preview, for other apps' crawlers, not for players)
+    else if (!['sw.js', 'icon.svg', 'og.jpg'].includes(name)) files.push(relative(dist, p).split(sep).join('/'));
   }
 };
 walk(dist);

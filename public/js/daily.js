@@ -167,6 +167,7 @@ function clock(s) {
 // Plain text, built only from these numbers: the day, the gems, the slips, the
 // time, which waves had a slip, and the days in a row. No cell, row, clue or
 // colour ever goes in, so it can't carry the stone's shape (test/daily.test.js).
+export const INVITE = 'One 3D logic puzzle a day. One answer, no guessing.';
 export function shareText({ day, stars, slips, seconds, waves, streak = 0 }) {
   const gems = GEM.repeat(stars) + GEM_EMPTY.repeat(3 - stars);
   const slipWord = slips === 0 ? 'no slips' : slips === 1 ? '1 slip' : `${slips} slips`;
@@ -176,6 +177,11 @@ export function shareText({ day, stars, slips, seconds, waves, streak = 0 }) {
     waves.map((s) => (s ? WAVE_SLIP : WAVE_CLEAN)).join(''),
   ];
   if (streak >= 2) lines.push(`${streak} days in a row`);
+  // for whoever receives it, the one line that says what this is (Hopkins,
+  // docs/hopkins-study.md): name the reader's kind of puzzle, make the claim
+  // only Strata can (every daily is checked to have one answer by logic
+  // alone), and ask nothing - no "can you beat me", no "play now"
+  lines.push(INVITE);
   lines.push(`${DAILY_URL}?d=${day}`);
   return lines.join('\n');
 }

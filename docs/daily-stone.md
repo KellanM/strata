@@ -21,6 +21,7 @@ Strata · Daily #13
 ◆◆◇ · 1 slip · 3:41
 🟨🟨🟫🟨🟨🟨🟨
 3 days in a row
+One 3D logic puzzle a day. One answer, no guessing.
 https://kellanm.github.io/strata/?d=13
 ```
 

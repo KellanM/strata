@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayNumber, dateOf, daySeed, dailyStone, dailyPalette, judge, cellWaves, slipWaves,
-  shareText, linkedDay, recordDay, readDays, streakAt, noteShare, DAILY_BAND, DAILY_URL, WAVE_CLEAN, WAVE_SLIP,
+  shareText, INVITE, linkedDay, recordDay, readDays, streakAt, noteShare, DAILY_BAND, DAILY_URL, WAVE_CLEAN, WAVE_SLIP,
 } from '../public/js/daily.js';
 import { Puzzle, setClues, lineSolve, solveStats } from '../public/js/puzzle.js';
 import { buildCells } from '../public/js/shapes.js';
@@ -96,14 +96,15 @@ test('daily: the share line is right and never carries the solution', () => {
     '◆◆◇ · 1 slip · 4:12',
     `${WAVE_CLEAN}${WAVE_CLEAN}${WAVE_SLIP}${WAVE_CLEAN}${WAVE_CLEAN}`,
     '5 days in a row',
+    INVITE,
     `${DAILY_URL}?d=12`,
   ].join('\n'));
-  assert.match(shareText({ day: 3, stars: 3, slips: 0, seconds: 61, waves: [false], streak: 1 }), /no slips · 1:01\n🟨\nhttps/);
+  assert.match(shareText({ day: 3, stars: 3, slips: 0, seconds: 61, waves: [false], streak: 1 }), /no slips · 1:01\n🟨\nOne 3D logic puzzle a day\. One answer, no guessing\.\nhttps/);
 
   // For every day: the share of a real solve is a function of the numbers
   // alone. Two different stones solved with the same numbers share the same
   // text but for the day, so nothing of a stone's shape can be in it.
-  const ALLOWED = new RegExp(`^[A-Za-z0-9 #·:/?=.\\n◆◇${WAVE_CLEAN}${WAVE_SLIP}-]+$`, 'u');
+  const ALLOWED = new RegExp(`^[A-Za-z0-9 #·:/?=.,\\n◆◇${WAVE_CLEAN}${WAVE_SLIP}-]+$`, 'u');
   const strip = (t) => t.replace(/#\d+/, '#N').replace(/\?d=\d+/, '?d=N');
   let reference = null;
   for (let n = 1; n <= DAYS; n++) {
