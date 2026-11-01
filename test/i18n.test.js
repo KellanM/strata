@@ -23,7 +23,10 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// Traditional Chinese takes the same 30: the same full-width characters in the same box (its
+// glyphs carry more strokes, not more width), and Taiwan's wording runs no longer than the
+// mainland's for the same thought (its longest line is 23).
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -97,11 +100,17 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   assert.equal(I18N.chooseLang({ prefs: ['fr-FR', 'ja-JP'], live: ['en', 'ja'] }), 'ja');
   assert.equal(I18N.chooseLang({ prefs: ['en-GB', 'ja-JP'], live: ['en', 'ja'] }), 'en');
   assert.equal(I18N.chooseLang({ saved: 'ja', prefs: ['en-US'], live: ['en', 'ja'] }), 'ja');
-  // Traditional Chinese has no table: it falls through to the next preference
+  // Traditional Chinese is its own table: Taiwan, Hong Kong, Macau and -Hant, never the simplified
+  assert.equal(I18N.chooseLang({ prefs: ['zh-TW'] }), 'zh-Hant');
+  assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'] }), 'zh-Hant');
+  assert.equal(I18N.chooseLang({ prefs: ['zh-MO'] }), 'zh-Hant');
+  assert.equal(I18N.chooseLang({ prefs: ['zh-Hans-CN'] }), 'zh-Hans');
+  assert.equal(I18N.chooseLang({ dev: 'zh-Hant', live }), 'zh-Hant');
+  // where it isn't live, it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // live today: English, Japanese, Simplified and Traditional Chinese (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
