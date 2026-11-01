@@ -61,9 +61,15 @@ test('ko: no particle straight after a {placeholder} or an icon', () => {
 // longer than English, so a budget near the English maximum makes the drafter cut, not wrap.
 // And the 14 words English keeps to: German compounds make that easy, the characters are the
 // real limit.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90, ko: 36 };
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90, ko: 36, fr: 72 };
 const PLURAL_FORMS = { ru: ['one', 'few', 'many', 'other'] };
 const LATIN_STORY_BUDGET = { de: { chars: 80, words: 14 } };
+// French counts characters too, not words: its words run longer and its elisions (l’, d’, qu’)
+// make a word count meaningless. Measured in Chromium on every line, in the real boxes: the
+// result's line (13 px, 320 px box) with Larger text holds about 36 characters, so two lines is
+// about 72, and the drafts that ran 69-78 took a third line there (6 of 209, against English's 1).
+// With every line at 72 or under none does; the Finds view (15 px) stays on two lines without
+// Larger text. English's longest is 75, so French at 72 also stays about as long as the English.
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -180,13 +186,41 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   assert.equal(I18N.chooseLang({ prefs: ['ko-KR', 'en-US'], live: ['en', 'ko'] }), 'ko');
   assert.equal(I18N.chooseLang({ prefs: ['ko-KR'], live: ['en'] }), 'en');
   assert.equal(I18N.chooseLang({ dev: 'ko', live: ['en'] }), 'ko');
-  // live today: English, Japanese, Simplified Chinese and Korean (Kellan, 2026-10-31)
   // German: every de tag (Germany, Austria, Switzerland), once live
   assert.equal(I18N.chooseLang({ prefs: ['de-AT'], live: ['en', 'de'] }), 'de');
   assert.equal(I18N.chooseLang({ prefs: ['de-CH', 'en-GB'], live: ['en'] }), 'en');
   assert.equal(I18N.chooseLang({ dev: 'de', live: ['en'] }), 'de');
-  // live today: English, Japanese, Simplified Chinese (Kellan, 2026-10-31) and German
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru']);
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru']);
+  // French for every French tag: France, Canada, Belgium, Switzerland
+  assert.equal(I18N.chooseLang({ prefs: ['fr-CA', 'en-US'], live: ['en', 'fr'] }), 'fr');
+  assert.equal(I18N.chooseLang({ prefs: ['fr_BE'], live: ['en', 'fr'] }), 'fr');
+});
+
+// French counts 0 as singular ("0 monde"), so a count English writes as "no slips" keeps its
+// zero form, and the singular form must make sense for both 0 and 1
+test('fr: plurals pick by French rules, with 0 singular', () => {
+  const fr = TABLES.fr.strings;
+  const pr = new Intl.PluralRules('fr');
+  assert.equal(pr.select(0), 'one');
+  assert.equal(pr.select(2), 'other');
+  for (const [k, v] of Object.entries(fr)) {
+    if (!v || typeof v !== 'object') continue;
+    assert.ok(typeof v.one === 'string', `fr ${k} needs a "one" form (0 and 1)`);
+    assert.match(v.one, /\{n\}/, `fr ${k}: "one" is said for 0 too, so it shows the number`);
+  }
+  assert.equal(fr.slips.zero, 'aucun faux pas');
+});
+
+// French typography: a no-break space before : (U+00A0) and a narrow one before ; ! ? (U+202F),
+// never a plain space or none; « » for quotes; the typographic apostrophe
+test('fr: French punctuation spacing, quotes and apostrophes', () => {
+  for (const [k, v] of Object.entries(TABLES.fr.strings)) {
+    for (const s of typeof v === 'object' ? Object.values(v) : [v]) {
+      const text = s.replace(/<[^>]+>/g, '');
+      assert.doesNotMatch(text, /(^|[^  ])[:;!?](\s|$)/, `fr ${k}: space before punctuation: ${JSON.stringify(s)}`);
+      assert.doesNotMatch(text, /["“”']/, `fr ${k}: quotes and apostrophes: ${JSON.stringify(s)}`);
+    }
+  }
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {

@@ -1350,3 +1350,16 @@ html:lang(ko) :is(#win-title .story, #journal-view .jv-story, #chapter-card .cli
 html:lang(de) .jr-tile .nm { letter-spacing: .12em; }
 html:lang(de) #journal-view .jv-name { font-size: min(calc(26px * var(--ts)), 5.8vw); letter-spacing: .12em; padding-left: .12em; }
 html.large-text:lang(de) .jr-tile .nm, html:lang(de) #journal-view .jv-name { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+/* ---------- French (fr) ----------
+   French runs about a fifth longer than English, and its spaced capitals collide first in rows of
+   ring labels with Larger text: the map's Menu · Aujourd'hui · Trouvailles, Settings' Musique ·
+   Vibrations, the pause's Carte · Réessayer. Those labels close up from .24em to .12em (their
+   lead-in padding with them), and the lessons list's names from .14em to .08em, so Couronne and
+   Coffre de marin stay inside their column. The chapter card's name never wraps and is sized by
+   the screen's width (6.4vw), so it holds about 16 French capitals at .3em: the longest names
+   ("Fête des lanternes", "Marches de braise", 17-18) close up to .24em and keep 30 px of margin
+   at 375 wide (the clockwork world is "L'horlogerie" for the same reason). English never has
+   lang="fr", so it is untouched. */
+html:lang(fr) :is(.ring-label, .ring-toggle .l, .pause-label) { letter-spacing: .12em; padding-left: .12em; }
+html:lang(fr) .lesson-list .nm { letter-spacing: .08em; }
+html:lang(fr) #chapter-card .cname { letter-spacing: .24em; padding-left: .24em; }

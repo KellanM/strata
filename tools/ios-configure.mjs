@@ -45,7 +45,7 @@ export function configure(iosDir, release = JSON.parse(readFileSync(join(root, '
     // and so its web view's navigator.languages, in English even on a Japanese, Chinese or Spanish iPhone
     // and so its web view's navigator.languages, in English even on a Japanese, Chinese or Korean iPhone
     // and so its web view's navigator.languages, in English even on a Japanese, Chinese or German iPhone
-    CFBundleLocalizations: ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru'],
+    CFBundleLocalizations: ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru'],
   };
   for (const [k, v] of Object.entries(want)) {
     if (JSON.stringify(info[k]) !== JSON.stringify(v)) { info[k] = v; changed.push(`Info.plist ${k}`); }

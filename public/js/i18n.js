@@ -24,8 +24,9 @@ import { TUTORIAL, TUTORIAL_V2 } from './shapes.js';
 // Japanese, Simplified Chinese and Korean live on Kellan's word (2026-10-31: "We don't need a human
 // reviewer"), without a native speaker's pass; docs/localisation.md keeps the open doubts
 // German the same way (docs/l10n/de.md)
-export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru'];
-export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru'];   // every table there is, reviewed or not
+export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru'];
+export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru'];   // every table there is, reviewed or not
+// Japanese, Simplified Chinese and French live on Kellan's word (2026-10-31: "We don't need a human
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
 // traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the

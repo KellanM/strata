@@ -24,7 +24,7 @@ test('ios-configure: iPhone-only, encryption answered, privacy manifest in the a
     assert.equal(info['UISupportedInterfaceOrientations~ipad'], undefined);
     assert.equal(info.UIStatusBarHidden, true);
     assert.equal(info.UIViewControllerBasedStatusBarAppearance, false);
-    assert.deepEqual(info.CFBundleLocalizations, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'es', 'ru']);
+    assert.deepEqual(info.CFBundleLocalizations, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru']);
     assert.equal(info.UILaunchStoryboardName, 'LaunchScreen');   // the iOS 27.1 SDK (v1.1) requires a launch screen
     assert.equal(info.UIRequiresFullScreen, undefined);           // a Duo's fold and Split View resize the window
 
