@@ -26,6 +26,13 @@ const familyOf = (id) => (sectionOf(id) === 'toybox' ? 'toys' : sectionOf(id));
 // the days already played when the last stones were added (Daily #2, 1 Nov 2026, page 19's picks):
 // each day's stone, as it was shared. Never edit these; add the next day played instead.
 const PLAYED = { 1: null, 2: 'daily-piggy-bank' };
+// and the days already announced to be played from the next day on, the rest of the first era's
+// cycle (#3-#13, 2-12 Nov 2026), pinned too: a later change to the lists must not move them
+const ANNOUNCED = {
+  3: 'daily-sugar-skull', 4: 'daily-genie', 5: 'daily-troll-doll', 6: 'daily-instant-camera', 7: 'daily-frog-prince',
+  8: 'daily-cloth-tiger', 9: 'daily-rabbit-hat', 10: 'daily-sword-stone', 11: 'daily-chicken-crossing',
+  12: 'daily-baba-yaga-hut', 13: 'daily-sock-monkey',
+};
 const DATED_IDS = new Set(DATED.map((d) => d.id));
 // every name a stone has, in every language
 const NAMES = [];
@@ -108,8 +115,8 @@ test('daily: from Daily #2 (1 Nov 2026) every day is one of the curated stones',
   for (const era of ROTATION) for (const id of era.order) assert.ok(DAILY_BY_ID.has(id), id);
 });
 
-test('daily: the days already played keep their stones (Daily #1 and #2)', () => {
-  for (const [n, id] of Object.entries(PLAYED)) assert.equal(stoneIdOf(Number(n)), id, `Daily #${n}`);
+test('daily: the days already played keep their stones (Daily #1 and #2), and the announced ones theirs (#3-#13)', () => {
+  for (const [n, id] of Object.entries({ ...PLAYED, ...ANNOUNCED })) assert.equal(stoneIdOf(Number(n)), id, `Daily #${n}`);
   assert.equal(dateOf(2), '2026-11-01');
   // every line in the lists starts on a day not yet played when it was added, and the calendar
   // made of only the lines in force on each played day agrees with today's, up to that day
@@ -170,22 +177,34 @@ test('daily: the undated days cycle through the rotation, and no section comes t
   const undated = [];
   for (let n = CURATED_FROM; n <= LAST_2030; n++) if (!DATED_IDS.has(stoneIdOf(n))) undated.push([n, stoneIdOf(n)]);
   // page 18's 11 in order (Daily #2, then #4 on: the Sugar Skull took #3); then, from the turn of
-  // that cycle (Daily #14, 13 Nov 2026), the second era: page 18's 11 and page 19's 13, cycling
+  // that cycle (Daily #14, 13 Nov 2026), the second era: page 19's 13 interleaved with page 18's
+  // 11, a new one first, cycling
   const [first, second] = ROTATION.map((e) => e.order);
   assert.equal(ROTATION.length, 2);
-  assert.deepEqual(second.slice(0, first.length), first, 'the second era keeps the first one\'s order, the new stones after');
+  const fresh = second.filter((id) => !first.includes(id));
+  assert.equal(second.length, first.length + fresh.length);
+  assert.deepEqual(second.filter((id) => first.includes(id)), first, 'page 18\'s keep their order');
+  assert.ok(fresh.includes(second[0]), 'the second era leads with a new stone');
+  // interleaved: never more than two new in a row, never two page 18 stones in a row
+  second.forEach((id, k) => {
+    const next = second[(k + 1) % second.length], after = second[(k + 2) % second.length];
+    assert.ok(!(first.includes(id) && first.includes(next)), `${id}, ${next}: two of page 18's together`);
+    assert.ok(!(fresh.includes(id) && fresh.includes(next) && fresh.includes(after)), `${id}: three new together`);
+  });
   assert.deepEqual(undated.slice(0, first.length).map(([, id]) => id), first);
   assert.equal(undated[first.length][0], 14);
   assert.equal(dateOf(14), '2026-11-13');
   undated.slice(first.length).forEach(([n, id], k) => assert.equal(id, second[k % second.length], `Daily #${n}`));
-  // page 19's undated stones first come on #25-#38, 24 Nov-7 Dec 2026 (the Nutcracker has #37)
+  // page 19's undated stones first come from #14 (13 Nov) to #38 (7 Dec), the Dog on the Sofa first
   const firstDay = (id) => undated.find(([, x]) => x === id)[0];
-  assert.deepEqual(second.slice(first.length).map(firstDay), [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38]);
+  assert.equal(stoneIdOf(14), 'daily-dog-sofa');
+  assert.deepEqual(fresh.map(firstDay), [14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 38]);
   // neither order puts one section next to itself, the end and the start included (Toy Box,
-  // Again counted as Toy Box)
+  // Again counted as Toy Box), nor does the turn from the first era's last day (#13) to the second's first
   for (const order of [first, second]) {
     order.forEach((id, k) => assert.notEqual(familyOf(id), familyOf(order[(k + 1) % order.length]), `${id}, ${order[(k + 1) % order.length]}`));
   }
+  assert.notEqual(familyOf(first.at(-1)), familyOf(second[0]));
   for (let k = 1; k < undated.length; k++) {
     assert.notEqual(familyOf(undated[k][1]), familyOf(undated[k - 1][1]), `undated days ${undated[k - 1]}, ${undated[k]}`);
   }

@@ -625,13 +625,13 @@ export const strings = {
   'story.bonus-starfall': 'A lua desceu para descansar, e esqueceu de ir embora.',
 
   // ---- objects: the Daily Stone's (public/js/dailies.js)
-  'name.daily-piggy-bank': 'Cofrinho de Porquinho',
+  'name.daily-piggy-bank': 'Cofrinho',
   'story.daily-piggy-bank': 'Está economizando desde terça. Não diz para quê.',
   'name.daily-instant-camera': 'Câmera Instantânea',
   'story.daily-instant-camera': 'Tirou sua foto. Ainda está decidindo o que acha.',
   'name.daily-rabbit-hat': 'Coelho na Cartola',
   'story.daily-rabbit-hat': 'Ninguém perguntou ao coelho. Ele gostaria que isso constasse.',
-  'name.daily-chicken-crossing': 'Galinha Atravessando',
+  'name.daily-chicken-crossing': 'Galinha na Estrada',
   'story.daily-chicken-crossing': 'Ela tem seus motivos. Não vai contar.',
   'name.daily-sword-stone': 'Espada na Pedra',
   'story.daily-sword-stone': 'Muitos já tentaram. A pedra está se divertindo muito.',

@@ -561,19 +561,20 @@ export const ROTATION = [
     'daily-piggy-bank', 'daily-genie', 'daily-troll-doll', 'daily-instant-camera', 'daily-frog-prince', 'daily-cloth-tiger',
     'daily-rabbit-hat', 'daily-sword-stone', 'daily-chicken-crossing', 'daily-baba-yaga-hut', 'daily-sock-monkey',
   ] },
-  // page 19's 13 undated picks, after page 18's 11, from the first turn on or after Daily #3: the
-  // cycle that began on #2 finishes (#13 Sock Monkey, a day later than before, for the Sugar Skull),
-  // this era begins on #14 (13 Nov 2026), and the new stones first come on #25-#38 (24 Nov-7 Dec).
-  // Their order spreads the sections, Toy Box, Again counted as Toy Box:
-  //   ... W T | X T Y S T X R T H S T X C | I ...
+  // page 19's 13 undated picks, interleaved with page 18's 11 (Kellan wanted the new ones soon), from
+  // the first turn on or after Daily #3: the cycle that began on #2 finishes (#13 Sock Monkey, a day
+  // later than before, for the Sugar Skull), and this era begins on #14 (13 Nov 2026) with a new
+  // stone. New and old alternate, new first, each in its own order (page 18's as in the first era),
+  // with two new together near the end (13 against 11). By section, Toy Box, Again counted as Toy Box:
+  //   ... W T | X I T W Y T S I T W X T R I T W H M S W T X T C | X ...
   // (X Up to Something, Y Myths of the World, S Storybook, R Nursery Rhymes, H Show Time,
-  // C Things With a Secret). The Sleepy Cyclops sits where no year to 2030 puts him next to Cupid
-  // on Feb 14; the Squirrel's Nov 1 always falls between two dated days.
+  // C Things With a Secret): no section next to itself, the end and the start included, nor after
+  // #13's Sock Monkey. No year to 2030 puts the Sleepy Cyclops next to Cupid on Feb 14; the
+  // Squirrel's Nov 1 always falls between two dated days.
   { since: 3, order: [
-    'daily-piggy-bank', 'daily-genie', 'daily-troll-doll', 'daily-instant-camera', 'daily-frog-prince', 'daily-cloth-tiger',
-    'daily-rabbit-hat', 'daily-sword-stone', 'daily-chicken-crossing', 'daily-baba-yaga-hut', 'daily-sock-monkey',
-    'daily-dog-sofa', 'daily-karakuri', 'daily-cyclops', 'daily-puss-in-boots', 'daily-luchador', 'daily-gull-chips',
-    'daily-owl-pussycat', 'daily-toy-dinosaur', 'daily-jester', 'daily-dorothys-house', 'daily-pinocchio', 'daily-goat-car',
-    'daily-stone-soup',
+    'daily-dog-sofa', 'daily-piggy-bank', 'daily-karakuri', 'daily-genie', 'daily-cyclops', 'daily-troll-doll',
+    'daily-puss-in-boots', 'daily-instant-camera', 'daily-luchador', 'daily-frog-prince', 'daily-gull-chips', 'daily-cloth-tiger',
+    'daily-owl-pussycat', 'daily-rabbit-hat', 'daily-toy-dinosaur', 'daily-sword-stone', 'daily-jester', 'daily-chicken-crossing',
+    'daily-dorothys-house', 'daily-baba-yaga-hut', 'daily-pinocchio', 'daily-goat-car', 'daily-sock-monkey', 'daily-stone-soup',
   ] },
 ];

@@ -184,8 +184,8 @@ async function run() {
 
   // 6c. page 19's stones: a few reveals, undated and dated, each name on one line
   for (const [date, n, id, name, shot] of [
-    ['2026-11-24', 25, 'daily-dog-sofa', 'Dog on the Sofa', '7b-reveal-dog-sofa.png'],
-    ['2026-11-30', 31, 'daily-owl-pussycat', 'Owl and Pussycat', '7c-reveal-owl-pussycat.png'],
+    ['2026-11-13', 14, 'daily-dog-sofa', 'Dog on the Sofa', '7b-reveal-dog-sofa.png'],
+    ['2026-11-25', 26, 'daily-owl-pussycat', 'Owl and Pussycat', '7c-reveal-owl-pussycat.png'],
     ['2027-02-14', 107, 'daily-cupid', 'Cupid', '7d-reveal-cupid.png'],
     ['2027-09-22', 327, 'daily-toadstool-frog', 'Frog & Toadstool', '7e-reveal-toadstool-frog.png'],
     ['2027-11-01', 367, 'daily-squirrel-pumpkin', 'Squirrel & Pumpkin', '7f-reveal-squirrel-pumpkin.png'],
@@ -240,16 +240,16 @@ async function run() {
     await page.context().close();
   }
 
-  // 10. ?d=N for a returning player: on to that stone from the title (Daily #14: the Piggy Bank again, the second era's first day)
+  // 10. ?d=N for a returning player: on to that stone from the title (Daily #15: the Piggy Bank again, in the second era)
   {
     const page = await newPage(learned);
-    await page.goto(`http://localhost:${port}/?d=14&today=2026-11-13`);
+    await page.goto(`http://localhost:${port}/?d=15&today=2026-11-14`);
     await page.waitForFunction(() => window.strata?.openMenu, null, { timeout: 30000 });
     await page.waitForTimeout(3500);
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => window.strata.game?.entry?.daily === 14, null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => window.strata.game?.entry?.daily === 15, null, { timeout: 15000 }).catch(() => {});
     const g = await page.evaluate(() => [window.strata.game?.entry?.daily, window.strata.game?.shape.id]);
-    assert(g[0] === 14 && g[1] === 'daily-piggy-bank', `?d=14 opens Daily #14 for a returning player (${g.join(', ')})`);
+    assert(g[0] === 15 && g[1] === 'daily-piggy-bank', `?d=15 opens Daily #15 for a returning player (${g.join(', ')})`);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: out + '11-link-returning.png' });
     await page.context().close();
@@ -258,7 +258,7 @@ async function run() {
   // 11. ?d=N for a new player: the short lessons, then the stone
   {
     const page = await newPage({});
-    await page.goto(`http://localhost:${port}/?d=14&today=2026-11-13`);
+    await page.goto(`http://localhost:${port}/?d=15&today=2026-11-14`);
     await toMap(page);
     const head = await page.evaluate(() => [document.querySelector('#map-progress').textContent, document.querySelector('#map-today').hidden, document.querySelector('.map-node.learn .mt')?.textContent]);
     assert(head[1] === true && head[2] === '7 lessons first', `new player: no Today ring yet; Learn says "${head[2]}"; head "${head[0]}"`);
@@ -275,7 +275,7 @@ async function run() {
       await page.waitForTimeout(4600);
     }
     log('lessons run:', lessons.join(' '));
-    await page.waitForFunction(() => window.strata.game?.entry?.daily === 14, null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => window.strata.game?.entry?.daily === 15, null, { timeout: 15000 }).catch(() => {});
     const g = await page.evaluate(() => [window.strata.game?.shape.id, localStorage.getItem('strata.tutorial')]);
     assert(lessons.length === 7 && g[0] === 'daily-piggy-bank' && g[1] === '1', `after ${lessons.length} lessons, straight to ${g[0]}`);
     await page.waitForTimeout(1200);
