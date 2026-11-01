@@ -23,7 +23,11 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// French counts characters too, not words: its words are longer and its articles and elisions
+// (l’, d’, qu’) make a word count meaningless. The same 320 px box holds about 41 of the Latin
+// face's characters a line at 13 px with Larger text (x1.22), measured in Chromium on the
+// longest lines; two lines is 82, so 80 leaves the wrap a word's slack. English's longest is 75.
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, fr: 80 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -100,8 +104,38 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // French for every French tag: France, Canada, Belgium, Switzerland
+  assert.equal(I18N.chooseLang({ prefs: ['fr-CA', 'en-US'], live: ['en', 'fr'] }), 'fr');
+  assert.equal(I18N.chooseLang({ prefs: ['fr_BE'], live: ['en', 'fr'] }), 'fr');
+  // live today: English, Japanese, Simplified Chinese and French (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'fr']);
+});
+
+// French counts 0 as singular ("0 monde"), so a count English writes as "no slips" keeps its
+// zero form, and the singular form must make sense for both 0 and 1
+test('fr: plurals pick by French rules, with 0 singular', () => {
+  const fr = TABLES.fr.strings;
+  const pr = new Intl.PluralRules('fr');
+  assert.equal(pr.select(0), 'one');
+  assert.equal(pr.select(2), 'other');
+  for (const [k, v] of Object.entries(fr)) {
+    if (!v || typeof v !== 'object') continue;
+    assert.ok(typeof v.one === 'string', `fr ${k} needs a "one" form (0 and 1)`);
+    assert.match(v.one, /\{n\}/, `fr ${k}: "one" is said for 0 too, so it shows the number`);
+  }
+  assert.equal(fr.slips.zero, 'aucun faux pas');
+});
+
+// French typography: a no-break space before : (U+00A0) and a narrow one before ; ! ? (U+202F),
+// never a plain space or none; « » for quotes; the typographic apostrophe
+test('fr: French punctuation spacing, quotes and apostrophes', () => {
+  for (const [k, v] of Object.entries(TABLES.fr.strings)) {
+    for (const s of typeof v === 'object' ? Object.values(v) : [v]) {
+      const text = s.replace(/<[^>]+>/g, '');
+      assert.doesNotMatch(text, /(^|[^  ])[:;!?](\s|$)/, `fr ${k}: space before punctuation: ${JSON.stringify(s)}`);
+      assert.doesNotMatch(text, /["“”']/, `fr ${k}: quotes and apostrophes: ${JSON.stringify(s)}`);
+    }
+  }
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
