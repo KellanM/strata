@@ -1301,3 +1301,12 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { lette
 html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---------- Spanish (es): longer words (docs/l10n/es.md) ----------
+   A world's name sits on one line on its card. Spanish names run a few letters longer than
+   English ("Escalones de brasa", "Noche de faroles"), so the card's tracking closes from .3em to
+   .2em, which keeps the longest inside 375 px. Finds' tile names wrap onto a second line, as
+   they do with Larger text, instead of being cut off: about twice as many Spanish names as
+   English ones run past a tile's width */
+html:lang(es) :is(#chapter-card .cname, #world-close .cname) { letter-spacing: .2em; padding-left: .2em; }
+html:lang(es) .jr-tile .nm { white-space: normal; text-align: center; }
