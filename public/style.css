@@ -1278,7 +1278,7 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
   #journal-count { gap: 10px; letter-spacing: .2em; white-space: nowrap; }
 }
 
-/* ---------- another language (public/js/i18n.js; Japanese and Chinese, not live until reviewed) ----------
+/* ---------- another language (public/js/i18n.js): the CJK type rules (Japanese, Chinese, Korean) ----------
    English never gets a lang other than "en", so none of this touches it. The i18n module sets
    <html lang> and Settings' on and off; the faces below come after the Latin ones, so numbers and
    Latin words keep their look and the CJK characters come from the system's own faces (iOS has
@@ -1363,3 +1363,18 @@ html.large-text:lang(de) .jr-tile .nm, html:lang(de) #journal-view .jv-name { hy
 html:lang(fr) :is(.ring-label, .ring-toggle .l, .pause-label) { letter-spacing: .12em; padding-left: .12em; }
 html:lang(fr) .lesson-list .nm { letter-spacing: .08em; }
 html:lang(fr) #chapter-card .cname { letter-spacing: .24em; padding-left: .24em; }
+/* ---- Brazilian Portuguese (pt-BR; docs/l10n/pt-BR.md). English is untouched.
+   Portuguese names are mostly "X de Y" (Saquinho de Chá, Carrinho de Castanhas), so a Finds tile
+   name takes two lines rather than losing its end, as it already does with Larger text, and
+   closes its tracking a little so most still fit on one */
+html:lang(pt-BR) .jr-tile .nm { white-space: normal; text-align: center; overflow-wrap: anywhere; }
+html:lang(pt-BR) .jr-tile.found .nm { letter-spacing: .14em; }
+/* A map name sits beside its stone on one line; a long Portuguese one ("Carrinho de Castanhas",
+   and "Saquinho de Chá" with Larger text) ran off the screen's edge. It wraps instead, within
+   the room beside the stone */
+html:lang(pt-BR) .map-node .label { white-space: normal; width: max-content; max-width: 40vw; }
+html:lang(pt-BR) .map-node .nm { letter-spacing: .2em; }
+html:lang(pt-BR) .map-node.lbl-left .nm { margin-right: -.2em; }
+/* A world's name on its card is one line in English. "Colinas das Fogueiras" and "Festa das
+   Lanternas" are wider than a 375 px screen in those capitals, so they may take two lines */
+html:lang(pt-BR) :is(#chapter-card, #world-close) .cname { white-space: normal; text-wrap: balance; max-width: 100%; }

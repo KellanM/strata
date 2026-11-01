@@ -61,7 +61,7 @@ test('ko: no particle straight after a {placeholder} or an icon', () => {
 // longer than English, so a budget near the English maximum makes the drafter cut, not wrap.
 // And the 14 words English keeps to: German compounds make that easy, the characters are the
 // real limit.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90, ko: 36, fr: 72 };
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90, ko: 36, fr: 72, 'pt-BR': 64 };
 const PLURAL_FORMS = { ru: ['one', 'few', 'many', 'other'] };
 const LATIN_STORY_BUDGET = { de: { chars: 80, words: 14 } };
 // French counts characters too, not words: its words run longer and its elisions (l’, d’, qu’)
@@ -70,6 +70,12 @@ const LATIN_STORY_BUDGET = { de: { chars: 80, words: 14 } };
 // about 72, and the drafts that ran 69-78 took a third line there (6 of 209, against English's 1).
 // With every line at 72 or under none does; the Finds view (15 px) stays on two lines without
 // Larger text. English's longest is 75, so French at 72 also stays about as long as the English.
+// Brazilian Portuguese is counted in characters too, not words: it spends more short ones (de, a,
+// o, que) on the same thought. The budget is measured, not borrowed from English: in the find view
+// (15 px, a 320 px box) with Larger text (x1.22), English's longest lines (70-75 characters) already
+// take three lines, and Portuguese, with longer words, broke to three from 59 characters. Every
+// pt-BR line was rewritten until it took two lines there at 375 px, which left them at 64 at most
+// (docs/l10n/pt-BR.md); 64 keeps a new line from undoing that without a look.
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -190,10 +196,15 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   assert.equal(I18N.chooseLang({ prefs: ['de-AT'], live: ['en', 'de'] }), 'de');
   assert.equal(I18N.chooseLang({ prefs: ['de-CH', 'en-GB'], live: ['en'] }), 'en');
   assert.equal(I18N.chooseLang({ dev: 'de', live: ['en'] }), 'de');
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'ru']);
   // French for every French tag: France, Canada, Belgium, Switzerland
   assert.equal(I18N.chooseLang({ prefs: ['fr-CA', 'en-US'], live: ['en', 'fr'] }), 'fr');
   assert.equal(I18N.chooseLang({ prefs: ['fr_BE'], live: ['en', 'fr'] }), 'fr');
+  // Portuguese from anywhere (Brazil, Portugal, plain pt) is Brazil's table, once it is live
+  assert.equal(I18N.chooseLang({ prefs: ['pt-BR'], live: ['en', 'pt-BR'] }), 'pt-BR');
+  assert.equal(I18N.chooseLang({ prefs: ['pt-PT', 'en-US'], live: ['en', 'pt-BR'] }), 'pt-BR');
+  assert.equal(I18N.chooseLang({ prefs: ['pt_BR'], live: ['en'] }), 'en');
+  // live today, all on Kellan's word (2026-10-31): no native speaker's review
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ko', 'de', 'fr', 'es', 'pt-BR', 'ru']);
 });
 
 // French counts 0 as singular ("0 monde"), so a count English writes as "no slips" keeps its
@@ -220,6 +231,16 @@ test('fr: French punctuation spacing, quotes and apostrophes', () => {
       assert.doesNotMatch(text, /(^|[^  ])[:;!?](\s|$)/, `fr ${k}: space before punctuation: ${JSON.stringify(s)}`);
       assert.doesNotMatch(text, /["“”']/, `fr ${k}: quotes and apostrophes: ${JSON.stringify(s)}`);
     }
+  }
+});
+
+// Intl.PluralRules counts 0 as "one" in Portuguese ("0 mundo"), so a plural must say 0 itself
+test('pt-BR: every plural has "one", "other" and its own "zero"', () => {
+  assert.equal(new Intl.PluralRules('pt-BR').select(0), 'one');
+  for (const [k, v] of Object.entries(TABLES['pt-BR'].strings)) {
+    if (!v || typeof v !== 'object') continue;
+    assert.ok(typeof v.one === 'string' && typeof v.other === 'string', `pt-BR ${k}`);
+    assert.ok(typeof v.zero === 'string', `pt-BR ${k}: 0 would read as singular without a "zero" form`);
   }
 });
 
