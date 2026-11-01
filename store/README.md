@@ -7,6 +7,7 @@ Everything that goes into the App Store listing lives here.
 | Listing text | `app-store-listing.md` | Name, subtitle, description, keywords, age rating, privacy label, review notes. Paste-ready |
 | Screenshots, iPhone 6.9" (1320×2868) | `screenshots/6_9in-<order>-<subject>.png` | Upload in the order of the number |
 | Screenshots, iPhone 6.5" (1284×2778) | `screenshots/6_5in-<order>-<subject>.png` | Same five frames |
+| Screenshots, iPhone Duo (v1.1): outer 1398×2034, inner 2007×2853 | `screenshots/duo-outer-<n>.png`, `duo-inner-<n>.png` (not shot yet) | `node shoot.mjs duo-outer duo-inner <frames>`; earns the "Made for iPhone Duo" badge (docs/handoff-2026-10-31-v1.1-duo.md) |
 | Screenshot script | `shoot.mjs` | Real gameplay only. The listing explains how to reshoot each frame |
 | **App icon (installed)** | `icon/app-icon.png` (= `icon/stone-3x3x3-lime.png`) | Kellan's pick, 2026-10-28: the 3×3×3 stone with its clues, on lime (it replaced the Sloth on lime, `icon/sloth-lime.png`, picked the day before). Also heads the support page. Copied to `../resources/icon.png` (App Store source) and `../public/icons/` (web: 180, 192, 512, a maskable 512 for Android, a 64 px favicon) |
 | App icon, candidates | `icon/sloth-green.png`, `icon/sloth-cloud-isles.png`, `icon/sloth-blue.png` | 1024 px, the Sloth's win state; the lime version (above) was chosen over these |

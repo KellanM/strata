@@ -1888,9 +1888,20 @@ function diveInto(el, palette, start) {
 // once the screen has settled (otherwise it keeps the landscape width and
 // shows only its right side back in portrait)
 let settleTimers = [];
+// A fold or an unfold (iPhone Duo) changes the window's height in one step: the map
+// keeps the stone at the middle of its view in the middle, rather than its top edge
+// in place (which slid the stone you were looking at down or up by half the change)
+// (a scroll event at the new size can come before the resize event: it mustn't overwrite the old view)
+let mapView = null;   // { top, h } of the map's scroller, as last laid out or scrolled
+function keepMapCentre() {
+  const sc = mapSheet();
+  if (!sc?.clientHeight) return;
+  if (mapView && sc.clientHeight !== mapView.h) sc.scrollTop = mapView.top + (mapView.h - sc.clientHeight) / 2;
+  mapView = { top: sc.scrollTop, h: sc.clientHeight };
+}
 function relayout() {
   settleTimers.forEach(clearTimeout);
-  const run = () => { resize(); if ($('#menu').classList.contains('show')) renderMenu(false); };
+  const run = () => { resize(); if ($('#menu').classList.contains('show')) { renderMenu(false); keepMapCentre(); } else mapView = null; };
   run();
   settleTimers = [setTimeout(run, 250), setTimeout(run, 700)];
 }
@@ -2675,7 +2686,7 @@ function mapRush() {
 }
 let ringInkFrame = 0;
 let mapScrolledAt = 0;
-mapSheet().addEventListener('scroll', () => { mapScrolledAt = performance.now(); if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
+mapSheet().addEventListener('scroll', () => { mapScrolledAt = performance.now(); const sc = mapSheet(); if (!mapView || sc.clientHeight === mapView.h) mapView = { top: sc.scrollTop, h: sc.clientHeight }; if (!ringInkFrame) ringInkFrame = requestAnimationFrame(() => { ringInkFrame = 0; ringInk(); mapRush(); }); }, { passive: true });
 const DESCENT = { first: 0.6, again: 0.45 };   // quick: a glance down, not a journey (Kellan, 2026-10-25)   // seconds for a whole descent (decision 2, docs/map-study.md)
 const HAND_OFF = 0.9;   // of the descent's way: from here a touch lands on the map, not the title
 function setScroll(k) {

@@ -18,7 +18,7 @@ Planning only; nothing is built yet. The facts on the Duo and on iPadOS come fro
 | 1024×1366 | iPad 13", portrait | Big and clear | Phone-sized and tiny on the screen | — |
 | 1366×1024 | iPad 13", landscape | Big and clear | Tiny | A thin column, most of the width empty |
 
-**Bug:** at iPad sizes (1024 and wider) **one of the three peel handles is missing**. At 694 wide all three show.
+**Bug (found 2026-10-31: not a bug in the game):** at iPad sizes (1024 and wider) one of the three peel handles looked missing. The renders were taken a fixed 4.5 s after tapping a stone. The diamonds pop in one after another once the block is whole, and software-rendered Chromium draws an iPad-sized page slowly enough that the shot landed mid-entrance: one diamond full size, one still small, one not yet in. Waited out, all three show at 1024×1366 and 1366×1024 (1× and 2×), on screen at the same places as at 694 wide. `store/shoot.mjs` now waits for the diamonds to land before shooting a level.
 
 ## iPhone Duo: the facts (researched, 2026-10-31)
 
@@ -67,7 +67,7 @@ Build 7 is iPhone-only and in review. Change nothing about devices while it's th
    - The map uses the width: wider spacing, or the chapter story beside the trail.
    - The result screen's rings and the lesson cards are placed for a wide window.
 2. **Interface scale by size class.** Use a tablet type scale and larger button rings, so the interface stops being phone-sized on a 13" screen.
-3. **Fix the missing peel handle** at large sizes (it may be off-screen; check where it lands).
+3. ~~Fix the missing peel handle~~: it wasn't missing, only caught mid-entrance by a slow render (see the bug note above).
 4. **Input:**
    - **Trackpad and pointer:** hover highlights the cube under the cursor. `finePointer` already exists for the web.
    - **Keyboard shortcuts:** C and M for the tools, ⌘Z to take back, arrows to turn the block, Esc to pause.
