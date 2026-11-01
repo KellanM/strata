@@ -1101,6 +1101,22 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 17: Moose; Kellan's pick, 2026-11-01; its body two cubes shorter, for the phone's tap budget)
+      id: 'moose', name: 'Moose', from: 'cand-p17-moose', fraction: 0.65, seed: 4,
+      story: 'It eats the leaves before they fall. It says it is helping.',
+      ...voxels({ a: 0x3f2c28, b: 0xd8402e, c: 0x6e4630, d: 0x3a3442, e: 0xeadbb8 }, [
+        '...a.a... ......... ...a.a... ......... .........',
+        '...a.a... ......... ...a.a... ......... ....b....',
+        '..ccccc.. ..ccccc.. ..ccccc.. ....c.... ....b....',
+        '..ccccc.. ..ccccc.. ..ccccc.. ......... ...ccc...',
+        '..ccccc.. ..ccccc.. ..ccccc.. ...ccc... ....c....',
+        '......... ..ccccc.. ..ccccc.. ...ccc... ...d.d...',
+        '......... ......... .eecccee. .eecccee. .........',
+        '......... ......... eee...eee eee...eee .........',
+        '......... ......... ......... e.e...e.e .........',
+      ]),
+    },
+    {
       id: 'owl', name: 'Owl', dims: [6, 7, 4], fraction: 0.85, seed: 23,
       story: 'It watched every star fall, and kept a list.',
       cell(x, y, z) {
@@ -1920,6 +1936,20 @@ export const SHAPES = [
   // Older than the temples: carved, mossy, and half asleep in the mist.
   ...chapter(9, [
     {
+      // from the object gallery (page 17: Sphinx; Kellan's pick, 2026-11-01)
+      id: 'sphinx', name: 'Sphinx', from: 'cand-p17-sphinx', fraction: 0.65, seed: 1,
+      story: 'It lost its nose long ago and has not gone looking for it.',
+      ...voxels({ a: 0xd8a862, b: 0x3f6fb8, c: 0x3a3442 }, [
+        '.......... aaaaaaaaaa aaaaaaaa.. aaaaaaaaaa ..........',
+        '.......... aaaaaaaa.. aaaaaaaa.. aaaaaaaa.. ..........',
+        '......aa.. .aaaaaaa.. aaaaaaaab. .aaaaaaa.. ......aa..',
+        '......bb.. .....aaa.. .....aaab. .....aaa.. ......bb..',
+        '......aa.. ......baa. ......baa. ......baa. ......aa..',
+        '......bb.. ......bac. ......baa. ......bac. ......bb..',
+        '......aa.. ......bbb. ......bbb. ......bbb. ......aa..',
+      ]),
+    },
+    {
       // from the object gallery (page 7: Moai)
       id: 'moai', name: 'Moai', from: 'cand-p7-moai', fraction: 0.7, seed: 13,
       story: 'It has watched the horizon so long it forgot to blink.',
@@ -1974,6 +2004,22 @@ export const SHAPES = [
         '....... ....... ..acb.. .fbbb.. ..bbb.. ....... .......',
         '....... ....... .g..... ggga... .f..... ....... .......',
         '....... ....... ....... .gcac.. ....... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 17: Haniwa; Kellan's pick, 2026-11-01)
+      id: 'haniwa', name: 'Haniwa', from: 'cand-p17-haniwa', fraction: 0.65, seed: 1,
+      story: 'Buried to keep a king company, it found something to sing about.',
+      ...voxels({ a: 0x6fb85a, b: 0xd2784a, c: 0x4a2a24 }, [
+        '.aaaaa. aaaaaaa aaaaaaa aaaaaaa .aaaaa.',
+        '..bbb.. .bbbbb. .bbbbb. .bbbbb. ..bbb..',
+        '....... ..bbb.. ..bbb.. ..bbb.. .......',
+        '....... ..bbb.. b.bbb.. ..bbb.. .......',
+        '....... ..bbb.. bbbbbbb ..bbb.. .......',
+        '....... ....... ...b..b ....... .......',
+        '....... ..bbb.. ..bbb.b ..bcb.. .......',
+        '....... ..bbb.. ..bbb.b ..cbc.. .......',
+        '....... ..bbb.. ..bbb.. ..bbb.. .......',
       ]),
     },
     {
@@ -2069,6 +2115,22 @@ export const SHAPES = [
         '.f.f... .ede... .ded... .ede... .......',
         '....... .e.e... ..ed... .ed.... .......',
         '....... ....... ..dd... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 17: Grass Snake; Kellan's pick, 2026-11-01)
+      id: 'grass-snake', name: 'Grass Snake', from: 'cand-p17-grass-snake', fraction: 0.65, seed: 1,
+      story: 'The stone was put up to mark something. The snake says: the sunny side.',
+      ...voxels({ a: 0xd2c6b0, b: 0x5a9a3e, c: 0xf2d24a, d: 0x3a3442, e: 0xe0434b }, [
+        '....... ....... ..aaa.. ..aaa.. ..aaa.. ....... ....... .......',
+        '....... ....... ..aaa.. ..aaa.. ..aaab. .bbbbb. ....... .......',
+        '....... ...bbb. ..aaab. ..aaab. ..aaab. ....... ....... .......',
+        '....... .bbb... .baaa.. .baaa.. .baaa.. ....... ....... .......',
+        '....... ....... ..aaa.. ..aaa.. .baaa.. .bbbbb. ....... .......',
+        '....... ....bb. ..aaab. ..aaab. ..aaab. .....b. ....... .......',
+        '....... .bbbb.. .baaa.. .baaa.. ..aaa.. ....... ....... .......',
+        '....... ....... ...a... .baaa.. .b.a... ....... ....... .......',
+        '....... ....... ..ccc.. ..bbb.. ..dbd.. ..bbb.. ...b... ...e...',
       ]),
     },
     {
@@ -2735,6 +2797,23 @@ export const SHAPES = [
       ]),
     },
     {
+      // from the object gallery (page 17: Cloud Fisher; Kellan's pick, 2026-11-01; the cloud a column
+      // shorter and the fish a cube, for the phone's tap budget)
+      id: 'cloud-fisher', name: 'Cloud Fisher', from: 'cand-p17-cloud-fisher', fraction: 0.6, seed: 3,   // (eased to 11.9: Cloud Isles stays easier than Starfall)
+      story: 'Forty years fishing off this cloud. Today, for the first time, something bit.',
+      ...voxels({ a: 0xf07a2a, b: 0xd9e3f6, c: 0xfbfcff, d: 0x5a3a2e, e: 0x9aa3ad, f: 0x4a62a8, g: 0xf2c09a, h: 0xe2b25a, i: 0x3a3442 }, [
+        '......... ......... ........a ......... .........',
+        '......... ..bb..... .bbbb...a ..bb..... .........',
+        '..bb..... bbccbbd.. bccccb..e bbccbbd.. ..bb.....',
+        '......... .ccc..f.. ccccc...e .ccc..f.. .........',
+        '......... ...ffff.. .c.fff..e ...ffff.. .........',
+        '......... ...fff... ...fffghe ...fff... .........',
+        '......... ...ggi... ...ggg.hh ...ggi... .........',
+        '...hhh... ..hhhhh.. ..hhhhh.. ..hhhhh.. ...hhh...',
+        '......... ....h.... ...hhh... ....h.... .........',
+      ]),
+    },
+    {
       // from the object gallery (page 8: Biplane)
       id: 'biplane', name: 'Biplane', from: 'cand-p8-biplane', fraction: 0.65, seed: 11,
       story: 'Two wings, one pilot, and the whole sky to wander in.',
@@ -2788,6 +2867,21 @@ export const SHAPES = [
         '....... ....... ....... ....... ..ccc.. ..ccc.. ...c... .......',
         '....... ....... ....... ....... ..c.c.. ...g... ....... .......',
         '....... ....... ....... ....... ....... ...g... ....... .......',
+      ]),
+    },
+    {
+      // from the object gallery (page 17: Broomstick; Kellan's pick, 2026-11-01)
+      id: 'broomstick', name: 'Broomstick', from: 'cand-p17-broomstick', fraction: 0.65, seed: 1,
+      story: 'The witch is in having tea. The cat was told not to touch anything.',
+      ...voxels({ a: 0xe2b25a, b: 0xd8503a, c: 0x8a5a3c, d: 0x34303e, e: 0xf6d365 }, [
+        '.......... a......... a......... a......... ..........',
+        'a......... aa........ aab....... aa........ a.........',
+        'a......... aab....... aacccccccc aab..dd... a.........',
+        'a......... aa.dddd... aab..dd... aa...dd... a.........',
+        '.......... a..d.dd... a....dd... a....dd... ..........',
+        '.......... ...ddddd.. ....dddd.. ....edde.. ..........',
+        '.......... ...d.dd... ....dddd.. ....dddd.. ..........',
+        '.......... .......... ....d..d.. .......... ..........',
       ]),
     },
     {
@@ -3312,6 +3406,8 @@ export const ADDED_LATER = new Set([
   'teabag-pal', 'toaster', 'fried-egg', 'teapot', 'bunny-teacup', 'mug',
   // Kellan's picks from gallery pages 15 and 16 (2026-10-31)
   'broody-hen', 'highland-cow', 'red-grouse', 'sheepfold', 'grapes', 'ice-lolly', 'sunfish', 'yawning-hippo', 'scorpion', 'monk', 'akabeko', 'goldfish-lantern', 'basket-dog',
+  // and from gallery page 17 (2026-11-01)
+  'moose', 'haniwa', 'sphinx', 'grass-snake', 'broomstick', 'cloud-fisher',
 ]);
 
 // Retired ids: their solves stay in old saves (nothing reads them now), so they
@@ -3351,6 +3447,8 @@ const LIT = {
   'mountain-goat': { span: 2 }, 'calendar-stone': { span: 2 }, 'stand-mixer': { span: 2 },
   // Kellan's picks (2026-10-31), lit as they were in the gallery
   sheepfold: { span: 2 }, grapes: { span: 2 }, 'goldfish-lantern': { keep: [0xffd77a] },
+  // and from page 17 (2026-11-01)
+  sphinx: { span: 2 },
 };
 // These carry hand-made dithered ramps of their own: the Heart, and the page
 // 14 pieces built with its kit (the amber, the orrery's sun, the astrolabe's

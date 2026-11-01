@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (`docs/l10n/de.md` lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords as well, since an umlaut is two bytes and App Store Connect's 100 is safest read as bytes. The in-game words follow the glossary in `docs/l10n/de.md` (Stein, Würfel, Figur, Meißel, markieren, Patzer, Juwel, Schrein, Welt). "du", as in the game.
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords as well, since an umlaut is two bytes and App Store Connect's 100 is safest read as bytes. The in-game words follow the glossary in `docs/l10n/de.md` (Stein, Würfel, Figur, Meißel, markieren, Patzer, Juwel, Schrein, Welt). "du", as in the game.
 
 ---
 
@@ -40,7 +40,7 @@ Strata ist ein stilles Rätsel darüber, es zu finden. Jedes Level ist ein Stein
 Es ist ein Nonogramm in drei Dimensionen, ein Logikbild zum Drehen. Dreh den Stein in deinen Händen, heb Schichten ab, um hineinzusehen, und arbeite dich Reihe für Reihe vor, bis nur noch die Figur übrig ist.
 
 EINE REISE DURCH FÜNFZEHN WELTEN
-194 Steine in 15 Welten, vom Ersten Licht und dem Moosgarten bis zum Laternenfest, der Tiefe und dem Sternenfall. Jede Welt ist ein Ort mit eigenem Licht und eigenen Farben, und jeder Stein, den du freilegst, nimmt als kleine Skulptur seinen Platz auf der Karte ein. In jeder Welt wartet ein Schrein auf alle, die sich ihre Juwelen verdienen.
+200 Steine in 15 Welten, vom Ersten Licht und dem Moosgarten bis zum Laternenfest, der Tiefe und dem Sternenfall. Jede Welt ist ein Ort mit eigenem Licht und eigenen Farben, und jeder Stein, den du freilegst, nimmt als kleine Skulptur seinen Platz auf der Karte ein. In jeder Welt wartet ein Schrein auf alle, die sich ihre Juwelen verdienen.
 
 LEICHT ZU LERNEN
 Zwölf kurze Lektionen bringen dir beim Spielen alles bei: wie du die Zahlen liest, wie du meißelst, wie du die Würfel markierst, die bleiben sollen. Die Steine werden unterwegs größer und die Hinweise weniger, aber die Regeln ändern sich nie. Kommst du nicht weiter, warte einen Moment, dann leuchtet eine Reihe mit einem Zug sanft auf.

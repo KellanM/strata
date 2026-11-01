@@ -44,20 +44,20 @@ export default [
   //   pose: browsing, head down, a red maple leaf hanging from its lip
   //   parts: chocolate body, bone antlers, dark legs; the leaf the accent
   (() => {
-    const g = grid(9, 9, 7);
-    for (const x of [3, 5]) for (const z of [0, 3]) g.box([x, x], [0, 1], [z, z], mooseDk);   // long legs
-    g.box([2, 6], [2, 4], [0, 4], moose);                                                // the body
-    g.box([2, 6], [5, 5], [2, 4], moose).box([3, 5], [6, 6], [3, 4], moose);             // the big shoulder hump
-    g.box([3, 5], [4, 6], [5, 5], moose);                                                // the head
-    g.box([3, 5], [3, 4], [6, 6], moose).clear(3, 4, 6).clear(5, 4, 6);                 // the long drooping nose
-    g.set(4, 2, 5, moose);                                                               // the bell under the chin
-    pair(g, 3, 5, 6, INK);                                                               // eyes
-    g.set(4, 2, 6, leaf).set(4, 1, 6, leaf);                                             // a maple leaf, mid-chew
-    for (const z of [4, 5]) {                                                            // the palm antlers, both sides
+    const g = grid(9, 9, 5);
+    for (const x of [3, 5]) for (const z of [0, 2]) g.box([x, x], [0, 1], [z, z], mooseDk);   // long legs
+    g.box([2, 6], [2, 4], [0, 2], moose);                                                // the body
+    g.box([2, 6], [5, 5], [1, 2], moose).box([3, 5], [6, 6], [2, 2], moose);             // the big shoulder hump
+    g.box([3, 5], [4, 6], [3, 3], moose);                                                // the head
+    g.box([3, 5], [3, 4], [4, 4], moose).clear(3, 4, 4).clear(5, 4, 4);                 // the long drooping nose
+    g.set(4, 2, 3, moose);                                                               // the bell under the chin
+    pair(g, 3, 5, 4, INK);                                                               // eyes
+    g.set(4, 2, 4, leaf).set(4, 1, 4, leaf);                                             // a maple leaf, mid-chew
+    for (const z of [2, 3]) {                                                            // the palm antlers, both sides
       pair(g, 2, 6, z, antler); pair(g, 1, 6, z, antler);
       pair(g, 0, 7, z, antler); pair(g, 1, 7, z, antler); pair(g, 2, 7, z, antler);
     }
-    pair(g, 0, 8, 5, antler); pair(g, 2, 8, 5, antler);                                  // and their tines
+    pair(g, 0, 8, 3, antler); pair(g, 2, 8, 3, antler);                                  // and their tines
     return g.entry({ id: 'cand-p17-moose', name: 'Moose', seed: 4, story: 'It eats the leaves before they fall. It says it is helping.' });
   })(),
 

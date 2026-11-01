@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (docs/l10n/ko.md lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field (spaces count), and bytes (UTF-8, three to a Hangul syllable) for Keywords, which is how App Store Connect counts them. The in-game words follow the glossary in `docs/l10n/ko.md` (돌, 큐브, 모양, 끌, 표시, 실수, 보석, 사당, 세계). Polite 해요체 throughout, as in the game's interface.
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field (spaces count), and bytes (UTF-8, three to a Hangul syllable) for Keywords, which is how App Store Connect counts them. The in-game words follow the glossary in `docs/l10n/ko.md` (돌, 큐브, 모양, 끌, 표시, 실수, 보석, 사당, 세계). Polite 해요체 throughout, as in the game's interface.
 
 ---
 
@@ -40,7 +40,7 @@ Strata는 그것을 찾아내는 조용한 퍼즐이에요. 스테이지마다 �
 말하자면 3차원 네모로직(노노그램)이에요. 돌을 손안에서 돌려 보고, 층을 벗겨 안을 들여다보고, 한 줄씩 풀어 모양만 남겨 보세요.
 
 ■ 15개 세계를 지나는 여행
-15개 세계에 194개의 돌. '첫 빛'과 '이끼 정원'에서 '등불 축제', '심해', '별 내리는 밤'까지. 세계마다 고유한 빛과 색이 있고, 찾아낸 모양은 작은 조각상이 되어 지도 위에 놓여요. 세계마다 보석을 모은 사람을 위한 보너스 돌(사당)이 하나씩 기다려요.
+15개 세계에 200개의 돌. '첫 빛'과 '이끼 정원'에서 '등불 축제', '심해', '별 내리는 밤'까지. 세계마다 고유한 빛과 색이 있고, 찾아낸 모양은 작은 조각상이 되어 지도 위에 놓여요. 세계마다 보석을 모은 사람을 위한 보너스 돌(사당)이 하나씩 기다려요.
 
 ■ 쉽게 배우기
 짧은 레슨 12개로 플레이하면서 모두 배울 수 있어요. 숫자 읽는 법, 끌 쓰는 법, 남길 큐브를 표시하는 법. 여행이 이어질수록 돌은 커지고 단서는 줄지만, 규칙은 변하지 않아요. 막히면 잠시 기다려 보세요. 풀 수 있는 줄이 은은하게 빛나요.

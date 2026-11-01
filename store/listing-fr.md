@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (`docs/l10n/fr.md` lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords, which is how App Store Connect counts them (an accented letter is two bytes). The in-game words follow the glossary in `docs/l10n/fr.md` (pierre, cube, forme, burin, tailler, marquer, faux pas, gemme, sanctuaire, monde). Tutoiement, as in the game.
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords, which is how App Store Connect counts them (an accented letter is two bytes). The in-game words follow the glossary in `docs/l10n/fr.md` (pierre, cube, forme, burin, tailler, marquer, faux pas, gemme, sanctuaire, monde). Tutoiement, as in the game.
 
 French typography: the spaces before « : » and « ? » are no-break spaces (U+00A0), so App Store Connect never breaks a line before the colon. Each counts as one character. If App Store Connect shows them oddly, plain spaces are fine; the counts don't change.
 
@@ -42,7 +42,7 @@ Strata est un jeu calme où il s’agit de le trouver. Chaque niveau est un bloc
 C’est un logimage en trois dimensions (un nonogramme, ou picross en 3D). Tourne la pierre entre tes mains, retire ses couches pour voir à l’intérieur, et avance rangée par rangée jusqu’à ce qu’il ne reste que la forme.
 
 UN VOYAGE À TRAVERS QUINZE MONDES
-194 pierres dans 15 mondes, des Premières lueurs et du Jardin de mousse à la Fête des lanternes, aux Abysses et à la Pluie d’étoiles. Chaque monde a sa lumière et ses couleurs, et chaque pierre que tu découvres prend sa place sur la carte, comme une petite sculpture. Dans chaque monde, un sanctuaire attend ceux qui ont gagné leurs gemmes.
+200 pierres dans 15 mondes, des Premières lueurs et du Jardin de mousse à la Fête des lanternes, aux Abysses et à la Pluie d’étoiles. Chaque monde a sa lumière et ses couleurs, et chaque pierre que tu découvres prend sa place sur la carte, comme une petite sculpture. Dans chaque monde, un sanctuaire attend ceux qui ont gagné leurs gemmes.
 
 FACILE À APPRENDRE
 Douze courtes leçons t’apprennent tout en jouant : lire les nombres, tailler, marquer les cubes que tu veux garder. Les pierres grandissent et les indices se font plus rares au fil du voyage, mais les règles ne changent jamais. Tu bloques ? Attends un peu, et une rangée où jouer s’allume doucement.

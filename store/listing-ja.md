@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (docs/localisation.md lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords, which is how App Store Connect counts them. The in-game words follow the glossary in `public/i18n/ja.js` (石, キューブ, かたち, ノミ, 印, ミス, 宝石, 祠, 世界).
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords, which is how App Store Connect counts them. The in-game words follow the glossary in `public/i18n/ja.js` (石, キューブ, かたち, ノミ, 印, ミス, 宝石, 祠, 世界).
 
 ---
 
@@ -38,7 +38,7 @@ Strataは、それを見つけるための静かなパズルです。ステー�
 いわば、3次元のノノグラム（お絵かきロジック）です。石を手の中で回し、層をはがして中をのぞき、列をひとつずつ解いて、最後にかたちだけを残しましょう。
 
 ■ 15の世界をめぐる旅
-15の世界に、194の石。「はじまりの光」や「苔の庭」から、「提灯まつり」「深海」「星降る夜」まで。世界ごとに光と色があり、見つけたかたちは小さな彫刻として地図に並んでいきます。どの世界にも、宝石を集めた人のためのボーナスの石（祠）がひとつ待っています。
+15の世界に、200の石。「はじまりの光」や「苔の庭」から、「提灯まつり」「深海」「星降る夜」まで。世界ごとに光と色があり、見つけたかたちは小さな彫刻として地図に並んでいきます。どの世界にも、宝石を集めた人のためのボーナスの石（祠）がひとつ待っています。
 
 ■ やさしく覚えられる
 12の短いレッスンで、遊びながらすべてを覚えられます。数字の読み方、ノミの使い方、残したいキューブに印をつける方法。旅が進むにつれて石は大きく、手がかりは少なくなりますが、ルールはずっと変わりません。行き詰まったら少し待ってください。手を進められる列が、そっと光ります。
