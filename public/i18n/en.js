@@ -9,6 +9,7 @@
 // English is never rewritten on the page: index.html already holds it, and t() gives back these
 // strings exactly (test/i18n.test.js checks the page against them).
 import { SHAPES, BONUS, CHAPTERS, TUTORIAL, TUTORIAL_V2 } from '../js/shapes.js';
+import { DAILIES } from '../js/dailies.js';
 
 export const reviewed = true;
 
@@ -192,6 +193,7 @@ export const strings = {
   'finds.ahead': 'Still ahead',
   'finds.worlds': { one: '{n} world', other: '{n} worlds' },
   'finds.stones': '{n} stones',
+  'finds.daily': 'Daily Stones',
 
   // ---- finale.js (the result's score, drawn in the scene)
   'result.best': 'BEST',
@@ -201,13 +203,13 @@ export const strings = {
 };
 
 // The game's own words, from the data, by the keys every table uses:
-//   name.<id>, story.<id>              every object (levels and shrines) and every lesson
+//   name.<id>, story.<id>              every object (levels, shrines, the Daily Stone's) and every lesson
 //   chapter.<slug>.name|line|blurb     the fifteen worlds (slug: 'first-light')
 //   hint.<lesson id>.<k>.text|mouse|mistake   a lesson's lines, in order
 export const slug = (name) => name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
 export function data() {
   const out = {};
-  for (const s of [...SHAPES, ...BONUS]) {
+  for (const s of [...SHAPES, ...BONUS, ...DAILIES]) {
     out[`name.${s.id}`] = s.name;
     if (s.story) out[`story.${s.id}`] = s.story;
   }

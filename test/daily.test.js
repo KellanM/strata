@@ -1,19 +1,31 @@
-// The Daily Stone (public/js/daily.js, docs/daily-stone.md): the date gives the
-// same stone on every device, every day's stone is fair (one answer, reached by
-// line logic, in the mid-difficulty band), and the share line can't give the
+// The Daily Stone (public/js/daily.js, public/js/dailies.js, docs/daily-stone.md):
+// the date gives the same stone on every device, the calendar of curated stones
+// keeps its rules (and its past), every day's stone is fair (one answer, reached
+// by line logic, in the mid-difficulty band), and the share line can't give the
 // answer away.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayNumber, dateOf, daySeed, dailyStone, dailyPalette, judge, cellWaves, slipWaves,
+  dayNumber, dateOf, daySeed, dailyStone, generatedStone, dailyPalette, judge, cellWaves, slipWaves, calendar, stoneIdOf,
   shareText, INVITE, linkedDay, recordDay, readDays, streakAt, noteShare, DAILY_BAND, DAILY_URL, WAVE_CLEAN, WAVE_SLIP,
 } from '../public/js/daily.js';
+import { DAILIES, DAILY_BY_ID, SECTIONS, CURATED_FROM, DATED, ROTATION } from '../public/js/dailies.js';
 import { Puzzle, setClues, lineSolve, solveStats } from '../public/js/puzzle.js';
 import { buildCells } from '../public/js/shapes.js';
 import { SHAPES, BONUS } from '../public/js/shapes.js';
+import { LANGS } from '../public/js/i18n.js';
 import { prepare, countSolutions, cluesConsistent } from '../tools/aha-lib.mjs';
 
 const DAYS = 400;
+const LAST_2030 = dayNumber(new Date(2030, 11, 31, 12));
+const sectionOf = (id) => DAILY_BY_ID.get(id).section;
+const DATED_IDS = new Set(DATED.map((d) => d.id));
+// every name a stone has, in every language
+const NAMES = [];
+for (const code of LANGS) {
+  const T = code === 'en' ? null : (await import(`../public/i18n/${code}.js`)).strings;
+  for (const s of DAILIES) NAMES.push(T ? T[`name.${s.id}`] : s.name);
+}
 const memStore = () => {
   const m = new Map();
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), map: m };
@@ -42,22 +54,153 @@ test('daily: seeds and stones are deterministic (same day, same stone)', () => {
   }
   // a fixed point, so a change to the generator can't slip by unnoticed (it would reseed every day)
   assert.equal(daySeed(1), 829554316);
-  const a = dailyStone(7), b = dailyStone(7);
-  const ca = buildCells(a.shape), cb = buildCells(b.shape);
-  assert.deepEqual([...ca.solid], [...cb.solid]);
-  assert.deepEqual([...ca.colors], [...cb.colors]);
-  assert.deepEqual(dailyPalette(7), dailyPalette(7));
-  // neighbouring days differ
+  for (const n of [1, 7]) {
+    const a = dailyStone(n), b = dailyStone(n);
+    const ca = buildCells(a.shape), cb = buildCells(b.shape);
+    assert.deepEqual([...ca.solid], [...cb.solid]);
+    assert.deepEqual([...ca.colors], [...cb.colors]);
+    assert.deepEqual(dailyPalette(n), dailyPalette(n));
+  }
+  // the generator's neighbouring days differ
   const seen = new Set();
-  for (let n = 1; n <= 60; n++) seen.add([...buildCells(dailyStone(n).shape).solid].join(''));
+  for (let n = 1; n <= 60; n++) seen.add([...buildCells(generatedStone(n).shape).solid].join(''));
   assert.equal(seen.size, 60, 'two days share a stone');
 });
 
-test(`daily: ${DAYS} consecutive days are each uniquely solvable by line logic, mid-difficulty`, () => {
+// ---------------------------------------------------------------- the calendar (dailies.js)
+
+test('daily: Daily #1 keeps the stone it was shared with', () => {
+  // the generated stone of 31 Oct 2026, as it was before the curated stones came
+  assert.equal(stoneIdOf(1), null);
+  const { shape, seed, attempt, d } = dailyStone(1);
+  assert.equal(shape.id, 'daily-1');
+  assert.equal(seed, 1059122607);
+  assert.equal(attempt, 4);
+  assert.deepEqual(shape.dims, [6, 6, 6]);
+  assert.equal([...buildCells(shape).solid].join(''),
+    '000000111000111000110000000000000000110100111110111000111000010000000000111110111110111110111000010000000000'
+    + '011111111111111110111100011100011000111110111110111110111100111100011100111100111100111100111100111100011100');
+  assert.equal(d.toFixed(3), '10.839');
+  assert.equal(dailyPalette(1).base, 'Clouds');
+  assert.equal(dailyPalette(1).skyTop, 13689087);
+});
+
+test('daily: from Daily #2 (1 Nov 2026) every day is one of the curated stones', () => {
+  assert.equal(CURATED_FROM, 2);
+  assert.equal(dateOf(CURATED_FROM), '2026-11-01');
+  assert.equal(stoneIdOf(2), 'daily-piggy-bank');
+  for (let n = 2; n <= LAST_2030; n++) {
+    const id = stoneIdOf(n);
+    assert.ok(DAILY_BY_ID.has(id), `day ${n}: ${id}`);
+    const { shape, curated } = dailyStone(n);
+    assert.ok(curated && shape.id === id && shape.daily === n && shape.from.startsWith('cand-p18-'), `day ${n}`);
+  }
+  // every stone has its place in the calendar, once: dated, or in the rotation
+  const placed = [...DATED.map((d) => d.id), ...ROTATION.at(-1).order];
+  assert.deepEqual([...placed].sort(), DAILIES.map((s) => s.id).sort());
+  for (const era of ROTATION) for (const id of era.order) assert.ok(DAILY_BY_ID.has(id), id);
+});
+
+test('daily: the dated stones fall on their dates, 2026-2030, and on no other day', () => {
+  const DATES = { 'daily-black-cat': [10, 31], 'daily-nutcracker': [12, 6], 'daily-melted-snowman': [3, 20] };
+  assert.deepEqual(Object.keys(DATES).sort(), [...DATED_IDS].sort());
+  for (let y = 2026; y <= 2030; y++) {
+    for (const [id, [m, d]] of Object.entries(DATES)) {
+      const n = dayNumber(new Date(y, m - 1, d, 9));
+      if (n < CURATED_FROM) { assert.equal(stoneIdOf(n), null, `${y}-${m}-${d}: before the cutover`); continue; }
+      assert.equal(stoneIdOf(n), id, `${y}-${m}-${d}`);
+    }
+  }
+  for (let n = CURATED_FROM; n <= LAST_2030; n++) {
+    const id = stoneIdOf(n);
+    if (!DATED_IDS.has(id)) continue;
+    const [m, d] = DATES[id];
+    assert.equal(dateOf(n).slice(5), `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`, `day ${n}: ${id}`);
+  }
+  // none before its date this year: Halloween 2026 was Daily #1, so the Black Cat waits for 2027
+  assert.equal(dayNumber(new Date(2026, 9, 31, 12)), 1);
+  assert.equal(stoneIdOf(366), 'daily-black-cat');
+  assert.equal(dateOf(366), '2027-10-31');
+  const first = (id) => { for (let n = CURATED_FROM; ; n++) if (stoneIdOf(n) === id) return dateOf(n); };
+  assert.equal(first('daily-black-cat'), '2027-10-31');
+  assert.equal(first('daily-nutcracker'), '2026-12-06');
+  assert.equal(first('daily-melted-snowman'), '2027-03-20');
+});
+
+test('daily: the undated days cycle through the rotation, and no section comes twice in a row', () => {
+  const order = ROTATION[0].order;
+  const undated = [];
+  for (let n = CURATED_FROM; n <= LAST_2030; n++) if (!DATED_IDS.has(stoneIdOf(n))) undated.push(stoneIdOf(n));
+  // in order, cycling once every stone has had its day
+  undated.forEach((id, k) => assert.equal(id, order[k % order.length], `undated day ${k}`));
+  for (let k = 1; k < undated.length; k++) {
+    assert.notEqual(sectionOf(undated[k]), sectionOf(undated[k - 1]), `undated days ${k - 1}, ${k}: ${undated[k - 1]}, ${undated[k]}`);
+  }
+  // and on the calendar too, dated days included
+  for (let n = CURATED_FROM + 1; n <= LAST_2030; n++) assert.notEqual(sectionOf(stoneIdOf(n)), sectionOf(stoneIdOf(n - 1)), `days ${n - 1}, ${n}`);
+  // the Days of the Year are all dated: none in the rotation
+  for (const id of order) assert.notEqual(sectionOf(id), 'seasons', id);
+});
+
+test('daily: the calendar is deterministic', () => {
+  const a = calendar(LAST_2030), b = calendar(LAST_2030);
+  assert.deepEqual(a, b);
+  for (let n = 1; n <= LAST_2030; n++) assert.equal(stoneIdOf(n), a[n]);
+  // a short walk agrees with a long one
+  assert.deepEqual(calendar(500), a.slice(0, 501));
+});
+
+test('daily: appending a stone changes no day before its era starts', () => {
+  const before = calendar(LAST_2030);
+  const SINCE = 200;   // (a day already past would be wrong in dailies.js; here it shows the rule)
+  const rotation = [...ROTATION, { since: SINCE, order: [...ROTATION.at(-1).order, 'daily-new-undated'] }];
+  const dated = [...DATED, { id: 'daily-new-dated', date: '07-04', since: 300 }];
+  const after = calendar(LAST_2030, { rotation, dated });
+  // nothing changes until the new stone's first day, which comes after its era's day
+  const first = after.indexOf('daily-new-undated');
+  assert.ok(first > SINCE, `the new stone's first day: ${first}`);
+  for (let n = 1; n < first; n++) assert.equal(after[n], before[n], `day ${n} changed`);
+  // it joined at the end of the cycle: the undated days just before it are one whole cycle
+  const order = ROTATION[0].order;
+  const lead = after.slice(CURATED_FROM, first).filter((id) => !DATED_IDS.has(id)).slice(-order.length);
+  assert.deepEqual(lead, order);
+  // the new dated stone is on its date from its day on, and never before
+  assert.ok(after.includes('daily-new-dated'));
+  for (let n = 1; n <= LAST_2030; n++) {
+    if (after[n] === 'daily-new-dated') assert.ok(n >= 300 && dateOf(n).endsWith('-07-04'), `day ${n}`);
+  }
+});
+
+test('daily: every curated stone is trimmed, lit, written out and fair', () => {
+  const levelIds = new Set([...SHAPES, ...BONUS].map((s) => s.id));
+  for (const s of DAILIES) {
+    assert.ok(s.id.startsWith('daily-') && !levelIds.has(s.id), `${s.id}: its own id`);
+    assert.ok(s.name && s.story && s.story.split(/\s+/).length <= 14, `${s.id}: a name and a story`);
+    assert.ok(SECTIONS[s.section], `${s.id}: section ${s.section}`);
+    // the clue settings written out, so the clues never move under a stone already played
+    assert.ok(typeof s.fraction === 'number' && Number.isInteger(s.seed), `${s.id}: fraction and seed`);
+    // judge(): line logic settles every cell with the clues the game shows, no empty edge (the
+    // block is trimmed to the object), in the daily band
+    const j = judge(s);
+    assert.ok(j.ok, `${s.id}: ${j.why}`);
+    // and the independent check the levels get (uniqueness.test.js)
+    const q = prepare(s);
+    assert.ok(cluesConsistent(q), `${s.id}: a clue disagrees with the stone`);
+    const r = countSolutions(q, 2);
+    assert.ok(r.exhausted && r.solutions === 1 && !r.differsFromShape, `${s.id}: ${r.solutions} solutions`);
+    // lit as the levels are: more tones than the flat candidate had colours
+    assert.ok(new Set(buildCells(s).colors).size > 4, `${s.id}: lit`);
+  }
+  // the sky of a curated day is its section's
+  assert.equal(dailyPalette(2).base, 'Dawn');
+  assert.equal(dailyPalette(3).base, SECTIONS[sectionOf(stoneIdOf(3))].palette);
+});
+
+test(`daily: the generator's stones, ${DAYS} days of them, are each uniquely solvable by line logic, mid-difficulty`, () => {
   const t0 = performance.now();
   const levelIds = new Set([...SHAPES, ...BONUS].map((s) => s.id));
   for (let n = 1; n <= DAYS; n++) {
-    const { shape, d, chisel, waves } = dailyStone(n);
+    const { shape, d, chisel, waves } = generatedStone(n);
     assert.ok(!levelIds.has(shape.id) && shape.id === `daily-${n}`, `${shape.id}: not a level's object`);
     // the game's own check, as for the levels: line logic settles every cell
     const { solid, colors } = buildCells(shape);
@@ -117,7 +260,10 @@ test('daily: the share line is right and never carries the solution', () => {
     assert.match(t, ALLOWED, `day ${n}: an unexpected character`);
     assert.ok(t.length < 200, `day ${n}: too long`);
     assert.ok(t.startsWith('Strata · Daily #' + n + '\n') && t.endsWith(`?d=${n}`));
-    // nothing of the stone: not its name, colours, size or its solid cells as bits
+    // nothing of the stone: not its name (in any language, nor any curated stone's, nor its id),
+    // colours, size or its solid cells as bits
+    for (const name of NAMES) assert.ok(!t.toLowerCase().includes(name.toLowerCase()), `day ${n}: a name, ${name}`);
+    assert.ok(!t.includes(shape.id) && !(shape.from && t.includes(shape.from)), `day ${n}: the stone's id`);
     const bits = [...p.solid].join('');
     assert.ok(!t.includes(bits.slice(0, 24)), `day ${n}: the solid cells`);
     for (const c of new Set(buildCells(shape).colors)) if (c) assert.ok(!t.toLowerCase().includes(c.toString(16)), `day ${n}: a colour`);
