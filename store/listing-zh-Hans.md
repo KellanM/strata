@@ -1,6 +1,6 @@
 # Strata · App Store listing, Simplified Chinese (zh-Hans, mainland China)
 
-**Draft, reviewed: false — a native speaker checks this before it goes on the store.**
+**Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (docs/localisation.md lists the open doubts).
 
 Translated from [app-store-listing.md](app-store-listing.md) (the live English, same claims, same order), with the level count updated to **194** (`SHAPES` after build 7). Counts are measured by script: characters for text fields, UTF-8 bytes for keywords, as App Store Connect counts them.
 

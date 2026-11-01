@@ -1,7 +1,6 @@
-// Japanese (日本語): a draft, not yet reviewed by a native speaker. It is shown only when asked for
-// (?lang=ja or strata.dev.lang), until it is reviewed and 'ja' is added to LANGS_LIVE (public/js/i18n.js).
-// Glossary and what to check first: docs/localisation.md.
-export const reviewed = false;
+// Japanese (日本語): live (Kellan, 2026-10-31), without a native speaker's review: docs/localisation.md
+// lists the drafters' open doubts, to fix as players find them.
+export const reviewed = true;
 
 export const strings = {
   // ---- index.html

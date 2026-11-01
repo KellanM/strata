@@ -72,7 +72,7 @@ for (const [code, T] of Object.entries(TABLES)) {
   test(`${code}: marked as not reviewed until it is live`, () => {
     assert.equal(typeof T.reviewed, 'boolean');
     if (!I18N.LANGS_LIVE.includes(code)) assert.equal(T.reviewed, false, `${code} isn't live, so its table is a draft`);
-    else assert.equal(T.reviewed, true, `${code} is live, so a native speaker must have reviewed it`);
+    else assert.equal(T.reviewed, true, `${code} is live, so its table is marked as approved`);
   });
 }
 
@@ -100,8 +100,8 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // and today, with only English live, nothing reaches a player but English
-  assert.deepEqual(I18N.LANGS_LIVE, ['en']);
+  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {

@@ -1,6 +1,6 @@
 # Localisation: the string system, the drafts, and how a language goes live (2026-10-31)
 
-Growth-roadmap test 6 (Japanese and Simplified Chinese first). Everything here is built on the `v1.1` branch. Players still see only English: the Japanese and Chinese tables are drafts, `reviewed: false`, until a native speaker has checked them.
+Growth-roadmap test 6 (Japanese and Simplified Chinese first). **Live (Kellan, 2026-10-31):** Japanese and Simplified Chinese are on for players whose device or browser prefers them. Kellan decided against a native speaker's review ("We don't need a human reviewer"); the doubts below are what to fix first if players report them. The iOS app declares the languages in `CFBundleLocalizations` (`tools/ios-configure.mjs`).
 
 ## The system
 
@@ -39,7 +39,7 @@ Growth-roadmap test 6 (Japanese and Simplified Chinese first). Everything here i
 - No table has a key English doesn't.
 - Placeholders match English in every form. Plurals have `other`, and `zero` where English has one. `.html` keys keep their icons and close their tags.
 - English story lines keep to 14 words. Japanese story lines keep to 36 characters and Chinese to 30. That is two lines with Larger text in the 320 px box the line sits in: about 23 full-width characters a line at 13 px, about 19 at 1.22×. Chinese is set tighter because it runs about a sixth denser than Japanese for the same thought.
-- `chooseLang` never returns a language that isn't live, except through `?lang=` or `strata.dev.lang`. `LANGS_LIVE` is `['en']`.
+- `chooseLang` never returns a language that isn't live, except through `?lang=` or `strata.dev.lang`. `LANGS_LIVE` is `['en', 'ja', 'zh-Hans']`.
 - `index.html` says exactly what en.js says.
 
 ## Glossary (one term per thing; docs/copy-study.md C1)
@@ -67,7 +67,7 @@ Growth-roadmap test 6 (Japanese and Simplified Chinese first). Everything here i
 
 The old lessons' "white stone", "picture" and "coloured part" became cube, object and coloured cubes in both languages, as copy-study C1 proposes for English. So 石 / 石块 only ever means the level.
 
-## What the native reviewer should check first
+## Open doubts: the first things to fix if players report them
 
 1. **The glossary.** It is fixed in every line, so a wrong word is wrong 200 times. In Japanese, 列 for every direction reads oddly to players used to 行 (across) and 列 (down), and 漂流 for Drift sounds like a shipwreck. In Chinese, the object has no noun, and 这个石块 or 石头 may read more naturally than 石块.
 2. **The voice of the story lines** (209 per language, `story.*`). They should be short, dry, warm and specific, and never cute. Read a chapter's worth in a row. The drafters doubted the jokes most: Japanese bonsai, highland-cow and scorpion; Chinese alpaca, avocado and red-grouse (the bird's "go back" call is a pun only in English).

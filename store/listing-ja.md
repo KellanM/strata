@@ -1,6 +1,6 @@
 # Strata · App Store listing, Japanese (日本語)
 
-**Draft, reviewed: false — a native speaker checks this before it goes on the store.**
+**Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (docs/localisation.md lists the open doubts).
 
 Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and bytes (UTF-8) for Keywords, which is how App Store Connect counts them. The in-game words follow the glossary in `public/i18n/ja.js` (石, キューブ, かたち, ノミ, 印, ミス, 宝石, 祠, 世界).
 
