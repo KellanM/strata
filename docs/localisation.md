@@ -41,3 +41,47 @@ Growth-roadmap test 6 (Japanese and Simplified Chinese first). Everything here i
 - English story lines keep to 14 words. Japanese story lines keep to 36 characters and Chinese to 30. That is two lines with Larger text in the 320 px box the line sits in: about 23 full-width characters a line at 13 px, about 19 at 1.22×. Chinese is set tighter because it runs about a sixth denser than Japanese for the same thought.
 - `chooseLang` never returns a language that isn't live, except through `?lang=` or `strata.dev.lang`. `LANGS_LIVE` is `['en']`.
 - `index.html` says exactly what en.js says.
+
+## Glossary (one term per thing; docs/copy-study.md C1)
+
+| English | Japanese (ja) | Chinese (zh-Hans) |
+|---|---|---|
+| stone (the block, a level) | 石 | 石块 (石 in compounds: 今日之石) |
+| cube | キューブ | 方块 |
+| object (what's found) | かたち | no noun: 它 / 藏着的东西 |
+| chisel (tool / verb; the gesture is tap) | ノミ / 削る | 凿子 / 凿掉 |
+| mark (tool / verb; the gesture is hold) | 印 / 印をつける | 标记 |
+| slip | ミス | 失误 |
+| gem | 宝石 | 宝石 |
+| shrine | 祠 | 神龛 |
+| Finds | 図鑑 | 图鉴 |
+| lesson | レッスン | 课 / 课程 |
+| circled number (two pieces) | 丸囲みの数字 | 圆圈数字 |
+| squared number (three or more pieces) | 四角囲みの数字 | 方框数字 |
+| piece (touching cubes in a row) | かたまり | 段 |
+| row / column | 列 / 縦の列 | 行 / 列 |
+| world | 世界 | 世界 |
+| Drift | 漂流 | 漂流 |
+| Today, the Daily Stone | 今日 / 今日の石 | 今日 / 今日之石 |
+| tap, double-tap, hold | タップ, ダブルタップ, 長押し | 轻点, 轻点两下, 按住 |
+
+The old lessons' "white stone", "picture" and "coloured part" became cube, object and coloured cubes in both languages, as copy-study C1 proposes for English. So 石 / 石块 only ever means the level.
+
+## What the native reviewer should check first
+
+1. **The glossary.** It is fixed in every line, so a wrong word is wrong 200 times. In Japanese, 列 for every direction reads oddly to players used to 行 (across) and 列 (down), and 漂流 for Drift sounds like a shipwreck. In Chinese, the object has no noun, and 这个石块 or 石头 may read more naturally than 石块.
+2. **The voice of the story lines** (209 per language, `story.*`). They should be short, dry, warm and specific, and never cute. Read a chapter's worth in a row. The drafters doubted the jokes most: Japanese bonsai, highland-cow and scorpion; Chinese alpaca, avocado and red-grouse (the bird's "go back" call is a pun only in English).
+3. **The lessons** (`hint.*`, then `coach.first`, `remind.*`, `rules.*`). These are what a first-time player must understand at once. Look hardest at the Rules page's plain-number line (`rules.plain`, restructured in both), the "full row" gesture (`touch.full`), and Japanese `hint.lesson-keep.1.text`, which is dense.
+4. **Names that may not be known:** Japanese shortened deep-sea names (オオグソクムシ, イエティクラブ, アンコウ) and 夢とりの輪; Chinese 蹲踞, 小芥子, 赤牛, 月影盆.
+5. **Small labels in context:** `map.open` (a shrine that's open but not yet solved), `act.challenge` (Game Center's challenge), `hud.number`, and `win.dayOf` with a real date.
+6. **The store listings** (`store/listing-ja.md`, `listing-zh-Hans.md`), especially the keywords. Both say 宝石 where the English listing says "stars", to match the game.
+
+Over-budget, on purpose: a few Touch-page gesture labels (ダブルタップ / 轻点两下 alone fill the 5- and 4-character budgets). That column wraps in English too.
+
+## Layout, checked
+
+`tools/a11y-shots.mjs --lang ja|zh-Hans [--large]` shot every screen at 390×844 and 375×667, with Larger text off and on: title, lesson card and pause, map, Settings, Rules, Touch, Finds and a find, the lessons list, the chapter card, the level's tip, reminder and pause, the result, and the shrine card (the slip offer could not be shot: a slip made through the test hook does not land). Its measure reports any text off screen or clipped by its box, and none was in either language. The shots are in `shots/a11y/ja`, `zh`, `ja-large` and `zh-large`; `shots/` isn't committed.
+
+## English unchanged, checked
+
+`tools/a11y-shots.mjs` was run on a copy of the build from before this work, and again after it. `--compare` checks every element with text (font size, letter-spacing, box and text) and every word and label on the page, shown or not, on every screen. The clock's digits are masked. `tools/pixel-diff.py` compares the pictures. The results are in the commit message that added this paragraph.

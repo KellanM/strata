@@ -215,14 +215,12 @@ await withLock(async () => {
       await page.evaluate(() => { const g = window.strata.game; for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break'); });
       await page.waitForTimeout(7000);
       await shoot('result');
-      // the next level: a slip, the offer to take it back, and a shrine's card
+      // the next level, with its reminder card; then a shrine's card
+      // (the offer to take back a slip isn't shot: a slip made through strata.act doesn't land here)
       await click('#act-next'); await page.waitForTimeout(3500);
-      await page.evaluate(() => { const g = window.strata.game; window.strata.act([...Array(g.puzzle.size).keys()].find((k) => g.puzzle.solid[k]), 'break'); });
-      await page.waitForTimeout(1500);
-      await click('#rewind'); await page.waitForTimeout(900);
-      await shoot('slip-offer');
+      await shoot('level-remind');
       await page.evaluate(() => { const s = window.strata; s.startPuzzle({ shape: s.journalEntries().find((e) => e.shape.bonus).shape, palette: s.game.palette, number: null, bonus: true }); });
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(700);
       await shoot('shrine-card');
       await ctx.close();
     }
