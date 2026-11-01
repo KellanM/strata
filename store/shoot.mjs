@@ -1,5 +1,7 @@
 // App Store screenshots from real gameplay (store/screenshots/).
-//   PORT=5290 node server.js &   then   node store/shoot.mjs [6.9|6.5] [frame ...]
+//   PORT=5290 node server.js &   then   node store/shoot.mjs [6.9|6.5|duo-outer|duo-inner] [frame ...]
+// With no size named it shoots the two iPhone sizes; the iPhone Duo's are asked for by name
+// (v1.1, docs/ipad-duo-plan.md M1.6), and land beside them as duo-outer-N.png / duo-inner-N.png.
 // Takes the shared browser lock (strata-browser.lock) for the whole run.
 import { chromium } from 'file:///C:/Users/Kellan/AppData/Roaming/npm/node_modules/playwright/index.mjs';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -10,7 +12,13 @@ const LOCK = 'C:/Users/Kellan/AppData/Local/Temp/strata-browser.lock';
 const SIZES = {
   '6.9': { width: 440, height: 956 },   // 1320x2868
   '6.5': { width: 428, height: 926 },   // 1284x2778
+  // iPhone Duo: the "Made for iPhone Duo" badge wants both screens (each at 3x, as the iPhones)
+  'duo-outer': { width: 466, height: 678, scale: 3 },   // 1398x2034, the outer screen
+  'duo-inner': { width: 669, height: 951, scale: 3 },   // 2007x2853, the inner screen, unfolded
 };
+const DEFAULT_SIZES = ['6.9', '6.5'];
+// 6.9 -> 6_9in (the names already on the store); duo-inner -> duo-inner
+const sizeName = (s) => (s.includes('.') ? `${s.replace('.', '_')}in` : s);
 const args = process.argv.slice(2);
 const sizes = args.filter((a) => SIZES[a]);
 const frames = args.filter((a) => !SIZES[a]);
@@ -28,7 +36,7 @@ async function lock() {
 
 // a fresh page with a save where the lessons are done and some stones solved
 async function open(browser, size, { solved = solvedJSON, query = '?nosplash' } = {}) {
-  const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
+  const ctx = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: size.scale ?? 3, isMobile: true, hasTouch: true,
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });
   await ctx.addInitScript(({ solved }) => {
     if (sessionStorage.getItem('shot.init')) return;
@@ -73,6 +81,13 @@ async function startLevel(page, id) {
   await page.waitForTimeout(1500);
   await node.click();
   await page.waitForFunction((id) => window.strata.game?.shape?.id === id, id);
+  // and until the peel diamonds have all landed: they pop in one after another once the block is
+  // whole, and at the Duo's and iPad's sizes a software-rendered page is slow enough that a fixed
+  // wait caught them part-way, one still missing (docs/ipad-duo-plan.md's "missing handle")
+  await page.waitForFunction(() => {
+    const s = window.strata, g = s.game;
+    return g.shape.handles === false || s.handles.items.every((it) => g.puzzle.dims[it.axis] <= 1 || it.k >= 0.99);
+  }, null, { timeout: 30000 });
 }
 
 async function solve(page) {
@@ -226,11 +241,11 @@ let browser;
 try {
   browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
     args: ['--use-angle=d3d11', '--enable-gpu'] });
-  for (const s of sizes.length ? sizes : Object.keys(SIZES)) {
+  for (const s of sizes.length ? sizes : DEFAULT_SIZES) {
     for (const f of [1, 2, 3, 4, 5, 6, 7]) {
       if (!want(f)) continue;
       const { ctx, page } = await FRAMES[f](browser, SIZES[s]);
-      const file = `${OUT}${process.env.PREFIX || ''}${s.replace('.', '_')}in-${f}.png`;
+      const file = `${OUT}${process.env.PREFIX || ''}${sizeName(s)}-${f}.png`;
       await page.screenshot({ path: file });
       console.log(file);
       await ctx.close();
