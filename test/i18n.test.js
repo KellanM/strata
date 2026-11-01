@@ -23,12 +23,13 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-// Brazilian Portuguese is set in the same Latin face as English, so its budget is English's own
-// longest line in characters (story.horseshoe-crab, 75): a line no longer than that wraps no worse
-// than English already does, which is two lines in the 320 px box with Larger text (checked in the
-// find view and the result, docs/l10n/pt-BR.md). Words aren't the measure: Portuguese spends more
-// short ones (de, a, o, que) on the same thought.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'pt-BR': 75 };
+// Brazilian Portuguese is counted in characters too, not words: it spends more short ones (de, a,
+// o, que) on the same thought. The budget is measured, not borrowed from English: in the find view
+// (15 px, a 320 px box) with Larger text (x1.22), English's longest lines (70-75 characters) already
+// take three lines, and Portuguese, with longer words, broke to three from 59 characters. Every
+// pt-BR line was rewritten until it took two lines there at 375 px, which left them at 64 at most
+// (docs/l10n/pt-BR.md); 64 keeps a new line from undoing that without a look.
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'pt-BR': 64 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];

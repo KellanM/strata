@@ -1301,3 +1301,19 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { lette
 html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---- Brazilian Portuguese (pt-BR; docs/l10n/pt-BR.md). English is untouched.
+   Portuguese names are mostly "X de Y" (Saquinho de Chá, Carrinho de Castanhas), so a Finds tile
+   name takes two lines rather than losing its end, as it already does with Larger text, and
+   closes its tracking a little so most still fit on one */
+html:lang(pt-BR) .jr-tile .nm { white-space: normal; text-align: center; overflow-wrap: anywhere; }
+html:lang(pt-BR) .jr-tile.found .nm { letter-spacing: .14em; }
+/* A map name sits beside its stone on one line; a long Portuguese one ("Carrinho de Castanhas",
+   and "Saquinho de Chá" with Larger text) ran off the screen's edge. It wraps instead, within
+   the room beside the stone */
+html:lang(pt-BR) .map-node .label { white-space: normal; width: max-content; max-width: 40vw; }
+html:lang(pt-BR) .map-node .nm { letter-spacing: .2em; }
+html:lang(pt-BR) .map-node.lbl-left .nm { margin-right: -.2em; }
+/* A world's name on its card is one line in English. "Colinas das Fogueiras" and "Festa das
+   Lanternas" are wider than a 375 px screen in those capitals, so they may take two lines */
+html:lang(pt-BR) :is(#chapter-card, #world-close) .cname { white-space: normal; text-wrap: balance; max-width: 100%; }
