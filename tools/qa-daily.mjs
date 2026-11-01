@@ -1,8 +1,10 @@
 // QA aid: the Daily Stone's flow in a headless browser (docs/daily-stone.md),
 // against a running server: the map's Today ring, a curated stone's solve and
 // its reveal (name and story), the share line (never the name), Finds' Daily
-// section, the next day, a dated stone on its date, Daily #1's generated stone,
-// another language, and ?d=N links for a returning and a new player.
+// section, the next day (the Sugar Skull, dated, on 2 Nov 2026), page 19's
+// stones on their days, a dated stone on its date, Daily #1's generated stone,
+// another language, ?d=N links for a returning and a new player, and every
+// stone's name in every language on the result's line and its Finds tile.
 // Screenshots go to the folder given (default: the system's temp folder).
 // Through the shared browser lock, as the other browser tools.
 //   PORT=5317 node server.js   then   node tools/qa-daily.mjs 5317 [outDir]
@@ -10,6 +12,9 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'file:///C:/Users/Kellan/AppData/Roaming/npm/node_modules/playwright/index.mjs';   // the global install
+import { DAILIES } from '../public/js/dailies.js';
+import { calendar } from '../public/js/daily.js';
+import { LANGS } from '../public/js/i18n.js';
 const port = process.argv[2] || '5317';
 const out = (process.argv[3] || join(tmpdir(), 'strata-daily')) + '/';
 mkdirSync(out, { recursive: true });
@@ -62,7 +67,9 @@ const solve = (page) => page.evaluate(() => {
 const reveal = (page) => page.evaluate(() => {
   const el = document.querySelector('#win-title');
   const txt = (s) => el.querySelector(s)?.textContent.replace(/\u00a0/g, ' ') ?? null;
-  return { sub: txt('.sub'), name: txt('.name'), story: txt('.story'), shown: el.classList.contains('show') };
+  const nm = el.querySelector('.name');
+  return { sub: txt('.sub'), name: txt('.name'), story: txt('.story'), shown: el.classList.contains('show'),
+    nameWidth: nm ? Math.round(nm.getBoundingClientRect().width) : null, screen: innerWidth };
 });
 // Today, from the map: tap the ring, the stone opens; solve it; the reveal
 async function playToday(page, shot) {
@@ -139,7 +146,7 @@ async function run() {
       return sec && { title: sec.querySelector('h3').textContent, found: [...sec.querySelectorAll('.jr-tile.found .nm')].map((n) => n.textContent), tiles: sec.querySelectorAll('.jr-tile').length };
     });
     await page.waitForTimeout(900);
-    assert(finds && finds.found.join() === 'Piggy Bank' && finds.tiles === 14, `Finds has a Daily section: ${JSON.stringify(finds)}`);
+    assert(finds && finds.found.join() === 'Piggy Bank' && finds.tiles === 31, `Finds has a Daily section: ${JSON.stringify(finds)}`);
     await page.screenshot({ path: out + '5-finds-daily.png' });
     await page.evaluate(() => document.querySelector('#journal .jr-daily .jr-tile.found')?.click());
     await page.waitForTimeout(1500);
@@ -147,20 +154,49 @@ async function run() {
     assert(view[1] === 'Piggy Bank' && view[0] === 'Daily Stones' && /Tuesday/.test(view[2]), `its turntable: ${view.join(' / ')}`);
     await page.screenshot({ path: out + '6-finds-view.png' });
 
-    // 6. the next day: it resets, the next stone of the rotation (and the run is two days)
+    // 6. the next day: it resets, and 2 Nov is the Sugar Skull's, dated (and the run is two days)
     await page.evaluate(() => { localStorage.setItem('strata.dev.today', '2026-11-02'); });
     await page.goto(`http://localhost:${port}/`);
     await toMap(page);
     const next = await page.evaluate(() => { const b = document.querySelector('#map-today'); return { day: b.dataset.day, done: b.classList.contains('done') }; });
     assert(next.day === '3' && !next.done, `the next day it resets (Daily #${next.day}, not done)`);
-    const r3 = await playToday(page, '7-reveal-genie.png');
+    const r3 = await playToday(page, '7-reveal-sugar-skull.png');
     log('day 3:', JSON.stringify(r3));
-    assert(r3.id === 'daily-genie' && r3.name === 'Genie' && /lamp/.test(r3.story ?? ''), 'tomorrow’s stone is the Genie, named, with its story');
+    assert(r3.id === 'daily-sugar-skull' && r3.name === 'Sugar Skull' && /coming home tonight/.test(r3.story ?? ''), 'tomorrow’s stone is the Sugar Skull, named, with its story');
+    assert(r3.nameWidth <= r3.screen, `its name fits the line (${r3.nameWidth} of ${r3.screen} px)`);
     await page.click('#act-share');
     await page.waitForTimeout(300);
     const shared2 = await page.evaluate(() => window.__shared.at(-1));
     log('--- day 3 ---\n' + shared2);
-    assert(/\n2 days in a row\n/.test(shared2) && !/genie|lamp/i.test(shared2), 'two days in a row, and no name');
+    assert(/\n2 days in a row\n/.test(shared2) && !/sugar|skull/i.test(shared2), 'two days in a row, and no name');
+    await page.context().close();
+  }
+
+  // 6b. ?today=2026-11-02 straight from the URL: the Sugar Skull, Daily #3
+  {
+    const page = await newPage(learned);
+    await page.goto(`http://localhost:${port}/?today=2026-11-02`);
+    await toMap(page);
+    const r = await playToday(page);
+    assert(r.day === 3 && r.id === 'daily-sugar-skull' && r.sub === 'Daily #3', `?today=2026-11-02 opens the Sugar Skull (${r.id}, ${r.sub})`);
+    await page.context().close();
+  }
+
+  // 6c. page 19's stones: a few reveals, undated and dated, each name on one line
+  for (const [date, n, id, name, shot] of [
+    ['2026-11-13', 14, 'daily-dog-sofa', 'Dog on the Sofa', '7b-reveal-dog-sofa.png'],
+    ['2026-11-25', 26, 'daily-owl-pussycat', 'Owl and Pussycat', '7c-reveal-owl-pussycat.png'],
+    ['2027-02-14', 107, 'daily-cupid', 'Cupid', '7d-reveal-cupid.png'],
+    ['2027-09-22', 327, 'daily-toadstool-frog', 'Frog & Toadstool', '7e-reveal-toadstool-frog.png'],
+    ['2027-11-01', 367, 'daily-squirrel-pumpkin', 'Squirrel & Pumpkin', '7f-reveal-squirrel-pumpkin.png'],
+  ]) {
+    const page = await newPage(learned);
+    await page.goto(`http://localhost:${port}/?today=${date}`);
+    await toMap(page);
+    const r = await playToday(page, shot);
+    log(`day ${n}:`, JSON.stringify(r));
+    assert(r.day === n && r.id === id && r.name === name && r.story && r.sub === `Daily #${n}`, `${date} gives ${name} on Daily #${n}, with its story`);
+    assert(r.nameWidth <= r.screen, `its name fits the line (${r.nameWidth} of ${r.screen} px)`);
     await page.context().close();
   }
 
@@ -192,11 +228,11 @@ async function run() {
   // 9. in Japanese: the name and story from ja.js
   {
     const page = await newPage(learned);
-    await page.goto(`http://localhost:${port}/?today=2026-11-04&lang=ja`);
+    await page.goto(`http://localhost:${port}/?today=2026-11-05&lang=ja`);
     await toMap(page);
     const r = await playToday(page, '10-reveal-ja-instant-camera.png');
     log('ja:', JSON.stringify(r));
-    assert(r.id === 'daily-instant-camera' && r.name === 'インスタントカメラ' && r.story === 'あなたを撮った。どう思ったかは、まだ考え中。' && r.sub === 'デイリー #5',
+    assert(r.id === 'daily-instant-camera' && r.name === 'インスタントカメラ' && r.story === 'あなたを撮った。どう思ったかは、まだ考え中。' && r.sub === 'デイリー #6',
       '?lang=ja shows the Japanese name and story');
     await page.click('#act-share');
     await page.waitForTimeout(300);
@@ -204,16 +240,16 @@ async function run() {
     await page.context().close();
   }
 
-  // 10. ?d=N for a returning player: on to that stone from the title (Daily #13: the Piggy Bank again)
+  // 10. ?d=N for a returning player: on to that stone from the title (Daily #15: the Piggy Bank again, in the second era)
   {
     const page = await newPage(learned);
-    await page.goto(`http://localhost:${port}/?d=13&today=2026-11-12`);
+    await page.goto(`http://localhost:${port}/?d=15&today=2026-11-14`);
     await page.waitForFunction(() => window.strata?.openMenu, null, { timeout: 30000 });
     await page.waitForTimeout(3500);
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => window.strata.game?.entry?.daily === 13, null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => window.strata.game?.entry?.daily === 15, null, { timeout: 15000 }).catch(() => {});
     const g = await page.evaluate(() => [window.strata.game?.entry?.daily, window.strata.game?.shape.id]);
-    assert(g[0] === 13 && g[1] === 'daily-piggy-bank', `?d=13 opens Daily #13 for a returning player (${g.join(', ')})`);
+    assert(g[0] === 15 && g[1] === 'daily-piggy-bank', `?d=15 opens Daily #15 for a returning player (${g.join(', ')})`);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: out + '11-link-returning.png' });
     await page.context().close();
@@ -222,7 +258,7 @@ async function run() {
   // 11. ?d=N for a new player: the short lessons, then the stone
   {
     const page = await newPage({});
-    await page.goto(`http://localhost:${port}/?d=13&today=2026-11-12`);
+    await page.goto(`http://localhost:${port}/?d=15&today=2026-11-14`);
     await toMap(page);
     const head = await page.evaluate(() => [document.querySelector('#map-progress').textContent, document.querySelector('#map-today').hidden, document.querySelector('.map-node.learn .mt')?.textContent]);
     assert(head[1] === true && head[2] === '7 lessons first', `new player: no Today ring yet; Learn says "${head[2]}"; head "${head[0]}"`);
@@ -239,12 +275,57 @@ async function run() {
       await page.waitForTimeout(4600);
     }
     log('lessons run:', lessons.join(' '));
-    await page.waitForFunction(() => window.strata.game?.entry?.daily === 13, null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => window.strata.game?.entry?.daily === 15, null, { timeout: 15000 }).catch(() => {});
     const g = await page.evaluate(() => [window.strata.game?.shape.id, localStorage.getItem('strata.tutorial')]);
     assert(lessons.length === 7 && g[0] === 'daily-piggy-bank' && g[1] === '1', `after ${lessons.length} lessons, straight to ${g[0]}`);
     await page.waitForTimeout(1200);
     await page.screenshot({ path: out + '12-link-new-player-stone.png' });
     await page.context().close();
+  }
+
+  // 12. every curated stone's name, in every language, on the lines that don't wrap: the result's
+  // name (#win-title .name, set as main.js sets it) within a 375 px screen, and its Finds tile (an
+  // ellipsis in the languages whose tiles don't wrap). Every stone is solved in the record first, so
+  // each has a tile with its name.
+  {
+    const days = {};
+    for (const s of DAILIES) {
+      const n = calendar(400).indexOf(s.id);
+      days[n] = { t: 200, m: 0, s: 3, p: 1000, w: '0000', at: 0 };
+    }
+    const report = [];
+    for (const lang of LANGS) {
+      const ctx = await browser.newContext({ viewport: { width: 375, height: 667 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await ctx.addInitScript((s) => { for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v); },
+        { ...learned, 'strata.daily.days': JSON.stringify(days) });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.goto(`http://localhost:${port}/?today=2027-11-01&lang=${lang}`);
+      await toMap(page);
+      const result = await page.evaluate(async () => {
+        const { DAILIES: all } = await import('/js/dailies.js');
+        const { objName } = await import('/js/i18n.js');
+        const title = document.querySelector('#win-title');
+        return all.map((s) => {
+          const letters = [...objName(s)];
+          title.innerHTML = `<span class="name${letters.length > 9 ? ' long' : ''}">`
+            + letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>';
+          return { id: s.id, name: objName(s), w: Math.round(title.querySelector('.name').getBoundingClientRect().width) };
+        });
+      });
+      await page.evaluate(() => { document.querySelector('#win-title').innerHTML = ''; document.querySelector('#map-journal').click(); });
+      await page.waitForTimeout(1500);
+      const tiles = await page.evaluate(() => [...document.querySelectorAll('#journal .jr-daily .jr-tile.found .nm')]
+        .map((n) => ({ name: n.textContent, cut: n.scrollWidth > n.clientWidth + 1 })));
+      const widest = result.reduce((a, b) => (b.w > a.w ? b : a));
+      const over = result.filter((r) => r.w > 375);
+      const cut = tiles.filter((t) => t.cut).map((t) => t.name);
+      report.push(`${lang}: widest ${widest.name} ${widest.w} px; tiles ${tiles.length}, cut: ${cut.join(', ') || 'none'}`);
+      assert(!over.length, `${lang}: every daily name fits the result's line at 375 px${over.length ? ': ' + over.map((r) => `${r.name} ${r.w}`).join(', ') : ''}`);
+      assert(tiles.length === DAILIES.length, `${lang}: Finds shows all ${tiles.length} daily names`);
+      await ctx.close();
+    }
+    log(report.join('\n'));
   }
 }
 

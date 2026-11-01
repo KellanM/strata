@@ -2,7 +2,7 @@
 
 Growth roadmap test 8; the design sketch is in docs/gtm-study.md (M1). One stone a day, the same for everyone, with a spoiler-free share line. It is built for v1.1 on the web and in the app. Game Center's half needs the native plugin and App Store Connect: see docs/game-center-handoff.md.
 
-From Daily #2 (1 Nov 2026) the stone is a real object: one of Kellan's picks from gallery page 18, the Daily Stones (2026-11-01: "These are great dailys to start with"), by a fixed calendar (below). Daily #1 was an abstract stone from the drift's generator, and keeps it.
+From Daily #2 (1 Nov 2026) the stone is a real object: one of Kellan's picks from gallery page 18, the Daily Stones (2026-11-01: "These are great dailys to start with"), and from page 19, more Daily Stones (17 more picks, added on Daily #2 to start on Daily #3), by a fixed calendar (below). Daily #1 was an abstract stone from the drift's generator, and keeps it.
 
 ## What the player sees
 
@@ -73,14 +73,14 @@ https://kellanm.github.io/strata/?d=13
   - A missed day quietly starts a new run. There is no "streak lost" message and no notification.
 - **Kept on this device only:**
   - `strata.daily.days` holds, per day: time, slips, gems, score and waves. It keeps the last 400 days. (Which stone a day had is the calendar's to say, so it isn't stored.)
-  - A half-carved daily is kept with the levels' progress by its stone and its day (`daily-piggy-bank@2`), not by the stone alone: a curated stone comes round again every 11 days or so, and starts fresh then.
+  - A half-carved daily is kept with the levels' progress by its stone and its day (`daily-piggy-bank@2`), not by the stone alone: a curated stone comes round again (every 24 days or so, the undated ones), and starts fresh then.
   - `strata.daily.shares` is a count.
   - Neither is ever sent anywhere. The daily doesn't touch `strata.solved`, the finds or the levels' flawless run.
 - **The score** is the result screen's own (cubes, clean hand, calm pace), without the levels' run bonus, so it is the same scale for everyone. Game Center gets this number.
 - **Testing:**
   - `?today=YYYY-MM-DD` (or `strata.dev.today`) moves the web build's clock. It is ignored in the app.
   - `window.strata.openDaily(n)` opens any day; `window.strata.daily.stoneIdOf(n)` says which stone it has.
-  - `tools/qa-daily.mjs <port> [outDir]` plays the flow in a headless browser against a running server, through the shared browser lock: Today on 1 Nov 2026 (the Piggy Bank, named and told on the reveal), the share line (no name), Finds' Daily section, the next day (the Genie, two days in a row), 31 Oct 2027 (the Black Cat, #366), Daily #1's generated stone, `?lang=ja`, and `?d=N` links for a returning and a new player.
+  - `tools/qa-daily.mjs <port> [outDir]` plays the flow in a headless browser against a running server, through the shared browser lock: Today on 1 Nov 2026 (the Piggy Bank, named and told on the reveal), the share line (no name), Finds' Daily section, the next day (the Sugar Skull, dated, two days in a row), `?today=2026-11-02` straight from the URL, page 19's stones on their days (the Dog on the Sofa, Owl and Pussycat, Cupid, Frog & Toadstool, Squirrel & Pumpkin), 31 Oct 2027 (the Black Cat, #366), Daily #1's generated stone, `?lang=ja`, `?d=N` links for a returning and a new player, and every stone's name in all ten languages on the result's one-line name (within 375 px) and in its Finds tile.
 
 ## The pool
 
@@ -106,18 +106,83 @@ Kellan's picks (2026-11-01), baked into `public/js/dailies.js` by `tools/bake-ga
 - **Four needed easier clues than the gallery's defaults** (0.85 / 7 where none were written), which put them over the band's 12.0: Sword in the Stone (D 14.2), Frog Prince (13.2), Baba Yaga's Hut (14.5), and the Melted Snowman (13.5 once trimmed: its grid had an empty layer over the hat). Each one's line in dailies.js says so. The gallery files are unchanged.
 - **Names and stories** are in all ten tables as `name.daily-<id>` and `story.daily-<id>` (en.js reads them from dailies.js, as it does the levels'), each within its language's story budget (test/i18n.test.js). Finds' section title is `finds.daily`.
 
+**Page 19's picks** (Kellan, 2026-11-01: 17 of the "more Daily Stones"), added on Daily #2 to start on Daily #3. They come after page 18's in `DAILIES`, so Finds shows them after page 18's.
+
+| Stone | From (page 19) | Section, sky | fraction / seed | D | Chisels | Waves |
+|---|---|---|---|---|---|---|
+| Puss in Boots | `cand-p19-puss-in-boots` | I Storybook, Dawn | 0.65 / 1 | 10.5 | 157 | 6 |
+| Dorothy's House | `cand-p19-dorothys-house` | I Storybook, Dawn | 0.7 / 2 | 10.3 | 160 | 5 |
+| Owl and Pussycat | `cand-p19-owl-pussycat` | II Nursery Rhymes, Orchard | 0.65 / 1 | 10.6 | 173 | 6 |
+| Sleepy Cyclops | `cand-p19-cyclops` | III Myths of the World, Night | 0.65 / 7 | 10.6 | 163 | 7 |
+| Cupid (Feb 14) | `cand-p19-cupid` | III Myths of the World, Night | 0.65 / 1 | 11.3 | 158 | 7 |
+| Karakuri Tea Doll | `cand-p19-karakuri` | V Toy Box, Again, Dusk | 0.65 / 4 | 10.9 | 160 | 6 |
+| Luchador | `cand-p19-luchador` | V Toy Box, Again, Dusk | 0.65 / 2 | 10.4 | 122 | 6 |
+| Toy Dinosaur | `cand-p19-toy-dinosaur` | V Toy Box, Again, Dusk | 0.65 / 4 | 11.0 | 155 | 6 |
+| Pinocchio | `cand-p19-pinocchio` | V Toy Box, Again, Dusk | 0.65 / 3 | 10.3 | 119 | 6 |
+| Jester | `cand-p19-jester` | VI Show Time, Festival | 0.65 / 1 | 10.5 | 164 | 6 |
+| Sugar Skull (Nov 2) | `cand-p19-sugar-skull` | VII Holidays of the World, Beacon | 0.7 / 6 | 11.0 | 124 | 7 |
+| Frog & Toadstool (Sep 22) | `cand-p19-toadstool-frog` | VIII Weather and Seasons, Clouds | 0.7 / 1 | 11.0 | 131 | 6 |
+| Squirrel & Pumpkin (Nov 1) | `cand-p19-squirrel-pumpkin` | IX Up to Something, Autumn | 0.65 / 5 | 10.9 | 144 | 6 |
+| Dog on the Sofa | `cand-p19-dog-sofa` | IX Up to Something, Autumn | 0.65 / 7 | 10.7 | 149 | 6 |
+| Gull & Chips | `cand-p19-gull-chips` | IX Up to Something, Autumn | 0.65 / 1 | 10.4 | 172 | 6 |
+| Goat on the Car | `cand-p19-goat-car` | IX Up to Something, Autumn | 0.6 / 7 | 10.9 | 176 | 7 |
+| Stone Soup | `cand-p19-stone-soup` | X Things With a Secret, Stones | 0.65 / 2 | 10.7 | 174 | 7 |
+
+- **None needed easier clues:** page 19 wrote out each candidate's `fraction` and `seed` for the daily band, and every one passes `judge()` with them, lit and trimmed (no block needed trimming). None of the 17 has `lit` options; the test checks every stone's against its candidate's, and page 19's clue settings and stories too.
+- **Two English names are shorter than the gallery's,** so they sit on the result's one line (the name never wraps there; English's widest before was Songbird Automaton, 18 letters): *The Owl and the Pussycat* is **Owl and Pussycat**, and *Frog under a Toadstool* is **Frog & Toadstool** (as Squirrel & Pumpkin and Gull & Chips are named). Their ids are the candidates' (`daily-owl-pussycat`, `daily-toadstool-frog`).
+- **Their words:** names and stories in all ten tables, in each table's glossary and voice (the frog is きのこ, 蘑菇, 버섯, Pilz, Champignon, Hongo, Cogumelo, гриб, as the levels' Mushroom is), within each story budget. `tools/qa-daily.mjs` sets every name in the result's one-line style at 375 px in all ten languages, and checks Finds shows each. All 17 fit in every language (the widest new one, Russian's Игрушечный динозавр, is 372 px). The check found two of page 18's Portuguese names past the edge, *Cofrinho de Porquinho* (397 px) and *Galinha Atravessando* (378); they are now **Cofrinho** and **Galinha na Estrada** (renaming changes no day's stone).
+- **The Luchador is undated.** Its section's notes suggest 21 Sep (Mexico's Día de la Lucha Libre), but the date is unverified, so it is in the rotation.
+
 ## The calendar
 
 `stoneIdOf(n)` and `calendar()` in daily.js, from the lists in dailies.js. The date gives the day number (the local date, as always), and the day number gives the stone, the same on every device.
 
 - **Before the cutover** (`CURATED_FROM`, Daily #2): the generated stone. That is only Daily #1.
-- **A dated stone falls on its date,** every year, by month and day: the Black Cat on Oct 31 (Halloween), the Nutcracker on Dec 6 (St Nicholas' Day, early in Advent), the Melted Snowman on Mar 20 (about the spring equinox). They are held out of the rotation, so they appear on no other day. 2026's Oct 31 was Daily #1, before the cutover, so the Black Cat's first night is 31 Oct 2027 (Daily #366). The Nutcracker's first is 6 Dec 2026 (#37), the Snowman's 20 Mar 2027 (#141).
-- **Every other day takes the next stone of the rotation,** and the order starts again once all 11 have had their day: Piggy Bank, Genie, Troll Doll, Instant Camera, Frog Prince, Cloth Tiger, Rabbit in a Hat, Sword in the Stone, Chicken Crossing, Baba Yaga's Hut, Sock Monkey.
-  - By section that is I W T I W T I W M W T: no two neighbours share one, the cycle's end and start included. The dated days are all IV, which isn't in the rotation, so no two calendar days in a row share a section either.
-  - It opens on a Known Anywhere stone (the Piggy Bank, on the first curated day), for strangers arriving from a link.
-- **The past never changes.** The lists are only ever appended to, each addition with a `since` day not yet reached. The test checks that an appended stone, dated or not, changes no day before its first appearance.
+- **A dated stone falls on its date,** every year, by month and day, from its `since` day on. They are held out of the rotation, so they appear on no other day.
 
-The first weeks: #2 Sun 1 Nov Piggy Bank, #3 Genie, #4 Troll Doll, #5 Instant Camera, #6 Frog Prince, #7 Cloth Tiger, #8 Rabbit in a Hat, #9 Sword in the Stone, #10 Chicken Crossing, #11 Baba Yaga's Hut, #12 Sock Monkey, then #13 Thu 12 Nov the Piggy Bank again, and so on to #37 Sun 6 Dec, the Nutcracker (Genie the day before, Troll Doll the day after).
+  | Stone | Date | Why | `since` | First day |
+  |---|---|---|---|---|
+  | Black Cat | Oct 31 | Halloween | #2 | 31 Oct 2027, #366 (2026's Oct 31 was Daily #1, before the cutover) |
+  | Nutcracker | Dec 6 | St Nicholas' Day, early in Advent | #2 | 6 Dec 2026, #37 |
+  | Melted Snowman | Mar 20 | about the spring equinox | #2 | 20 Mar 2027, #141 |
+  | Sugar Skull | Nov 2 | Día de Muertos, the Day of the Dead | #3 | **2 Nov 2026, #3**, the day after it was added |
+  | Cupid | Feb 14 | St Valentine's Day | #3 | 14 Feb 2027, #107 |
+  | Frog & Toadstool | Sep 22 | the autumn rains, taken as the autumn equinox (22 or 23 Sep; 22 Sep, by the gallery's "autumn rains", as the Snowman takes the spring one's Mar 20) | #3 | 22 Sep 2027, #327 |
+  | Squirrel & Pumpkin | Nov 1 | the morning after Halloween | #3 | 1 Nov 2027, #367: 1 Nov 2026 was Daily #2, already the Piggy Bank's when the Squirrel was added |
+
+  - A dated stone may take a day from tomorrow on: its `since` is a day not yet reached, and the rotation simply waits a day for it. The Sugar Skull's #3 was the Genie's, so from #3 on every undated day is one later than it was (the Genie on #4, and so on); #1 and #2 are as they were. The test pins them.
+  - 31 Oct, 1 Nov and 2 Nov are all dated from 2027 (Black Cat, Squirrel, Sugar Skull): three sections in a row, none in the rotation's way.
+- **Every other day takes the next stone of the rotation,** and the order starts again once all have had their day. Eras are appended:
+  - **The first era** (Daily #2 on), 11 of page 18's: Piggy Bank, Genie, Troll Doll, Instant Camera, Frog Prince, Cloth Tiger, Rabbit in a Hat, Sword in the Stone, Chicken Crossing, Baba Yaga's Hut, Sock Monkey. By section that is I W T I W T I W M W T. It opens on a Known Anywhere stone (the Piggy Bank, on the first curated day), for strangers arriving from a link. Its one cycle runs #2, then #4-#13 (the Sock Monkey's is Thu 12 Nov 2026, #13).
+  - **The second era** (`since` #3, so from the first turn of the cycle on or after it: **#14, Fri 13 Nov 2026**): page 19's 13 undated stones interleaved with page 18's 11, so the new ones come at once (Kellan wanted his new picks soon, not after a full repeat of page 18's), a new one first. New and old alternate, each in its own order, with two new together near the end (13 against 11):
+
+    Dog on the Sofa, Piggy Bank, Karakuri Tea Doll, Genie, Sleepy Cyclops, Troll Doll, Puss in Boots, Instant Camera, Luchador, Frog Prince, Gull & Chips, Cloth Tiger, Owl and Pussycat, Rabbit in a Hat, Toy Dinosaur, Sword in the Stone, Jester, Chicken Crossing, Dorothy's House, Baba Yaga's Hut, Pinocchio, Goat on the Car, Sock Monkey, Stone Soup.
+
+    24 stones, so an undated stone comes round about every 24 days. The new 13's first days: Dog on the Sofa #14 (13 Nov), Karakuri Tea Doll #16, Sleepy Cyclops #18, Puss in Boots #20, Luchador #22, Gull & Chips #24, Owl and Pussycat #26, Toy Dinosaur #28, Jester #30, Dorothy's House #32 (1 Dec), Pinocchio #34, Goat on the Car #35, Stone Soup #38 (7 Dec, after the Nutcracker's #37).
+  - By section (X Up to Something, I Known Anywhere, T Toy Box (page 19's Toy Box, Again counts as Toy Box), W Small Wonders, Y Myths of the World, S Storybook, R Nursery Rhymes, M Caught in the Act, H Show Time, C Things With a Secret) the cycle is X I T W Y T S I T W X T R I T W H M S W T X T C: no two neighbours share a section, the cycle's end (C) and start (X) included, nor the turn from the first era's last day (#13, the Sock Monkey, T) to its first. The seven Toy Box stones are never neighbours, nor are the three Up to Something.
+  - **On the calendar, dated days included:** Days of the Year, Holidays of the World and Weather and Seasons are only dated. Two dated stones share a section with undated ones: Cupid (Myths) and the Squirrel (Up to Something). The Squirrel's Nov 1 always sits between two dated days, and no year to 2030 puts the Sleepy Cyclops next to Cupid's Feb 14. The order was found by a search over interleavings that keeps both orders and checks every pair of neighbouring days to 2030, as the test does.
+- **The past never changes.** The lists are only ever appended to, each addition with a `since` day not yet reached. The test checks that an appended stone, dated or not, changes no day before its first appearance, and pins the days already played (Daily #1 and #2) when the last stones were added, and those announced from the next day (#3-#13).
+
+The next weeks, from Daily #2 (dated days in bold, a page 19 stone's first day in italics). #1-#13 are pinned by the test: #1 and #2 were played, #3-#13 are being played from 2 Nov.
+
+| # | Date | Stone | # | Date | Stone | # | Date | Stone |
+|---|---|---|---|---|---|---|---|---|
+| 2 | Sun 1 Nov | Piggy Bank | 18 | Tue 17 Nov | *Sleepy Cyclops* | 34 | Thu 3 Dec | *Pinocchio* |
+| 3 | Mon 2 Nov | **Sugar Skull** | 19 | Wed 18 Nov | Troll Doll | 35 | Fri 4 Dec | *Goat on the Car* |
+| 4 | Tue 3 Nov | Genie | 20 | Thu 19 Nov | *Puss in Boots* | 36 | Sat 5 Dec | Sock Monkey |
+| 5 | Wed 4 Nov | Troll Doll | 21 | Fri 20 Nov | Instant Camera | 37 | Sun 6 Dec | **Nutcracker** |
+| 6 | Thu 5 Nov | Instant Camera | 22 | Sat 21 Nov | *Luchador* | 38 | Mon 7 Dec | *Stone Soup* |
+| 7 | Fri 6 Nov | Frog Prince | 23 | Sun 22 Nov | Frog Prince | 39 | Tue 8 Dec | Dog on the Sofa |
+| 8 | Sat 7 Nov | Cloth Tiger | 24 | Mon 23 Nov | *Gull & Chips* | 40 | Wed 9 Dec | Piggy Bank |
+| 9 | Sun 8 Nov | Rabbit in a Hat | 25 | Tue 24 Nov | Cloth Tiger | 41 | Thu 10 Dec | Karakuri Tea Doll |
+| 10 | Mon 9 Nov | Sword in the Stone | 26 | Wed 25 Nov | *Owl and Pussycat* | 42 | Fri 11 Dec | Genie |
+| 11 | Tue 10 Nov | Chicken Crossing | 27 | Thu 26 Nov | Rabbit in a Hat | 43 | Sat 12 Dec | Sleepy Cyclops |
+| 12 | Wed 11 Nov | Baba Yaga's Hut | 28 | Fri 27 Nov | *Toy Dinosaur* | 44 | Sun 13 Dec | Troll Doll |
+| 13 | Thu 12 Nov | Sock Monkey | 29 | Sat 28 Nov | Sword in the Stone | 45 | Mon 14 Dec | Puss in Boots |
+| 14 | Fri 13 Nov | *Dog on the Sofa* (second era) | 30 | Sun 29 Nov | *Jester* | 46 | Tue 15 Dec | Instant Camera |
+| 15 | Sat 14 Nov | Piggy Bank | 31 | Mon 30 Nov | Chicken Crossing | 47 | Wed 16 Dec | Luchador |
+| 16 | Sun 15 Nov | *Karakuri Tea Doll* | 32 | Tue 1 Dec | *Dorothy's House* | | | |
+| 17 | Mon 16 Nov | Genie | 33 | Wed 2 Dec | Baba Yaga's Hut | | | |
 
 ### Adding a stone
 
@@ -125,8 +190,10 @@ The first weeks: #2 Sun 1 Nov Piggy Bank, #3 Genie, #4 Troll Doll, #5 Instant Ca
 2. Bake it: `node tools/bake-gallery.mjs cand-…`, and paste the `...voxels(...)` into `DAILIES` in dailies.js with `id: 'daily-…'`, `name`, `story`, `from`, `section`, `fraction`, `seed` and any `lit`.
 3. Give it a name and a story in every table (`public/i18n/*.js`, the "Daily Stone's" block before the chapters), within each language's story budget.
 4. Put it in the calendar, with `since` a day **not yet reached** (tomorrow or later):
-   - **Undated:** append an era to `ROTATION`: `{ since, order: [...the last era's order, 'daily-new'] }`. The new era takes over at the first turn of the old cycle on or after `since`, so the old cycle always finishes and the new stone joins at the end. Check the new order's sections: no two neighbours from one section, the end and the start included. A new era may reorder; an old one is never edited.
-   - **Dated:** append `{ id, date: 'MM-DD', since }` to `DATED`. Don't give two stones one date.
+   - **Undated:** append an era to `ROTATION`: `{ since, order: [...the last era's order, 'daily-new'] }`. The new era takes over at the first turn of the old cycle on or after `since`, so the old cycle always finishes and the new stone joins at the end. To bring new stones in sooner, the new era may interleave them with the old (as the second era does, a new one first). Check the new order's sections: no two neighbours from one section, the end and the start included (Toy Box, Again counts as Toy Box). A new era may reorder; an old one is never edited.
+   - **Dated:** append `{ id, date: 'MM-DD', since }` to `DATED`. Don't give two stones one date. If its date is tomorrow, it takes tomorrow (as the Sugar Skull took #3), and the rotation's days from then on each move one later; if its date is today, today is already played, so it waits a year (as the Squirrel did).
+   - Check the calendar's neighbours to 2030 (the test does): a dated stone whose section is also in the rotation can land next to one of its own; move the undated one in the new order.
+   - Add the day you're adding on to `PLAYED` in test/daily.test.js, if it isn't there (the days already played), and to `ANNOUNCED` any day whose stone has been made known: both are pinned.
 5. Never edit an existing era, a dated line's date or `since`, or a stone's voxels or clue settings: every day already played would change under the players who shared it.
 6. `npm test`: test/daily.test.js checks the calendar's rules, every stone (judge(), one solution, written-out clues) and the share line; test/i18n.test.js checks the words.
 
