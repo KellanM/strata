@@ -24,6 +24,14 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
 const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// German is counted in characters too, and also in words, as English is. Its letters are Latin,
+// in the same 13 px box: at about 6.6 px a letter (Avenir Next, mixed case, with the spaces),
+// 320 px holds about 48 letters a line, or about 39 with Larger text. 80 is two lines without
+// Larger text and three with it, as the longest English lines (75) take. German runs about 30%
+// longer than English, so a budget near the English maximum makes the drafter cut, not wrap.
+// And the 14 words English keeps to: German compounds make that easy, the characters are the
+// real limit.
+const LATIN_STORY_BUDGET = { de: { chars: 80, words: 14 } };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -64,10 +72,19 @@ for (const [code, T] of Object.entries(TABLES)) {
     }
   });
 
-  test(`${code}: story lines within ${STORY_BUDGET[code]} characters`, () => {
+  if (STORY_BUDGET[code]) test(`${code}: story lines within ${STORY_BUDGET[code]} characters`, () => {
     const long = Object.entries(T.strings).filter(([k, v]) => k.startsWith('story.') && chars(v) > STORY_BUDGET[code]);
     assert.deepEqual(long.map(([k, v]) => `${k} (${chars(v)}): ${v}`), []);
   });
+
+  const latin = LATIN_STORY_BUDGET[code];
+  if (latin) test(`${code}: story lines within ${latin.chars} characters and ${latin.words} words`, () => {
+    const long = Object.entries(T.strings).filter(([k, v]) => k.startsWith('story.')
+      && (chars(v) > latin.chars || v.split(/\s+/).length > latin.words));
+    assert.deepEqual(long.map(([k, v]) => `${k} (${chars(v)}, ${v.split(/\s+/).length} words): ${v}`), []);
+  });
+
+  test(`${code}: has a story-line budget`, () => assert.ok(STORY_BUDGET[code] || LATIN_STORY_BUDGET[code]));
 
   test(`${code}: marked as not reviewed until it is live`, () => {
     assert.equal(typeof T.reviewed, 'boolean');
@@ -100,8 +117,12 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // German: every de tag (Germany, Austria, Switzerland), once live
+  assert.equal(I18N.chooseLang({ prefs: ['de-AT'], live: ['en', 'de'] }), 'de');
+  assert.equal(I18N.chooseLang({ prefs: ['de-CH', 'en-GB'], live: ['en'] }), 'en');
+  assert.equal(I18N.chooseLang({ dev: 'de', live: ['en'] }), 'de');
+  // live today: English, Japanese, Simplified Chinese (Kellan, 2026-10-31) and German
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'de']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
