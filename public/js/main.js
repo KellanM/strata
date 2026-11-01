@@ -20,6 +20,7 @@ import { rate as motionRate, after, mark, reveal, prepareReveal, devFlags, ease,
 import { migrateSaves } from './migrate.js';
 import * as ads from './ads.js';
 import * as daily from './daily.js';   // the Daily Stone (docs/daily-stone.md)
+import { DAILIES, SECTIONS as DAILY_SECTIONS } from './dailies.js';   // its curated stones
 import * as perf from './perf.js';   // frame timing and strata.bench() for profiling (docs/profiling.md)
 import { t as tr, objName, storyOf, chapterName, chapterLine, hintStr, locale, lang, LANGS, LANGS_LIVE } from './i18n.js';   // the words, in the player's language (English unless another is live)
 perf.boot('js');   // cold-start milestones for the CLI (issue #7): js, first-frame, map-built, splash-lifted, title-interactive
@@ -152,6 +153,9 @@ function puzzleList() {
 // shrines only (not lessons, the logo or a drift), the 8 most recent.
 const PROGRESS_KEY = 'strata.progress', PROGRESS_KEEP = 8;
 const keepsProgress = (g) => !!g && !g.entry.lesson && g.shape.id !== 'logo' && !g.shape.id.startsWith('random');
+// kept by the level's id; a curated Daily Stone's by its id and its day, since it comes round
+// again (and a generated day's id, daily-N, was its day already)
+const progressId = (g) => (g.entry.daily && g.shape.from ? `${g.shape.id}@${g.entry.daily}` : g.shape.id);
 function readProgress() {
   try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch { return {}; }
 }
@@ -160,7 +164,7 @@ function saveProgress() {
   if (!keepsProgress(g) || g.solved) return;
   const all = readProgress();
   const on = (a) => a.reduce((o, v, i) => (v && o.push(i), o), []);
-  all[g.shape.id] = { b: on(g.broken), p: on(g.painted), u: g.undo.map((u) => [u.kind === 'break' ? 1 : 0, u.i]),
+  all[progressId(g)] = { b: on(g.broken), p: on(g.painted), u: g.undo.map((u) => [u.kind === 'break' ? 1 : 0, u.i]),
     m: g.mistakes, s: g.slips ?? [], t: Math.round(((g.pausedAt ?? now()) - g.start) * 10) / 10, at: Date.now() };
   const ids = Object.keys(all).sort((a, b) => all[b].at - all[a].at);
   for (const id of ids.slice(PROGRESS_KEEP)) delete all[id];
@@ -174,11 +178,11 @@ function clearProgress(id) {
 }
 function restoreProgress(g) {
   if (!keepsProgress(g)) return;
-  const saved = readProgress()[g.shape.id];
+  const saved = readProgress()[progressId(g)];
   if (!saved) return;
   const n = g.puzzle.size, ok = (i) => Number.isInteger(i) && i >= 0 && i < n;
   // a stale save (the level changed shape since) is dropped, not half-applied
-  if (![...saved.b, ...saved.p].every(ok) || saved.b.some((i) => g.puzzle.solid[i])) { clearProgress(g.shape.id); return; }
+  if (![...saved.b, ...saved.p].every(ok) || saved.b.some((i) => g.puzzle.solid[i])) { clearProgress(progressId(g)); return; }
   for (const i of saved.b) { g.broken[i] = 1; cubes.setState(i, undefined, undefined, 0); }
   for (const i of saved.p) { g.painted[i] = 1; cubes.setState(i, 1, 0); }
   g.undo = (saved.u ?? []).filter(([, i]) => ok(i)).map(([k, i]) => ({ kind: k ? 'break' : 'paint', i }));
@@ -659,7 +663,7 @@ function win() {
   g.solved = true;
   renderRewind();
   g.elapsed = t - g.start;
-  clearProgress(g.shape.id);
+  clearProgress(progressId(g));
   g.revealStart = t + 0.3;
   setPeeled(0, true);
   cubes.uniforms.uHover.value.set(-99, -99, -99);
@@ -731,10 +735,18 @@ function win() {
   // drift is no object, and says only what it is (Kellan, 2026-10-29: honest words for the drift)
   const title = $('#win-title');
   const drift = g.shape.id.startsWith('random');
-  const dayStone = g.entry.daily;   // the Daily Stone: no object either, named by its day
-  const letters = [...(drift ? `${d[0]}³` : objName(g.shape))];
-  const story = !g.entry.lesson && !drift && !dayStone && storyOf(g.shape);
-  const sub = drift ? tr('win.drift') : dayStone ? (dayStone === todayN() ? tr('hud.today') : tr('win.dayOf', { date: dailyDate(dayStone) })) : tr('win.uncovered');
+  // the Daily Stone: a curated day's is an object, named with its story under "Daily #N" (and the
+  // date, for another day's); Daily #1's was generated, no object, so it is named by its day under
+  // "today's stone" (the HUD, which said both, has stepped aside)
+  const dayStone = g.entry.daily, isToday = dayStone === todayN();
+  const blank = drift || (dayStone && !g.shape.from);
+  const name = drift ? `${d[0]}³` : blank ? tr('hud.daily', { n: dayStone }) : objName(g.shape);
+  const letters = [...name];
+  const story = !g.entry.lesson && !blank && storyOf(g.shape);
+  const sub = drift ? tr('win.drift')
+    : blank ? (isToday ? tr('hud.today') : tr('win.dayOf', { date: dailyDate(dayStone) }))
+    : dayStone ? tr('hud.daily', { n: dayStone }) + (isToday ? '' : ` · ${dailyDate(dayStone)}`)
+    : tr('win.uncovered');
   title.innerHTML = `<span class="sub">${sub}</span><span class="name` + (letters.length > 9 ? ' long' : '') + '">' +
     letters.map((ch, k) => `<span style="--k:${k}">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('') + '</span>' +
     (story ? `<span class="story" style="--d:${(0.25 + letters.length * 0.055 + 0.7).toFixed(2)}s"></span>` : '');
@@ -742,7 +754,7 @@ function win() {
   title.classList.remove('show'); void title.offsetWidth;
   // (the bar above says "No. 31" till now: the answer is the object's to give, not the type's first -
   // it had changed to the name at the last chisel, over the still-white block)
-  after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = drift ? `${d[0]}³` : objName(g.shape); } });
+  after(1.1, () => { if (game === g) { title.classList.add('show'); $('#pz-name').textContent = name; } });
 
   if (g.entry.lesson) { tutorialEvent('solved'); return; }
   if (dayStone) { dailySolved(g); return; }
@@ -771,8 +783,9 @@ function win() {
 
 // ---------------------------------------------------------------- the Daily Stone
 
-// docs/daily-stone.md. One stone a day from the drift's generator (daily.js),
-// entered by the map's Today ring once the lessons are done. Solved, its
+// docs/daily-stone.md. One stone a day, from the calendar of curated stones
+// (daily.js, dailies.js), entered by the map's Today ring once the lessons are
+// done. Solved, it is named with its story, as a level is; its
 // result offers Share (a spoiler-free line) and, in the app with Game Center,
 // Challenge. The record and the days in a row stay on this device.
 function openDaily(n, el = null) {
@@ -1449,7 +1462,7 @@ function restartLevel() {
     return;
   }
   closePause();
-  clearProgress(g.shape.id);
+  clearProgress(progressId(g));
   mark(`pause: restart ${g.shape.id}`);
   if (g.entry.lesson) { const single = !!tutorial?.single; washInto(g.palette, () => startTutorial(g.entry.lesson - 1, { single })); }
   else washInto(g.palette, () => startPuzzle(g.entry));
@@ -1514,8 +1527,22 @@ function journalEntries() {
   });
   return [...puzzleList(), ...bonus];
 }
+// Finds' Daily Stone section: every curated stone, in dailies.js's order, with the best gems of
+// the days it was solved here (strata.daily.days; Daily #1's generated stone is no object), on
+// its own section's sky
+function dailyFinds() {
+  const best = new Map();
+  for (const [n, rec] of Object.entries(daily.readDays())) {
+    const id = daily.stoneIdOf(Number(n));
+    if (id) best.set(id, Math.max(best.get(id) ?? 0, rec.s | 0));
+  }
+  return DAILIES.map((shape) => {
+    const base = PALETTES.find((p) => p.name === DAILY_SECTIONS[shape.section].palette) ?? PALETTES[0];
+    return { shape, palette: variant(base, 0.5, 200), stars: best.get(shape.id) ?? null };
+  });
+}
 function openJournal() {
-  renderJournal($('#journal'), { entries: journalEntries(), solved: solvedStore });
+  renderJournal($('#journal'), { entries: journalEntries(), solved: solvedStore, dailies: dailyFinds() });
   $('#journal .jr-scroll').scrollTop = 0;
   show('#journal', true);
 }

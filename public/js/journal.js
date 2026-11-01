@@ -29,8 +29,32 @@ function inkFor(p) {
   return dark ? '#f4f1ff' : '#' + new THREE.Color(p.under).multiplyScalar(0.72).getHexString();
 }
 
-// entries: [{ shape, palette }] for every level and bonus stone.
-export function renderJournal(root, { entries, solved }) {
+// a found object's tile: its picture on its own sky, its name and gems; tapped, its turntable
+function foundTile(root, e, n, label) {
+  const b = document.createElement('button');
+  b.className = 'jr-tile found' + (e.shape.bonus ? ' bonus' : '');
+  b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"><img class="obj-rim" alt="" draggable="false"></span><span class="nm">${esc(objName(e.shape))}</span>${gems(n)}`;
+  b.setAttribute('aria-label', tr('finds.tileAria', { name: objName(e.shape), n }));
+  Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
+  // the eclipse's edge, as on the map
+  Promise.resolve().then(() => { b.querySelector('.obj-rim').src = renderRim(e.shape, e.palette, { size: 120 }); });
+  b.addEventListener('click', () => openView(root, e, n, label));
+  return b;
+}
+// not found yet: its shadow; a shrine says what it is
+function waitingTile(bonus) {
+  const b = document.createElement('button');
+  b.className = 'jr-tile' + (bonus ? ' bonus' : '');
+  b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${bonus ? esc(tr('finds.shrine')) : '&nbsp;'}</span>`;
+  b.setAttribute('aria-label', tr(bonus ? 'finds.shrineAria' : 'finds.notYet'));
+  b.disabled = true;
+  return b;
+}
+const SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.4 15.6a4.6 4.6 0 0 1 9.2 0Z"/><path d="M4 15.6h16M12 6.6v1.9M6.5 9.1l1.3 1.3M17.5 9.1l-1.3 1.3M8.5 18.6h7"/></svg>';
+
+// entries: [{ shape, palette }] for every level and bonus stone. dailies: [{ shape, palette,
+// stars }] for every Daily Stone object (dailies.js), stars null until one is solved here.
+export function renderJournal(root, { entries, solved, dailies = [] }) {
   const total = entries.length;
   const found = entries.filter((e) => solved[e.shape.id]).length;
   const gemsWon = entries.reduce((n, e) => n + (solved[e.shape.id] ? recordStars(e.shape, solved[e.shape.id]) : 0), 0);
@@ -67,25 +91,34 @@ export function renderJournal(root, { entries, solved }) {
     const tiles = sec.querySelector('.jr-tiles');
     for (const e of items) {
       const rec = solved[e.shape.id];
-      const b = document.createElement('button');
-      b.className = 'jr-tile' + (rec ? ' found' : '') + (e.shape.bonus ? ' bonus' : '');
-      if (rec) {
-        const n = recordStars(e.shape, rec);
-        b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"><img class="obj-rim" alt="" draggable="false"></span><span class="nm">${esc(objName(e.shape))}</span>${gems(n)}`;
-        b.setAttribute('aria-label', tr('finds.tileAria', { name: objName(e.shape), n }));
-        Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
-        // the eclipse's edge, as on the map
-        Promise.resolve().then(() => { b.querySelector('.obj-rim').src = renderRim(e.shape, e.palette, { size: 120 }); });
-        b.addEventListener('click', () => openView(root, e, n));
-      } else {
-        b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? esc(tr('finds.shrine')) : '&nbsp;'}</span>`;
-        b.setAttribute('aria-label', tr(e.shape.bonus ? 'finds.shrineAria' : 'finds.notYet'));
-        b.disabled = true;
-      }
-      tiles.appendChild(b);
+      tiles.appendChild(rec ? foundTile(root, e, recordStars(e.shape, rec)) : waitingTile(e.shape.bonus));
     }
     grid.appendChild(sec);
   });
+  // the Daily Stone's objects, once one is solved here: a section of their own after the worlds
+  // reached, on the dawn of the map's Today ring, its sun for a numeral. Each is there once, with
+  // its best gems; the rest wait in the dark, as a world's do
+  const dayHave = dailies.filter((e) => e.stars != null).length;
+  if (dayHave) {
+    const p = PALETTES.find((q) => q.name === 'Dawn') ?? PALETTES[0];
+    const sec = document.createElement('section');
+    sec.className = 'jr-chapter jr-daily' + (dayHave === dailies.length ? ' complete' : '');
+    prev = hex(p.skyBottom);
+    sec.style.setProperty('--sky-top', hex(p.skyTop));
+    sec.style.setProperty('--sky-bottom', hex(p.skyBottom));
+    sec.style.setProperty('--glow', hex(p.glow));
+    sec.style.setProperty('--ink', inkFor(p));
+    if (inkFor(p) === '#f4f1ff') sec.classList.add('dark');
+    sec.innerHTML = `<header>
+        <span class="jr-numeral">${SUN}</span>
+        <h3>${esc(tr('finds.daily'))}</h3>
+        <span class="jr-progress">${esc(dayHave === dailies.length ? tr('finds.complete') : tr('finds.have', { have: dayHave, total: dailies.length }))}</span>
+        <span class="jr-bar"><i style="width:${(100 * dayHave / dailies.length).toFixed(1)}%"></i></span>
+      </header><div class="jr-tiles"></div>`;
+    const tiles = sec.querySelector('.jr-tiles');
+    for (const e of dailies) tiles.appendChild(e.stars != null ? foundTile(root, e, e.stars, tr('finds.daily')) : waitingTile(false));
+    grid.appendChild(sec);
+  }
   // still ahead: out of the last chapter shown, down into the night of the map's end
   let foot = prev;
   if (ahead.length) {
@@ -106,14 +139,15 @@ export function renderJournal(root, { entries, solved }) {
 
 let view = null;
 
-function openView(root, entry, earned = 0) {
+// label: the line over the name (the object's world, or for a Daily Stone's, the section's name)
+function openView(root, entry, earned = 0, label = chapterName(entry.shape.chapter)) {
   closeView();
   const pane = root.querySelector('#journal-view');
   const canvas = pane.querySelector('canvas');
   pane.querySelector('.jv-name').textContent = objName(entry.shape);
   pane.querySelector('.jv-story').textContent = storyOf(entry.shape) ?? '';
   pane.querySelector('.jv-gems').innerHTML = gems(earned);
-  pane.querySelector('.jv-chapter').textContent = chapterName(entry.shape.chapter) ?? '';
+  pane.querySelector('.jv-chapter').textContent = label ?? '';
   pane.style.setProperty('--sky-top', hex(entry.palette.skyTop));
   pane.style.setProperty('--sky-bottom', hex(entry.palette.skyBottom));
   // ink from the object's own palette, whatever level is playing behind

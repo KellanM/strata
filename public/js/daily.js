@@ -1,14 +1,15 @@
 // The Daily Stone (docs/daily-stone.md; growth roadmap test 8): one stone a
-// day, the same for everyone, carved from the drift's own generator
-// (shapes.js randomShape) - an abstract block, never one of the levels'
-// objects. Solved, it gives a spoiler-free share line, Wordle's way.
+// day, the same for everyone. From Daily #2 (1 Nov 2026) it is one of Kellan's
+// picks from gallery page 18 (dailies.js), by a fixed calendar; Daily #1 was
+// carved from the drift's own generator (shapes.js randomShape) and keeps its
+// stone. Solved, it gives a spoiler-free share line, Wordle's way.
 //
 // Everything here is pure (no DOM, no three.js), so node --test runs it as is;
 // storage is passed in (localStorage in the game), and nothing leaves the device.
 //
 // The day: the player's own calendar date, local time (Wordle's rule). The stone
 // turns over at the player's midnight, so "today" means their today and a streak
-// counts their days. Daily #N is a number of calendar days, so the seed comes
+// counts their days. Daily #N is a number of calendar days, so the stone comes
 // from N alone: anyone on the same date has the same stone, and at any moment
 // the world is on at most two neighbouring numbers. (UTC would put everyone on
 // one stone at once, but turn it over mid-afternoon in the Americas and
@@ -18,6 +19,7 @@ import { Puzzle, setClues, lineSolve, solveStats, difficulty, lineFits } from '.
 import { randomShape, buildCells } from './shapes.js';
 import { PALETTES, variant } from './palettes.js';
 import { t as tr } from './i18n.js';
+import { DAILY_BY_ID, SECTIONS, CURATED_FROM, DATED, ROTATION } from './dailies.js';
 
 // Daily #1. Fixed for good once the first share has gone out: moving it
 // renumbers (and so reseeds) every day after.
@@ -86,11 +88,58 @@ export function judge(shape, band = DAILY_BAND) {
   return { ok: !why, why, d, chisel, waves: stats.rounds, puzzle: p };
 }
 
-// Day N's stone: the first try (0, 1, 2, ...) whose seed passes. Deterministic,
-// so every device carves the same stone; the attempt is kept for the record.
+// ---------------------------------------------------------------- the calendar
+
+// Day by day from the cutover, each day's curated stone (dailies.js): a dated
+// stone on its date, else the rotation's next, cycling; a later era takes over
+// at the first turn of its predecessor's cycle on or after its `since`. Index
+// n holds Daily #n's id, null before the cutover. Only appends can change a
+// day, and only days from the appended line's `since` on.
+export function calendar(upTo, { dated = DATED, rotation = ROTATION, start = CURATED_FROM } = {}) {
+  const days = new Array(upTo + 1).fill(null);
+  let era = 0, k = 0;   // the era, and how many of its days have gone by
+  for (let n = start; n <= upTo; n++) {
+    const md = dateOf(n).slice(5);
+    const fixed = dated.find((d) => d.date === md && n >= d.since);
+    if (fixed) { days[n] = fixed.id; continue; }
+    const next = rotation[era + 1];
+    if (next && n >= next.since && k % rotation[era].order.length === 0) { era++; k = 0; }
+    const { order } = rotation[era];
+    days[n] = order[k++ % order.length];
+  }
+  return days;
+}
+// Daily #n's curated stone's id, or null (a day before the cutover: a generated stone)
+let known = [];
+export function stoneIdOf(n) {
+  if (n >= known.length) known = calendar(Math.max(n, 2 * known.length, 1024));
+  return known[n] ?? null;
+}
+
+// ---------------------------------------------------------------- the stone
+
+// Day N's stone: its curated stone, or before the cutover its generated one.
+// Either way deterministic, so every device has the same stone.
 const cache = new Map();
+const judged = new Map();   // a curated stone's numbers, worked out once
 export function dailyStone(n) {
   if (cache.has(n)) return cache.get(n);
+  const id = stoneIdOf(n);
+  let pick;
+  if (id) {
+    const stone = DAILY_BY_ID.get(id);
+    if (!judged.has(id)) judged.set(id, judge(stone));
+    const { d, chisel, waves } = judged.get(id);
+    pick = { shape: { ...stone, daily: n }, curated: true, d, chisel, waves };
+  } else pick = generatedStone(n);
+  if (cache.size > 512) cache.clear();
+  cache.set(n, pick);
+  return pick;
+}
+
+// A generated day's stone (Daily #1, the only one): the first try (0, 1, 2, ...)
+// whose seed passes. The attempt is kept for the record.
+export function generatedStone(n) {
   let pick = null;
   for (let attempt = 0; attempt < ATTEMPTS && !pick; attempt++) {
     const seed = daySeed(n, attempt);
@@ -107,15 +156,16 @@ export function dailyStone(n) {
   }
   // its own id (not 'random-...': main.js treats those as the drift) and name
   pick.shape = { ...pick.shape, id: `daily-${n}`, name: `Daily #${n}`, daily: n };
-  if (cache.size > 512) cache.clear();
-  cache.set(n, pick);
   return pick;
 }
 
-// the day's sky: one of the game's palettes, at a time of day of its own
+// the day's sky, at a time of day of its own: a curated stone's is the one its
+// section was drawn against on page 18; a generated day's, any of the game's
 export function dailyPalette(n) {
   const seed = daySeed(n, 999);
-  return variant(PALETTES[seed % PALETTES.length], (seed % 97) / 96, seed);
+  const id = stoneIdOf(n);
+  const base = id ? PALETTES.find((p) => p.name === SECTIONS[DAILY_BY_ID.get(id).section].palette) : PALETTES[seed % PALETTES.length];
+  return variant(base, (seed % 97) / 96, seed);
 }
 
 // The carving's waves: in which wave of line logic each cell is settled (the

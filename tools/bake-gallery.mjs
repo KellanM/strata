@@ -1,7 +1,7 @@
 // Bakes gallery candidates into SHAPES source: each object's voxels become
 // layered strings for voxels() in public/js/shapes.js, so a picked object
-// becomes a level without the game depending on gallery files (which are not
-// in the offline cache).
+// becomes a level (or a Daily Stone, public/js/dailies.js) without the game
+// depending on gallery files (which are not in the offline cache).
 //
 //   node tools/bake-gallery.mjs cand-bed cand-fox ...
 import { readdirSync } from 'node:fs';

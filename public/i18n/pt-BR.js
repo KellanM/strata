@@ -184,6 +184,7 @@ export const strings = {
   // Portuguese counts 0 as "one" (Intl.PluralRules), so 0 gets its own form
   'finds.worlds': { zero: '{n} mundos', one: '{n} mundo', other: '{n} mundos' },
   'finds.stones': '{n} pedras',
+  'finds.daily': 'Pedras do dia',
 
   // ---- finale.js
   'result.best': 'RECORDE',
@@ -622,6 +623,36 @@ export const strings = {
   'story.bonus-cloud-isles': 'Uma ilha que largou o chão e foi subindo.',
   'name.bonus-starfall': 'Lua Crescente',
   'story.bonus-starfall': 'A lua desceu para descansar, e esqueceu de ir embora.',
+
+  // ---- objects: the Daily Stone's (public/js/dailies.js)
+  'name.daily-piggy-bank': 'Cofrinho de Porquinho',
+  'story.daily-piggy-bank': 'Está economizando desde terça. Não diz para quê.',
+  'name.daily-instant-camera': 'Câmera Instantânea',
+  'story.daily-instant-camera': 'Tirou sua foto. Ainda está decidindo o que acha.',
+  'name.daily-rabbit-hat': 'Coelho na Cartola',
+  'story.daily-rabbit-hat': 'Ninguém perguntou ao coelho. Ele gostaria que isso constasse.',
+  'name.daily-chicken-crossing': 'Galinha Atravessando',
+  'story.daily-chicken-crossing': 'Ela tem seus motivos. Não vai contar.',
+  'name.daily-sword-stone': 'Espada na Pedra',
+  'story.daily-sword-stone': 'Muitos já tentaram. A pedra está se divertindo muito.',
+  'name.daily-frog-prince': 'Príncipe Sapo',
+  'story.daily-frog-prince': 'Um beijo só, ele diz. Já disse isso a vários patos.',
+  'name.daily-genie': 'Gênio da Lâmpada',
+  'story.daily-genie': 'Mil anos numa lâmpada, e ainda sai de braços abertos.',
+  'name.daily-baba-yaga-hut': 'Cabana da Baba Yaga',
+  'story.daily-baba-yaga-hut': 'Sai para passear quase toda noite. Bata, e talvez ela se vire.',
+  'name.daily-black-cat': 'Gato Preto',
+  'story.daily-black-cat': 'Uma noite por ano, todos o esperam. Ele quer valer a pena.',
+  'name.daily-nutcracker': 'Quebra-Nozes',
+  'story.daily-nutcracker': 'Todo dezembro guarda a lareira. Ninguém nunca lhe deu uma noz.',
+  'name.daily-melted-snowman': 'Boneco Derretido',
+  'story.daily-melted-snowman': 'Teve um bom inverno. A cenoura sempre ia durar mais que ele.',
+  'name.daily-cloth-tiger': 'Tigre de Pano',
+  'story.daily-cloth-tiger': 'Costurado para afastar pesadelos do bebê. Nenhum sonho ousou.',
+  'name.daily-troll-doll': 'Boneco Troll',
+  'story.daily-troll-doll': 'Está de cabelo em pé desde 1959. Não diz por quê.',
+  'name.daily-sock-monkey': 'Macaco de Meia',
+  'story.daily-sock-monkey': 'Feito de meias de trabalho. Ainda cheira levemente a bota.',
 
   // ---- the worlds: chapter.<slug>.name|line|blurb
   'chapter.first-light.name': 'Primeira Luz',

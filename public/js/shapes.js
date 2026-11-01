@@ -80,8 +80,9 @@ export function lit(shape, { swap = {}, span = 3, keep = [], accent = 5 } = {}) 
 
 // Baked voxels (tools/bake-gallery.mjs): one string per height, bottom up;
 // in each, rows back to front separated by spaces, one character per x, '.'
-// for empty. `key` maps characters to colours.
-function voxels(key, layers) {
+// for empty. `key` maps characters to colours. (dailies.js bakes the Daily
+// Stone's objects the same way.)
+export function voxels(key, layers) {
   const grid = layers.map((l) => l.split(' '));
   return {
     dims: [grid[0][0].length, grid.length, grid[0].length],
@@ -3467,7 +3468,8 @@ for (const shape of [...SHAPES, ...BONUS]) {
 // edge of the block is a whole row of 0s to chisel, taps that teach nothing.
 // So each block is trimmed to the object's bounding box (the object itself is
 // unchanged). The tutorial keeps its blocks: its empty rows are the lesson.
-function trimToObject(shape) {
+// (dailies.js trims the Daily Stone's objects with it too.)
+export function trimToObject(shape) {
   const [X, Y, Z] = shape.dims;
   let [lo, hi] = BOUNDS.get(shape) ?? [];
   if (!lo) {
