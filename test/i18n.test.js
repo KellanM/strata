@@ -23,7 +23,13 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// Spanish is counted in characters too, not words: its words run longer than English's, but a
+// line wraps by width, so characters are what fill the box. English's longest line is 75
+// characters. At 13 px the box holds about 48 Latin characters a line (Avenir averages about
+// half an em), and about 40 with Larger text, so 90 is two lines at the normal size and three
+// with Larger text, where English's longest already takes two. 90 is also English's 75 plus the
+// fifth that Spanish usually adds. (Finds sets the line at 15 px: three lines there.)
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, es: 90 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -100,8 +106,11 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // Spanish is one table for Spain and the Americas
+  for (const tag of ['es', 'es-ES', 'es-MX', 'es-419', 'es_US']) assert.equal(I18N.chooseLang({ prefs: [tag], live: ['en', 'es'] }), 'es', tag);
+  assert.equal(I18N.chooseLang({ prefs: ['es-MX'], live: ['en'] }), 'en');
+  // live today: English, Japanese, Simplified Chinese and Spanish (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'es']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
