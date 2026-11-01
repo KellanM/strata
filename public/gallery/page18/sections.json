@@ -1,4 +1,5 @@
-[{"key":"icons","numeral":"I","name":"Known Anywhere","chapter":"daily stones: things anyone on earth can name at a glance","palette":"Dawn"},
- {"key":"moments","numeral":"II","name":"Caught in the Act","chapter":"daily stones: creatures doing the thing they're known for","palette":"Orchard"},
- {"key":"wonders","numeral":"III","name":"Small Wonders","chapter":"daily stones: myths, marvels and the slightly impossible","palette":"Night"},
- {"key":"seasons","numeral":"IV","name":"Days of the Year","chapter":"daily stones: one for a season, a weather, a day worth marking","palette":"Autumn"}]
+[{"key": "icons", "numeral": "I", "name": "Known Anywhere", "chapter": "daily stones: things anyone on earth can name at a glance", "palette": "Dawn"},
+ {"key": "moments", "numeral": "II", "name": "Caught in the Act", "chapter": "daily stones: creatures doing the thing they're known for", "palette": "Orchard"},
+ {"key": "wonders", "numeral": "III", "name": "Small Wonders", "chapter": "daily stones: myths, marvels and the slightly impossible", "palette": "Night"},
+ {"key": "seasons", "numeral": "IV", "name": "Days of the Year", "chapter": "daily stones: one for a season, a weather, a day worth marking", "palette": "Autumn"},
+ {"key": "toys", "numeral": "V", "name": "Toy Box", "chapter": "daily stones: folk toys and toys from everywhere, each with a face or a moment", "palette": "Festival"}]
