@@ -23,7 +23,12 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// Brazilian Portuguese is set in the same Latin face as English, so its budget is English's own
+// longest line in characters (story.horseshoe-crab, 75): a line no longer than that wraps no worse
+// than English already does, which is two lines in the 320 px box with Larger text (checked in the
+// find view and the result, docs/l10n/pt-BR.md). Words aren't the measure: Portuguese spends more
+// short ones (de, a, o, que) on the same thought.
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'pt-BR': 75 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -100,8 +105,22 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // Portuguese from anywhere (Brazil, Portugal, plain pt) is Brazil's table, once it is live
+  assert.equal(I18N.chooseLang({ prefs: ['pt-BR'], live: ['en', 'pt-BR'] }), 'pt-BR');
+  assert.equal(I18N.chooseLang({ prefs: ['pt-PT', 'en-US'], live: ['en', 'pt-BR'] }), 'pt-BR');
+  assert.equal(I18N.chooseLang({ prefs: ['pt_BR'], live: ['en'] }), 'en');
+  // live today: English, Japanese and Simplified Chinese, then Brazilian Portuguese (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'pt-BR']);
+});
+
+// Intl.PluralRules counts 0 as "one" in Portuguese ("0 mundo"), so a plural must say 0 itself
+test('pt-BR: every plural has "one", "other" and its own "zero"', () => {
+  assert.equal(new Intl.PluralRules('pt-BR').select(0), 'one');
+  for (const [k, v] of Object.entries(TABLES['pt-BR'].strings)) {
+    if (!v || typeof v !== 'object') continue;
+    assert.ok(typeof v.one === 'string' && typeof v.other === 'string', `pt-BR ${k}`);
+    assert.ok(typeof v.zero === 'string', `pt-BR ${k}: 0 would read as singular without a "zero" form`);
+  }
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
