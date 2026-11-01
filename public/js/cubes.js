@@ -13,7 +13,9 @@ export function clueTile(line) {
   return line.hidden ? 0 : 1 + line.count * 3 + line.style;
 }
 
-function buildAtlas() {
+// large: Larger text (Settings; main.js), the numbers bolder and a size up. Their glyphs keep
+// their size, so a two-digit clue still clears its ring or square.
+function buildAtlas(large = false) {
   const T = 128, canvas = document.createElement('canvas');
   canvas.width = canvas.height = T * ATLAS_COLS;
   const g = canvas.getContext('2d');
@@ -26,7 +28,8 @@ function buildAtlas() {
       const tile = 1 + count * 3 + style;
       const cx = (tile % ATLAS_COLS) * T + T / 2, cy = Math.floor(tile / ATLAS_COLS) * T + T / 2;
       const label = String(count);
-      g.font = `600 ${label.length > 1 ? 60 : 74}px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif`;
+      const px = label.length > 1 ? (large ? 62 : 60) : (large ? 82 : 74);
+      g.font = `${large ? 700 : 600} ${px}px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif`;
       g.fillText(label, cx, cy + 4);
       g.lineWidth = 7;
       if (style === 1) {
@@ -311,8 +314,17 @@ const fragmentShader = /* glsl */ `
       float col8 = mod(tile, 8.0), row8 = floor(tile / 8.0);
       vec2 auv = vec2((col8 + vUv.x) / 8.0, 1.0 - (row8 + 1.0 - vUv.y) / 8.0);
       float g = texture2D(uAtlas, auv).a;
-      float lum = dot(base, vec3(0.299, 0.587, 0.114));
-      vec3 ink = lum > 0.5 ? base * vec3(0.36, 0.33, 0.42) : mix(base, vec3(1.0, 0.97, 0.92), 0.78);
+      // the darker or the lighter tone, whichever stands further from the face (by contrast, not by
+      // the face's lightness alone: a mid-tone face took the nearer one, as little as 2.3:1); and on a
+      // mid-tone face, where even that one stands close, it is taken further, to near-black or cream,
+      // as far as it falls short of 4.5:1 (tools/clue-contrast.mjs; docs/growth-roadmap.md test 7)
+      vec3 dark = base * vec3(0.36, 0.33, 0.42), light = mix(base, vec3(1.0, 0.97, 0.92), 0.78);
+      vec3 W = vec3(0.2126, 0.7152, 0.0722);
+      float yb = dot(pow(base, vec3(2.2)), W), yd = dot(pow(dark, vec3(2.2)), W), yl = dot(pow(light, vec3(2.2)), W);
+      float cd = (max(yb, yd) + 0.05) / (min(yb, yd) + 0.05), cl = (max(yb, yl) + 0.05) / (min(yb, yl) + 0.05);
+      bool toDark = cd >= cl;
+      vec3 ink = toDark ? dark : light;
+      ink = mix(ink, toDark ? base * 0.12 : vec3(1.0, 0.97, 0.92), clamp((4.5 - max(cd, cl)) / 0.5, 0.0, 1.0));
       col = mix(col, ink, g * 0.92 * (1.0 - uReveal) * (1.0 - 0.62 * done));
     }
 
@@ -393,6 +405,15 @@ export class Cubes {
     this.mesh = null;
     this.ripIndex = 0;
     this.focusAny = false;
+  }
+
+  // Larger text: the numbers drawn again, bolder
+  setLargeText(on) {
+    if (!!on === !!this.largeText) return;
+    this.largeText = !!on;
+    const old = this.atlas;
+    this.atlas = this.uniforms.uAtlas.value = buildAtlas(this.largeText);
+    old.dispose();
   }
 
   setPalette(p) {

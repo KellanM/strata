@@ -11,6 +11,20 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <title>Strata — 3D Nonograms</title>
+  <!-- the link preview (tools/make-og.mjs): one stone half carved, then what was inside it.
+       Hopkins (docs/hopkins-study.md): the full story in the lines that are read - what you do,
+       what you get, the claim no one else makes - and no "play now", no "free" up front -->
+  <meta name="description" content="Read the numbers, chisel the stone, and a fox or a baby dragon is left standing. One answer per stone, no guessing. A new stone every day, in your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Strata">
+  <meta property="og:url" content="https://kellanm.github.io/strata/">
+  <meta property="og:title" content="Strata: chisel the stone, find what’s inside">
+  <meta property="og:description" content="Read the numbers, chisel the stone, and a fox or a baby dragon is left standing. One answer per stone, no guessing. A new stone every day, in your browser.">
+  <meta property="og:image" content="https://kellanm.github.io/strata/og.jpg?v=4">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A stone of cubes with clue numbers on its faces, and beside it the origami fox that was inside it.">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="icons/favicon-64.png" type="image/png">
   <!-- The studio's card: painted before anything else loads (so its style is
        here, not in style.css), and held while the game boots behind it. -->
@@ -220,15 +234,15 @@
   </div>
 
   <header class="hud top">
-    <button id="menu-btn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog">
+    <button id="menu-btn" class="icon-btn" aria-label="Menu" data-i18n-aria="hud.menu" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     </button>
     <div class="title">
       <span id="pz-name">Strata</span>
-      <span class="sub-line"><span id="pz-meta"></span><span id="timer">0:00</span><span id="strikes" aria-label="mistakes"></span></span>
+      <span class="sub-line"><span id="pz-meta"></span><span id="timer">0:00</span><span id="strikes" aria-label="mistakes" data-i18n-aria="hud.mistakes"></span></span>
     </div>
     <span class="hud-spacer">
-      <button id="rewind" class="icon-btn" aria-label="Take back your last slip" hidden>
+      <button id="rewind" class="icon-btn" aria-label="Take back your last slip" data-i18n-aria="hud.rewind" hidden>
         <svg viewBox="0 0 24 24"><path d="M5 9a8 8 0 1 1-.9 6.5"/><path d="M4.5 4.5V9.5H9.5"/></svg>
       </button>
     </span>
@@ -237,36 +251,36 @@
   <div id="coach" role="status" aria-live="polite">
     <div id="coach-dots"></div>
     <p id="coach-text"></p>
-    <button id="coach-skip">skip</button>
+    <button id="coach-skip" data-i18n="coach.skip">skip</button>
   </div>
 
   <footer class="hud bottom">
     <div class="tools">
-      <div class="segmented" role="radiogroup" aria-label="Tool" data-tool="break">
+      <div class="segmented" role="radiogroup" aria-label="Tool" data-i18n-aria="tool.group" data-tool="break">
         <button class="tool on" data-tool="break" role="radio" aria-checked="true">
           <!-- a mason's chisel, chips at its edge -->
           <svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(40 12 12) translate(0 -1)"><rect x="10.4" y="1.5" width="3.2" height="7" rx="1.2"/><path d="M11.3 8.5v4.3l-1.9 4.2v2.4h5.2V17l-1.9-4.2V8.5"/></g><path d="M3.4 19.6l-1.3.4M4.6 21.4l-.2 1.3M2.6 22.2l1-1"/></svg>
-          <span>Chisel</span>
+          <span data-i18n="tool.chisel">Chisel</span>
         </button>
         <button class="tool" data-tool="paint" role="radio" aria-checked="false">
           <!-- a stick of chalk and the line it leaves (the splash's own chalk) -->
           <svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(40 12 12) translate(.6 .4)"><rect x="10.2" y="2.5" width="3.6" height="12" rx="1.3"/><path class="f t" d="M10.2 11h3.6v2.2c0 .7-.6 1.3-1.3 1.3h-1c-.7 0-1.3-.6-1.3-1.3z"/></g><path d="M4.6 19.4c1.6-1.4 3-1.2 4.2-.2s2.6 1.2 4.2-.2"/></svg>
-          <span>Mark</span>
+          <span data-i18n="tool.mark">Mark</span>
         </button>
       </div>
     </div>
   </footer>
 
-  <section id="title" class="show fl" aria-label="Strata. Touch the glowing stone, then tap to begin">
+  <section id="title" class="show fl" aria-label="Strata. Touch the glowing stone, then tap to begin" data-i18n-aria="title.aria">
     <canvas id="firstlight" aria-hidden="true"></canvas>
     <div id="fl-night" aria-hidden="true"></div>
     <div id="fl-hint" aria-hidden="true"></div>
     <h1>Strata</h1>
-    <p class="sub">peel the stone · find the shape</p>
-    <p class="tap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>tap to begin</p>
+    <p class="sub" data-i18n="title.sub">peel the stone · find the shape</p>
+    <p class="tap" data-i18n-html="title.tap.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>tap to begin</p>
   </section>
 
-  <section id="menu" class="overlay" aria-label="Puzzles">
+  <section id="menu" class="overlay" aria-label="Puzzles" data-i18n-aria="map.aria">
     <div class="map-backdrop" aria-hidden="true"></div>
     <div class="map-scroll">
       <header class="map-head">
@@ -281,30 +295,36 @@
          ring, a glyph, one word - Menu and Finds either side of the head (the
          finds' glyph is the game's own, so it is named: Kellan, 2026-10-29),
          Resume (when a level waits) centred at the foot -->
-    <button id="map-help" class="ring-btn" aria-label="Menu">
+    <button id="map-help" class="ring-btn" aria-label="Menu" data-i18n-aria="map.menu">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M5 7.5h14M5 12h14M5 16.5h14"/></svg></span>
-      <span class="ring-label">Menu</span>
+      <span class="ring-label" data-i18n="map.menu">Menu</span>
     </button>
     <!-- the finds (the journal, in the code): a stone on a display slab -->
-    <button id="map-journal" class="ring-btn" aria-label="Finds">
+    <button id="map-journal" class="ring-btn" aria-label="Finds" data-i18n-aria="map.finds">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M12 3.6L16.85 6.4L16.85 12L12 14.8L7.15 12L7.15 6.4ZM7.15 6.4L12 9.2L16.85 6.4M12 9.2V14.8"/><path d="M3.8 17.3 12 22l8.2-4.7M3.8 17.3l3.4-2M20.2 17.3l-3.4-2"/></svg></span>
-      <span class="ring-label">Finds</span>
+      <span class="ring-label" data-i18n="map.finds">Finds</span>
     </button>
-    <button id="map-close" class="ring-btn resume" aria-label="Back to the puzzle">
+    <!-- the Daily Stone (main.js updateToday): between Menu and Finds once the lessons are
+         done; a sun on the horizon, risen (filled) once today's stone is solved -->
+    <button id="map-today" class="ring-btn" aria-label="Today’s stone" data-i18n-aria="map.todayAria" hidden>
+      <span class="ring"><svg viewBox="0 0 24 24"><path class="sun" d="M7.4 15.6a4.6 4.6 0 0 1 9.2 0Z"/><path d="M4 15.6h16M12 6.6v1.9M6.5 9.1l1.3 1.3M17.5 9.1l-1.3 1.3M8.5 18.6h7"/></svg></span>
+      <span class="ring-label" data-i18n="map.today">Today</span>
+    </button>
+    <button id="map-close" class="ring-btn resume" aria-label="Back to the puzzle" data-i18n-aria="map.resumeAria">
       <span class="ring"><svg viewBox="0 0 24 24"><path d="M9.5 7.2v9.6l7.5-4.8z"/></svg></span>
-      <span class="ring-label">Resume</span>
+      <span class="ring-label" data-i18n="map.resume">Resume</span>
     </button>
   </section>
 
-  <section id="journal" class="overlay" aria-label="Finds">
+  <section id="journal" class="overlay" aria-label="Finds" data-i18n-aria="finds.title">
     <div class="jr-scroll">
       <header class="jr-head">
-        <h2>Finds</h2>
+        <h2 data-i18n="finds.title">Finds</h2>
         <p id="journal-count" class="sub"></p>
       </header>
       <div id="journal-grid"></div>
     </div>
-    <button id="journal-close" class="icon-btn" aria-label="Close your finds">
+    <button id="journal-close" class="icon-btn" aria-label="Close your finds" data-i18n-aria="finds.close">
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
     <div id="journal-view" aria-live="polite">
@@ -314,9 +334,9 @@
         <h2 class="jv-name"></h2>
         <div class="jv-gems"></div>
         <p class="jv-story"></p>
-        <p class="jv-hint sub">drag to turn</p>
+        <p class="jv-hint sub" data-i18n="finds.drag">drag to turn</p>
       </div>
-      <button id="journal-back" class="icon-btn" aria-label="Back to your finds">
+      <button id="journal-back" class="icon-btn" aria-label="Back to your finds" data-i18n-aria="finds.back">
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
     </div>
@@ -324,80 +344,87 @@
 
   <!-- Settings and how to play, as one carousel (docs/settings-study.md, mockup C, after Alto):
        pages side by side, swiped or chosen by their titles; the neighbours' titles peek -->
-  <section id="help" class="overlay" aria-label="Settings and how to play">
-    <button class="icon-btn help-close" data-close aria-label="Close">
+  <section id="help" class="overlay" aria-label="Settings and how to play" data-i18n-aria="help.aria">
+    <button class="icon-btn help-close" data-close aria-label="Close" data-i18n-aria="help.close">
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
-    <div class="car-titles" role="tablist" aria-label="Settings and how to play">
-      <button role="tab" aria-selected="true" aria-controls="help-more">Settings</button>
-      <button role="tab" aria-selected="false" aria-controls="help-rules">Rules</button>
-      <button role="tab" aria-selected="false" aria-controls="help-touch">Touch</button>
+    <div class="car-titles" role="tablist" aria-label="Settings and how to play" data-i18n-aria="help.aria">
+      <button role="tab" aria-selected="true" aria-controls="help-more" data-i18n="help.settings">Settings</button>
+      <button role="tab" aria-selected="false" aria-controls="help-rules" data-i18n="help.rules">Rules</button>
+      <button role="tab" aria-selected="false" aria-controls="help-touch" data-i18n="help.touch">Touch</button>
     </div>
     <div class="help-pages">
       <div id="help-more" class="help-page" role="tabpanel">
         <div class="pg">
         <div class="toggles">
-          <button id="toggle-sfx" class="ring-toggle" aria-label="Sound">
-            <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 7a7 7 0 0 1 0 10"/></svg><span class="l">Sound</span><span class="s" aria-hidden="true"></span>
+          <button id="toggle-sfx" class="ring-toggle" aria-label="Sound" data-i18n-aria="set.sound">
+            <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 7a7 7 0 0 1 0 10"/></svg><span class="l" data-i18n="set.sound">Sound</span><span class="s" aria-hidden="true"></span>
           </button>
-          <button id="toggle-music" class="ring-toggle" aria-label="Music">
-            <svg viewBox="0 0 24 24"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.8" cy="17.5" r="2.3"/><circle cx="16.8" cy="15.5" r="2.3"/></svg><span class="l">Music</span><span class="s" aria-hidden="true"></span>
+          <button id="toggle-music" class="ring-toggle" aria-label="Music" data-i18n-aria="set.music">
+            <svg viewBox="0 0 24 24"><path d="M9 17.5V6.5l10-2v11"/><circle cx="6.8" cy="17.5" r="2.3"/><circle cx="16.8" cy="15.5" r="2.3"/></svg><span class="l" data-i18n="set.music">Music</span><span class="s" aria-hidden="true"></span>
           </button>
-          <button id="toggle-haptics" class="ring-toggle" aria-label="Vibration">
-            <svg viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M19.5 9v6"/></svg><span class="l">Vibration</span><span class="s" aria-hidden="true"></span>
+          <button id="toggle-haptics" class="ring-toggle" aria-label="Vibration" data-i18n-aria="set.vibration">
+            <svg viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M19.5 9v6"/></svg><span class="l" data-i18n="set.vibration">Vibration</span><span class="s" aria-hidden="true"></span>
+          </button>
+        </div>
+        <!-- a row of its own: its two words don't fit a ring's width (docs/copy-study.md C7) -->
+        <div class="toggles reading">
+          <button id="toggle-text" class="ring-toggle" aria-label="Larger text" data-i18n-aria="set.larger">
+            <!-- a small a and a large A -->
+            <svg viewBox="0 0 24 24"><path d="M2.8 18.5 6.3 10l3.5 8.5M4 15.6h4.6"/><path d="M11.2 18.5 16.5 5l5.3 13.5M13.1 14h6.8"/></svg><span class="l" data-i18n="set.larger">Larger text</span><span class="s" aria-hidden="true"></span>
           </button>
         </div>
         <div id="support" class="support">
           <div class="support-offer">
-            <p>Strata is free. Remove ads and support it.</p>
-            <div class="row"><button id="remove-ads">Remove ads · $1.99</button></div>
-            <p class="perk">then taking back a slip and opening shrines need no ad</p>
-            <button id="restore-ads" class="restore">restore purchase</button>
+            <p data-i18n="ads.free">Strata is free. Remove ads and support it.</p>
+            <div class="row"><button id="remove-ads" data-i18n="ads.remove">Remove ads · $1.99</button></div>
+            <p class="perk" data-i18n="ads.perk">then taking back a slip and opening shrines need no ad</p>
+            <button id="restore-ads" class="restore" data-i18n="ads.restore">restore purchase</button>
           </div>
           <div class="support-thanks">
-            <p>Thank you for keeping Strata whole.</p>
-            <p class="perk">every ad gone, for good</p>
+            <p data-i18n="ads.thanks">Thank you for keeping Strata whole.</p>
+            <p class="perk" data-i18n="ads.gone">every ad gone, for good</p>
           </div>
         </div>
         <div class="home-tip">
-          <p><b>Best on your Home Screen</b>: full screen, with sound, and it plays offline.</p>
-          <p><b>iPhone:</b> Safari's <span class="glyph-share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></span> then <b>Add to Home Screen</b>.<br>
-            <b>Android:</b> Chrome's <span class="glyph-menu" aria-label="menu">⋮</span> then <b>Add to Home screen</b> (or <b>Install app</b>); Samsung Internet's <span class="glyph-menu" aria-label="menu">≡</span> then <b>Add page to → Home screen</b>.</p>
+          <p data-i18n-html="home.best.html"><b>Best on your Home Screen</b>: full screen, with sound, and it plays offline.</p>
+          <p data-i18n-html="home.how.html"><b>iPhone:</b> Safari's <span class="glyph-share" aria-label="Share" data-i18n-aria="glyph.share"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></span> then <b>Add to Home Screen</b>.<br>
+            <b>Android:</b> Chrome's <span class="glyph-menu" aria-label="menu" data-i18n-aria="glyph.menu">⋮</span> then <b>Add to Home screen</b> (or <b>Install app</b>); Samsung Internet's <span class="glyph-menu" aria-label="menu" data-i18n-aria="glyph.menu">≡</span> then <b>Add page to → Home screen</b>.</p>
         </div>
         </div>
       </div>
       <div id="help-rules" class="help-page" role="tabpanel">
         <div class="pg">
-        <p class="lead">Every stone hides an object. <b>Chisel</b> away every cube that isn't part of it.</p>
+        <p class="lead" data-i18n-html="rules.lead.html">Every stone hides an object. <b>Chisel</b> away every cube that isn't part of it.</p>
         <dl class="legend">
-          <dt><span class="glyph plain">3</span></dt><dd>3 of the object's cubes are in this row, running across, down or back</dd>
-          <dt><span class="glyph circle">3</span></dt><dd>they're split into two groups</dd>
-          <dt><span class="glyph square">4</span></dt><dd>three groups or more</dd>
-          <dt><span class="glyph slip">✕</span></dt><dd>a slip: you chiselled a cube that belongs. It's kept for you</dd>
-          <dt><span class="gems">◆◆◆</span></dt><dd>for no slips, two for a few, one for finishing. No rush</dd>
+          <dt><span class="glyph plain">3</span></dt><dd data-i18n="rules.plain">3 of the object's cubes are in this row, running across, down or back</dd>
+          <dt><span class="glyph circle">3</span></dt><dd data-i18n="rules.circle">they're split into two groups</dd>
+          <dt><span class="glyph square">4</span></dt><dd data-i18n="rules.square">three groups or more</dd>
+          <dt><span class="glyph slip">✕</span></dt><dd data-i18n="rules.slip">a slip: you chiselled a cube that belongs. It's kept for you</dd>
+          <dt><span class="gems">◆◆◆</span></dt><dd data-i18n="rules.gems">for no slips, two for a few, one for finishing. No rush</dd>
         </dl>
-        <p class="aside">Stuck? Wait a moment and a row with a move will glow. A slip can be taken back with <b>↺</b>, so a stone can still be finished clean.</p>
+        <p class="aside" data-i18n-html="rules.aside.html">Stuck? Wait a moment and a row with a move will glow. A slip can be taken back with <b>↺</b>, so a stone can still be finished clean.</p>
         </div>
       </div>
       <div id="help-touch" class="help-page" role="tabpanel">
         <div class="pg">
         <dl class="gestures">
-          <dt>Tap</dt><dd>chisel a cube</dd>
-          <dt data-mouse="Right-click">Hold</dt><dd>mark it: a marked cube can't be chiselled</dd>
-          <dt data-mouse="Double-click a 0">Double-tap a 0</dt><dd>clear its whole row</dd>
-          <dt data-mouse="Double-click a full row">Double-tap a full row</dt><dd>on Mark, mark it all</dd>
-          <dt>Drag</dt><dd>turn the block</dd>
-          <dt data-mouse="Scroll">Pinch</dt><dd>zoom</dd>
-          <dt>Slide a ◆</dt><dd>peel layers away to see inside</dd>
-          <dt data-mouse="Double-click the sky">Double-tap the sky</dt><dd>reset the view</dd>
-          <dt>Menu ≡</dt><dd>resume, the map, or retry</dd>
+          <dt data-i18n="touch.tap">Tap</dt><dd data-i18n="touch.tapDo">chisel a cube</dd>
+          <dt data-mouse="Right-click" data-i18n-mouse="touch.holdMouse" data-i18n="touch.hold">Hold</dt><dd data-i18n="touch.holdDo">mark it: a marked cube can't be chiselled</dd>
+          <dt data-mouse="Double-click a 0" data-i18n-mouse="touch.zeroMouse" data-i18n="touch.zero">Double-tap a 0</dt><dd data-i18n="touch.zeroDo">clear its whole row</dd>
+          <dt data-mouse="Double-click a full row" data-i18n-mouse="touch.fullMouse" data-i18n="touch.full">Double-tap a full row</dt><dd data-i18n="touch.fullDo">on Mark, mark it all</dd>
+          <dt data-i18n="touch.drag">Drag</dt><dd data-i18n="touch.dragDo">turn the block</dd>
+          <dt data-mouse="Scroll" data-i18n-mouse="touch.pinchMouse" data-i18n="touch.pinch">Pinch</dt><dd data-i18n="touch.pinchDo">zoom</dd>
+          <dt data-i18n="touch.slide">Slide a ◆</dt><dd data-i18n="touch.slideDo">peel layers away to see inside</dd>
+          <dt data-mouse="Double-click the sky" data-i18n-mouse="touch.skyMouse" data-i18n="touch.sky">Double-tap the sky</dt><dd data-i18n="touch.skyDo">reset the view</dd>
+          <dt data-i18n="touch.menu">Menu ≡</dt><dd data-i18n="touch.menuDo">resume, the map, or retry</dd>
         </dl>
         </div>
       </div>
     </div>
     <div class="car-dots" aria-hidden="true"><i></i><i></i><i></i></div>
     <!-- Apple 5.1.1(i): the privacy policy is reachable from inside the app. Full URLs, so the store app opens them in Safari -->
-    <p class="car-foot"><span id="version" class="version">dev</span> · <a href="https://kellanm.github.io/strata/privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="https://kellanm.github.io/strata/support.html" target="_blank" rel="noopener">Support</a></p>
+    <p class="car-foot"><span id="version" class="version">dev</span> · <a href="https://kellanm.github.io/strata/privacy.html" target="_blank" rel="noopener" data-i18n="foot.privacy">Privacy</a> · <a href="https://kellanm.github.io/strata/support.html" target="_blank" rel="noopener" data-i18n="foot.support">Support</a></p>
   </section>
 
   <section id="dev" class="overlay" aria-label="Developer">
@@ -412,6 +439,7 @@
         <button class="dev-row" id="dev-titlename">Title name in stars <span id="dev-titlename-state"></span></button>
         <button class="dev-row" id="dev-titlewall">Title wall <span id="dev-titlewall-state"></span></button>
         <button class="dev-row" id="dev-splashtest">Splash: shards gone <span id="dev-splashtest-state"></span></button>
+        <button class="dev-row" id="dev-lang">Language <span id="dev-lang-state"></span></button>
         <button class="dev-row" id="dev-ads-reset">Reset ads, shrines <span>›</span></button>
         <button class="dev-row" id="dev-tutorial">Replay the tutorial <span>›</span></button>
         <button class="dev-row danger" id="dev-reset">Reset progress <span>›</span></button>
@@ -421,65 +449,68 @@
     </div>
   </section>
 
-  <section id="win" class="overlay" aria-label="Solved">
+  <section id="win" class="overlay" aria-label="Solved" data-i18n-aria="win.aria">
     <div class="panel narrow center">
       <div class="plain">
-        <p class="sub">you uncovered</p>
+        <p class="sub" data-i18n="win.uncovered">you uncovered</p>
         <h2 id="win-name"></h2>
         <p id="win-stats" class="sub"></p>
       </div>
       <div class="row">
-        <button id="win-menu">Map</button>
-        <button id="win-next" class="primary">Next</button>
+        <button id="win-menu" data-i18n="act.map">Map</button>
+        <button id="win-next" class="primary" data-i18n="act.next">Next</button>
       </div>
     </div>
   </section>
 
-  <nav id="actions" aria-label="Next steps">
-    <button id="act-map"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 6.5 9 4.5l6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></svg></span><span class="lb">Map</span></button>
-    <button id="act-next" class="primary"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="fill" d="M9.5 7.2v9.6l7.5-4.8z"/></svg></span><span class="lb">Next</span></button>
-    <button id="act-replay"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18.6 9.4A7 7 0 1 0 19 13"/><path d="M19.2 4.6v4.9h-4.9"/></svg></span><span class="lb">Replay</span></button>
+  <nav id="actions" aria-label="Next steps" data-i18n-aria="act.aria">
+    <button id="act-map"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 6.5 9 4.5l6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></svg></span><span class="lb" data-i18n="act.map">Map</span></button>
+    <button id="act-next" class="primary"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="fill" d="M9.5 7.2v9.6l7.5-4.8z"/></svg></span><span class="lb" data-i18n="act.next">Next</span></button>
+    <button id="act-replay"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18.6 9.4A7 7 0 1 0 19 13"/><path d="M19.2 4.6v4.9h-4.9"/></svg></span><span class="lb" data-i18n="act.replay">Replay</span></button>
+    <!-- the Daily Stone's result (main.js showResult: #actions.daily): Share its line; in the app with Game Center, Challenge friends -->
+    <button id="act-share" class="primary"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 14.5V4.2M8.2 7.8 12 4l3.8 3.8"/><path d="M8.5 10.5H6.8v9.3h10.4v-9.3h-1.7"/></svg></span><span class="lb" data-i18n="act.share">Share</span></button>
+    <button id="act-challenge"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.8 19c.6-3.2 2.6-5 5.2-5s4.6 1.8 5.2 5M14.6 14.4c.6-.3 1.2-.4 1.9-.4 2.1 0 3.6 1.4 4 4"/></svg></span><span class="lb" data-i18n="act.challenge">Challenge</span></button>
   </nav>
 
-  <aside id="install" aria-label="Add Strata to your Home Screen">
+  <aside id="install" aria-label="Add Strata to your Home Screen" data-i18n-aria="install.aria">
     <svg class="install-cube" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 10 16 17 4 10Z"/><path d="M4 10 16 17v12L4 22Z"/><path d="M28 10 16 17v12l12-7Z"/></svg>
     <div class="install-text">
-      <p class="install-title">Strata is best on your Home Screen</p>
-      <p class="install-why">full screen · with sound · plays offline</p>
-      <p class="install-how ios">Tap <span class="glyph-share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></span> then <b>Add to Home Screen</b></p>
-      <p class="install-how android">Tap <span class="glyph-menu" aria-label="menu">⋮</span> then <b>Add to Home screen</b> or <b>Install app</b></p>
-      <p class="install-how samsung">Tap <span class="glyph-menu" aria-label="menu">≡</span> then <b>Add page to</b> → <b>Home screen</b></p>
+      <p class="install-title" data-i18n="install.title">Strata is best on your Home Screen</p>
+      <p class="install-why" data-i18n="install.why">full screen · with sound · plays offline</p>
+      <p class="install-how ios" data-i18n-html="install.ios.html">Tap <span class="glyph-share" aria-label="Share" data-i18n-aria="glyph.share"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></span> then <b>Add to Home Screen</b></p>
+      <p class="install-how android" data-i18n-html="install.android.html">Tap <span class="glyph-menu" aria-label="menu" data-i18n-aria="glyph.menu">⋮</span> then <b>Add to Home screen</b> or <b>Install app</b></p>
+      <p class="install-how samsung" data-i18n-html="install.samsung.html">Tap <span class="glyph-menu" aria-label="menu" data-i18n-aria="glyph.menu">≡</span> then <b>Add page to</b> → <b>Home screen</b></p>
     </div>
     <div class="install-actions">
-      <button id="install-go" class="primary">Install</button>
-      <button id="install-later">Later</button>
+      <button id="install-go" class="primary" data-i18n="install.go">Install</button>
+      <button id="install-later" data-i18n="install.later">Later</button>
     </div>
   </aside>
   <aside id="offer" role="dialog" aria-live="polite">
     <div class="offer-card">
       <p class="offer-text"></p>
       <p class="small offer-small"></p>
-      <div class="row"><button data-no>Not now</button><button class="primary" data-yes></button></div>
+      <div class="row"><button data-no data-i18n="offer.no">Not now</button><button class="primary" data-yes></button></div>
     </div>
   </aside>
-  <div id="pause" role="dialog" aria-label="Paused">
+  <div id="pause" role="dialog" aria-label="Paused" data-i18n-aria="pause.aria">
     <div class="pause-card">
       <p class="pause-where" aria-hidden="true"><span class="pause-chapter"></span><span class="pause-name"></span></p>
-      <button class="pause-resume" data-pause="resume" aria-label="Resume">
+      <button class="pause-resume" data-pause="resume" aria-label="Resume" data-i18n-aria="pause.resume">
         <svg viewBox="0 0 24 24"><path d="M9.5 7.2v9.6l7.5-4.8z"/></svg>
       </button>
       <div class="pause-row">
         <button data-pause="map">
           <svg viewBox="0 0 24 24"><path d="M3.5 6.5 9 4.5l6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></svg>
-          <span class="pause-label">Map</span>
+          <span class="pause-label" data-i18n="pause.map">Map</span>
         </button>
-        <button data-pause="rules" aria-label="Rules: what the numbers mean">
+        <button data-pause="rules" aria-label="Rules: what the numbers mean" data-i18n-aria="pause.rulesAria">
           <svg viewBox="0 0 24 24"><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg>
-          <span class="pause-label">Rules</span>
+          <span class="pause-label" data-i18n="pause.rules">Rules</span>
         </button>
         <button data-pause="restart">
           <svg viewBox="0 0 24 24"><path d="M18.6 9.4A7 7 0 1 0 19 13"/><path d="M19.2 4.6v4.9h-4.9"/></svg>
-          <span class="pause-label">Retry</span>
+          <span class="pause-label" data-i18n="pause.retry">Retry</span>
         </button>
       </div>
     </div>

@@ -20,6 +20,7 @@ export const noAdsBuild = nativeApp || !MONETIZED;
 const plugin = (name) => (nativeApp ? cap.registerPlugin?.(name) ?? cap.Plugins?.[name] : null);
 const Prefs = plugin('Preferences');
 const Haptics = plugin('Haptics');
+const Review = plugin('InAppReview');
 const PREFIX = 'strata.';
 
 const ours = () => Object.keys(localStorage).filter((k) => k.startsWith(PREFIX));
@@ -72,6 +73,95 @@ export function haptic(pattern, kind) {
     else Haptics.impact({ style: pattern >= 14 ? 'MEDIUM' : 'LIGHT' });
   } catch { /* */ }
   return true;
+}
+
+// The App Store's own rating sheet (@capacitor-community/in-app-review), asked
+// for at one good moment: back on the map after closing a world, from the
+// second world on, and not again for 120 days (Apple shows it at most three
+// times a year anyway, and may show it less). Never after a slip-filled
+// moment, never mid-level. docs/growth-roadmap.md, test 1.
+const ASKED = 'strata.review.asked';
+export function askForReview(worldsClosed) {
+  if (!Review || worldsClosed < 2) return;
+  try {
+    const last = Number(localStorage.getItem(ASKED) || 0);
+    if (Date.now() - last < 120 * 864e5) return;
+    localStorage.setItem(ASKED, String(Date.now()));
+    Review.requestReview();
+  } catch { /* */ }
+}
+
+// ---------------------------------------------------------------- the Daily Stone
+
+// Sharing the day's line (daily.js shareText). In the app: Capacitor's Share
+// plugin if the build has it, else the web view's own share sheet. On the web:
+// the share sheet on a phone, the clipboard on a computer (Wordle's way).
+// Returns 'shared' | 'copied' | 'cancelled' | 'failed'.
+const available = (name) => nativeApp && !!cap?.isPluginAvailable?.(name);
+export async function shareOut(text) {
+  const Share = available('Share') ? plugin('Share') : null;
+  if (Share) {
+    try { await Share.share({ text }); return 'shared'; } catch (e) { if (/cancel/i.test(e?.message ?? '')) return 'cancelled'; }
+  }
+  const touch = globalThis.matchMedia?.('(pointer: coarse)').matches;
+  if (navigator.share && (touch || nativeApp)) {
+    try { await navigator.share({ text }); return 'shared'; } catch (e) { if (e?.name === 'AbortError') return 'cancelled'; }
+  }
+  try { await navigator.clipboard.writeText(text); return 'copied'; } catch { /* no clipboard access: the old way */ }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { /* */ }
+  ta.remove();
+  return ok ? 'copied' : 'failed';
+}
+
+// Game Center (app only): the day's score to a daily leaderboard, and Apple's
+// Challenges on it, so friends can be asked to beat it (docs/daily-stone.md,
+// docs/game-center-handoff.md). A small local plugin, StrataGameCenter, in
+// the iOS project; until the Mac build adds it, gameCenter is false and every
+// call below is a quiet no-op, as on the web. The ids are App Store Connect's.
+export const GAME_CENTER = {
+  plugin: 'StrataGameCenter',
+  leaderboard: 'strata.daily.score',       // recurring, daily, high to low
+  challenge: 'strata.daily.challenge',     // a Challenge on that leaderboard, not repeatable
+  activity: 'strata.daily.activity',       // the activity a Challenge deep-links into
+};
+const GC = available(GAME_CENTER.plugin) ? plugin(GAME_CENTER.plugin) : null;
+export const gameCenter = !!GC;
+let gcSignIn = null;
+// once, after the lessons (it may show Game Center's own banner)
+export function signInGameCenter() {
+  if (!GC) return Promise.resolve(false);
+  gcSignIn ??= GC.authenticate().then((r) => !!r?.authenticated).catch(() => false);
+  return gcSignIn;
+}
+// the day's first solve, scored as the result screen shows it (no run bonus)
+export async function submitDaily(score, day) {
+  if (!GC) return false;
+  try {
+    if (!(await signInGameCenter())) return false;
+    await GC.submitScore({ leaderboardID: GAME_CENTER.leaderboard, score: Math.max(0, Math.round(score)), context: day | 0 });
+    return true;
+  } catch { return false; }
+}
+// Apple's sheet to challenge friends on today's stone
+export async function challengeFriends() {
+  if (!GC) return false;
+  try {
+    if (!(await signInGameCenter())) return false;
+    await GC.presentChallenge({ challengeID: GAME_CENTER.challenge });
+    return true;
+  } catch { return false; }
+}
+// a Challenge (or the Games app) asks for today's stone
+export function onDailyActivity(fn) {
+  if (!GC) return;
+  try { GC.addListener('activity', (e) => { if (!e?.activityID || e.activityID === GAME_CENTER.activity) fn(e); }); } catch { /* */ }
 }
 
 if (nativeApp) document.documentElement.classList.add('native-app');

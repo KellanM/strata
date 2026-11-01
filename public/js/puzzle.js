@@ -299,3 +299,18 @@ export function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// One number for how demanding a puzzle is, from solveStats(). See
+// docs/level-design.md. Roughly: deduction chain length, how little the clues
+// give away up front, how much is hidden inside, and how big the block is.
+// (Tests and tools read it through test/difficulty.js; the Daily Stone uses
+// it to pick a mid-difficulty block.)
+export function difficulty(stats, puzzle) {
+  return (
+    stats.rounds * 0.6 +
+    (1 - stats.opening) * 3 +
+    stats.hidden * 3 +
+    stats.interior * 2 +
+    Math.log2(puzzle.size) * 0.5
+  );
+}

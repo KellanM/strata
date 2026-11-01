@@ -12,6 +12,8 @@
 //                                        "Strata: Stone Puzzles")
 //   portrait only; the status bar hidden (the plist way needs both keys)
 //   no iPad orientations: the app is iPhone-only (store/release.json "devices")
+//   UILaunchStoryboardName = LaunchScreen (kept: the iOS 27.1 SDK requires a launch screen),
+//   no UIRequiresFullScreen (the iPhone Duo's fold and Split View resize the window)
 // project.pbxproj:
 //   TARGETED_DEVICE_FAMILY = 1 (iPhone; "1,2" would need 13" iPad screenshots)
 //   MARKETING_VERSION / CURRENT_PROJECT_VERSION from store/release.json
@@ -38,10 +40,22 @@ export function configure(iosDir, release = JSON.parse(readFileSync(join(root, '
     UISupportedInterfaceOrientations: ['UIInterfaceOrientationPortrait'],
     UIStatusBarHidden: true,
     UIViewControllerBasedStatusBarAppearance: false,
+    // the languages the game speaks (public/js/i18n.js LANGS_LIVE): without them iOS runs the app,
+    // and so its web view's navigator.languages, in English even on a Japanese or Chinese iPhone
+    CFBundleLocalizations: ['en', 'ja', 'zh-Hans'],
   };
   for (const [k, v] of Object.entries(want)) {
     if (JSON.stringify(info[k]) !== JSON.stringify(v)) { info[k] = v; changed.push(`Info.plist ${k}`); }
   }
+  // a launch screen: required to build for the iOS 27.1 SDK (v1.1, the iPhone Duo) and for any
+  // resizable window. Capacitor's template has one; this keeps it from going missing unnoticed
+  if (!info.UILaunchStoryboardName) {
+    if (!existsSync(join(app, 'Base.lproj', 'LaunchScreen.storyboard'))) throw new Error('Info.plist: no launch screen (UILaunchStoryboardName) and no Base.lproj/LaunchScreen.storyboard to name');
+    info.UILaunchStoryboardName = 'LaunchScreen';
+    changed.push('Info.plist UILaunchStoryboardName');
+  }
+  // the system must be free to resize the window (a Duo folding, Split View): never full-screen-only
+  if ('UIRequiresFullScreen' in info) { delete info.UIRequiresFullScreen; changed.push('Info.plist UIRequiresFullScreen removed'); }
   if (release.devices === 'iphone' && 'UISupportedInterfaceOrientations~ipad' in info) {
     delete info['UISupportedInterfaceOrientations~ipad'];
     changed.push('Info.plist UISupportedInterfaceOrientations~ipad removed');

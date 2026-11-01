@@ -9,7 +9,14 @@
   --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", system-ui, sans-serif;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
+  /* Larger text (Settings; main.js largeText): every type size in this sheet is written times
+     --ts, and the small capitals never go under --tf. Off they are 1 and 0, so every size is as
+     written; on, about a fifth larger, and no label under 12px (docs/copy-study.md C7, Apple's
+     type minimums). The developer's panel, the web's placeholder ad, and the display names
+     fitted to the width by a vw clamp (the chapter's, the find's, the pause's) keep theirs */
+  --ts: 1; --tf: 0px;
 }
+html.large-text { --ts: 1.22; --tf: 12px; }
 
 body.dark {
   --ink: #eef0ff;
@@ -63,10 +70,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 :is(#menu-btn, #rewind, #journal-close, #journal-back) svg { stroke-width: 1.3; }
 
 .title { flex: 1; display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
-#pz-name { font-size: 15px; letter-spacing: .32em; text-transform: uppercase; font-weight: 500; }
-#pz-meta { font-size: 11px; letter-spacing: .2em; color: var(--ink-soft); text-transform: uppercase; }
+#pz-name { font-size: calc(15px * var(--ts)); letter-spacing: .32em; text-transform: uppercase; font-weight: 500; }
+#pz-meta { font-size: calc(11px * var(--ts)); letter-spacing: .2em; color: var(--ink-soft); text-transform: uppercase; }
 
-.sub-line { display: flex; align-items: baseline; justify-content: center; gap: 0; margin-top: 3px; font-size: 11px; letter-spacing: .2em; color: var(--ink-soft); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.sub-line { display: flex; align-items: baseline; justify-content: center; gap: 0; margin-top: 3px; font-size: calc(11px * var(--ts)); letter-spacing: .2em; color: var(--ink-soft); text-transform: uppercase; font-variant-numeric: tabular-nums; }
 #pz-meta { font-size: inherit; }
 #timer:not(:empty)::before { content: "·"; margin: 0 .55em 0 .35em; }
 #strikes { color: #d4505a; letter-spacing: .25em; }
@@ -84,7 +91,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
    the hammer and pencil gone; a toggle of rings tried, and the pill kept) */
 .segmented {
   justify-self: center; display: flex; padding: 4px; border-radius: 999px; position: relative;
-  width: 204px; height: 46px; box-sizing: border-box; padding: 3px;
+  width: calc(204px * var(--ts)); height: 46px; box-sizing: border-box; padding: 3px;
   border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
 }
 /* a soft highlight that slides between the two tools */
@@ -98,7 +105,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .tool {
   flex: 1; position: relative; z-index: 1; border-radius: 999px;
   display: flex; align-items: center; justify-content: center; gap: 7px;
-  font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft);
+  font-size: max(var(--tf), calc(10.5px * var(--ts))); letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft);
   transition: color .35s;
 }
 .tool svg { width: 19px; height: 19px; stroke-width: 1.4; }
@@ -147,17 +154,17 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .panel.center { text-align: center; }
 
 h1, h2 { font-weight: 400; text-transform: uppercase; margin: 0; }
-h1 { font-size: 30px; letter-spacing: .5em; text-align: center; padding-left: .5em; }
-h2 { font-size: 22px; letter-spacing: .32em; margin-bottom: 14px; }
-.sub { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--ink-soft); text-align: center; margin: 8px 0 22px; }
-.panel p { font-size: 15px; line-height: 1.55; }
+h1 { font-size: calc(30px * var(--ts)); letter-spacing: .5em; text-align: center; padding-left: .5em; }
+h2 { font-size: calc(22px * var(--ts)); letter-spacing: .32em; margin-bottom: 14px; }
+.sub { font-size: calc(11px * var(--ts)); letter-spacing: .32em; text-transform: uppercase; color: var(--ink-soft); text-align: center; margin: 8px 0 22px; }
+.panel p { font-size: calc(15px * var(--ts)); line-height: 1.55; }
 
 .row button {
-  padding: 12px 18px; border-radius: 999px; font-size: 13px; letter-spacing: .2em; text-transform: uppercase;
+  padding: 12px 18px; border-radius: 999px; font-size: calc(13px * var(--ts)); letter-spacing: .2em; text-transform: uppercase;
   box-shadow: inset 0 0 0 1px var(--line);
 }
 .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-button.primary { background: var(--ink); color: var(--sky); box-shadow: none; padding: 12px 24px; border-radius: 999px; letter-spacing: .24em; text-transform: uppercase; font-size: 13px; }
+button.primary { background: var(--ink); color: var(--sky); box-shadow: none; padding: 12px 24px; border-radius: 999px; letter-spacing: .24em; text-transform: uppercase; font-size: calc(13px * var(--ts)); }
 /* Settings and how to play: one carousel (docs/settings-study.md, mockup C, after Alto's
    menu). No card: the sky's own wash over the blurred world, as the pause; the pages lie
    side by side and snap, natively scrolled; the titles above follow the swipe, the
@@ -167,7 +174,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   background: none; box-shadow: none; border: 1px solid var(--line); color: var(--ink); }   /* a hairline ring, as the map's */
 .car-titles { position: absolute; left: 0; top: calc(78px + var(--safe-t)); display: flex; gap: 34px; white-space: nowrap; will-change: transform; }
 .car-titles button { padding: 8px 0; background: none; box-shadow: none; border-radius: 0; color: var(--ink);
-  font-size: 12px; letter-spacing: .36em; text-transform: uppercase; opacity: .35; }
+  font-size: calc(12px * var(--ts)); letter-spacing: .36em; text-transform: uppercase; opacity: .35; }
 .car-titles button::after { content: ""; display: block; width: 7px; height: 7px; margin: 12px auto 0; transform: rotate(45deg) scale(var(--k, 0));
   border: 1px solid var(--ink-soft); }
 .help-pages { position: absolute; left: 0; right: 0; top: calc(140px + var(--safe-t)); bottom: calc(96px + var(--safe-b));
@@ -181,7 +188,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 .car-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink); opacity: .25; transition: opacity .3s; }
 .car-dots i.on { opacity: .9; }
 .car-foot { position: absolute; left: 0; right: 0; bottom: calc(24px + var(--safe-b)); margin: 0; text-align: center;
-  font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); }
+  font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); }
 .car-foot .version { display: inline; margin: 0; font-size: inherit; letter-spacing: inherit; }
 .car-foot a { color: var(--ink-soft); text-decoration: none; }
 /* the toggles in the pause's voice: a ring, a glyph, its word, and whether it's on */
@@ -191,36 +198,52 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
   transition: background .3s, border-color .3s, opacity .3s, transform .25s cubic-bezier(.2,.9,.3,1.4); opacity: .45; }
 .ring-toggle.on svg { opacity: 1; border-color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
 .ring-toggle:active svg { transform: scale(.92); }
-.ring-toggle .l { font-size: 11px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); transition: color .3s; }
+.ring-toggle .l { font-size: calc(11px * var(--ts)); letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); transition: color .3s; }
 .ring-toggle.on .l { color: var(--ink); }
-.ring-toggle .s { margin-top: -6px; font-size: 9px; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
+.ring-toggle .s { margin-top: -6px; font-size: max(var(--tf), calc(9px * var(--ts))); letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
 .ring-toggle .s::after { content: "off"; }
 .ring-toggle.on .s::after { content: "on"; }
+/* Larger text, under them: one ring, its two words on one line */
+#help-more .toggles.reading { margin-top: 22px; }
+.toggles.reading .ring-toggle { width: auto; min-width: 96px; }
+.toggles.reading .l { white-space: nowrap; }
+/* Larger text on a short screen (375x667): the carousel's head and foot come in closer, and the
+   rules' rows a little tighter, so the Rules page still fits without a scroll */
+@media (max-height: 740px) {
+  .large-text .car-titles { top: calc(58px + var(--safe-t)); }
+  .large-text .help-pages { top: calc(114px + var(--safe-t)); bottom: calc(78px + var(--safe-b)); }
+  .large-text .car-dots { bottom: calc(50px + var(--safe-b)); }
+  .large-text .car-foot { bottom: calc(18px + var(--safe-b)); }
+  .large-text .legend { gap: 8px 12px; }
+  .large-text .help-page .lead { margin-bottom: 12px; }
+  .large-text .help-page .aside { margin-top: 12px; line-height: 1.45; }
+  .large-text .legend dd { line-height: 1.32; }
+}
 #help-more .support { margin-top: 34px; }
 #help-more .home-tip { margin-top: 30px; }
-#help-more .home-tip p { font-size: 13px; line-height: 1.55; }
+#help-more .home-tip p { font-size: calc(13px * var(--ts)); line-height: 1.55; }
 @media (prefers-reduced-motion: reduce) { #help .pg, #help.show .pg { transform: none; transition: opacity .2s; } }
 
-.help-page .lead { margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
-.help-page .aside { margin: 16px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.help-page .lead { margin: 0 0 16px; font-size: calc(16px * var(--ts)); line-height: 1.5; }
+.help-page .aside { margin: 16px 0 0; font-size: calc(13.5px * var(--ts)); line-height: 1.55; color: var(--ink-soft); }
 .legend, .gestures { margin: 0; display: grid; }
 .legend { grid-template-columns: 44px 1fr; gap: 12px 12px; align-items: center; }
 .legend dt { display: grid; place-items: center; }
-.legend dd, .gestures dd { margin: 0; font-size: 14px; line-height: 1.45; }
-.glyph.plain { border-color: transparent; font-size: 15px; }
-.glyph.slip { border-color: transparent; font-size: 15px; }
-.gems { font-size: 10px; letter-spacing: .1em; color: var(--ink); white-space: nowrap; }
+.legend dd, .gestures dd { margin: 0; font-size: calc(14px * var(--ts)); line-height: 1.45; }
+.glyph.plain { border-color: transparent; font-size: calc(15px * var(--ts)); }
+.glyph.slip { border-color: transparent; font-size: calc(15px * var(--ts)); }
+.gems { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .1em; color: var(--ink); white-space: nowrap; }
 .gestures { grid-template-columns: minmax(0, 54%) 1fr; }
 .gestures dt, .gestures dd { padding: 10px 0; border-top: 1px solid var(--line); }
 .gestures dt:first-of-type, .gestures dt:first-of-type + dd { border-top: 0; padding-top: 2px; }
-.gestures dt { font-weight: 700; font-size: 14px; padding-right: 12px; }
+.gestures dt { font-weight: 700; font-size: calc(14px * var(--ts)); padding-right: 12px; }
 .gestures dd { color: var(--ink-soft); }
 
-.glyph { display: inline-grid; place-items: center; width: 24px; height: 24px; font-size: 13px; border: 1.5px solid currentColor; margin: 0 2px; }
+.glyph { display: inline-grid; place-items: center; width: calc(24px * var(--ts)); height: calc(24px * var(--ts)); font-size: calc(13px * var(--ts)); border: 1.5px solid currentColor; margin: 0 2px; }
 .glyph.circle { border-radius: 50%; }
 .glyph.square { border-radius: 4px; }
 
-#loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 11px; letter-spacing: .4em; text-transform: uppercase; color: var(--ink-soft); pointer-events: none; z-index: 4; }
+#loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: calc(11px * var(--ts)); letter-spacing: .4em; text-transform: uppercase; color: var(--ink-soft); pointer-events: none; z-index: 4; }
 
 @media (min-width: 900px) {
   .tools { width: min(460px, 100%); margin: 0 auto; }
@@ -254,10 +277,10 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #coach.quiet { padding: 8px 18px 4px; }
 #coach.quiet #coach-text { display: none; }
 #coach-skip[hidden] { display: none; }
-#coach-text { margin: 6px 0 4px; font-size: 15px; line-height: 1.45; }
+#coach-text { margin: 6px 0 4px; font-size: calc(15px * var(--ts)); line-height: 1.45; }
 #coach-dots { display: flex; gap: 6px; justify-content: center; }
 /* the rebuilt lessons (docs/tutorial-study.md): words large enough to read without glasses, in full ink */
-.lessons-v2 #coach-text { font-size: 18px; line-height: 1.4; color: var(--ink); }
+.lessons-v2 #coach-text { font-size: calc(18px * var(--ts)); line-height: 1.4; color: var(--ink); }
 #timer[hidden] { display: none; }
 
 /* the ghost finger: a soft fingertip showing a lesson's move on the stone */
@@ -282,7 +305,7 @@ button.primary { background: var(--ink); color: var(--sky); box-shadow: none; pa
 #coach-dots i { width: 6px; height: 6px; transform: rotate(45deg); background: var(--line); transition: background .4s; }
 #coach-dots i.done { background: var(--ink-soft); }
 #coach-dots i.now { background: var(--ink); }
-#coach-skip { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 6px 10px; }
+#coach-skip { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 6px 10px; }
 
 /* ---------- puzzle map ---------- */
 #menu { display: block; padding: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -371,9 +394,9 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 }
 .map-region.at-left { left: var(--edge); align-items: flex-start; }
 .map-region.at-right { right: var(--edge); align-items: flex-end; text-align: right; }
-.map-region .r-name { font-size: 15px; letter-spacing: .42em; text-transform: uppercase; }
+.map-region .r-name { font-size: calc(15px * var(--ts)); letter-spacing: .42em; text-transform: uppercase; }
 .map-region.at-right .r-name { margin-right: -.42em; }
-.map-region .r-sub { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: .62; }
+.map-region .r-sub { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; opacity: .62; }
 .on-dark { color: #eef0ff; }
 
 /* the map is filed into bands down the page (map.js): off screen, a band is
@@ -401,10 +424,10 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .map-node.lbl-right .label { left: 66px; align-items: flex-start; text-align: left; }
 .map-node.lbl-left .label { right: 66px; align-items: flex-end; text-align: right; }
 .map-node.drift .label { top: 58px; left: 50%; transform: translateX(-50%); align-items: center; }
-.map-node .n { font-size: 10px; letter-spacing: .26em; opacity: .62; }
-.map-node .nm { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; }
+.map-node .n { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .26em; opacity: .62; }
+.map-node .nm { font-size: calc(12px * var(--ts)); letter-spacing: .26em; text-transform: uppercase; }
 .map-node.lbl-left .nm { margin-right: -.26em; }
-.map-node .mt { font-size: 9.5px; letter-spacing: .2em; opacity: .62; font-variant-numeric: tabular-nums; }
+.map-node .mt { font-size: max(var(--tf), calc(9.5px * var(--ts))); letter-spacing: .2em; opacity: .62; font-variant-numeric: tabular-nums; }
 .stars-mini { display: inline-flex; gap: 4px; margin-top: 3px; }
 .stars-mini i { display: block; width: 7px; height: 10px; }
 .stars-mini svg { width: 7px; height: 10px; display: block; stroke: none; }
@@ -457,7 +480,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
   transition: transform .25s cubic-bezier(.2,.9,.3,1.4); }
 .ring-btn .ring svg { width: 22px; height: 22px; }
 .ring-btn:active .ring { transform: scale(.92); }
-.ring-label { font-size: 9.5px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: rgba(var(--ink-rgb, 74, 61, 99), .64); white-space: nowrap; }
+.ring-label { font-size: max(var(--tf), calc(9.5px * var(--ts))); letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: rgba(var(--ink-rgb, 74, 61, 99), .64); white-space: nowrap; }
 #map-close {
   position: absolute; left: 50%; bottom: calc(22px + var(--safe-b)); translate: -50% 0; z-index: 1;
   opacity: 0; pointer-events: none; transition: opacity .3s;
@@ -466,6 +489,16 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #map-close .ring svg { width: 30px; height: 30px; fill: currentColor; stroke-width: 1.2; }   /* the play triangle (M9.5 7.2v9.6l7.5-4.8z, as the pause's) is drawn with its centroid on the ring's centre */
 #menu.has-game #map-close { opacity: 1; pointer-events: auto; }
 #map-help { position: absolute; top: calc(18px + var(--safe-t)); left: 26px; z-index: 1; }   /* in from the corners (Kellan, 2026-10-29) */
+/* the Daily Stone: Today, between Menu and Finds (once the lessons are done); the
+   head's words step down to clear it. Solved, its sun has risen: filled, in a
+   warm hairline, until the next day */
+#map-today { position: absolute; top: calc(18px + var(--safe-t)); left: 50%; translate: -50% 0; z-index: 1; }
+#map-today[hidden] { display: none; }
+#map-today svg { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+#map-today .sun { fill: none; transition: fill .4s; }
+#map-today.done .sun { fill: currentColor; }
+#map-today.done .ring { border-color: rgba(214, 160, 70, .62); box-shadow: 0 0 14px rgba(255, 214, 140, .28); }
+#menu.daily-on .map-head { padding-top: calc(104px + var(--safe-t)); }
 #menu:not(.show) #map-close { pointer-events: none; }
 /* (#menu.show > * would otherwise show it: it's only there with a level to go back to) */
 #menu:not(.has-game) #map-close { opacity: 0; pointer-events: none; }
@@ -564,7 +597,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 /* the tapped stone answers at once */
 .map-node.tapped .cube, .map-node.tapped .obj { animation: tap-pop .32s var(--ease-pop) both; }
 @keyframes tap-pop { 0% { scale: .9; } 55% { scale: 1.16; } 100% { scale: 1.1; } }
-#menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal { opacity: 0; transition: opacity .2s; }
+#menu.diving #map-close, #menu.diving #map-help, #menu.diving #map-journal, #menu.diving #map-today { opacity: 0; transition: opacity .2s; }
 /* the level's sky opens out of the tapped stone as nested diamonds (a cube's top face):
    the glow leads, the sky follows; then it fades as the block assembles */
 #veil, #veil-glow { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .45s ease-out;
@@ -579,8 +612,8 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 #menu.arriving .map-scroll { transform-origin: var(--dive-x) var(--dive-y); transform: scale(1.35); opacity: 0; transition: none; }
 #menu.settling .map-scroll { transform-origin: var(--dive-x) var(--dive-y);
   transition: transform var(--dur-scene) var(--ease-glide), opacity .28s ease-out; }
-#menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal { opacity: 0; transition: none; }
-#menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal { transition: opacity .4s ease-out .2s; }
+#menu.arriving #map-close, #menu.arriving #map-help, #menu.arriving #map-journal, #menu.arriving #map-today { opacity: 0; transition: none; }
+#menu.settling #map-close, #menu.settling #map-help, #menu.settling #map-journal, #menu.settling #map-today { transition: opacity .4s ease-out .2s; }
 /* map -> back to the level: a slight swell as it dissolves */
 #menu.leaving .map-scroll { transform: scale(1.08); opacity: 0; transition: transform .4s cubic-bezier(.4,0,.6,1), opacity .3s ease-in; }
 
@@ -606,7 +639,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 }
 #win-title.show { opacity: 1; }
 #win-title .sub {
-  font-size: 11px; letter-spacing: .42em; text-transform: uppercase; opacity: 0;
+  font-size: calc(11px * var(--ts)); letter-spacing: .42em; text-transform: uppercase; opacity: 0;
 }
 #win-title .name {
   font-size: clamp(28px, 8.5vw, 44px); font-weight: 500; letter-spacing: .28em; text-transform: uppercase;
@@ -631,7 +664,7 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 .star { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .star svg { width: 34px; height: 34px; fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: .28; transition: opacity .2s; }
 .star:nth-child(2) svg { width: 40px; height: 40px; margin-top: -6px; }
-.star i { font-style: normal; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+.star i { font-style: normal; font-size: max(var(--tf), calc(9px * var(--ts))); letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
 .star.on svg { fill: var(--ink); stroke: var(--ink); opacity: 1; animation: star-pop .42s cubic-bezier(.2,1.6,.4,1) both; }
 .star.on i { color: var(--ink); }
 .star.on { position: relative; }
@@ -641,19 +674,19 @@ body.map-up #scene { opacity: 0; transition-duration: .28s; }   /* out fast: the
 }
 @keyframes star-pop { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.18) rotate(4deg); } 100% { transform: none; } }
 @keyframes star-ring { 0% { transform: scale(.3); opacity: .5; } 100% { transform: scale(1.3); opacity: 0; } }
-#win .score { font-size: 34px; font-weight: 500; letter-spacing: .08em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+#win .score { font-size: calc(34px * var(--ts)); font-weight: 500; letter-spacing: .08em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
 .score.tick { animation: score-tick .12s ease-out; }
 @keyframes score-tick { 50% { transform: scale(1.05); } }
 .lines { list-style: none; padding: 0; margin: 0 auto 6px; width: min(240px, 100%); }
 .lines li {
-  display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  display: flex; justify-content: space-between; font-size: calc(11px * var(--ts)); letter-spacing: .2em; text-transform: uppercase;
   color: var(--ink-soft); padding: 3px 0; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s;
 }
 .lines li.in { opacity: 1; transform: none; }
 .lines li b { font-weight: 500; color: var(--ink); letter-spacing: .08em; font-variant-numeric: tabular-nums; }
 .best {
   display: inline-block; margin: 2px 0 10px; padding: 3px 10px; border: 1px solid var(--ink); border-radius: 999px;
-  font-size: 10px; letter-spacing: .3em; text-transform: uppercase; opacity: 0; transform: scale(1.6);
+  font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; opacity: 0; transform: scale(1.6);
 }
 .best.in { animation: best-stamp .38s cubic-bezier(.3,1.5,.5,1) both; }
 @keyframes best-stamp { from { opacity: 0; transform: scale(1.6) rotate(-6deg); } to { opacity: 1; transform: rotate(-3deg); } }
@@ -691,7 +724,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #actions button {
   background: none; border: 0; box-shadow: none; color: var(--ink); padding: 0; width: 84px;
   display: flex; flex-direction: column; align-items: center; gap: 9px;
-  font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
+  font-size: calc(11px * var(--ts)); letter-spacing: .24em; text-transform: uppercase;
 }
 #actions .ring {
   width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
@@ -703,6 +736,8 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #actions button.primary .ring { width: 72px; height: 72px; border-color: color-mix(in srgb, var(--ink) 55%, transparent); background: color-mix(in srgb, var(--ink) 7%, transparent); }
 #actions button.primary .ring svg { width: 30px; height: 30px; }
 #actions button.primary .lb { opacity: 1; }
+/* the Daily Stone's result: Map, Share, and Challenge in the app with Game Center */
+#actions:not(.daily) :is(#act-share, #act-challenge), #actions.daily :is(#act-next, #act-replay), #actions:not(.gc) #act-challenge { display: none; }
 
 /* ---------- chapter title card ---------- */
 #chapter-card {
@@ -713,9 +748,9 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
   opacity: 0; pointer-events: none;
 }
 #chapter-card.show { animation: chapter-card 2.8s ease both; pointer-events: auto; }
-#chapter-card .numeral { font-size: 13px; letter-spacing: .5em; padding-left: .5em; }
+#chapter-card .numeral { font-size: calc(13px * var(--ts)); letter-spacing: .5em; padding-left: .5em; }
 #chapter-card .cname { margin: 0; font-size: clamp(22px, 6.4vw, 38px); font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; white-space: nowrap; }
-#chapter-card .cline { margin: 4px 0 0; font-size: 14px; letter-spacing: .06em; max-width: 300px; line-height: 1.5; }
+#chapter-card .cline { margin: 4px 0 0; font-size: calc(14px * var(--ts)); letter-spacing: .06em; max-width: 300px; line-height: 1.5; }
 #chapter-card .numeral, #chapter-card .cname, #chapter-card .cline { opacity: 0; }
 #chapter-card.show .numeral { animation: card-rise .9s ease .15s both; }
 #chapter-card.show .cname { animation: card-rise 1s ease .35s both; }
@@ -742,12 +777,12 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #world-close.in .ring img { opacity: 1; transform: translate(var(--x), var(--y)); }
 #world-close p, #world-close h2 { position: relative; margin: 0; opacity: 0; transition: opacity 1s ease .2s; }
 #world-close.in p, #world-close.in h2 { opacity: 1; }
-#world-close .numeral { font-size: 13px; letter-spacing: .5em; padding-left: .5em; opacity: 0; }
+#world-close .numeral { font-size: calc(13px * var(--ts)); letter-spacing: .5em; padding-left: .5em; opacity: 0; }
 #world-close.in .numeral { opacity: .7; }
 #world-close .cname { margin: 8px 0 10px; font-size: clamp(20px, 6vw, 26px); font-weight: 500; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; white-space: nowrap; }
-#world-close .cline { font-size: 15px; max-width: min(250px, calc(100% - 140px)); line-height: 1.45; }
+#world-close .cline { font-size: calc(15px * var(--ts)); max-width: min(250px, calc(100% - 140px)); line-height: 1.45; }
 #world-close.in .cline { opacity: .85; }
-#world-close .all { margin-top: 26px; font-size: 11px; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+#world-close .all { margin-top: 26px; font-size: calc(11px * var(--ts)); letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
 #world-close.in .all { opacity: .62; transition-delay: 1.4s; }
 @media (prefers-reduced-motion: reduce) { #world-close, #world-close * { transition: none !important; } }
 
@@ -756,7 +791,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 
 /* ---------- story line under the solved object's name ---------- */
 #win-title .story {
-  max-width: min(320px, calc(100% - 48px)); margin-top: 6px; font-size: 13px; line-height: 1.45; letter-spacing: .03em;
+  max-width: min(320px, calc(100% - 48px)); margin-top: 6px; font-size: calc(13px * var(--ts)); line-height: 1.45; letter-spacing: .03em;
   opacity: 0; text-shadow: 0 0 18px rgba(255, 250, 235, 0.8);
 }
 #win-title.show .story { animation: win-story 1.2s ease both; animation-delay: var(--d, 1.2s); }
@@ -773,7 +808,7 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 /* opaque: the journal is its own place, not a veil over the map */
 #journal { background: #f7dccb; }
 .jr-head { text-align: center; padding: calc(64px + var(--safe-t)) 20px 18px; background: linear-gradient(180deg, #f7dccb, #f3d7d0); }
-.jr-head h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; }
+.jr-head h2 { margin: 0; font-size: calc(22px * var(--ts)); font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; }
 #journal-count { margin: 10px 0 0; display: flex; justify-content: center; align-items: center; gap: 14px; }
 .jr-total { display: inline-flex; align-items: center; gap: 5px; letter-spacing: .14em; }
 .jr-total svg { width: 9px; height: 12px; }
@@ -788,15 +823,15 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .jr-chapter + .jr-chapter, .jr-chapter + .jr-later { border-top: 1px solid rgba(255, 255, 255, .42); }
 /* the worlds not reached yet: named only, sinking to the map's night (journal.js) */
 .jr-later { padding: 40px 18px 70px; text-align: center; color: #eef0ff; }
-.jr-later h3 { margin: 0 0 6px; font-size: 13px; font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; opacity: .85; }
-.jr-later p { margin: 0 0 22px; font-size: 10px; letter-spacing: .26em; text-transform: uppercase; opacity: .55; }
+.jr-later h3 { margin: 0 0 6px; font-size: calc(13px * var(--ts)); font-weight: 500; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; opacity: .85; }
+.jr-later p { margin: 0 0 22px; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .26em; text-transform: uppercase; opacity: .55; }
 .jr-later ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
-.jr-later li { font-size: 11px; letter-spacing: .32em; padding-left: .32em; text-transform: uppercase; opacity: .7; }
-.jr-later li span { display: block; margin-top: 3px; font-size: 9px; letter-spacing: .24em; opacity: .55; }
+.jr-later li { font-size: calc(11px * var(--ts)); letter-spacing: .32em; padding-left: .32em; text-transform: uppercase; opacity: .7; }
+.jr-later li span { display: block; margin-top: 3px; font-size: max(var(--tf), calc(9px * var(--ts))); letter-spacing: .24em; opacity: .55; }
 .jr-chapter header { width: min(560px, 100%); margin: 0 auto 18px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.jr-numeral { font-size: 11px; letter-spacing: .3em; opacity: .7; }
-.jr-chapter h3 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: .34em; padding-left: .34em; text-transform: uppercase; }
-.jr-progress { font-size: 10px; letter-spacing: .26em; text-transform: uppercase; opacity: .75; }
+.jr-numeral { font-size: calc(11px * var(--ts)); letter-spacing: .3em; opacity: .7; }
+.jr-chapter h3 { margin: 0; font-size: calc(17px * var(--ts)); font-weight: 500; letter-spacing: .34em; padding-left: .34em; text-transform: uppercase; }
+.jr-progress { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .26em; text-transform: uppercase; opacity: .75; }
 .jr-bar { display: block; width: 120px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 18%, transparent); overflow: hidden; }
 .jr-bar i { display: block; height: 100%; background: #e9b949; border-radius: 2px; }
 .jr-chapter.complete .jr-progress { opacity: 1; color: #e9b949; text-shadow: 0 0 12px rgba(255, 220, 140, .8); }
@@ -813,7 +848,9 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .jr-tile img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(40, 20, 60, .14)); }
 .jr-pic > img { grid-area: 1 / 1; }
 .jr-tile img.obj-rim { filter: none; mix-blend-mode: screen; pointer-events: none; }   /* only light: no shadow under it */
-.jr-tile .nm { font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.jr-tile .nm { font-size: max(var(--tf), calc(9.5px * var(--ts))); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* with Larger text a long name takes two lines rather than losing its end */
+.large-text .jr-tile .nm { white-space: normal; text-align: center; }
 .jr-tile:not(.found) { cursor: default; }
 .jr-tile:not(.found) .nm { opacity: .45; letter-spacing: .14em; text-transform: none; font-style: italic; }
 .jr-shadow { width: 64px; height: 64px; border-radius: 50%;
@@ -838,13 +875,13 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #journal-view.show { opacity: 1; pointer-events: auto; }
 #journal-view canvas { flex: 1; width: 100%; min-height: 0; touch-action: none; cursor: grab; }
 #journal-view .jv-text { text-align: center; padding: 0 28px calc(40px + var(--safe-b)); }
-#journal-view .jv-name { margin: 2px 0 8px; font-size: 26px; font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
-#journal-view .jv-story { margin: 0 auto 10px; max-width: 320px; font-size: 15px; line-height: 1.5; }
+#journal-view .jv-name { margin: 2px 0 8px; font-size: calc(26px * var(--ts)); font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
+#journal-view .jv-story { margin: 0 auto 10px; max-width: 320px; font-size: calc(15px * var(--ts)); line-height: 1.5; }
 #journal-view .jv-hint { opacity: .55; }
 #journal-back { position: absolute; top: calc(12px + var(--safe-t)); left: 14px; }
 
 /* the build stamps this; it tells which version a phone is running */
-.version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
+.version { cursor: pointer; margin: 14px 0 0; text-align: center; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); opacity: .7; }
 
 /* ---------- add to home screen ---------- */
 #install {
@@ -867,9 +904,9 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 .install-cube path:nth-child(2) { fill: #f1c4a6; }
 .install-cube path:nth-child(3) { fill: #a98cb6; }
 .install-text p { margin: 0; }
-.install-title { font-size: 14px; letter-spacing: .06em; }
-.install-why { margin-top: 3px !important; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
-.install-how { margin-top: 8px !important; font-size: 13px; line-height: 1.5; }
+.install-title { font-size: calc(14px * var(--ts)); letter-spacing: .06em; }
+.install-why { margin-top: 3px !important; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+.install-how { margin-top: 8px !important; font-size: calc(13px * var(--ts)); line-height: 1.5; }
 .glyph-share svg { width: 17px; height: 17px; vertical-align: -3px; margin: 0 2px; }
 .install-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 /* one set of steps for the browser in hand; Install only when the browser offers it */
@@ -878,9 +915,9 @@ body.solved #win-title { top: calc(54px + var(--safe-t)); }
 #install.can-install #install-go { display: inline-block; }
 #install.can-install .install-how { display: none !important; }
 #install.android::after, #install.samsung::after { display: none; }
-.glyph-menu { display: inline-block; min-width: 14px; text-align: center; font-weight: 700; font-size: 15px; line-height: 1; vertical-align: -1px; margin: 0 2px; }
+.glyph-menu { display: inline-block; min-width: 14px; text-align: center; font-weight: 700; font-size: calc(15px * var(--ts)); line-height: 1; vertical-align: -1px; margin: 0 2px; }
 /* the same steps in How to play, only in a browser tab */
-.home-tip { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--panel); font-size: 13.5px; }
+.home-tip { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--panel); font-size: calc(13.5px * var(--ts)); }
 .home-tip p { margin: 0; }
 .home-tip p + p { margin-top: 8px; line-height: 1.6; }
 .home-tip .glyph-share svg { width: 15px; height: 15px; }
@@ -892,7 +929,7 @@ body.standalone .home-tip { display: none; }
 .dev-row {
   display: flex; justify-content: space-between; align-items: center; width: 100%;
   padding: 13px 16px; border-radius: 14px; border: 0; text-decoration: none;
-  background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; letter-spacing: .04em; text-align: left;
+  background: var(--panel); color: var(--ink); font: inherit; font-size: calc(14px * var(--ts)); letter-spacing: .04em; text-align: left;
 }
 .dev-row span { color: var(--ink-soft); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
 .dev-row.danger { color: #c4485a; }
@@ -924,7 +961,7 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 #title h1 { animation: title-in 1.2s cubic-bezier(.2,.8,.2,1) .05s both; }
 #title .sub { margin: 14px 0 0; animation: title-fade 1s ease-out .45s both; }
 #title .tap { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  font-size: 10px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase;
+  font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .42em; padding-left: .42em; text-transform: uppercase;
   animation: title-fade .8s ease-out 1s both, title-breathe 2.6s ease-in-out 1.8s infinite; }
 #title .tap svg { width: 18px; height: 18px; margin-left: -.42em; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
   animation: title-nudge 1.6s ease-in-out 1.8s infinite; }
@@ -934,7 +971,7 @@ body:has(#title.show, #help.show, #dev.show, #journal.show, #win.show) #install,
 @keyframes title-in { from { opacity: 0; letter-spacing: .9em; padding-left: .9em; } }
 @keyframes title-fade { from { opacity: 0; } }
 @keyframes title-breathe { 50% { opacity: .45; } }
-#menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close { opacity: 0; transition: none; }
+#menu.pulling #map-help, #menu.pulling #map-journal, #menu.pulling #map-close, #menu.pulling #map-today { opacity: 0; transition: none; }
 /* while the map comes up from the title, its sky has no edge: the backdrop reaches
    well above the sheet and fades in over that reach, so the title's sky melts into it */
 /* the sheet's own top edge fades too; main.js slides the fade off the top as the map arrives */
@@ -981,7 +1018,7 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 /* names sit on the cloud: a soft halo of their own sky keeps them readable */
 .map-region { text-shadow: 0 0 14px rgba(255, 250, 244, .75); }
 .map-region.on-dark { text-shadow: 0 0 14px rgba(10, 12, 30, .55); }
-.map-region .r-num { font-size: 10px; letter-spacing: .4em; opacity: .7; }
+.map-region .r-num { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .4em; opacity: .7; }
 .map-region.at-right .r-num { margin-right: -.4em; }
 .map-region.at-centre { left: 50%; transform: translate(-50%, -50%); align-items: center; text-align: center; }
 .map-region.veiled .r-name { opacity: .85; }
@@ -1020,7 +1057,7 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .map-node.bonus.solved .halo { background: radial-gradient(closest-side, rgba(255, 222, 140, .62), rgba(255, 210, 110, .22) 50%, rgba(255, 210, 110, 0)); animation: none; }
 .map-node.bonus.solved::after { height: 150px; background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(255, 210, 112, .5), rgba(255, 210, 112, 0) 72%); }
 .map-node.bonus.solved .obj-rim { mix-blend-mode: normal; }   /* screened, gold on a pale sky washed out */
-.map-node.bonus .n { color: #e9b949; opacity: 1; font-size: 12px; }
+.map-node.bonus .n { color: #e9b949; opacity: 1; font-size: calc(12px * var(--ts)); }
 .map-node.bonus.open .nm { font-weight: 600; letter-spacing: .3em; }
 .map-node.bonus.open .mt { color: #a8741a; opacity: 1; }
 .map-node.bonus.on-dark.open .mt { color: #ffe7a1; }
@@ -1040,7 +1077,7 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 
 /* a shrine's card: the chapter card, in gold */
 #chapter-card.shrine { background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, #fff2d2 92%, transparent) 0%, color-mix(in srgb, var(--sky) 72%, transparent) 55%, color-mix(in srgb, var(--sky) 28%, transparent) 100%); }
-#chapter-card.shrine .numeral { color: #a8741a; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+#chapter-card.shrine .numeral { color: #a8741a; font-size: calc(12px * var(--ts)); font-weight: 600; text-transform: uppercase; }
 #chapter-card.shrine .cname { color: #3e3020; font-size: clamp(20px, 6vw, 34px); }
 #chapter-card.shrine .cline { color: #5a4630; }
 /* held longer than a chapter's card, and sharp sooner: it reads before the block comes */
@@ -1074,12 +1111,12 @@ body.menu-open :is(.hud, #actions, #coach) * { pointer-events: none !important; 
 .offer-card { padding: 16px 20px 14px; border-radius: 22px; text-align: center;
   background: var(--panel-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 14px 40px rgba(40, 20, 60, 0.14); }
-.offer-card p { margin: 0; font-size: 14px; line-height: 1.5; letter-spacing: .02em; }
-.offer-card .small { margin-top: 4px; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+.offer-card p { margin: 0; font-size: calc(14px * var(--ts)); line-height: 1.5; letter-spacing: .02em; }
+.offer-card .small { margin-top: 4px; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
 .offer-card .small:empty { display: none; }
 .offer-card .row { margin-top: 12px; }
-.offer-card .row button { font-size: 11px; padding: 10px 16px; }
-.offer-card .row button.primary { font-size: 11px; padding: 10px 18px; }
+.offer-card .row button { font-size: calc(11px * var(--ts)); padding: 10px 16px; }
+.offer-card .row button.primary { font-size: calc(11px * var(--ts)); padding: 10px 18px; }
 .offer-card .row button[hidden] { display: none; }
 
 /* the menu button in a level stills the world (docs/pause-study.md). No card:
@@ -1098,7 +1135,7 @@ body:has(#pause.show) :is(.hud, #coach) { opacity: 0; pointer-events: none; }
 body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 .pause-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; color: var(--ink); }
 .pause-where { margin: 0 0 34px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.pause-chapter { font-size: 11px; letter-spacing: .42em; padding-left: .42em; text-transform: uppercase; color: var(--ink-soft); }
+.pause-chapter { font-size: calc(11px * var(--ts)); letter-spacing: .42em; padding-left: .42em; text-transform: uppercase; color: var(--ink-soft); }
 .pause-name { font-size: clamp(24px, 7vw, 34px); font-weight: 500; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; }
 .pause-name:empty, .pause-chapter:empty { display: none; }
 /* a thin rule with a diamond, the axes' crystal, between the place and the choices */
@@ -1118,9 +1155,9 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 .lessons-panel { text-align: center; }
 .lessons-panel .primary { display: block; margin: 0 auto; }
 .lesson-list button { display: flex; gap: 10px; align-items: baseline; width: 100%; padding: 9px 2px; text-align: left; color: var(--ink); border-bottom: 1px solid var(--line); }
-.lesson-list .n { font-size: 10px; letter-spacing: .2em; color: var(--ink-soft); }
-.lesson-list .nm { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
-.pause-label { font-size: 11px; letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; transition: color .3s; }
+.lesson-list .n { font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .2em; color: var(--ink-soft); }
+.lesson-list .nm { font-size: calc(13px * var(--ts)); letter-spacing: .14em; text-transform: uppercase; }
+.pause-label { font-size: calc(11px * var(--ts)); letter-spacing: .24em; padding-left: .24em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; transition: color .3s; }
 .pause-resume:active, .pause-row button:active svg { transform: scale(.92); }
 /* "Start over?" asks in the same quiet voice: the ring fills, nothing turns red */
 .pause-row button.confirm svg { background: var(--ink); color: var(--sky); border-color: var(--ink); }
@@ -1135,10 +1172,10 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 
 /* Remove Ads, under the sound toggles in How to play */
 .support { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; }
-.support p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
+.support p { margin: 0 0 12px; font-size: calc(14px * var(--ts)); line-height: 1.5; }
 .support .row { margin-top: 0; }
-.support .perk { margin: 10px 0 0; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); line-height: 1.6; }
-.support .restore { display: block; margin: 10px auto 0; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 4px 8px; }
+.support .perk { margin: 10px 0 0; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); line-height: 1.6; }
+.support .restore { display: block; margin: 10px auto 0; font-size: max(var(--tf), calc(10px * var(--ts))); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-soft); padding: 4px 8px; }
 .support-thanks { display: none; }
 .support.owned .support-offer { display: none; }
 .support.owned .support-thanks { display: block; }
@@ -1148,7 +1185,7 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 #breath { position: fixed; inset: 0; z-index: 55; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   text-align: center; opacity: 0; transition: opacity .45s var(--ease-fade); pointer-events: auto; }
 #breath.in { opacity: 1; }
-#breath .pause { margin: 0; font-size: 14px; line-height: 1.7; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
+#breath .pause { margin: 0; font-size: calc(14px * var(--ts)); line-height: 1.7; letter-spacing: .3em; padding-left: .3em; text-transform: uppercase; color: var(--ink-soft); }
 #breath .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
 #breath .dots i { width: 5px; height: 5px; transform: rotate(45deg); background: var(--ink-soft); opacity: .3; animation: breath-dot 1.2s ease-in-out infinite; }
 #breath .dots i:nth-child(2) { animation-delay: .2s; }
@@ -1165,7 +1202,7 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 .sim-label { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; padding: 6px 12px; border: 1px dashed #8a85a0; border-radius: 6px; color: #c9c4dc; font-family: system-ui, sans-serif; }
 .sim-ad .sim-what { font-size: 13px; color: #8f8aa6; max-width: 270px; line-height: 1.5; margin: 0; }
 .sim-ad .sim-slot { width: min(300px, 80vw); aspect-ratio: 1; border-radius: 14px; display: grid; place-items: center;
-  background: repeating-linear-gradient(45deg, #201f27 0 12px, #1c1b22 12px 24px); color: #5d5874; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+  background: repeating-linear-gradient(45deg, #201f27 0 12px, #1c1b22 12px 24px); color: #5d5874; font-size: calc(12px * var(--ts)); letter-spacing: .2em; text-transform: uppercase; }
 .sim-timer { position: absolute; top: calc(18px + var(--safe-t)); right: 18px; width: 34px; height: 34px; display: grid; place-items: center; font-size: 13px; color: #c9c4dc; }
 .sim-timer[hidden] { display: none; }
 .sim-timer svg { position: absolute; inset: 0; width: 34px; height: 34px; transform: rotate(-90deg); stroke: #6e6985; stroke-width: 1.5; }
@@ -1185,3 +1222,80 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
 /* the store app (js/native.js): no purchases in version 1, no web install prompt */
 .native-app #support, .native-app #install { display: none !important; }
 .no-ads #support { display: none !important; }   /* nothing to buy: native.js MONETIZED */
+
+/* ---------- regular-width windows: the iPhone Duo's inner screen (669 wide), a wide Split View half ----------
+   The interface scales up a touch, so it isn't phone-sized on the bigger screen (docs/ipad-duo-plan.md M1.5):
+   the corner rings, the level's name, the tool switch, the lesson card, the result's and the pause's rings and
+   the map's. Only here: on a phone (390 wide) and on the Duo's outer screen (466) nothing changes. */
+@media (min-width: 600px) and (min-height: 600px) {
+  :root { --u: 1.2; }
+  .icon-btn { width: calc(46px * var(--u)); height: calc(46px * var(--u)); }
+  .icon-btn svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
+  .hud.top { grid-template-columns: calc(46px * var(--u)) 1fr calc(46px * var(--u)); padding-left: calc(14px * var(--u)); padding-right: calc(14px * var(--u)); }
+  .hud-spacer { width: calc(46px * var(--u)); }
+  #pz-name { font-size: calc(15px * var(--u) * var(--ts)); }
+  .sub-line { font-size: calc(11px * var(--u) * var(--ts)); }
+  .hud.bottom { padding-bottom: calc(14px * var(--u) + var(--safe-b)); }
+  .segmented { width: calc(204px * var(--u)); height: calc(46px * var(--u)); }
+  .tool { font-size: max(var(--tf), calc(10.5px * var(--u) * var(--ts))); gap: calc(7px * var(--u)); }
+  .tool svg { width: calc(19px * var(--u)); height: calc(19px * var(--u)); }
+  #coach { top: calc(76px * var(--u) + var(--safe-t)); width: min(calc(440px * var(--u)), calc(100% - 28px)); padding: calc(14px * var(--u)) calc(18px * var(--u)) calc(12px * var(--u)); border-radius: calc(20px * var(--u)); }
+  #coach-text { font-size: calc(15px * var(--u) * var(--ts)); }
+  .lessons-v2 #coach-text { font-size: calc(18px * var(--u) * var(--ts)); }
+  #coach-skip { font-size: max(var(--tf), calc(10px * var(--u) * var(--ts))); }
+  #coach-dots i { width: calc(6px * var(--u)); height: calc(6px * var(--u)); }
+  #win-title .sub { font-size: calc(11px * var(--u) * var(--ts)); }
+  #win-title .story { font-size: calc(13px * var(--u) * var(--ts)); max-width: min(calc(320px * var(--u)), calc(100% - 48px)); }
+  #actions { gap: calc(22px * var(--u)); }
+  #actions button { width: calc(84px * var(--u)); font-size: calc(11px * var(--u) * var(--ts)); }
+  #actions .ring { width: calc(52px * var(--u)); height: calc(52px * var(--u)); }
+  #actions .ring svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
+  #actions button.primary .ring { width: calc(72px * var(--u)); height: calc(72px * var(--u)); }
+  #actions button.primary .ring svg { width: calc(30px * var(--u)); height: calc(30px * var(--u)); }
+  .ring-btn .ring { width: calc(48px * var(--u)); height: calc(48px * var(--u)); }
+  .ring-btn .ring svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
+  .ring-label { font-size: max(var(--tf), calc(9.5px * var(--u) * var(--ts))); }
+  #map-close .ring { width: calc(66px * var(--u)); height: calc(66px * var(--u)); }
+  #map-close .ring svg { width: calc(30px * var(--u)); height: calc(30px * var(--u)); }
+  .pause-chapter, .pause-label { font-size: calc(11px * var(--u) * var(--ts)); }
+  .pause-resume { width: calc(84px * var(--u)); height: calc(84px * var(--u)); }
+  .pause-resume svg { width: calc(34px * var(--u)); height: calc(34px * var(--u)); }
+  .pause-row button { width: calc(92px * var(--u)); }
+  .pause-row svg { width: calc(52px * var(--u)); height: calc(52px * var(--u)); padding: calc(14px * var(--u)); }
+}
+
+/* ---------- narrow windows: Split View on the iPhone Duo (about 330 wide, down to 320) ----------
+   No iPhone that runs Strata is this narrow, so phones are untouched. The level's line under its name
+   keeps to one line (a long chapter gives way with an ellipsis before the clock and the slips do), and
+   the Finds count closes up so it doesn't break. */
+@media (max-width: 359px) {
+  .hud.top { gap: 8px; padding-left: 10px; padding-right: 10px; }
+  .hud.top .title { min-width: 0; }
+  #pz-name { letter-spacing: .26em; }
+  .sub-line { letter-spacing: .14em; white-space: nowrap; max-width: 100%; }
+  #pz-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #timer, #strikes { flex: none; }
+  #journal-count { gap: 10px; letter-spacing: .2em; white-space: nowrap; }
+}
+
+/* ---------- another language (public/js/i18n.js; Japanese and Chinese, not live until reviewed) ----------
+   English never gets a lang other than "en", so none of this touches it. The i18n module sets
+   <html lang> and Settings' on and off; the faces below come after the Latin ones, so numbers and
+   Latin words keep their look and the CJK characters come from the system's own faces (iOS has
+   Hiragino and PingFang; Android Noto CJK; Windows Yu Gothic and Microsoft YaHei). */
+html:not([lang="en"]) .ring-toggle .s::after { content: var(--t-off); }
+html:not([lang="en"]) .ring-toggle.on .s::after { content: var(--t-on); }
+html:lang(ja) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif; }
+html:lang(zh) { --font: "Avenir Next", "Avenir", Futura, "Century Gothic", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif; }
+/* Spaced capitals are a Latin habit: CJK has no capitals, and characters tracked out a third of
+   an em read as separate words. Every label closes up to a light tracking (the ✕s and gems keep
+   theirs: they are marks, not words), and the lead-ins that balanced the tracking go too.
+   Kanji and hanzi lose their strokes under about 11 px, so the small labels' floor rises to 11
+   (13 with Larger text) */
+html:is(:lang(ja), :lang(zh)) { --tf: 11px; }
+html.large-text:is(:lang(ja), :lang(zh)) { --tf: 13px; }
+html:is(:lang(ja), :lang(zh)) body * { letter-spacing: .04em !important; }
+html:is(:lang(ja), :lang(zh)) :is(#strikes, .gems, .jr-total) { letter-spacing: .2em !important; }
+html:is(:lang(ja), :lang(zh)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
+  #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
+  .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
