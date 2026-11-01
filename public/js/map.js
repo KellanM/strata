@@ -14,6 +14,7 @@ import { recordStars } from './score.js';
 import { renderThumb, renderRim } from './thumbs.js';
 import { PALETTES, variant } from './palettes.js';
 import * as Shapes from './shapes.js';
+import { t as tr, objName, chapterName } from './i18n.js';
 import { after, mark, DUR, ease, rate as motionRate } from './motion.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -434,8 +435,8 @@ export function renderMap(root, opts) {
     el.style.setProperty('--edge', `${x0 + 8}px`);
     // past the next chapter, the cloud keeps the name: only its numeral shows
     el.innerHTML = r.named
-      ? `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(r.name)}</span><span class="r-sub"><b class="gem-ic">◆</b> ${r.stars} / ${r.items.length * 3}</span>`
-      : `<span class="r-num">${esc(r.numeral)}</span><span class="r-name" aria-hidden="true">?</span><span class="sr-only">Locked world</span>`;
+      ? `<span class="r-num">${esc(r.numeral)}</span><span class="r-name">${esc(chapterName(r.name))}</span><span class="r-sub"><b class="gem-ic">◆</b> ${r.stars} / ${r.items.length * 3}</span>`
+      : `<span class="r-num">${esc(r.numeral)}</span><span class="r-name" aria-hidden="true">?</span><span class="sr-only">${esc(tr('map.lockedWorld'))}</span>`;
     root.appendChild(el);
     r.el = el;
   }
@@ -443,7 +444,7 @@ export function renderMap(root, opts) {
     const el = document.createElement('div');
     el.className = 'map-region at-centre on-dark';
     el.style.top = `${driftLabelY}px`;
-    el.innerHTML = '<span class="r-name">Drift</span><span class="r-sub">endless · carved at random</span>';
+    el.innerHTML = `<span class="r-name">${esc(tr('map.drift'))}</span><span class="r-sub">${esc(tr('map.driftSub'))}</span>`;
     root.appendChild(el);
   }
 
@@ -465,8 +466,8 @@ export function renderMap(root, opts) {
     b.style.setProperty('--glow', hex(p.glow));
     let num = '', name = '', meta = '', art = cube(hex(p.top), hex(p.lit), hex(p.shade), n.kind === 'drift' ? 38 : 46);
     if (n.kind === 'learn') {
-      num = '00'; name = 'Learn'; meta = learned ? 'completed' : `${lessons} lessons${opts.lessonsFirst ? ' first' : ''}`;
-      b.setAttribute('aria-label', `Learn: ${lessons} short lessons${learned ? ', completed' : ''}`);
+      num = '00'; name = tr('map.learn'); meta = learned ? tr('map.completed') : tr(opts.lessonsFirst ? 'map.lessonsFirst' : 'map.lessons', { n: lessons });
+      b.setAttribute('aria-label', tr(learned ? 'map.learnAriaDone' : 'map.learnAria', { n: lessons }));
       if (learned) {
         // done: the plain stone gives way to the carved one, the first time with the solved stones' rise
         const fresh = celebrate && !seenObjects.has(LEARNED.id);
@@ -480,8 +481,8 @@ export function renderMap(root, opts) {
       b.addEventListener('contextmenu', (e) => e.preventDefault());
       b.addEventListener('click', () => { if (held) { held = false; return; } opts.onLearn(b); });
     } else if (n.kind === 'drift') {
-      num = ''; name = `${n.n}³`; meta = 'drift';
-      b.setAttribute('aria-label', `Drift: random ${n.n} by ${n.n} by ${n.n} puzzle`);
+      num = ''; name = `${n.n}³`; meta = tr('map.driftMeta');
+      b.setAttribute('aria-label', tr('map.driftAria', { n: n.n }));
       b.addEventListener('click', () => opts.onDrift(n.n, b));
     } else {
       const { shape, number } = n.entry;
@@ -489,11 +490,11 @@ export function renderMap(root, opts) {
       const isBonus = n.kind === 'bonus';
       num = isBonus ? '✦' : String(number).padStart(2, '0');
       if (isBonus) {
-        name = s ? shape.name : 'Shrine';
-        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `<b class="gem-ic">◆</b> ${n.region.stars} / ${shrineStars(n.region)}` : 'open';
+        name = s ? objName(shape) : tr('map.shrine');
+        meta = s ? starRow(recordStars(shape, s)) : n.state === 'locked' ? `<b class="gem-ic">◆</b> ${n.region.stars} / ${shrineStars(n.region)}` : esc(tr('map.open'));
         if (!s) art = shrine(n.region.base, n.state);
       } else {
-        name = s ? shape.name : n.state === 'locked' ? '' : '???';
+        name = s ? objName(shape) : n.state === 'locked' ? '' : '???';
         meta = s ? starRow(recordStars(shape, s)) : '';
       }
       if (s) {
@@ -502,8 +503,8 @@ export function renderMap(root, opts) {
         art = `${fresh ? cube(hex(p.top), hex(p.lit), hex(p.shade), 46) : ''}<span class="obj-box"><img class="obj" alt="" src="${renderThumb(shape, p, { size: 120 })}"><img class="obj-rim" alt="" src="${renderRim(shape, p, { size: 120, gold: isBonus })}"></span>`;
         if (fresh) { b.classList.add('fresh'); newlySeen.push(shape.id); }
       }
-      b.setAttribute('aria-label', `${isBonus ? `${n.region.name} shrine` : `Puzzle ${number}`}` +
-        (s ? `, ${shape.name}, solved` : n.state === 'locked' ? (isBonus ? `, opens at ${shrineStars(n.region)} gems` : ', locked') : ''));
+      b.setAttribute('aria-label', (isBonus ? tr('map.shrineAria', { chapter: chapterName(n.region.name) }) : tr('map.puzzleAria', { n: number })) +
+        (s ? tr('map.solvedAria', { name: objName(shape) }) : n.state === 'locked' ? (isBonus ? tr('map.opensAtAria', { n: shrineStars(n.region) }) : tr('map.lockedAria')) : ''));
       if (n.state === 'locked') {
         b.setAttribute('aria-disabled', 'true');
         b.addEventListener('click', () => {
@@ -656,5 +657,5 @@ function placeCompanion(root, svg, trail, pts, segD, home, celebrate, delay = 0.
 // (it had been a star here alone; Kellan, 2026-10-29: one reward, one symbol)
 const STAR = '<svg viewBox="0 0 12 16" aria-hidden="true"><path class="l" d="M6 0 0 8l6 8z"/><path class="r" d="M6 0l6 8-6 8z"/><path class="o" d="M6 .7 .9 8 6 15.3 11.1 8z"/></svg>';
 function starRow(n) {
-  return `<span class="stars-mini" aria-label="${n} of 3 gems">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
+  return `<span class="stars-mini" aria-label="${tr('gems.aria', { n })}">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">${STAR}</i>`).join('')}</span>`;
 }

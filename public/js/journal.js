@@ -7,6 +7,7 @@
 // Tapping a found object opens it on a turntable with its one-line story.
 import * as THREE from 'three';
 import { CHAPTERS } from './shapes.js';
+import { t as tr, objName, storyOf, chapterName } from './i18n.js';
 import { PALETTES } from './palettes.js';
 import { recordStars } from './score.js';
 import { renderThumb, renderRim } from './thumbs.js';
@@ -33,7 +34,7 @@ export function renderJournal(root, { entries, solved }) {
   const total = entries.length;
   const found = entries.filter((e) => solved[e.shape.id]).length;
   const gemsWon = entries.reduce((n, e) => n + (solved[e.shape.id] ? recordStars(e.shape, solved[e.shape.id]) : 0), 0);
-  root.querySelector('#journal-count').innerHTML = `${found} of ${total} uncovered <span class="jr-total">${GEM}${gemsWon} / ${total * 3}</span>`;
+  root.querySelector('#journal-count').innerHTML = `${esc(tr('finds.count', { found, total }))} <span class="jr-total">${GEM}${gemsWon} / ${total * 3}</span>`;
   const grid = root.querySelector('#journal-grid');
   grid.innerHTML = '';
   // the worlds not reached yet - after the first with nothing found, the next to come - are
@@ -59,8 +60,8 @@ export function renderJournal(root, { entries, solved }) {
     if (inkFor(p) === '#f4f1ff') sec.classList.add('dark');
     sec.innerHTML = `<header>
         <span class="jr-numeral">${ch.numeral}</span>
-        <h3>${esc(ch.name)}</h3>
-        <span class="jr-progress">${complete ? 'complete' : `${have} of ${items.length}`}</span>
+        <h3>${esc(chapterName(ch.name))}</h3>
+        <span class="jr-progress">${esc(complete ? tr('finds.complete') : tr('finds.have', { have, total: items.length }))}</span>
         <span class="jr-bar"><i style="width:${(100 * have / items.length).toFixed(1)}%"></i></span>
       </header><div class="jr-tiles"></div>`;
     const tiles = sec.querySelector('.jr-tiles');
@@ -70,15 +71,15 @@ export function renderJournal(root, { entries, solved }) {
       b.className = 'jr-tile' + (rec ? ' found' : '') + (e.shape.bonus ? ' bonus' : '');
       if (rec) {
         const n = recordStars(e.shape, rec);
-        b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"><img class="obj-rim" alt="" draggable="false"></span><span class="nm">${esc(e.shape.name)}</span>${gems(n)}`;
-        b.setAttribute('aria-label', `${e.shape.name}, ${n} of 3 gems`);
+        b.innerHTML = `<span class="jr-pic"><img alt="" draggable="false"><img class="obj-rim" alt="" draggable="false"></span><span class="nm">${esc(objName(e.shape))}</span>${gems(n)}`;
+        b.setAttribute('aria-label', tr('finds.tileAria', { name: objName(e.shape), n }));
         Promise.resolve(renderThumb(e.shape, e.palette, { size: 120 })).then((url) => { b.querySelector('img').src = url; });
         // the eclipse's edge, as on the map
         Promise.resolve().then(() => { b.querySelector('.obj-rim').src = renderRim(e.shape, e.palette, { size: 120 }); });
         b.addEventListener('click', () => openView(root, e, n));
       } else {
-        b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? 'shrine' : '&nbsp;'}</span>`;
-        b.setAttribute('aria-label', e.shape.bonus ? 'A shrine, not yet opened' : 'Not yet uncovered');
+        b.innerHTML = `<span class="jr-pic">${SHADOW}</span><span class="nm">${e.shape.bonus ? esc(tr('finds.shrine')) : '&nbsp;'}</span>`;
+        b.setAttribute('aria-label', tr(e.shape.bonus ? 'finds.shrineAria' : 'finds.notYet'));
         b.disabled = true;
       }
       tiles.appendChild(b);
@@ -92,8 +93,8 @@ export function renderJournal(root, { entries, solved }) {
     later.className = 'jr-later';
     later.style.background = `linear-gradient(180deg, ${prev} 0, #4c5187 45%, #121731)`;
     const stones = (c) => c.items.filter((e) => !e.shape.bonus).length;
-    later.innerHTML = `<h3>Still ahead</h3><p>${ahead.length} ${ahead.length === 1 ? 'world' : 'worlds'} · ${ahead.reduce((n, c) => n + stones(c), 0)} stones</p>
-      <ol>${ahead.map((c) => `<li>${esc(c.ch.name)}<span>${stones(c)} stones</span></li>`).join('')}</ol>`;
+    later.innerHTML = `<h3>${esc(tr('finds.ahead'))}</h3><p>${esc(tr('finds.worlds', { n: ahead.length }))} · ${esc(tr('finds.stones', { n: ahead.reduce((n, c) => n + stones(c), 0) }))}</p>
+      <ol>${ahead.map((c) => `<li>${esc(chapterName(c.ch.name))}<span>${esc(tr('finds.stones', { n: stones(c) }))}</span></li>`).join('')}</ol>`;
     grid.appendChild(later);
     foot = '#121731';
   }
@@ -109,10 +110,10 @@ function openView(root, entry, earned = 0) {
   closeView();
   const pane = root.querySelector('#journal-view');
   const canvas = pane.querySelector('canvas');
-  pane.querySelector('.jv-name').textContent = entry.shape.name;
-  pane.querySelector('.jv-story').textContent = entry.shape.story ?? '';
+  pane.querySelector('.jv-name').textContent = objName(entry.shape);
+  pane.querySelector('.jv-story').textContent = storyOf(entry.shape) ?? '';
   pane.querySelector('.jv-gems').innerHTML = gems(earned);
-  pane.querySelector('.jv-chapter').textContent = entry.shape.chapter ?? '';
+  pane.querySelector('.jv-chapter').textContent = chapterName(entry.shape.chapter) ?? '';
   pane.style.setProperty('--sky-top', hex(entry.palette.skyTop));
   pane.style.setProperty('--sky-bottom', hex(entry.palette.skyBottom));
   // ink from the object's own palette, whatever level is playing behind

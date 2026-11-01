@@ -7,8 +7,9 @@
 //   PORT=5301 node server.js &  then
 //   node tools/a11y-shots.mjs <label> [--large] [--url http://localhost:5301/]
 //     writes shots/a11y/<label>/<w>x<h>-<screen>.png and shots/a11y/<label>/metrics.json
+//   node tools/a11y-shots.mjs <label> --lang ja   the same in a language not yet live (strata.dev.lang)
 //   node tools/a11y-shots.mjs --compare <labelA> <labelB>
-//     prints every element whose size or box differs between two runs
+//     prints every element whose size, box or text differs between two runs
 //
 // Chromium (the headless shell; CHROME=path overrides), one browser at a time through the
 // shared lock (tools/trailer/lib.mjs). Needs Playwright (PLAYWRIGHT=path/to/index.mjs or global).
@@ -24,6 +25,12 @@ const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 if (args[0] === '--compare') {
   const read = (l) => JSON.parse(readFileSync(path.join(ROOT, 'shots/a11y', l, 'metrics.json'), 'utf8'));
   const a = read(args[1]), b = read(args[2]);
+  // the level's clock runs on between two runs; its digits aren't words
+  const clock = (path, text) => (/#timer$/.test(path) ? text.replace(/\d+:\d\d/, 'm:ss') : text);
+  for (const run of [a, b]) for (const m of Object.values(run)) {
+    m.els.forEach((e) => { e.text = clock(e.path, e.text); });
+    if (m.words) m.words = m.words.map((w) => (w.startsWith('#timer ') ? clock('#timer', w) : w));
+  }
   let diffs = 0, total = 0;
   for (const key of Object.keys(a)) {
     if (!b[key]) { console.log(`${key}: missing in ${args[2]}`); continue; }
@@ -33,14 +40,24 @@ if (args[0] === '--compare') {
       const f = B.get(e.path);
       if (!f) { diffs++; console.log(`${key} ${e.path}: gone`); continue; }
       if (f.fs !== e.fs || f.ls !== e.ls || f.r.join() !== e.r.join()) { diffs++; console.log(`${key} ${e.path}: ${e.fs} ${e.r} -> ${f.fs} ${f.r}`); }
+      else if (f.text !== e.text) { diffs++; console.log(`${key} ${e.path}: "${e.text}" -> "${f.text}"`); }
     }
   }
-  console.log(`${diffs} of ${total} elements differ`);
+  // every word in the page, shown or not
+  let wdiffs = 0;
+  for (const key of Object.keys(a)) {
+    if (!b[key]?.words) continue;
+    const A = a[key].words.join('\n'), B = b[key].words.join('\n');
+    if (A !== B) { wdiffs++; const x = a[key].words, y = b[key].words; const i = x.findIndex((w, j) => w !== y[j]); console.log(`${key} words differ at ${i}: "${x[i]}" -> "${y[i]}"`); }
+  }
+  console.log(`${diffs} of ${total} elements differ; ${wdiffs} screens' words differ`);
+  diffs += wdiffs;
   process.exit(diffs ? 1 : 0);
 }
 
 const label = args[0];
 const large = args.includes('--large');
+const lang = opt('--lang', null);   // a language not yet live, for testing (strata.dev.lang; public/js/i18n.js)
 const base = opt('--url', 'http://localhost:5301/');
 const only = opt('--only', null);
 const OUT = path.join(ROOT, 'shots/a11y', label);
@@ -93,7 +110,7 @@ const MEASURE = () => {
     if (!r.width || !r.height) continue;
     if (el.closest('.sr-only, #splash, #title.fl h1, #title.fl .sub, #dev, #motion-log')) continue;
     const s = getComputedStyle(el);
-    const e = { path: pathOf(el), text: el.textContent.trim().slice(0, 40), fs: s.fontSize, ls: s.letterSpacing,
+    const e = { path: pathOf(el), text: el.textContent.trim(), fs: s.fontSize, ls: s.letterSpacing,
       r: [r.left, r.top, r.width, r.height].map((v) => Math.round(v * 10) / 10) };
     els.push(e);
     // out of the screen (a scroller's content below its fold is not a spill)
@@ -103,7 +120,13 @@ const MEASURE = () => {
     // clipped by its own box
     if (el.scrollWidth > el.clientWidth + 1 && /hidden|clip/.test(s.overflowX + s.overflow)) spills.push({ ...e, why: `clipped ${el.scrollWidth}>${el.clientWidth}` });
   }
-  return { els, spills };
+  // and every word in the page, shown or not: text, and the labels a screen reader speaks
+  const words = [];
+  const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n; (n = tw.nextNode());) if (n.textContent.trim() && !n.parentElement.closest('script, style, #dev, #motion-log')) words.push(pathOf(n.parentElement) + ' ' + n.textContent.trim());
+  for (const el of document.querySelectorAll('[aria-label], [data-mouse], [title]')) words.push(pathOf(el) + ' @' + ['aria-label', 'data-mouse', 'title'].map((a) => el.getAttribute(a)).filter((v) => v != null).join(' | '));
+  words.push('lang=' + document.documentElement.lang, 'doc.title=' + document.title);
+  return { els, spills, words };
 };
 
 const sizes = [[390, 844], [375, 667]];
@@ -131,7 +154,7 @@ await withLock(async () => {
       const boot = async (save) => {
         await page.goto('about:blank');
         await page.goto(base + '?nosplash');
-        await page.evaluate((kv) => { localStorage.clear(); for (const [k, v] of Object.entries(kv)) localStorage.setItem(k, v); }, { ...save, ...(large ? { 'strata.largeText': '1' } : {}) });
+        await page.evaluate((kv) => { localStorage.clear(); for (const [k, v] of Object.entries(kv)) localStorage.setItem(k, v); }, { ...save, ...(large ? { 'strata.largeText': '1' } : {}), ...(lang ? { 'strata.dev.lang': lang } : {}) });
         await page.goto(base + '?nosplash');
         await page.waitForFunction(() => window.strata?.game, null, { timeout: 180e3 });
         await page.waitForTimeout(4500);
@@ -174,6 +197,11 @@ await withLock(async () => {
       await shoot('finds-view');
       await click('#journal-back'); await page.waitForTimeout(600);
       await click('#journal-close'); await page.waitForTimeout(900);
+      // the Learn stone's long press: the list of lessons
+      await page.evaluate(() => document.querySelector('.map-node.learn')?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+      await page.waitForTimeout(1400);
+      await shoot('lessons');
+      await page.evaluate(() => document.querySelector('#lessons [data-close]')?.click()); await page.waitForTimeout(700);
 
       // a level: its chapter card, its tip card and the tools, its pause; solved, the result
       await page.evaluate(() => { localStorage.setItem('strata.chapters', '[]'); localStorage.removeItem('strata.reminded'); });
@@ -187,6 +215,13 @@ await withLock(async () => {
       await page.evaluate(() => { const g = window.strata.game; for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break'); });
       await page.waitForTimeout(7000);
       await shoot('result');
+      // the next level, with its reminder card; then a shrine's card
+      // (the offer to take back a slip isn't shot: a slip made through strata.act doesn't land here)
+      await click('#act-next'); await page.waitForTimeout(3500);
+      await shoot('level-remind');
+      await page.evaluate(() => { const s = window.strata; s.startPuzzle({ shape: s.journalEntries().find((e) => e.shape.bonus).shape, palette: s.game.palette, number: null, bonus: true }); });
+      await page.waitForTimeout(700);
+      await shoot('shrine-card');
       await ctx.close();
     }
   } finally { await browser.close(); }
