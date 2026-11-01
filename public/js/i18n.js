@@ -19,8 +19,10 @@ import { TUTORIAL, TUTORIAL_V2 } from './shapes.js';
 // Japanese, Simplified Chinese and Russian live on Kellan's word (2026-10-31: "We don't need a
 // human reviewer"), without a native speaker's pass; docs/localisation.md and docs/l10n/ keep the
 // open doubts
-export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru'];
-export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru'];   // every table there is, reviewed or not
+// reviewer"), without a native speaker's pass; docs/localisation.md keeps the open doubts. Spanish
+// (one neutral table for Spain and the Americas) likewise, the same day: docs/l10n/es.md
+export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'es', 'ru'];
+export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'es', 'ru'];   // every table there is, reviewed or not
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
 // traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the

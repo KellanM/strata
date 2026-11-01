@@ -33,7 +33,13 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // is about a tenth wider a letter than Latin, so 72 characters is the two lines Larger text
 // holds; checked in the browser with tools/a11y-shots.mjs --lang ru --large (docs/l10n/ru.md)
 // languages whose counted strings need more than English's one and other (CLDR plural rules)
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72 };
+// Spanish is counted in characters too, not words: its words run longer than English's, but a
+// line wraps by width, so characters are what fill the box. English's longest line is 75
+// characters. At 13 px the box holds about 48 Latin characters a line (Avenir averages about
+// half an em), and about 40 with Larger text, so 90 is two lines at the normal size and three
+// with Larger text, where English's longest already takes two. 90 is also English's 75 plus the
+// fifth that Spanish usually adds. (Finds sets the line at 15 px: three lines there.)
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, 'zh-Hant': 30, ru: 72, es: 90 };
 const PLURAL_FORMS = { ru: ['one', 'few', 'many', 'other'] };
 
 const vars = (s) => {
@@ -134,7 +140,11 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   assert.equal(I18N.chooseLang({ prefs: ['ru'], live: ['en'] }), 'en');
   assert.equal(I18N.chooseLang({ dev: 'ru', live: ['en'] }), 'ru');
   // live today: English, Japanese, Simplified Chinese and Russian (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru']);
+  // Spanish is one table for Spain and the Americas
+  for (const tag of ['es', 'es-ES', 'es-MX', 'es-419', 'es_US']) assert.equal(I18N.chooseLang({ prefs: [tag], live: ['en', 'es'] }), 'es', tag);
+  assert.equal(I18N.chooseLang({ prefs: ['es-MX'], live: ['en'] }), 'en');
+  // live today: English, Japanese, Simplified Chinese and Spanish (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'zh-Hant', 'es', 'ru']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {

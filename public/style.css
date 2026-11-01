@@ -1320,3 +1320,11 @@ html:lang(ru) .map-node .nm { width: max-content; max-width: 10.5em; }
 html:lang(ru) .jr-tile .nm { white-space: normal; text-align: center; letter-spacing: .14em; }
 html:lang(ru) :is(#chapter-card .cname, #world-close .cname) { white-space: normal; letter-spacing: .2em; padding-left: .2em; line-height: 1.2; }
 html:lang(ru) #journal-view .jv-name { font-size: calc(22px * var(--ts)); letter-spacing: .2em; padding-left: .2em; }
+/* ---------- Spanish (es): longer words (docs/l10n/es.md) ----------
+   A world's name sits on one line on its card. Spanish names run a few letters longer than
+   English ("Escalones de brasa", "Noche de faroles"), so the card's tracking closes from .3em to
+   .2em, which keeps the longest inside 375 px. Finds' tile names wrap onto a second line, as
+   they do with Larger text, instead of being cut off: about twice as many Spanish names as
+   English ones run past a tile's width */
+html:lang(es) :is(#chapter-card .cname, #world-close .cname) { letter-spacing: .2em; padding-left: .2em; }
+html:lang(es) .jr-tile .nm { white-space: normal; text-align: center; }
