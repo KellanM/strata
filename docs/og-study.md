@@ -251,3 +251,11 @@ Kellan wanted the before and after kept, so people know what the game does, but 
 - **Cost:** the stone hides the fox's left ear.
 
 The URL is versioned `?v=3`.
+
+## Revision: before and after, side by side (2026-10-31, approved: "Those look good")
+
+Kellan found the split stone hard to read ("It's hard to tell right now"); the two states should be separate. The card now shows:
+- **The objects:** the untouched stone with its clue numbers on the left, and the fox on the right. They are the same size, about half the card's height, with centres 42% of the width apart.
+- **The sky:** each object keeps its own light rays, and both sit in one continuous sky. There are no cards, shadows or arrows.
+- **How each object is cut out:** from its own shot, by its difference from the same shot with the object hidden, inside a soft circle round it.
+- **Trade-off accepted:** a square crop now falls between the two objects. Clarity comes first.

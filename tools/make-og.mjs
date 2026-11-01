@@ -1,21 +1,22 @@
 // The link preview (Open Graph) card, 1200x630, for public/og.jpg: what a
 // shared link to Strata shows in Messages, WhatsApp, Discord, X and the rest.
 //
-// docs/og-study.md: crafted games' previews show one hero in the game's own
-// world, large, with their wordmark and at most one line - no screenshots in
-// shadowed cards, no arrows. Kellan still wants the before and after, so it
-// is told inside one stone: the Origami Fox's stone, untouched, on the left,
-// gives way along a seam of light to the fox it held on the right. Both halves
-// are the game's own renders of the same stone at the same angle (the reveal
-// held at the angle it was played at, its gems hidden), the stone scaled onto
-// the reveal's framing by projecting its corners through each shot's camera.
-// Over it, the wordmark and one specific claim (Hopkins, docs/hopkins-study.md),
-// all inside the centre square (x 320-880) that WhatsApp-style crops keep.
+// docs/og-study.md: crafted games' previews show their own world, large, with
+// a wordmark and at most one line - no screenshots in shadowed cards, no
+// arrows. Kellan wants the before and after, separate and plain to see: so the
+// Origami Fox's stone, untouched with its clue numbers, and the fox it held
+// stand side by side at one size, each in its own light, in one sky. Both are
+// the game's own renders of the same stone at the same angle (the reveal held
+// at the angle it was played at, its gems hidden). Each is cut from its shot
+// by its difference from the same shot with it hidden (its rays come with it,
+// within a soft circle), and the floating dust is hidden while they're taken
+// so none lands on them; the sky behind keeps its dust. Over it, the wordmark
+// and one specific claim (Hopkins, docs/hopkins-study.md).
 //
-//   node tools/make-og.mjs     (starts its own server; needs ffmpeg, and the
-//                               network once for the Jost face, which stands in
-//                               for the app's Avenir Next on machines without it)
-import { execFileSync, spawn } from 'node:child_process';
+//   node tools/make-og.mjs     (starts its own server; needs the network once for
+//                               the Jost face, which stands in for the app's Avenir
+//                               Next on machines without it)
+import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -26,7 +27,7 @@ const { chromium } = await import('playwright').catch(() =>
 const root = fileURLToPath(new URL('..', import.meta.url));
 const tmp = mkdtempSync(join(tmpdir(), 'strata-og-'));
 const PORT = 5295, ID = 'origami-fox', CLAIM = 'One answer per stone. No guessing.';
-const CUT = { tilt: 14, left: 0.15 };   // the seam: degrees from upright, and how far left of the stone's middle
+const LAYOUT = { gap: 0.42, size: 0.5, y: 0.56 };   // centres 42% of the width apart; each stone half the height
 const shell = process.env.QA_CHROME || 'C:/Users/Kellan/AppData/Local/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-win64/chrome-headless-shell.exe';
 const uri = (f) => 'data:image/png;base64,' + readFileSync(f).toString('base64');
 
@@ -34,7 +35,7 @@ const server = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...pro
 await new Promise((r) => setTimeout(r, 1500));
 const browser = await chromium.launch({ executablePath: shell, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 try {
-  // 1. the two shots: the game at 1200x630 (x4), the stone untouched, then solved
+  // 1. the shots: the game at 1200x630 (x4), the stone untouched, then solved
   const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 4 });
   await ctx.addInitScript(() => {
     if (sessionStorage.getItem('og')) return;
@@ -58,86 +59,77 @@ try {
   }, ID);
   await page.waitForTimeout(6000);
   await page.addStyleTag({ content: '#title, #menu, #coach, #chapter-card, #win-title, #actions, #win, #pause, #install, #offer, #loading, .hud, .tools, #map-world { visibility: hidden !important; }' });
-  // never shown: the peel handles, and the result's gems and score
-  await page.evaluate(() => Object.defineProperty(window.strata.handles.group, 'visible', { get: () => false, set() {} }));
-  await page.waitForTimeout(400);
-  // where the stone's eight corners fall on screen (css px); cells are unit cubes about the origin
-  const corners = () => page.evaluate(async () => {
+  await page.evaluate(() => Object.defineProperty(window.strata.handles.group, 'visible', { get: () => false, set() {} }));   // no peel handles
+  const dust = (on) => page.evaluate((on) => window.strata.scene.traverse((o) => { if (o.isPoints) o.visible = on; }), on);
+  // where the stone's eight corners fall (css px); cells are unit cubes about the origin
+  const box = () => page.evaluate(async () => {
     const THREE = await import('three');
     const s = window.strata, m = s.cubes.mesh, d = s.game.puzzle.dims;
     m.updateMatrixWorld();
-    const pts = [];
+    const xs = [], ys = [];
     for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) {
       const v = new THREE.Vector3(x * d[0] / 2, y * d[1] / 2, z * d[2] / 2).applyMatrix4(m.matrixWorld).project(s.camera);
-      pts.push([(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]);
+      xs.push((v.x + 1) / 2 * innerWidth); ys.push((1 - v.y) / 2 * innerHeight);
     }
-    return pts;
+    return { cx: (Math.min(...xs) + Math.max(...xs)) * 2, cy: (Math.min(...ys) + Math.max(...ys)) * 2, h: (Math.max(...ys) - Math.min(...ys)) * 4 };   // image px (x4)
   });
-  const before = await corners(), stone = join(tmp, 'stone.png');
-  await page.screenshot({ path: stone });
+  // a shot with the object, and the same with it hidden, both without dust
+  const pair = async (name) => {
+    await dust(false); await page.waitForTimeout(150);
+    const b = await box(), shot = join(tmp, `${name}.png`), bare = join(tmp, `${name}-sky.png`);
+    await page.screenshot({ path: shot });
+    await page.evaluate(() => { window.strata.cubes.mesh.visible = false; });
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: bare });
+    await page.evaluate(() => { window.strata.cubes.mesh.visible = true; });
+    await dust(true);
+    return { box: b, shot, bare };
+  };
+  const stone = await pair('stone');
   await page.evaluate(() => {
     const g = window.strata.game;
     for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break');
     g.win.pose = 0;   // the angle it was played at, not the showcase turn
-    Object.defineProperty(window.strata.finale.group, 'visible', { get: () => false, set() {} });
+    Object.defineProperty(window.strata.finale.group, 'visible', { get: () => false, set() {} });   // no gems, no score
   });
   await page.waitForTimeout(10000);   // the whirl done, the sparks settled
-  const after = await corners(), fox = join(tmp, 'fox.png');
-  await page.screenshot({ path: fox });
+  const fox = await pair('fox');
+  const sky = join(tmp, 'sky.png');   // the sky behind both, its dust showing
+  await page.evaluate(() => { window.strata.cubes.mesh.visible = false; });
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: sky });
   await ctx.close();
 
-  // 2. one stone: the fox's frame, the untouched stone over its left part, a seam of light between
+  // 2. the two, side by side at one size, on the one sky
   const page2 = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-  await page2.setContent('<canvas width="4800" height="2520"></canvas>');
-  const split = await page2.evaluate(async ({ A, B, before, after, CUT }) => {
+  const art = await page2.evaluate(async ({ shots, LAYOUT }) => {
     const load = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = src; });
-    const [fox, stone] = await Promise.all([load(A), load(B)]);
-    const box = (pts) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
-    const bb = box(before), ab = box(after);
-    const k = (ab.x1 - ab.x0) / (bb.x1 - bb.x0), dx = ab.x0 - bb.x0 * k, dy = ab.y0 - bb.y0 * k;   // the stone onto the fox's frame
-    const c = document.querySelector('canvas'), g = c.getContext('2d');
-    g.drawImage(fox, 0, 0);
-    const o = new OffscreenCanvas(4800, 2520), oc = o.getContext('2d');
-    oc.drawImage(stone, dx * 4, dy * 4, stone.width * k, stone.height * k);
-    // only the stone, not its sky: its outline is the hull of its corners
-    const P = before.map(([x, y]) => [(x * k + dx) * 4, (y * k + dy) * 4]);
-    const cross = (p, a, b) => (a[0] - p[0]) * (b[1] - p[1]) - (a[1] - p[1]) * (b[0] - p[0]);
-    const sorted = [...P].sort((a, b) => a[0] - b[0] || a[1] - b[1]), hull = [];
-    for (const pass of [sorted, [...sorted].reverse()]) {
-      const st = [];
-      for (const q of pass) { while (st.length > 1 && cross(st.at(-2), st.at(-1), q) <= 0) st.pop(); st.push(q); }
-      st.pop(); hull.push(...st);
+    const W = 2400, H = 1260, out = new OffscreenCanvas(W, H), g = out.getContext('2d');
+    g.drawImage(await load(shots.sky), 0, 0, W, H);
+    const pixels = (img) => { const c = new OffscreenCanvas(img.width, img.height).getContext('2d'); c.drawImage(img, 0, 0); return c.getImageData(0, 0, img.width, img.height); };
+    // the object: where its shot differs from the same shot with it hidden, within a soft circle round it
+    const cutout = (img, bare, bx) => {
+      const a = pixels(img), d = a.data, b = pixels(bare).data, R0 = bx.h * 0.75, R1 = bx.h * 1.45;
+      for (let i = 0; i < d.length; i += 4) {
+        const diff = Math.max(Math.abs(d[i] - b[i]), Math.abs(d[i + 1] - b[i + 1]), Math.abs(d[i + 2] - b[i + 2]));
+        const r = Math.hypot((i / 4) % img.width - bx.cx, Math.floor(i / 4 / img.width) - bx.cy);
+        const fall = r <= R0 ? 1 : r >= R1 ? 0 : 1 - (r - R0) / (R1 - R0);
+        d[i + 3] = Math.round(Math.max(0, Math.min(1, (diff - 12) / 50)) * fall * fall * 255);
+      }
+      const c = new OffscreenCanvas(img.width, img.height);
+      c.getContext('2d').putImageData(a, 0, 0);
+      return c;
+    };
+    for (const [s, side] of [[shots.stone, -1], [shots.fox, 1]]) {
+      const img = await load(s.shot), k = (LAYOUT.size * H) / s.box.h;
+      const cx = W / 2 + side * LAYOUT.gap * W / 2;
+      g.drawImage(cutout(img, await load(s.bare), s.box), cx - s.box.cx * k, H * LAYOUT.y - s.box.cy * k, img.width * k, img.height * k);
     }
-    oc.globalCompositeOperation = 'destination-in';
-    oc.filter = 'blur(6px)';
-    oc.beginPath(); hull.forEach(([x, y], i) => (i ? oc.lineTo(x, y) : oc.moveTo(x, y))); oc.closePath(); oc.fill();
-    oc.filter = 'none';
-    // and only left of the cut, feathered
-    const t = CUT.tilt * Math.PI / 180, nx = Math.cos(t), ny = Math.sin(t);
-    const cx = ((ab.x0 + ab.x1) / 2 - CUT.left * (ab.x1 - ab.x0)) * 4, cy = (ab.y0 + ab.y1) / 2 * 4;
-    const fade = oc.createLinearGradient(cx - nx * 26, cy - ny * 26, cx + nx * 26, cy + ny * 26);
-    fade.addColorStop(0, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
-    oc.fillStyle = fade; oc.fillRect(0, 0, 4800, 2520);
-    g.drawImage(o, 0, 0);
-    // the seam: a thin light where the stone gives way, fading at both ends
-    g.save(); g.globalCompositeOperation = 'screen'; g.translate(cx, cy); g.rotate(t);
-    const h = (ab.y1 - ab.y0) * 4 * 0.6;
-    for (const [w, a] of [[34, 0.16], [12, 0.35], [4, 0.7]]) {
-      const v = g.createLinearGradient(0, -h, 0, h);
-      v.addColorStop(0, 'rgba(255,230,190,0)'); v.addColorStop(0.5, `rgba(255,236,205,${a})`); v.addColorStop(1, 'rgba(255,230,190,0)');
-      g.fillStyle = v; g.fillRect(-w / 2, -h, w, h * 2);
-    }
-    g.restore();
-    // the frame: the stone about 60% of the height, a little below the middle (room for the wordmark)
-    const H = (ab.y1 - ab.y0) * 4 / 0.62, W = H * 1200 / 630;
-    const left = (ab.x0 + ab.x1) / 2 * 4 - W / 2, top = (ab.y0 + ab.y1) / 2 * 4 - 0.54 * H;
-    const out = new OffscreenCanvas(2400, 1260);
-    out.getContext('2d').drawImage(c, left, top, W, H, 0, 0, 2400, 1260);
     const blob = await out.convertToBlob({ type: 'image/png' });
-    return 'data:image/png;base64,' + btoa(new Uint8Array(await blob.arrayBuffer()).reduce((s, b) => s + String.fromCharCode(b), ''));
-  }, { A: uri(fox), B: uri(stone), before, after, CUT });
+    return 'data:image/png;base64,' + btoa(new Uint8Array(await blob.arrayBuffer()).reduce((q, c) => q + String.fromCharCode(c), ''));
+  }, { shots: { sky: uri(sky), stone: { ...stone, shot: uri(stone.shot), bare: uri(stone.bare) }, fox: { ...fox, shot: uri(fox.shot), bare: uri(fox.bare) } }, LAYOUT });
   const base = join(tmp, 'base.png');
-  writeFileSync(base, Buffer.from(split.split(',')[1], 'base64'));
+  writeFileSync(base, Buffer.from(art.split(',')[1], 'base64'));
 
   // 3. the wordmark and the claim, in the game's thin letterspaced voice
   await page2.setContent(`<!doctype html><meta charset="utf-8">
