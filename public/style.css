@@ -1233,31 +1233,31 @@ body:has(#pause.show) :is(.hud, #coach) * { pointer-events: none !important; }
   .icon-btn svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
   .hud.top { grid-template-columns: calc(46px * var(--u)) 1fr calc(46px * var(--u)); padding-left: calc(14px * var(--u)); padding-right: calc(14px * var(--u)); }
   .hud-spacer { width: calc(46px * var(--u)); }
-  #pz-name { font-size: calc(15px * var(--u)); }
-  .sub-line { font-size: calc(11px * var(--u)); }
+  #pz-name { font-size: calc(15px * var(--u) * var(--ts)); }
+  .sub-line { font-size: calc(11px * var(--u) * var(--ts)); }
   .hud.bottom { padding-bottom: calc(14px * var(--u) + var(--safe-b)); }
   .segmented { width: calc(204px * var(--u)); height: calc(46px * var(--u)); }
-  .tool { font-size: calc(10.5px * var(--u)); gap: calc(7px * var(--u)); }
+  .tool { font-size: max(var(--tf), calc(10.5px * var(--u) * var(--ts))); gap: calc(7px * var(--u)); }
   .tool svg { width: calc(19px * var(--u)); height: calc(19px * var(--u)); }
   #coach { top: calc(76px * var(--u) + var(--safe-t)); width: min(calc(440px * var(--u)), calc(100% - 28px)); padding: calc(14px * var(--u)) calc(18px * var(--u)) calc(12px * var(--u)); border-radius: calc(20px * var(--u)); }
-  #coach-text { font-size: calc(15px * var(--u)); }
-  .lessons-v2 #coach-text { font-size: calc(18px * var(--u)); }
-  #coach-skip { font-size: calc(10px * var(--u)); }
+  #coach-text { font-size: calc(15px * var(--u) * var(--ts)); }
+  .lessons-v2 #coach-text { font-size: calc(18px * var(--u) * var(--ts)); }
+  #coach-skip { font-size: max(var(--tf), calc(10px * var(--u) * var(--ts))); }
   #coach-dots i { width: calc(6px * var(--u)); height: calc(6px * var(--u)); }
-  #win-title .sub { font-size: calc(11px * var(--u)); }
-  #win-title .story { font-size: calc(13px * var(--u)); max-width: min(calc(320px * var(--u)), calc(100% - 48px)); }
+  #win-title .sub { font-size: calc(11px * var(--u) * var(--ts)); }
+  #win-title .story { font-size: calc(13px * var(--u) * var(--ts)); max-width: min(calc(320px * var(--u)), calc(100% - 48px)); }
   #actions { gap: calc(22px * var(--u)); }
-  #actions button { width: calc(84px * var(--u)); font-size: calc(11px * var(--u)); }
+  #actions button { width: calc(84px * var(--u)); font-size: calc(11px * var(--u) * var(--ts)); }
   #actions .ring { width: calc(52px * var(--u)); height: calc(52px * var(--u)); }
   #actions .ring svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
   #actions button.primary .ring { width: calc(72px * var(--u)); height: calc(72px * var(--u)); }
   #actions button.primary .ring svg { width: calc(30px * var(--u)); height: calc(30px * var(--u)); }
   .ring-btn .ring { width: calc(48px * var(--u)); height: calc(48px * var(--u)); }
   .ring-btn .ring svg { width: calc(22px * var(--u)); height: calc(22px * var(--u)); }
-  .ring-label { font-size: calc(9.5px * var(--u)); }
+  .ring-label { font-size: max(var(--tf), calc(9.5px * var(--u) * var(--ts))); }
   #map-close .ring { width: calc(66px * var(--u)); height: calc(66px * var(--u)); }
   #map-close .ring svg { width: calc(30px * var(--u)); height: calc(30px * var(--u)); }
-  .pause-chapter, .pause-label { font-size: calc(11px * var(--u)); }
+  .pause-chapter, .pause-label { font-size: calc(11px * var(--u) * var(--ts)); }
   .pause-resume { width: calc(84px * var(--u)); height: calc(84px * var(--u)); }
   .pause-resume svg { width: calc(34px * var(--u)); height: calc(34px * var(--u)); }
   .pause-row button { width: calc(92px * var(--u)); }
