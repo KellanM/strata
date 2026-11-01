@@ -241,3 +241,13 @@ It is the truthful "puzzle" state. Use a fox-shaped (or "kept cubes") view state
 **Result:** one hero in the game's own light and sky, the STRATA wordmark (Jost 300, standing in for Avenir Next), and "One answer per stone. No guessing." Everything sits inside the centre square, x 320–880, and the fox reads at 240 px wide. The image URL is versioned `?v=2`, because chat apps cache previews.
 
 **Limits:** not yet checked in live iMessage, WhatsApp or Discord unfurls. That's only possible once v1.1 is merged and deployed.
+
+## Revision: the before and after, inside one stone (2026-10-31)
+
+Kellan wanted the before and after kept, so people know what the game does, but styled to be more interesting. Two side-by-side pictures are the template look the exemplars avoid, and a centre-square crop cuts both. So the comparison now happens inside one object:
+- **The layout:** the Origami Fox's untouched stone, with its clue numbers, fills the left of the frame and gives way along a thin diagonal seam of light to the revealed fox on the right.
+- **How it's made:** both halves are the game's own renders of the same stone. The stone is scaled onto the reveal's framing by projecting its eight corners through each shot's camera; the reveal sits at exactly 0.6 of the stone's on-screen size. It is masked to its own outline, so the sky is one continuous sky.
+- **Tuning:** the cut sits 15% of the stone's width left of centre and is tilted 14°, so both of the fox's eyes show.
+- **Cost:** the stone hides the fox's left ear.
+
+The URL is versioned `?v=3`.
