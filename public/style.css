@@ -1301,3 +1301,17 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { lette
 html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---------- German (de; docs/l10n/de.md) ----------
+   German runs about a third longer than English, and its names are often one long compound
+   (PFEILSCHWANZKREBS, SCHNECKENHÄUSCHEN) that has no space to wrap at. The words were cut first;
+   what is left: the Finds tiles track a little tighter, so more names fit before the ellipsis, and
+   where a name may wrap (the tiles with Larger text, the find's own page) a compound breaks with a
+   hyphen (hyphens: auto, German's dictionary on iOS and Android) rather than being clipped.
+   The find's own page sets its name at 26 px tracked .3em in a 320 px box: 18 letters (the longest
+   name, SCHLÜSSELLOCHBOGEN, as long as English's DRYSTONE SHEEPFOLD) need about 450. Tracked .12em
+   and kept under 5.8vw (about 22 px on a phone) every German name fits on one line; with Larger text
+   too, so there the name stays at that size and the story under it grows. */
+html:lang(de) .jr-tile .nm { letter-spacing: .12em; }
+html:lang(de) #journal-view .jv-name { font-size: min(calc(26px * var(--ts)), 5.8vw); letter-spacing: .12em; padding-left: .12em; }
+html.large-text:lang(de) .jr-tile .nm, html:lang(de) #journal-view .jv-name { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }

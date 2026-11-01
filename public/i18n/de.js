@@ -268,7 +268,7 @@ export const strings = {
   'story.gnome': 'Er bewacht die Erdbeeren seit Jahren und hat nur ein paar gegessen.',
   'name.garden-bench': 'Gartenbank',
   'story.garden-bench': 'Ein Platz zum Stillsitzen, während der Garten das Wachsen erledigt.',
-  'name.bunny-teacup': 'Häschen in der Tasse',
+  'name.bunny-teacup': 'Hase in der Tasse',
   'story.bunny-teacup': 'Früher war Tee darin. Jetzt ist ein Häschen darin, und das ist besser.',
   'name.capybara': 'Capybara & Yuzu',
   'story.capybara': 'Ein warmes Bad, eine Yuzu, genau ausbalanciert, und nirgends hinmüssen.',
@@ -584,7 +584,7 @@ export const strings = {
   // ---- objects: shrines
   'name.bonus-first-light': 'Häuschen',
   'story.bonus-first-light': 'Rauch aus dem Schornstein heißt: Jemand ist zu Hause.',
-  'name.bonus-beacon-hills': 'Das große Leuchtfeuer',
+  'name.bonus-beacon-hills': 'Großes Leuchtfeuer',
   'story.bonus-beacon-hills': 'Der letzte Hügel. Zündest du es an, sieht man es vom Meer aus.',
   'name.bonus-moss-garden': 'Moosschildkröte',
   'story.bonus-moss-garden': 'So alt, dass das Moos auf ihrem Rücken einen eigenen Garten hat.',
