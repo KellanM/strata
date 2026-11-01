@@ -78,6 +78,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .pages { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; padding: 0 12px; }
 .pages a { color: inherit; text-decoration: none; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; opacity: .55; padding: 4px 2px; }
 .pages a.on { opacity: 1; border-bottom: 1px solid currentColor; }
+.pages select { appearance: none; -webkit-appearance: none; background: none; border: 0; border-bottom: 1px solid transparent; color: inherit;
+  font: inherit; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; opacity: .55; padding: 4px 14px 4px 2px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(-45deg, transparent 50%, currentColor 50%);
+  background-size: 4px 4px; background-position: right 4px center, right 0 center; background-repeat: no-repeat; }
+.pages select.on { opacity: 1; border-bottom-color: currentColor; }
+.pages select option { color: #222; letter-spacing: normal; text-transform: none; }
 
 /* objects the QA pass flagged to drop: faded, with the reason */
 .card.dropped { opacity: .45; }

@@ -89,22 +89,27 @@ async function load() {
   return lists;
 }
 
-// page links under the title
+// page links under the title: Live, the newest page, and every earlier page folded into
+// one Previous menu (Kellan, 2026-11-01), so the row stays short as pages pile up
 {
   const nav = document.createElement('nav');
   nav.className = 'pages';
-  const live = document.createElement('a');
-  live.href = 'index.html?page=live';
-  live.textContent = 'Live';
-  if (LIVE) live.className = 'on';
-  nav.appendChild(live);
-  for (let n = 1; n <= PAGES; n++) {
+  const href = (n) => (n === 1 ? 'index.html' : `index.html?page=${n}`);
+  const link = (text, url, on) => {
     const a = document.createElement('a');
-    a.href = n === 1 ? 'index.html' : `index.html?page=${n}`;
-    a.textContent = `Page ${n}`;
-    if (n === PAGE) a.className = 'on';
+    a.href = url; a.textContent = text;
+    if (on) a.className = 'on';
     nav.appendChild(a);
-  }
+  };
+  link('Live', 'index.html?page=live', LIVE);
+  link(`New · Page ${PAGES}`, href(PAGES), PAGE === PAGES && !LIVE);
+  const older = document.createElement('select');
+  older.setAttribute('aria-label', 'Previous pages');
+  if (!LIVE && PAGE < PAGES) older.className = 'on';
+  older.innerHTML = `<option value="">Previous</option>` + Array.from({ length: PAGES - 1 }, (_, i) => PAGES - 1 - i)
+    .map((n) => `<option value="${n}"${!LIVE && n === PAGE ? ' selected' : ''}>Page ${n}</option>`).join('');
+  older.addEventListener('change', () => { if (older.value) location.href = href(Number(older.value)); });
+  nav.appendChild(older);
   document.querySelector('header.top').appendChild(nav);
 }
 
