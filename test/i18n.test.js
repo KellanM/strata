@@ -23,7 +23,15 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+//
+// Russian runs about a quarter longer than English in letters, but has no articles, so it is
+// counted in characters too. The longest English line is 75 characters, and two lines of it fit
+// the 320 px box with Larger text. Cyrillic in the stack's faces (Avenir Next, Segoe UI, Roboto)
+// is about a tenth wider a letter than Latin, so 72 characters is the two lines Larger text
+// holds; checked in the browser with tools/a11y-shots.mjs --lang ru --large (docs/l10n/ru.md)
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, ru: 72 };
+// languages whose counted strings need more than English's one and other (CLDR plural rules)
+const PLURAL_FORMS = { ru: ['one', 'few', 'many', 'other'] };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -69,6 +77,17 @@ for (const [code, T] of Object.entries(TABLES)) {
     assert.deepEqual(long.map(([k, v]) => `${k} (${chars(v)}): ${v}`), []);
   });
 
+  if (PLURAL_FORMS[code]) test(`${code}: counted strings have every form the language needs`, () => {
+    const rules = new Intl.PluralRules(code);
+    assert.deepEqual([...rules.resolvedOptions().pluralCategories].sort(), [...PLURAL_FORMS[code]].sort());
+    for (const [k, v] of Object.entries(T.strings)) {
+      if (!v || typeof v !== 'object') continue;
+      for (const f of PLURAL_FORMS[code]) assert.ok(typeof v[f] === 'string', `${code} ${k} needs a "${f}" form`);
+      // the "one" form is also 21, 31...: it must print the number, never a literal 1
+      assert.ok(/\{n\}/.test(v.one), `${code} ${k}: "one" must use {n}`);
+    }
+  });
+
   test(`${code}: marked as not reviewed until it is live`, () => {
     assert.equal(typeof T.reviewed, 'boolean');
     if (!I18N.LANGS_LIVE.includes(code)) assert.equal(T.reviewed, false, `${code} isn't live, so its table is a draft`);
@@ -100,8 +119,12 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // Russian, from any Russian tag
+  assert.equal(I18N.chooseLang({ prefs: ['ru-RU'], live: ['en', 'ru'] }), 'ru');
+  assert.equal(I18N.chooseLang({ prefs: ['ru'], live: ['en'] }), 'en');
+  assert.equal(I18N.chooseLang({ dev: 'ru', live: ['en'] }), 'ru');
+  // live today: English, Japanese, Simplified Chinese and Russian (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'ru']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {
@@ -113,6 +136,31 @@ test('t() gives back English exactly, fills its blanks and counts', () => {
   assert.equal(I18N.t('finds.worlds', { n: 3 }), '3 worlds');
   assert.equal(I18N.t('map.progress', { done: 12, total: 194 }), '12 of 194 uncovered');
   assert.equal(I18N.t('no.such.key'), 'no.such.key');
+});
+
+// Counting by the language's own rules: English one / other is unchanged, and Russian picks
+// one (1, 21, 101), few (2-4, 22-24) and many (0, 5-20, 11-14, 25), with zero first where a
+// table has it ("без промахов")
+test('pluralForm counts in English and in Russian', () => {
+  const en = new Intl.PluralRules('en'), ru = new Intl.PluralRules('ru');
+  const pick = (forms, n, rules) => I18N.pluralForm(forms, n, rules).replace('{n}', n);
+  assert.equal(pick(EN.strings.slips, 0, en), 'no slips');
+  assert.equal(pick(EN.strings.slips, 1, en), '1 slip');
+  assert.equal(pick(EN.strings.slips, 2, en), '2 slips');
+  assert.equal(pick(EN.strings.slips, 21, en), '21 slips');
+  const RU = TABLES.ru.strings;
+  const cases = { 0: 'без промахов', 1: '1 промах', 2: '2 промаха', 4: '4 промаха', 5: '5 промахов', 11: '11 промахов',
+    14: '14 промахов', 21: '21 промах', 22: '22 промаха', 25: '25 промахов', 101: '101 промах', 112: '112 промахов' };
+  for (const [n, want] of Object.entries(cases)) assert.equal(pick(RU.slips, Number(n), ru), want, `slips ${n}`);
+  // no zero form: 0 is "many" in Russian
+  assert.equal(pick(RU['finds.stones'], 0, ru), '0 камней');
+  assert.equal(pick(RU['finds.stones'], 3, ru), '3 камня');
+  assert.equal(pick(RU['finds.worlds'], 1, ru), '1 мир');
+  assert.equal(pick(RU['days.run'], 2, ru), '2 дня подряд');
+  assert.equal(pick(RU['days.run'], 7, ru), '7 дней подряд');
+  assert.equal(pick(RU['days.run'], 31, ru), '31 день подряд');
+  // a table that counts what English doesn't still falls back to other
+  assert.equal(I18N.pluralForm({ other: 'x' }, 3, ru), 'x');
 });
 
 // index.html holds the English: each data-i18n element's words must be en.js's, so English
