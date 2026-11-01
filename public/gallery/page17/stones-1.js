@@ -89,7 +89,7 @@ export default [
     front(g, 2, 7, hole); front(g, 4, 7, hole); front(g, 3, 6, hole);                   // two eyes and an O
     g.set(5, 4, 2, clay).set(6, 4, 2, clay).box([6, 6], [5, 7], [2, 2], clay);          // one arm up
     g.set(1, 4, 2, clay).set(0, 4, 2, clay).set(0, 3, 2, clay);                         // one arm down
-    return g.entry({ id: 'cand-p17-haniwa', name: 'Haniwa', story: 'It was buried to keep a king company. It seems to have found something to sing about.' });
+    return g.entry({ id: 'cand-p17-haniwa', name: 'Haniwa', story: 'Buried to keep a king company, it found something to sing about.' });
   })(),
 
   // CORMORANT
@@ -124,7 +124,7 @@ export default [
     for (const z of [0, 4]) g.box([6, 7], [2, 6], [z, z], (x, y) => (y % 2 ? paint : sand));   // its flaps, striped
     g.set(8, 3, 2, paint).set(8, 2, 2, paint);                                           // the beard
     g.set(8, 5, 1, INK).set(8, 5, 3, INK);                                               // eyes
-    return g.entry({ id: 'cand-p17-sphinx', name: 'Sphinx', lit: { span: 2 }, story: 'It lost its nose a long time ago and has not gone looking for it.' });
+    return g.entry({ id: 'cand-p17-sphinx', name: 'Sphinx', lit: { span: 2 }, story: 'It lost its nose long ago and has not gone looking for it.' });
   })(),
 
   // GRASS SNAKE
@@ -150,7 +150,7 @@ export default [
     g.box([2, 4], [8, 8], [2, 2], collar);                                               // its yellow collar
     pair(g, 2, 8, 4, INK);                                                               // eyes
     g.set(3, 8, 7, tongue);                                                              // tongue
-    return g.entry({ id: 'cand-p17-grass-snake', name: 'Grass Snake', story: 'The stone was put up to mark something. The snake has decided it was the sunny side.' });
+    return g.entry({ id: 'cand-p17-grass-snake', name: 'Grass Snake', story: 'The stone was put up to mark something. The snake says: the sunny side.' });
   })(),
 
   // TROLL

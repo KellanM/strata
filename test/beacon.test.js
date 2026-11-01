@@ -23,9 +23,10 @@ const { recordStars } = await import('../public/js/score.js');
 const BEACON = ['thistle', 'beacon', 'pocket-compass', 'hill-ram', 'torch-fox', 'heron', 'watchtower', 'pack-donkey'];
 // stones that joined Beacon Hills after it replaced Teatime (gallery page 13 picks, then 15)
 const BEACON_LATER = ['travelling-lute', 'yurt', 'highland-cow', 'red-grouse', 'sheepfold'];
-// Kellan's picks from gallery pages 15 and 16 (2026-10-31): no old save has seen them
+// Kellan's picks from gallery pages 15 and 16 (2026-10-31), then 17 (2026-11-01): no old save has seen them
 const PICKS = ['broody-hen', 'highland-cow', 'red-grouse', 'sheepfold', 'grapes', 'ice-lolly', 'sunfish', 'yawning-hippo',
-  'scorpion', 'monk', 'akabeko', 'goldfish-lantern', 'basket-dog'];
+  'scorpion', 'monk', 'akabeko', 'goldfish-lantern', 'basket-dog',
+  'moose', 'haniwa', 'sphinx', 'grass-snake', 'broomstick', 'cloud-fisher'];
 const picked = new Set(PICKS);
 const TEATIME = ['teabag-pal', 'toaster', 'cake-stand', 'mug', 'stand-mixer', 'fried-egg', 'bunny-teacup', 'teapot'];
 // (Fried Egg moved to First Light too, then retired for the Broody Hen, 2026-10-31)

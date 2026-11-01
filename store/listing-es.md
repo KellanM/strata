@@ -4,7 +4,7 @@
 
 One text for both of App Store Connect's Spanish pages, **Spanish (Spain)** and **Spanish (Mexico)**, written in the same neutral Spanish as the game (`public/i18n/es.js`): tú, no vosotros, no word that belongs to one region. Only the **Keywords** differ, because each page's field is searched by different people (see below). Paste everything else into both.
 
-Translated from [app-store-listing.md](app-store-listing.md), for version 1.1: 194 stones (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script (`node` over this file): characters for each field, and UTF-8 bytes for Keywords, which is how App Store Connect counts them (á, é, í, ó, ú and ñ are two bytes each). The in-game words follow the glossary in `docs/l10n/es.md`: piedra, cubo, figura, cincel / cincelar, marca / marcar, desliz, gema, santuario, mundo.
+Translated from [app-store-listing.md](app-store-listing.md), for version 1.1: 200 stones (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script (`node` over this file): characters for each field, and UTF-8 bytes for Keywords, which is how App Store Connect counts them (á, é, í, ó, ú and ñ are two bytes each). The in-game words follow the glossary in `docs/l10n/es.md`: piedra, cubo, figura, cincel / cincelar, marca / marcar, desliz, gema, santuario, mundo.
 
 ---
 
@@ -46,7 +46,7 @@ Strata es un juego tranquilo que consiste en encontrarlo. Cada nivel es un bloqu
 Es un nonograma en tres dimensiones: lógica de «pintar por números», pero en piedra. Gira la piedra en tus manos, quita capas para ver dentro y avanza fila a fila hasta que solo quede la figura.
 
 UN VIAJE POR QUINCE MUNDOS
-194 piedras en 15 mundos, de Primera luz y el Jardín de musgo a la Noche de faroles, el Mar profundo y la Lluvia estelar. Cada mundo es un lugar con su propia luz y sus colores, y cada figura que descubres ocupa su sitio en el mapa como una pequeña escultura. En cada mundo espera un santuario, una piedra extra para quien reúne sus gemas.
+200 piedras en 15 mundos, de Primera luz y el Jardín de musgo a la Noche de faroles, el Mar profundo y la Lluvia estelar. Cada mundo es un lugar con su propia luz y sus colores, y cada figura que descubres ocupa su sitio en el mapa como una pequeña escultura. En cada mundo espera un santuario, una piedra extra para quien reúne sus gemas.
 
 FÁCIL DE APRENDER
 Doce lecciones cortas te lo enseñan todo mientras juegas: cómo leer los números, cómo cincelar y cómo marcar los cubos que quieres conservar. A lo largo del viaje las piedras crecen y las pistas escasean, pero las reglas nunca cambian. Si te atascas, espera un momento: una fila donde puedes avanzar brillará suavemente.
@@ -95,10 +95,10 @@ The Mexico field is also indexed in the **United States** store, alongside the E
 The English What's New is still Kellan's to choose (`docs/handoff-2026-10-31-v1.1-full.md`); this is the proposed line, translated:
 
 ```
-Hecho para iPhone Duo. Una piedra nueva cada día, para compartir. Trece piedras nuevas. Texto más grande. Ahora en español, japonés y chino.
+Hecho para iPhone Duo. Una piedra nueva cada día, para compartir. Diecinueve piedras nuevas. Texto más grande. Ahora en español, japonés y chino.
 ```
 
-(140 / 4000 characters)
+(145 / 4000 characters)
 
 ## Notes for the reviewer
 

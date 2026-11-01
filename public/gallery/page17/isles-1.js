@@ -104,7 +104,7 @@ export default [
     g.set(4, 6, 3, catEye).set(7, 6, 3, catEye);                                        // eyes
     g.set(5, 3, 3, cat).set(6, 3, 3, cat);                                              // paws round the handle
     for (const [x, y] of [[4, 4], [3, 4], [3, 5], [3, 6], [3, 7]]) g.set(x, y, 1, cat); // the tail, up
-    return g.entry({ id: 'cand-p17-broomstick', name: 'Broomstick', story: 'The witch has gone in for tea. The cat has been told not to touch anything.' });
+    return g.entry({ id: 'cand-p17-broomstick', name: 'Broomstick', story: 'The witch is in having tea. The cat was told not to touch anything.' });
   })(),
 
   // a black swan afloat, side on, a grey cygnet riding at the back between
@@ -144,21 +144,21 @@ export default [
   // small fish on the end of it. (Sat at the front of the cloud he hid it
   // from the game view; side on at its end, the cloud runs off behind him.)
   (() => {
-    const g = grid(10, 10, 5);
-    g.ellipsoid([3, 3, 2], [3.4, 1.3, 2.2], cloud).ellipsoid([1.2, 4, 2], [1.4, 1.1, 1.5], cloud);   // the cloud
+    const g = grid(9, 9, 5);
+    g.ellipsoid([2.6, 2, 2], [3.0, 1.3, 2.2], cloud).ellipsoid([0.9, 3, 2], [1.2, 1.1, 1.5], cloud);   // the cloud
     tint(g, (x, y, z) => g.get(x, y, z) === cloud && !g.get(x, y - 1, z), cloudDk);
-    g.box([4, 6], [5, 6], [1, 3], coat);                                                // his coat
-    for (const z of [1, 3]) g.set(7, 5, z, coat).set(7, 4, z, coat).set(7, 3, z, boot); // legs over the edge
-    g.box([4, 6], [7, 7], [1, 3], skin);                                                // his head
-    g.set(6, 7, 1, INK).set(6, 7, 3, INK);                                              // eyes
-    g.box([3, 7], [8, 8], [0, 4], straw);                                               // the hat
-    for (const [x, z] of [[3, 0], [7, 0], [3, 4], [7, 4]]) g.clear(x, 8, z);
-    g.box([4, 6], [9, 9], [1, 3], straw);
-    for (const [x, z] of [[4, 1], [6, 1], [4, 3], [6, 3]]) g.clear(x, 9, z);
-    g.set(7, 6, 2, skin);                                                               // his hands
-    g.set(8, 6, 2, straw).set(8, 7, 2, straw).set(9, 7, 2, straw);                       // the rod
-    g.box([9, 9], [3, 6], [2, 2], line);                                                // the line
-    g.box([9, 9], [0, 2], [2, 2], fish);                                                 // a fish on it
-    return g.entry({ id: 'cand-p17-cloud-fisher', name: 'Cloud Fisher', fraction: 0.6, story: 'He has fished off this cloud for forty years. Today, for the first time, something bit.' });
+    g.box([3, 5], [4, 5], [1, 3], coat);                                                // his coat
+    for (const z of [1, 3]) g.set(6, 4, z, coat).set(6, 3, z, coat).set(6, 2, z, boot); // legs over the edge
+    g.box([3, 5], [6, 6], [1, 3], skin);                                                // his head
+    g.set(5, 6, 1, INK).set(5, 6, 3, INK);                                              // eyes
+    g.box([2, 6], [7, 7], [0, 4], straw);                                               // the hat
+    for (const [x, z] of [[2, 0], [6, 0], [2, 4], [6, 4]]) g.clear(x, 7, z);
+    g.box([3, 5], [8, 8], [1, 3], straw);
+    for (const [x, z] of [[3, 1], [5, 1], [3, 3], [5, 3]]) g.clear(x, 8, z);
+    g.set(6, 5, 2, skin);                                                               // his hands
+    g.set(7, 5, 2, straw).set(7, 6, 2, straw).set(8, 6, 2, straw);                       // the rod
+    g.box([8, 8], [2, 5], [2, 2], line);                                                // the line
+    g.box([8, 8], [0, 1], [2, 2], fish);                                                 // a fish on it
+    return g.entry({ id: 'cand-p17-cloud-fisher', name: 'Cloud Fisher', fraction: 0.6, story: 'Forty years fishing off this cloud. Today, for the first time, something bit.' });
   })(),
 ];

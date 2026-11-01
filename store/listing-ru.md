@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (`docs/l10n/ru.md` lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the 1.1 count; `docs/handoff-2026-10-31-v1.1-full.md`). Claims and their order follow the English. Counts were measured with a script: characters for each field, and bytes (UTF-8) for Keywords as well, since App Store Connect counts that field in bytes and every Cyrillic letter is two. The in-game words follow the glossary in `docs/l10n/ru.md` (камень, кубик, фигура, резец, метка, промах, самоцвет, святилище, мир). It says "ты", as the game does.
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the 1.1 count; `docs/handoff-2026-10-31-v1.1-full.md`). Claims and their order follow the English. Counts were measured with a script: characters for each field, and bytes (UTF-8) for Keywords as well, since App Store Connect counts that field in bytes and every Cyrillic letter is two. The in-game words follow the glossary in `docs/l10n/ru.md` (камень, кубик, фигура, резец, метка, промах, самоцвет, святилище, мир). It says "ты", as the game does.
 
 ---
 
@@ -40,7 +40,7 @@ Strata — тихая головоломка о том, как это найти
 Это японский кроссворд, или нонограмма, в трёх измерениях. Поворачивай камень в руках, снимай слои, чтобы заглянуть внутрь, и решай ряд за рядом, пока не останется только фигура.
 
 ПУТЕШЕСТВИЕ ЧЕРЕЗ ПЯТНАДЦАТЬ МИРОВ
-194 камня в 15 мирах: от Первого света и Сада мхов до Праздника фонарей, Глубины и Звездопада. У каждого мира свой свет и свои цвета, а каждый найденный камень встаёт на карту маленькой скульптурой. В каждом мире есть святилище — бонусный камень для тех, кто собрал самоцветы.
+200 камней в 15 мирах: от Первого света и Сада мхов до Праздника фонарей, Глубины и Звездопада. У каждого мира свой свет и свои цвета, а каждый найденный камень встаёт на карту маленькой скульптурой. В каждом мире есть святилище — бонусный камень для тех, кто собрал самоцветы.
 
 ЛЕГКО НАУЧИТЬСЯ
 Двенадцать коротких уроков всему научат прямо в игре: как читать числа, как откалывать кубики, как ставить метки на те, что нужно сохранить. Чем дальше путь, тем больше камни и тем меньше подсказок, но правила не меняются. Не знаешь, как дальше? Подожди немного, и ряд, где есть ход, мягко засветится.
@@ -58,7 +58,7 @@ Strata — тихая головоломка о том, как это найти
 Найди спокойную минуту, возьми камень и посмотри, что он хранил.
 ```
 
-(1,599 / 4000 characters)
+(1,600 / 4000 characters)
 
 ## Keywords (100)
 
@@ -75,10 +75,10 @@ Comma-separated with no spaces. Leaves out words already in the name or subtitle
 If Kellan uses the handoff's proposed English line, in Russian:
 
 ```
-Создано для iPhone Duo. Новый камень каждый день, чтобы делиться. Тринадцать новых камней. Крупный текст. Теперь на японском, китайском и русском.
+Создано для iPhone Duo. Новый камень каждый день, чтобы делиться. Девятнадцать новых камней. Крупный текст. Теперь на японском, китайском и русском.
 ```
 
-(146 / 4000 characters)
+(148 / 4000 characters)
 
 ## Notes for the reviewer
 

@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (docs/localisation.md lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md) (the live English, same claims, same order), with the level count updated to **194** (`SHAPES` after build 7). Counts are measured by script: characters for text fields, UTF-8 bytes for keywords, as App Store Connect counts them.
+Translated from [app-store-listing.md](app-store-listing.md) (the live English, same claims, same order), with the level count updated to **200** (`SHAPES` after build 7). Counts are measured by script: characters for text fields, UTF-8 bytes for keywords, as App Store Connect counts them.
 
 Notes for the reviewer:
 - The English description says "stars" for the reward; the game says gems (◆), so this uses 宝石 throughout, as the game's Chinese does. The claims are unchanged.
@@ -45,7 +45,7 @@ Strata 是一款安静的谜题游戏，讲的是把它找出来。每一关都�
 这是一款三维的数织（Nonogram）。把石块拿在手里转动，一层层剥开看到里面，一行一行推下去，直到只剩下藏着的那样东西。
 
 穿越十五片土地
-194 个石块，分布在 15 个章节里：从初光、苔园，到灯会、深海和星落。每个章节都是一个地方，有自己的光和色彩；你发现的每个石块，都会化作一座小雕塑，留在地图上。每个章节还有一个奖励石块，留给攒够宝石的人。
+200 个石块，分布在 15 个章节里：从初光、苔园，到灯会、深海和星落。每个章节都是一个地方，有自己的光和色彩；你发现的每个石块，都会化作一座小雕塑，留在地图上。每个章节还有一个奖励石块，留给攒够宝石的人。
 
 轻松上手
 十二节短课，边玩边教会你所有规则：怎么读数字，怎么凿，怎么标记你想留下的方块。越往后走，石块越大，线索越少，但规则从不改变。卡住了，就稍等一会儿，能推进的那一行会轻轻发光。

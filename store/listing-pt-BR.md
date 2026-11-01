@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** (`docs/l10n/pt-BR.md` lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 194 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and for Keywords both characters and bytes (UTF-8), since the accented letters take two bytes each and the byte count is the safer one. The in-game words follow the glossary in `docs/l10n/pt-BR.md` (pedra, cubo, objeto, cinzel / cinzelar, marca, deslize, gema, santuário, Achados, mundo).
+Translated from [app-store-listing.md](app-store-listing.md), with the level count updated to 200 (the game's count after build 7). Claims and their order follow the English. Counts are measured with a script: characters for each field, and for Keywords both characters and bytes (UTF-8), since the accented letters take two bytes each and the byte count is the safer one. The in-game words follow the glossary in `docs/l10n/pt-BR.md` (pedra, cubo, objeto, cinzel / cinzelar, marca, deslize, gema, santuário, Achados, mundo).
 
 App Store Connect locale: **Portuguese (Brazil)**. Portugal's store falls back to it unless a Portugal page is added.
 
@@ -42,7 +42,7 @@ Strata é um quebra-cabeça tranquilo sobre encontrá-la. Cada fase é um bloco 
 É um nonograma em três dimensões. Gire a pedra nas mãos, tire camadas para ver o que há dentro e resolva linha por linha, até sobrar só o objeto.
 
 UMA VIAGEM POR QUINZE MUNDOS
-194 pedras em 15 mundos, da Primeira Luz e do Jardim de Musgo à Festa das Lanternas, às Profundezas e à Chuva de Estrelas. Cada mundo é um lugar com luz e cores próprias, e cada pedra que você revela ganha seu lugar no mapa como uma pequena escultura. Em cada mundo, um santuário espera por quem juntar gemas suficientes.
+200 pedras em 15 mundos, da Primeira Luz e do Jardim de Musgo à Festa das Lanternas, às Profundezas e à Chuva de Estrelas. Cada mundo é um lugar com luz e cores próprias, e cada pedra que você revela ganha seu lugar no mapa como uma pequena escultura. Em cada mundo, um santuário espera por quem juntar gemas suficientes.
 
 FÁCIL DE APRENDER
 Doze lições curtas ensinam tudo enquanto você joga: como ler os números, como cinzelar, como marcar os cubos que você quer manter. As pedras crescem e as pistas diminuem ao longo da viagem, mas as regras nunca mudam. Se travar, espere um pouco: uma linha com jogada vai brilhar, suave.

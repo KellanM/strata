@@ -2,7 +2,7 @@
 
 **Approved for the store by Kellan, 2026-10-31, without a native speaker's review** ("Your translations are world class"; docs/l10n/zh-Hant.md lists the open doubts).
 
-Translated from [app-store-listing.md](app-store-listing.md) (the live English, same claims, same order), with the level count updated to **194** (`SHAPES` after build 7), and checked against [listing-zh-Hans.md](listing-zh-Hans.md). Written in Taiwan's words, not converted from the simplified page. Counts are measured by script: characters for text fields, UTF-8 bytes for keywords, as App Store Connect counts them.
+Translated from [app-store-listing.md](app-store-listing.md) (the live English, same claims, same order), with the level count updated to **200** (`SHAPES` after build 7), and checked against [listing-zh-Hans.md](listing-zh-Hans.md). Written in Taiwan's words, not converted from the simplified page. Counts are measured by script: characters for text fields, UTF-8 bytes for keywords, as App Store Connect counts them.
 
 App Store Connect has one Traditional Chinese locale, **Chinese (Traditional)**, and it serves both the Taiwan and the Hong Kong storefronts, so this one page is both. Its words are Taiwan's (螢幕, 離線, 帳號, 裝置, 療癒); a Hong Kong reader understands all of them.
 
@@ -46,7 +46,7 @@ Strata 是一款安靜的謎題遊戲，玩的是把它找出來。每一關都�
 這是一款立體的數織（Nonogram）。把石塊拿在手裡轉動，一層層剝開看到裡面，一列一列推下去，直到只剩下藏著的那樣東西。
 
 走過十五個世界
-194 個石塊，分布在 15 個章節裡：從初光、苔園，到燈會、深海和星落。每個章節都是一個地方，有自己的光和色彩；你發現的每個石塊，都會化成一座小雕塑，留在地圖上。每個章節還有一個獎勵石塊，留給集滿寶石的人。
+200 個石塊，分布在 15 個章節裡：從初光、苔園，到燈會、深海和星落。每個章節都是一個地方，有自己的光和色彩；你發現的每個石塊，都會化成一座小雕塑，留在地圖上。每個章節還有一個獎勵石塊，留給集滿寶石的人。
 
 輕鬆上手
 十二堂短課，邊玩邊教會你所有規則：怎麼讀數字、怎麼鑿、怎麼標記你想留下的方塊。越往後走，石塊越大、線索越少，但規則從不改變。卡住了，就稍等一下，能推進的那一列會輕輕發光。

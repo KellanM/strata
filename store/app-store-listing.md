@@ -5,7 +5,7 @@ Version 1 has no ads, no in-app purchases, no accounts and no data collection.
 
 Content counts come from `public/js/shapes.js`: `SHAPES` has 182 levels across `CHAPTERS` (15). There are 15 bonus stones (`BONUS`, one per chapter) and 12 lessons (`TUTORIAL`).
 
-**Counts after build 7:** on 2026-10-31, 13 of Kellan's gallery picks became levels and Fried Egg was retired for the Broody Hen. `SHAPES` now has **194** levels. Build 7 (v1.0.448) has 182, so this listing stays as it is for build 7. Before the next build is submitted, change "182" in the description, `listing-copy-hopkins.md` and the review notes.
+**Counts after build 7:** on 2026-10-31, 13 of Kellan's gallery picks became levels and Fried Egg was retired for the Broody Hen; on 2026-11-01, six more from gallery page 17 (Moose, Haniwa, Sphinx, Grass Snake, Broomstick, Cloud Fisher). `SHAPES` now has **200** levels. Build 7 (v1.0.448) has 182, so this listing stays as it is for build 7. The 1.1 description should use 200: before the next build is submitted, change "182" to "200" in the description, `listing-copy-hopkins.md` and the review notes. The translated pages (`listing-*.md`, for 1.1) already say 200.
 
 ---
 
