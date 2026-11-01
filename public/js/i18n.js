@@ -1,6 +1,6 @@
 // Strata in other languages (docs/growth-roadmap.md test 6). English is the source and the
 // fallback for any missing key (public/i18n/en.js); a language's table holds what it has
-// translated (public/i18n/ja.js, zh-Hans.js).
+// translated (public/i18n/ja.js, zh-Hans.js, ko.js).
 //
 // Which language: a saved choice (strata.lang), else the device's (navigator.languages, first
 // match wins), else English - but only from LANGS_LIVE. A table goes live once a native speaker
@@ -13,10 +13,10 @@
 import * as EN from '../i18n/en.js';
 import { TUTORIAL, TUTORIAL_V2 } from './shapes.js';
 
-// Japanese and Simplified Chinese live on Kellan's word (2026-10-31: "We don't need a human
+// Japanese, Simplified Chinese and Korean live on Kellan's word (2026-10-31: "We don't need a human
 // reviewer"), without a native speaker's pass; docs/localisation.md keeps the open doubts
-export const LANGS_LIVE = ['en', 'ja', 'zh-Hans'];
-export const LANGS = ['en', 'ja', 'zh-Hans'];   // every table there is, reviewed or not
+export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'ko'];
+export const LANGS = ['en', 'ja', 'zh-Hans', 'ko'];   // every table there is, reviewed or not
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
 // traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the

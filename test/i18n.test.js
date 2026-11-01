@@ -16,6 +16,17 @@ const en = { ...EN.strings, ...EN.data() };
 // share line's "Strata · Daily #N" are never keys at all, so every key here is translated.
 const ENGLISH_ON_PURPOSE = new Set([]);
 
+// Korean particles (을/를, 이/가, 은/는, 과/와) depend on the word before them, which a
+// placeholder or an icon can't know, so the Korean table never puts one straight after either
+test('ko: no particle straight after a {placeholder} or an icon', () => {
+  const ko = TABLES.ko?.strings ?? {};
+  for (const [k, v] of Object.entries(ko)) {
+    for (const f of typeof v === 'object' ? Object.values(v) : [v]) {
+      assert.ok(!/\{\w+\}(을|를|이|가|은|는|과|와|으로|로)(?![가-힣])/.test(f), `ko ${k}: ${f}`);
+    }
+  }
+});
+
 // Story lines: English keeps to 14 words (test/puzzle.test.js). CJK has no words to count, so
 // the budget is characters, from the screen: the line sits under the find's name at 13 px in a
 // box at most 320 px wide (style.css #win-title .story, #journal-view .jv-story), which holds
@@ -23,7 +34,11 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30 };
+// Korean is counted with its spaces, since it breaks lines at them: a space is about a quarter of
+// a syllable's width, so 36 characters with the usual seven or eight spaces is about 30 syllables
+// wide. Wrapping only at spaces (word-break: keep-all) can leave up to one word, four or five
+// syllables, unused at the end of the first line, which still fits two lines of 19 at Larger text.
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, ko: 36 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
@@ -100,8 +115,12 @@ test('a language goes live only from LANGS_LIVE; ?lang= and strata.dev.lang reac
   // Traditional Chinese has no table: it falls through to the next preference
   assert.equal(I18N.chooseLang({ prefs: ['zh-TW', 'zh-Hans-CN'], live: ['en', 'zh-Hans'] }), 'zh-Hans');
   assert.equal(I18N.chooseLang({ prefs: ['zh-Hant-HK'], live: ['en', 'zh-Hans'] }), 'en');
-  // live today: English, Japanese and Simplified Chinese (Kellan, 2026-10-31)
-  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans']);
+  // Korean: every ko tag, once live
+  assert.equal(I18N.chooseLang({ prefs: ['ko-KR', 'en-US'], live: ['en', 'ko'] }), 'ko');
+  assert.equal(I18N.chooseLang({ prefs: ['ko-KR'], live: ['en'] }), 'en');
+  assert.equal(I18N.chooseLang({ dev: 'ko', live: ['en'] }), 'ko');
+  // live today: English, Japanese, Simplified Chinese and Korean (Kellan, 2026-10-31)
+  assert.deepEqual(I18N.LANGS_LIVE, ['en', 'ja', 'zh-Hans', 'ko']);
 });
 
 test('t() gives back English exactly, fills its blanks and counts', () => {

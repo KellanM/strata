@@ -1301,3 +1301,9 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { lette
 html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---------- Korean (ko; public/i18n/ko.js, docs/l10n/ko.md) ----------
+   Hangul is set in words with spaces between, and a browser left to itself breaks a Korean line
+   between any two syllables, splitting words ("깎으 / 세요"). keep-all wraps at the spaces, as
+   Korean is printed; break-word still breaks a word too long for its box rather than let it spill */
+html:lang(ko) body { word-break: keep-all; overflow-wrap: break-word; }
