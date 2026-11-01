@@ -1301,3 +1301,22 @@ html:is(:lang(ja), :lang(zh), :lang(ko)) :is(#strikes, .gems, .jr-total) { lette
 html:is(:lang(ja), :lang(zh), :lang(ko)) :is(.ring-toggle .l, .ring-toggle .s, .ring-label, h1, #chapter-card .numeral, #chapter-card .cname,
   #world-close .numeral, #world-close .cname, #world-close .all, #win-title .name, .jr-head h2, .jr-later h3, .jr-later li,
   .jr-chapter h3, #journal-view .jv-name, .pause-chapter, .pause-name, .pause-label, #breath .pause) { padding-left: 0; }
+
+/* ---------- Russian (ru; docs/l10n/ru.md) ----------
+   Cyrillic capitals are wide, and Russian names run about a quarter longer than English, so the
+   letterspaced names that don't wrap in English get room to. The faces need nothing: Avenir Next
+   (iOS, macOS), Segoe UI and Century Gothic (Windows) and Roboto (Android, through system-ui) all
+   have Cyrillic.
+   - A map stone's name sits beside it on one line; a long one (ЧАЙНЫЙ ПАКЕТИК, with Larger text)
+     ran off the right edge, so it may take two lines.
+   - A Finds tile's name wraps instead of ending in "…", as it already does with Larger text.
+   - The chapter, shrine and world-closing cards set the world's name on one line in big tracked
+     capitals: ЧАСОВАЯ МАСТЕРСКАЯ, ПРАЗДНИК ФОНАРЕЙ and ОБЛАЧНЫЕ ОСТРОВА ran past a 375 px screen.
+     The tracking closes up a little and the name may take two lines.
+   - A find's own page sets its name at 26 px with Larger text's 1.22 on top: one-word names
+     (ПРОИГРЫВАТЕЛЬ, ОБСЕРВАТОРИЯ) were wider than the screen, so it steps down to 22 px. */
+html:lang(ru) .map-node .label { white-space: normal; }
+html:lang(ru) .map-node .nm { width: max-content; max-width: 10.5em; }
+html:lang(ru) .jr-tile .nm { white-space: normal; text-align: center; letter-spacing: .14em; }
+html:lang(ru) :is(#chapter-card .cname, #world-close .cname) { white-space: normal; letter-spacing: .2em; padding-left: .2em; line-height: 1.2; }
+html:lang(ru) #journal-view .jv-name { font-size: calc(22px * var(--ts)); letter-spacing: .2em; padding-left: .2em; }

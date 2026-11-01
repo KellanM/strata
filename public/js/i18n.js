@@ -16,8 +16,11 @@ import { TUTORIAL, TUTORIAL_V2 } from './shapes.js';
 // Japanese and Simplified Chinese live on Kellan's word (2026-10-31: "We don't need a human
 // reviewer"), without a native speaker's pass; docs/localisation.md keeps the open doubts.
 // Traditional Chinese the same day ("Your translations are world class"; docs/l10n/zh-Hant.md)
-export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant'];
-export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant'];   // every table there is, reviewed or not
+// Japanese, Simplified Chinese and Russian live on Kellan's word (2026-10-31: "We don't need a
+// human reviewer"), without a native speaker's pass; docs/localisation.md and docs/l10n/ keep the
+// open doubts
+export const LANGS_LIVE = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru'];
+export const LANGS = ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru'];   // every table there is, reviewed or not
 
 // a language tag (navigator's, a saved one, ?lang=) to one of ours, or null. Chinese is the
 // traditional table for Taiwan, Hong Kong, Macau and any -Hant tag, the simplified one for the
@@ -64,11 +67,16 @@ export const locale = lang === 'en' ? undefined : lang;
 export const cjk = ['ja', 'zh-Hans', 'zh-Hant', 'ko'].includes(lang);
 const plural = new Intl.PluralRules(lang === 'en' ? 'en' : lang);
 
+// a counted string's form for n: `zero` where the table has one ("no slips"), else the language's
+// own category from Intl.PluralRules, else `other`. English has one and other; Russian one (1, 21),
+// few (2-4, 22), many (0, 5-20, 11) and other (fractions); Japanese and Chinese only other. A
+// table may count a string English doesn't ("{n} days in a row": 1 день, 2 дня, 5 дней)
+export function pluralForm(forms, n, rules = plural) {
+  return (n === 0 && forms.zero != null ? forms.zero : forms[rules.select(n)]) ?? forms.other;
+}
+
 function fill(s, vars) {
-  if (s && typeof s === 'object') {
-    const n = Number(vars?.n ?? 0);
-    s = (n === 0 && s.zero != null ? s.zero : s[plural.select(n)]) ?? s.other;
-  }
+  if (s && typeof s === 'object') s = pluralForm(s, Number(vars?.n ?? 0));
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
 // the interface's words, by key

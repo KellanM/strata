@@ -42,7 +42,7 @@ export function configure(iosDir, release = JSON.parse(readFileSync(join(root, '
     UIViewControllerBasedStatusBarAppearance: false,
     // the languages the game speaks (public/js/i18n.js LANGS_LIVE): without them iOS runs the app,
     // and so its web view's navigator.languages, in English even on a Japanese or Chinese iPhone
-    CFBundleLocalizations: ['en', 'ja', 'zh-Hans', 'zh-Hant'],
+    CFBundleLocalizations: ['en', 'ja', 'zh-Hans', 'zh-Hant', 'ru'],
   };
   for (const [k, v] of Object.entries(want)) {
     if (JSON.stringify(info[k]) !== JSON.stringify(v)) { info[k] = v; changed.push(`Info.plist ${k}`); }
