@@ -3,7 +3,7 @@
 // Hopkins (docs/hopkins-study.md): the picture shows the product at work and
 // the result - one stone half carved, then what was inside it - and the words make
 // one specific claim, with no "play now" and no "free" in the headline.
-//   node tools/make-og.mjs        (reads the store screenshots; needs ffmpeg)
+//   node tools/make-og.mjs        (reads the two frames in store/og; needs ffmpeg)
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,16 +12,19 @@ import { pathToFileURL } from 'node:url';
 const { chromium } = await import('playwright').catch(() =>
   import(pathToFileURL(`${process.env.APPDATA}/npm/node_modules/playwright/index.mjs`).href));
 
-const root = new URL('..', import.meta.url), shots = new URL('store/screenshots/', root);
+const root = new URL('..', import.meta.url);
 const tmp = mkdtempSync(join(tmpdir(), 'strata-og-'));
-const crop = (url, y, out) => {
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', url.pathname.replace(/^\/(\w:)/, '$1'), '-vf', `crop=1100:1100:110:${y},scale=440:440`, join(tmp, out)]);
+const crop = (url, [w, x, y], out) => {
+  execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', url.pathname.replace(/^\/(\w:)/, '$1'), '-vf', `crop=${w}:${w}:${x}:${y},scale=440:440`, join(tmp, out)]);
   return 'data:image/png;base64,' + readFileSync(join(tmp, out)).toString('base64');
 };
-// the same stone both sides: the Origami Fox half carved (store/og, shot with
-// MID=origami-fox FRAC=0.5 node store/shoot.mjs 6.9 2), then revealed (store frame 1)
-const carving = crop(new URL('store/og/origami-fox-carving.png', root), 880, 'a.png');
-const inside = crop(new URL('6_9in-1-origami-fox.png', shots), 650, 'b.png');
+// the same stone both sides, from the same angle (store/og): the Origami Fox half
+// carved (MID=origami-fox FRAC=0.5 node store/shoot.mjs 6.9 2), then revealed and
+// held at the angle it was played at, not turned to its showcase pose
+// (SOLVE=origami-fox PLAY_ANGLE=1 node store/shoot.mjs 6.9 3). The reveal is
+// framed smaller in the game, so its crop is tighter: the two read at one scale.
+const carving = crop(new URL('store/og/origami-fox-carving.png', root), [1100, 110, 880], 'a.png');
+const inside = crop(new URL('store/og/origami-fox-revealed.png', root), [950, 185, 825], 'b.png');
 
 const html = `<!doctype html><meta charset="utf-8"><style>
   body { margin: 0; width: 1200px; height: 630px; overflow: hidden; color: #4a3d63;

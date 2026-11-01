@@ -130,6 +130,9 @@ const FRAMES = {
     await startLevel(page, process.env.SOLVE || 'kasbah');
     await page.waitForTimeout(3000);
     await solve(page);
+    // PLAY_ANGLE=1: it settles at the angle it was played at, not its showcase pose
+    // (for a before-and-after pair with frame 2, as in the link preview, tools/make-og.mjs)
+    if (process.env.PLAY_ANGLE) await page.evaluate(() => { const w = window.strata.game.win; if (w) w.pose = 0; });
     await page.waitForTimeout(6000);
     return { ctx, page };
   },
