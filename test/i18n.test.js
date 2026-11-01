@@ -23,11 +23,13 @@ const ENGLISH_ON_PURPOSE = new Set([]);
 // Two lines with Larger text is 38; the budget leaves a little for punctuation's full width.
 // Chinese runs about a sixth denser than Japanese for the same thought (no kana endings), so its
 // budget is tighter, which keeps the two languages' lines about as long as the English.
-// French counts characters too, not words: its words are longer and its articles and elisions
-// (l’, d’, qu’) make a word count meaningless. The same 320 px box holds about 41 of the Latin
-// face's characters a line at 13 px with Larger text (x1.22), measured in Chromium on the
-// longest lines; two lines is 82, so 80 leaves the wrap a word's slack. English's longest is 75.
-const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, fr: 80 };
+// French counts characters too, not words: its words run longer and its elisions (l’, d’, qu’)
+// make a word count meaningless. Measured in Chromium on every line, in the real boxes: the
+// result's line (13 px, 320 px box) with Larger text holds about 36 characters, so two lines is
+// about 72, and the drafts that ran 69-78 took a third line there (6 of 209, against English's 1).
+// With every line at 72 or under none does; the Finds view (15 px) stays on two lines without
+// Larger text. English's longest is 75, so French at 72 also stays about as long as the English.
+const STORY_BUDGET = { ja: 36, 'zh-Hans': 30, fr: 72 };
 
 const vars = (s) => {
   const forms = s && typeof s === 'object' ? Object.values(s) : [s];
