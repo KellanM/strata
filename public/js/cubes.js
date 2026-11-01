@@ -13,7 +13,9 @@ export function clueTile(line) {
   return line.hidden ? 0 : 1 + line.count * 3 + line.style;
 }
 
-function buildAtlas() {
+// large: Larger text (Settings; main.js), the numbers bolder and a size up. Their glyphs keep
+// their size, so a two-digit clue still clears its ring or square.
+function buildAtlas(large = false) {
   const T = 128, canvas = document.createElement('canvas');
   canvas.width = canvas.height = T * ATLAS_COLS;
   const g = canvas.getContext('2d');
@@ -26,7 +28,8 @@ function buildAtlas() {
       const tile = 1 + count * 3 + style;
       const cx = (tile % ATLAS_COLS) * T + T / 2, cy = Math.floor(tile / ATLAS_COLS) * T + T / 2;
       const label = String(count);
-      g.font = `600 ${label.length > 1 ? 60 : 74}px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif`;
+      const px = label.length > 1 ? (large ? 62 : 60) : (large ? 82 : 74);
+      g.font = `${large ? 700 : 600} ${px}px "Avenir Next", Futura, "Century Gothic", "Segoe UI", sans-serif`;
       g.fillText(label, cx, cy + 4);
       g.lineWidth = 7;
       if (style === 1) {
@@ -393,6 +396,15 @@ export class Cubes {
     this.mesh = null;
     this.ripIndex = 0;
     this.focusAny = false;
+  }
+
+  // Larger text: the numbers drawn again, bolder
+  setLargeText(on) {
+    if (!!on === !!this.largeText) return;
+    this.largeText = !!on;
+    const old = this.atlas;
+    this.atlas = this.uniforms.uAtlas.value = buildAtlas(this.largeText);
+    old.dispose();
   }
 
   setPalette(p) {
