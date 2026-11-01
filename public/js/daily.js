@@ -1,6 +1,6 @@
 // The Daily Stone (docs/daily-stone.md; growth roadmap test 8): one stone a
 // day, the same for everyone. From Daily #2 (1 Nov 2026) it is one of Kellan's
-// picks from gallery page 18 (dailies.js), by a fixed calendar; Daily #1 was
+// picks from gallery pages 18 and 19 (dailies.js), by a fixed calendar; Daily #1 was
 // carved from the drift's own generator (shapes.js randomShape) and keeps its
 // stone. Solved, it gives a spoiler-free share line, Wordle's way.
 //
@@ -160,7 +160,7 @@ export function generatedStone(n) {
 }
 
 // the day's sky, at a time of day of its own: a curated stone's is the one its
-// section was drawn against on page 18; a generated day's, any of the game's
+// section was drawn against in the gallery; a generated day's, any of the game's
 export function dailyPalette(n) {
   const seed = daySeed(n, 999);
   const id = stoneIdOf(n);

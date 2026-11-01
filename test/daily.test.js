@@ -15,10 +15,17 @@ import { buildCells } from '../public/js/shapes.js';
 import { SHAPES, BONUS } from '../public/js/shapes.js';
 import { LANGS } from '../public/js/i18n.js';
 import { prepare, countSolutions, cluesConsistent } from '../tools/aha-lib.mjs';
+import { PALETTES } from '../public/js/palettes.js';
+import { readdirSync, readFileSync } from 'node:fs';
 
 const DAYS = 400;
 const LAST_2030 = dayNumber(new Date(2030, 11, 31, 12));
 const sectionOf = (id) => DAILY_BY_ID.get(id).section;
+// for spreading the calendar, page 19's Toy Box, Again counts as page 18's Toy Box
+const familyOf = (id) => (sectionOf(id) === 'toybox' ? 'toys' : sectionOf(id));
+// the days already played when the last stones were added (Daily #2, 1 Nov 2026, page 19's picks):
+// each day's stone, as it was shared. Never edit these; add the next day played instead.
+const PLAYED = { 1: null, 2: 'daily-piggy-bank' };
 const DATED_IDS = new Set(DATED.map((d) => d.id));
 // every name a stone has, in every language
 const NAMES = [];
@@ -93,7 +100,7 @@ test('daily: from Daily #2 (1 Nov 2026) every day is one of the curated stones',
     const id = stoneIdOf(n);
     assert.ok(DAILY_BY_ID.has(id), `day ${n}: ${id}`);
     const { shape, curated } = dailyStone(n);
-    assert.ok(curated && shape.id === id && shape.daily === n && shape.from.startsWith('cand-p18-'), `day ${n}`);
+    assert.ok(curated && shape.id === id && shape.daily === n && /^cand-p1[89]-/.test(shape.from), `day ${n}`);
   }
   // every stone has its place in the calendar, once: dated, or in the rotation
   const placed = [...DATED.map((d) => d.id), ...ROTATION.at(-1).order];
@@ -101,13 +108,33 @@ test('daily: from Daily #2 (1 Nov 2026) every day is one of the curated stones',
   for (const era of ROTATION) for (const id of era.order) assert.ok(DAILY_BY_ID.has(id), id);
 });
 
+test('daily: the days already played keep their stones (Daily #1 and #2)', () => {
+  for (const [n, id] of Object.entries(PLAYED)) assert.equal(stoneIdOf(Number(n)), id, `Daily #${n}`);
+  assert.equal(dateOf(2), '2026-11-01');
+  // every line in the lists starts on a day not yet played when it was added, and the calendar
+  // made of only the lines in force on each played day agrees with today's, up to that day
+  const lastPlayed = Math.max(...Object.keys(PLAYED).map(Number));
+  for (const n of Object.keys(PLAYED).map(Number).filter((x) => x >= CURATED_FROM)) {
+    const rotation = ROTATION.filter((e) => e.since <= n), dated = DATED.filter((d) => d.since <= n);
+    assert.deepEqual(calendar(lastPlayed, { rotation, dated }).slice(0, n + 1), calendar(lastPlayed).slice(0, n + 1), `Daily #${n}`);
+  }
+  // page 19's lines (added on Daily #2) start tomorrow, Daily #3, not on a day already played
+  for (const line of [...ROTATION.slice(1), ...DATED.filter((d) => DAILY_BY_ID.get(d.id).from.startsWith('cand-p19-'))]) {
+    assert.ok(line.since > lastPlayed, `since ${line.since}: a day already played`);
+  }
+});
+
 test('daily: the dated stones fall on their dates, 2026-2030, and on no other day', () => {
-  const DATES = { 'daily-black-cat': [10, 31], 'daily-nutcracker': [12, 6], 'daily-melted-snowman': [3, 20] };
+  const DATES = {
+    'daily-black-cat': [10, 31], 'daily-nutcracker': [12, 6], 'daily-melted-snowman': [3, 20],
+    'daily-sugar-skull': [11, 2], 'daily-cupid': [2, 14], 'daily-toadstool-frog': [9, 22], 'daily-squirrel-pumpkin': [11, 1],
+  };
   assert.deepEqual(Object.keys(DATES).sort(), [...DATED_IDS].sort());
   for (let y = 2026; y <= 2030; y++) {
     for (const [id, [m, d]] of Object.entries(DATES)) {
       const n = dayNumber(new Date(y, m - 1, d, 9));
       if (n < CURATED_FROM) { assert.equal(stoneIdOf(n), null, `${y}-${m}-${d}: before the cutover`); continue; }
+      if (n in PLAYED) { assert.equal(stoneIdOf(n), PLAYED[n], `${y}-${m}-${d}: already played`); continue; }
       assert.equal(stoneIdOf(n), id, `${y}-${m}-${d}`);
     }
   }
@@ -125,21 +152,48 @@ test('daily: the dated stones fall on their dates, 2026-2030, and on no other da
   assert.equal(first('daily-black-cat'), '2027-10-31');
   assert.equal(first('daily-nutcracker'), '2026-12-06');
   assert.equal(first('daily-melted-snowman'), '2027-03-20');
+  // page 19's: the Sugar Skull tomorrow, 2 Nov 2026 (Daily #3), the first day not yet played
+  assert.equal(dayNumber(new Date(2026, 10, 2, 9)), 3);
+  assert.equal(stoneIdOf(3), 'daily-sugar-skull');
+  assert.equal(first('daily-sugar-skull'), '2026-11-02');
+  assert.equal(first('daily-cupid'), '2027-02-14');
+  assert.equal(first('daily-toadstool-frog'), '2027-09-22');
+  // 1 Nov 2026 was Daily #2, the Piggy Bank's, already played: the Squirrel waits for 1 Nov 2027,
+  // the morning after the Black Cat
+  assert.equal(stoneIdOf(2), 'daily-piggy-bank');
+  assert.equal(first('daily-squirrel-pumpkin'), '2027-11-01');
+  assert.equal(stoneIdOf(367), 'daily-squirrel-pumpkin');
+  assert.equal(stoneIdOf(368), 'daily-sugar-skull');
 });
 
 test('daily: the undated days cycle through the rotation, and no section comes twice in a row', () => {
-  const order = ROTATION[0].order;
   const undated = [];
-  for (let n = CURATED_FROM; n <= LAST_2030; n++) if (!DATED_IDS.has(stoneIdOf(n))) undated.push(stoneIdOf(n));
-  // in order, cycling once every stone has had its day
-  undated.forEach((id, k) => assert.equal(id, order[k % order.length], `undated day ${k}`));
-  for (let k = 1; k < undated.length; k++) {
-    assert.notEqual(sectionOf(undated[k]), sectionOf(undated[k - 1]), `undated days ${k - 1}, ${k}: ${undated[k - 1]}, ${undated[k]}`);
+  for (let n = CURATED_FROM; n <= LAST_2030; n++) if (!DATED_IDS.has(stoneIdOf(n))) undated.push([n, stoneIdOf(n)]);
+  // page 18's 11 in order (Daily #2, then #4 on: the Sugar Skull took #3); then, from the turn of
+  // that cycle (Daily #14, 13 Nov 2026), the second era: page 18's 11 and page 19's 13, cycling
+  const [first, second] = ROTATION.map((e) => e.order);
+  assert.equal(ROTATION.length, 2);
+  assert.deepEqual(second.slice(0, first.length), first, 'the second era keeps the first one\'s order, the new stones after');
+  assert.deepEqual(undated.slice(0, first.length).map(([, id]) => id), first);
+  assert.equal(undated[first.length][0], 14);
+  assert.equal(dateOf(14), '2026-11-13');
+  undated.slice(first.length).forEach(([n, id], k) => assert.equal(id, second[k % second.length], `Daily #${n}`));
+  // page 19's undated stones first come on #25-#38, 24 Nov-7 Dec 2026 (the Nutcracker has #37)
+  const firstDay = (id) => undated.find(([, x]) => x === id)[0];
+  assert.deepEqual(second.slice(first.length).map(firstDay), [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38]);
+  // neither order puts one section next to itself, the end and the start included (Toy Box,
+  // Again counted as Toy Box)
+  for (const order of [first, second]) {
+    order.forEach((id, k) => assert.notEqual(familyOf(id), familyOf(order[(k + 1) % order.length]), `${id}, ${order[(k + 1) % order.length]}`));
   }
-  // and on the calendar too, dated days included
-  for (let n = CURATED_FROM + 1; n <= LAST_2030; n++) assert.notEqual(sectionOf(stoneIdOf(n)), sectionOf(stoneIdOf(n - 1)), `days ${n - 1}, ${n}`);
-  // the Days of the Year are all dated: none in the rotation
-  for (const id of order) assert.notEqual(sectionOf(id), 'seasons', id);
+  for (let k = 1; k < undated.length; k++) {
+    assert.notEqual(familyOf(undated[k][1]), familyOf(undated[k - 1][1]), `undated days ${undated[k - 1]}, ${undated[k]}`);
+  }
+  // and on the calendar too, dated days included (Cupid's Feb 14 never next to the Sleepy Cyclops
+  // to 2030; the Squirrel's Nov 1 is always between two dated days)
+  for (let n = CURATED_FROM + 1; n <= LAST_2030; n++) assert.notEqual(familyOf(stoneIdOf(n)), familyOf(stoneIdOf(n - 1)), `days ${n - 1}, ${n}`);
+  // the Days of the Year, Holidays of the World and Weather and Seasons are all dated: none in the rotation
+  for (const id of second) assert.ok(!['seasons', 'holidays', 'weather'].includes(sectionOf(id)), id);
 });
 
 test('daily: the calendar is deterministic', () => {
@@ -161,7 +215,7 @@ test('daily: appending a stone changes no day before its era starts', () => {
   assert.ok(first > SINCE, `the new stone's first day: ${first}`);
   for (let n = 1; n < first; n++) assert.equal(after[n], before[n], `day ${n} changed`);
   // it joined at the end of the cycle: the undated days just before it are one whole cycle
-  const order = ROTATION[0].order;
+  const order = ROTATION.at(-1).order;
   const lead = after.slice(CURATED_FROM, first).filter((id) => !DATED_IDS.has(id)).slice(-order.length);
   assert.deepEqual(lead, order);
   // the new dated stone is on its date from its day on, and never before
@@ -191,9 +245,33 @@ test('daily: every curated stone is trimmed, lit, written out and fair', () => {
     // lit as the levels are: more tones than the flat candidate had colours
     assert.ok(new Set(buildCells(s).colors).size > 4, `${s.id}: lit`);
   }
-  // the sky of a curated day is its section's
+  // the sky of a curated day is its section's, the one it was drawn against in the gallery
+  for (const s of DAILIES) assert.ok(PALETTES.some((p) => p.name === SECTIONS[s.section].palette), `${s.id}: sky ${SECTIONS[s.section].palette}`);
   assert.equal(dailyPalette(2).base, 'Dawn');
   assert.equal(dailyPalette(3).base, SECTIONS[sectionOf(stoneIdOf(3))].palette);
+  assert.equal(dailyPalette(3).base, 'Beacon');   // the Sugar Skull, Holidays of the World
+});
+
+test('daily: each stone keeps its candidate\'s light, and page 19\'s its clue settings and story', async () => {
+  const pool = new Map();
+  for (const page of ['page18', 'page19']) {
+    const dir = new URL(`../public/gallery/${page}/`, import.meta.url);
+    for (const f of readdirSync(dir).filter((x) => x.endsWith('.js'))) {
+      const mod = await import(new URL(f, dir));
+      if (Array.isArray(mod.default)) for (const e of mod.default) pool.set(e.id, e);
+    }
+  }
+  for (const s of DAILIES) {
+    const e = pool.get(s.from);
+    assert.ok(e, `${s.id}: its candidate ${s.from}`);
+    assert.deepEqual(s.lit ?? null, e.lit ?? null, `${s.id}: lit options`);
+    if (!s.from.startsWith('cand-p19-')) continue;
+    // (page 18's four that took easier clues say so on their line; page 19's needed none)
+    assert.deepEqual([s.fraction, s.seed], [e.fraction, e.seed], `${s.id}: clue settings`);
+    assert.equal(s.story, e.story, `${s.id}: story`);
+    assert.equal(SECTIONS[s.section].palette, JSON.parse(readFileSync(new URL('../public/gallery/page19/sections.json', import.meta.url), 'utf8'))
+      .find((x) => x.key === s.section).palette, `${s.id}: its section's sky`);
+  }
 });
 
 test(`daily: the generator's stones, ${DAYS} days of them, are each uniquely solvable by line logic, mid-difficulty`, () => {
@@ -250,6 +328,11 @@ test('daily: the share line is right and never carries the solution', () => {
   const ALLOWED = new RegExp(`^[A-Za-z0-9 #·:/?=.,\\n◆◇${WAVE_CLEAN}${WAVE_SLIP}-]+$`, 'u');
   const strip = (t) => t.replace(/#\d+/, '#N').replace(/\?d=\d+/, '?d=N');
   let reference = null;
+  // the days walked include every curated stone's, so each one's share is checked
+  const walked = new Set(calendar(DAYS));
+  for (const s of DAILIES) assert.ok(walked.has(s.id), `${s.id}: no day in the first ${DAYS}`);
+  assert.equal(NAMES.length, LANGS.length * DAILIES.length);
+  assert.ok(NAMES.every(Boolean), 'every stone has a name in every language');
   for (let n = 1; n <= DAYS; n++) {
     const { shape, waves } = dailyStone(n);
     const p = prepare(shape);

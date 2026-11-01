@@ -90,4 +90,4 @@ Over-budget, on purpose: a few Touch-page gesture labels (ダブルタップ / �
 
 Each has its own notes, with its glossary, story-line budget, layout fixes and the doubts to fix first: `docs/l10n/zh-Hant.md`, `ko.md`, `de.md`, `fr.md`, `es.md`, `pt-BR.md` and `ru.md`. Their store pages are `store/listing-<code>.md`. Their layout rules are blocks at the end of `public/style.css`, each scoped to its `:lang()`, so English is never touched.
 
-**Counts:** the "712 strings" quoted in `docs/l10n/*.md` date from 2026-10-31. Since then, the 14 curated daily stones (`public/js/dailies.js`) and the six page 17 levels have added their names and stories to every table, along with the Finds "Daily Stones" heading. `test/i18n.test.js` keeps every table complete, whatever the count.
+**Counts:** the "712 strings" quoted in `docs/l10n/*.md` date from 2026-10-31. Since then, the 31 curated daily stones (`public/js/dailies.js`: 14 from page 18, 17 from page 19) and the six page 17 levels have added their names and stories to every table, along with the Finds "Daily Stones" heading. `test/i18n.test.js` keeps every table complete, whatever the count.
