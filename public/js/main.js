@@ -3226,7 +3226,7 @@ onDailyActivity(() => {
   dailyLink = n;
   if (!titleUp) openLinkedDaily();   // (on the title, it waits for the map: finishPull)
 });
-window.strata = { ads, poke, daily, todayN, openDaily, updateToday, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, openMenu, bench: (o) => perf.bench(window.strata, o) };
+window.strata = { ads, poke, daily, todayN, openDaily, updateToday, get game() { return game; }, get nudge() { return nudge; }, get tutorial() { return tutorial; }, get peel() { return peel; }, finale, act, startTutorial, startPuzzle, journalEntries, setPeeled, setPeelAxis, resetView, handles, camera, cubes, perf, openMenu, bench: (o) => perf.bench(window.strata, o) };
 if (new URLSearchParams(location.search).has('perf') || localStorage.getItem('strata.perf') === '1') perf.showHud();
 // A profiling build (STRATA_AUTOBENCH=n npm run build:app, docs/profiling.md): past the
 // title on its own, then the benchmark n times, each table logged as one line the Mac

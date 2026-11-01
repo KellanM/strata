@@ -1,52 +1,91 @@
 // The link preview (Open Graph) card, 1200x630, for public/og.jpg: what a
 // shared link to Strata shows in Messages, WhatsApp, Discord, X and the rest.
-// Hopkins (docs/hopkins-study.md): the picture shows the product at work and
-// the result - one stone half carved, then what was inside it - and the words make
-// one specific claim, with no "play now" and no "free" in the headline.
-//   node tools/make-og.mjs        (reads the two frames in store/og; needs ffmpeg)
-import { execFileSync } from 'node:child_process';
+//
+// docs/og-study.md: crafted games' previews show one hero in the game's own
+// world, large, with their wordmark and at most one line - no screenshots in
+// shadowed cards, no arrows, no before-and-after. So this is the game itself:
+// the Origami Fox just revealed, held at the angle it was played at, in its
+// chapter's sky and rays, rendered at 4x and cropped close so it fills about
+// two thirds of the height. The result's gems and score are hidden. Over it,
+// the wordmark and one specific claim (Hopkins, docs/hopkins-study.md). All of
+// it sits inside the centre square (x 320-880) that WhatsApp-style crops keep.
+//
+//   node tools/make-og.mjs     (starts its own server; needs ffmpeg, and the
+//                               network once for the Jost face, which stands in
+//                               for the app's Avenir Next on machines without it)
+import { execFileSync, spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 const { chromium } = await import('playwright').catch(() =>
   import(pathToFileURL(`${process.env.APPDATA}/npm/node_modules/playwright/index.mjs`).href));
 
-const root = new URL('..', import.meta.url);
+const root = fileURLToPath(new URL('..', import.meta.url));
 const tmp = mkdtempSync(join(tmpdir(), 'strata-og-'));
-const crop = (url, [w, x, y], out) => {
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', url.pathname.replace(/^\/(\w:)/, '$1'), '-vf', `crop=${w}:${w}:${x}:${y},scale=440:440`, join(tmp, out)]);
-  return 'data:image/png;base64,' + readFileSync(join(tmp, out)).toString('base64');
-};
-// the same stone both sides, from the same angle (store/og): the Origami Fox half
-// carved (MID=origami-fox FRAC=0.5 node store/shoot.mjs 6.9 2), then revealed and
-// held at the angle it was played at, not turned to its showcase pose
-// (SOLVE=origami-fox PLAY_ANGLE=1 node store/shoot.mjs 6.9 3). The reveal is
-// framed smaller in the game, so its crop is tighter: the two read at one scale.
-const carving = crop(new URL('store/og/origami-fox-carving.png', root), [1100, 110, 880], 'a.png');
-const inside = crop(new URL('store/og/origami-fox-revealed.png', root), [950, 185, 825], 'b.png');
-
-const html = `<!doctype html><meta charset="utf-8"><style>
-  body { margin: 0; width: 1200px; height: 630px; overflow: hidden; color: #4a3d63;
-    font-family: "Avenir Next", Avenir, Futura, "Century Gothic", "Segoe UI", sans-serif;
-    background: linear-gradient(180deg, #f6e3d2 0%, #eecbb0 100%); }
-  .row { position: absolute; top: 150px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 34px; }
-  .row img { width: 400px; height: 400px; border-radius: 28px; box-shadow: 0 14px 40px rgba(74, 61, 99, .18); }
-  .arrow { width: 54px; height: 54px; border-radius: 50%; border: 1.5px solid rgba(74, 61, 99, .45); display: grid; place-items: center; font-size: 24px; }
-  .name { position: absolute; top: 36px; width: 100%; text-align: center; font-size: 20px; letter-spacing: .5em; text-indent: .5em; }
-  h1 { position: absolute; top: 74px; width: 100%; margin: 0; text-align: center; font-weight: 400; font-size: 44px; letter-spacing: .01em; }
-  .claim { position: absolute; bottom: 26px; width: 100%; text-align: center; font-size: 19px; letter-spacing: .22em; text-indent: .22em; text-transform: uppercase; opacity: .78; }
-</style>
-<div class="name">STRATA</div>
-<h1>Chisel the stone. Find what’s inside.</h1>
-<div class="row"><img src="${carving}"><div class="arrow">→</div><img src="${inside}"></div>
-<div class="claim">One answer per stone · no guessing · no ads</div>`;
-
+const PORT = 5295, ID = 'origami-fox', CLAIM = 'One answer per stone. No guessing.';
 const shell = process.env.QA_CHROME || 'C:/Users/Kellan/AppData/Local/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-win64/chrome-headless-shell.exe';
-const browser = await chromium.launch({ executablePath: shell });
-const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-await page.setContent(html);
-await page.waitForTimeout(300);
-await page.screenshot({ path: new URL('public/og.jpg', root).pathname.replace(/^\/(\w:)/, '$1'), type: 'jpeg', quality: 88 });
-await browser.close();
-console.log('public/og.jpg');
+
+const server = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
+await new Promise((r) => setTimeout(r, 1500));
+const browser = await chromium.launch({ executablePath: shell, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+try {
+  // 1. the hero: the game at 1200x630 (x4), past the title, into the level, solved
+  const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 4 });
+  await ctx.addInitScript(() => {
+    if (sessionStorage.getItem('og')) return;
+    sessionStorage.setItem('og', '1');
+    for (const k of ['strata.tutorial', 'strata.learned', 'strata.dev.unlock', 'strata.ads.off']) localStorage.setItem(k, '1');
+    localStorage.setItem('strata.install.later', String(Date.now()));
+  });
+  const page = await ctx.newPage();
+  await page.goto(`http://localhost:${PORT}/?nosplash`);
+  await page.waitForFunction(() => document.querySelector('#title')?.classList.contains('show'));
+  await page.waitForTimeout(2000);
+  for (let k = 0; k < 8 && await page.evaluate(() => document.querySelector('#title').classList.contains('show')); k++) {
+    await page.mouse.click(600, 315);
+    await page.waitForTimeout(1200);
+  }
+  await page.waitForFunction(() => document.querySelector('#menu').classList.contains('show'));
+  await page.evaluate(async (id) => {
+    const { SHAPES } = await import('/js/shapes.js'), { PALETTES } = await import('/js/palettes.js');
+    const shape = SHAPES.find((s) => s.id === id);
+    window.strata.startPuzzle({ shape, palette: PALETTES.find((p) => p.name === shape.palette), number: 1 });
+  }, ID);
+  await page.waitForTimeout(5000);
+  await page.addStyleTag({ content: '#title, #menu, #coach, #chapter-card, #win-title, #actions, #win, #pause, #install, #offer, #loading, .hud, .tools, #map-world { visibility: hidden !important; }' });
+  await page.evaluate(() => {
+    const g = window.strata.game;
+    for (let i = 0; i < g.puzzle.size; i++) if (!g.puzzle.solid[i]) window.strata.act(i, 'break');
+    g.win.pose = 0;   // the angle it was played at, not the showcase turn
+    Object.defineProperty(window.strata.finale.group, 'visible', { get: () => false, set() {} });   // no gems, no score
+  });
+  await page.waitForTimeout(10000);   // the whirl done, the sparks settled
+  const hero = join(tmp, 'hero.png');
+  await page.screenshot({ path: hero });
+  await ctx.close();
+
+  // 2. close in: the object about two thirds of the height, a little below the middle
+  const base = join(tmp, 'base.png');
+  execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', hero, '-vf', 'crop=2410:1265:1195:420,scale=1200:630:flags=lanczos', base]);
+
+  // 3. the wordmark and the claim, in the game's thin letterspaced voice
+  const page2 = await browser.newPage({ viewport: { width: 1200, height: 630 } });
+  await page2.setContent(`<!doctype html><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400&display=block" rel="stylesheet">
+<style>
+  body { margin: 0; width: 1200px; height: 630px; overflow: hidden; color: #fff6ee; font-family: "Avenir Next", Jost, sans-serif;
+    background: url(data:image/png;base64,${readFileSync(base).toString('base64')}) center / cover; }
+  .mark { position: absolute; top: 44px; width: 100%; text-align: center; font-weight: 300; font-size: 30px;
+    letter-spacing: .62em; text-indent: .62em; text-shadow: 0 1px 18px rgba(60, 20, 40, .35); }
+  .claim { position: absolute; bottom: 42px; width: 100%; text-align: center; font-weight: 400; font-size: 15px;
+    letter-spacing: .3em; text-indent: .3em; text-transform: uppercase; opacity: .88; text-shadow: 0 1px 14px rgba(60, 20, 40, .4); }
+</style><div class="mark">STRATA</div><div class="claim">${CLAIM}</div>`);
+  await page2.evaluate(() => document.fonts.ready);
+  await page2.waitForTimeout(300);
+  await page2.screenshot({ path: join(root, 'public', 'og.jpg'), type: 'jpeg', quality: 90 });
+  console.log('public/og.jpg');
+} finally {
+  await browser.close();
+  server.kill();
+}
